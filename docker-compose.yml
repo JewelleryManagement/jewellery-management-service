@@ -1,0 +1,18 @@
+version: '3.1'
+
+services:
+  db:
+    container_name: postgres
+    image: jms-db
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    ports:
+        - 5432:5432
+    environment:
+      POSTGRES_DB: jewellery-management
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: V*BjZ(@AAh%Ec@5j
