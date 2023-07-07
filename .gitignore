@@ -1,11 +1,44 @@
-# Compiled class files
-*.class
-
-# Log files
-log/
-*.log
-
+HELP.md
 target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+# Gradle files
+.gradle/
+build/
+
+# Spring Boot properties
+application*.properties
+
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
@@ -16,28 +49,3 @@ buildNumber.properties
 .mvn/timing.properties
 # https://github.com/takari/maven-wrapper#usage-without-binary-jar
 .mvn/wrapper/maven-wrapper.jar
-
-# Eclipse m2e generated files
-# Eclipse Core
-.project
-# JDT-specific (Eclipse Java Development Tools)
-.classpath
-
-# IntelliJ IDEA files
-.idea/
-.idea
-/.idea
-*.iml
-*.iws
-*.ipr
-
-# Eclipse files
-.settings/
-
-# Gradle files
-.gradle/
-build/
-
-# Spring Boot properties
-application*.properties
-

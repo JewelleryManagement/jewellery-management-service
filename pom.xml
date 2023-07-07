@@ -8,11 +8,11 @@
 		<version>3.1.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.jewellery.inventory</groupId>
+	<groupId>jewellery.inventory</groupId>
 	<artifactId>jewellery-inventory</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>jewellery-inventory</name>
-	<description>Project is to help jewellery businesses digitalize their inventory management.</description>
+	<description>Project to help jewellery businesses digitalize their inventory management</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>

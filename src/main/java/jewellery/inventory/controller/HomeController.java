@@ -1,4 +1,4 @@
-package com.jewellery.inventory.jewelleryinventory.controller;
+package jewellery.inventory.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
