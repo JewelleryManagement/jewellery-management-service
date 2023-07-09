@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Pear extends Resource {
+public class Pearl extends Resource {
     private String type;
     private double size;
     private String quality;
