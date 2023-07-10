@@ -47,12 +47,6 @@
             <version>42.2.27</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-        </dependency>
-
-
     </dependencies>
 
     <build>
