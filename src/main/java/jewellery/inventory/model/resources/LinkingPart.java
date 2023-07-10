@@ -1,19 +1,15 @@
 package jewellery.inventory.model.resources;
 
+
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.persistence.Entity;
 
 @Entity
+@Getter
+@Setter
 public class LinkingPart extends Resource {
     private String description;
 
-    // ------ Getters and setters ------ //
-
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
 }

@@ -5,9 +5,10 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class PreciousMetal extends Resource {
+public class Pearl extends Resource {
     private String type;
-    private int purity;
+    private double size;
+    private String quality;
     private String color;
-    private String plating;
+    private String shape;
 }
