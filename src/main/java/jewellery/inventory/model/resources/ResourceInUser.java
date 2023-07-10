@@ -24,5 +24,5 @@ public class ResourceInUser {
     @ManyToOne
     private Resource resource;
 
-    private double quanity;
+    private double quantity;
 }
