@@ -9,4 +9,5 @@ public class JewelleryInventoryApplication {
     public static void main(String[] args) {
         SpringApplication.run(JewelleryInventoryApplication.class, args);
     }
+
 }
