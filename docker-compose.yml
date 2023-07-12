@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  db:
+    container_name: postgres
+    image: jms-db
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      POSTGRES_DB: ${JMS_DATABASE_NAME}
+      POSTGRES_USER: ${JMS_DATABASE_USER}
+      POSTGRES_PASSWORD: ${JMS_DATABASE_PASSWORD}
+    ports:
+      - "5432:5432"
