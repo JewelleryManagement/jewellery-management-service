@@ -4,7 +4,8 @@ import lombok.Data;
 
 @Data
 public class LinkingPartDTO {
-    private String name;
-    private String quantityType;
-    private String description;
+  private long id;
+  private String name;
+  private String quantityType;
+  private String description;
 }

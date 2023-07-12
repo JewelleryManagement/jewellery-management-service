@@ -1,10 +1,8 @@
 package jewellery.inventory.dto;
 
-import jewellery.inventory.model.resources.ResourceInProduct;
-import lombok.Data;
-
 import java.util.List;
 import java.util.UUID;
+import lombok.Data;
 
 @Data
 public class ProductDTO {

@@ -8,13 +8,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GemstoneDTO {
-    private long id;
-    private String color;
-    private double carat;
-    private String cut;
-    private String clarity;
-    private double dimensionX;
-    private double dimensionY;
-    private double dimensionZ;
-    private String shape;
+  private long id;
+  private String color;
+  private double carat;
+  private String cut;
+  private String clarity;
+  private double dimensionX;
+  private double dimensionY;
+  private double dimensionZ;
+  private String shape;
 }

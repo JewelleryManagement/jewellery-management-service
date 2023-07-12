@@ -4,10 +4,11 @@ import lombok.Data;
 
 @Data
 public class PreciousMetalDTO {
-    private String name;
-    private String quantityType;
-    private String type;
-    private int purity;
-    private String color;
-    private String plating;
+  private long id;
+  private String name;
+  private String quantityType;
+  private String type;
+  private int purity;
+  private String color;
+  private String plating;
 }
