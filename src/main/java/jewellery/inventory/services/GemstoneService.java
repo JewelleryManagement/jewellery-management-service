@@ -1,10 +1,8 @@
 package jewellery.inventory.services;
 
-<<<<<<< Updated upstream
-import jewellery.inventory.DTO.GemstoneDTO;
-=======
+
 import jewellery.inventory.dto.GemstoneDTO;
->>>>>>> Stashed changes
+
 import jewellery.inventory.exeptions.ApiRequestException;
 import jewellery.inventory.model.resources.Gemstone;
 import jewellery.inventory.repositories.GemstoneRepository;
@@ -74,7 +72,4 @@ public class GemstoneService {
         return gemstoneToGemstoneDTO(findGemstone.get());
     }
 }
-<<<<<<< Updated upstream
 
-=======
->>>>>>> Stashed changes
