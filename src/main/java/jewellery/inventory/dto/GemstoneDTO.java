@@ -1,4 +1,3 @@
-
 package jewellery.inventory.dto;
 
 import lombok.AllArgsConstructor;
