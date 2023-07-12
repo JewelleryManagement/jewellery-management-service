@@ -1,7 +1,11 @@
 package jewellery.inventory.controller;
 
 import jakarta.validation.Valid;
+<<<<<<< Updated upstream
 import jewellery.inventory.DTO.GemstoneDTO;
+=======
+import jewellery.inventory.dto.GemstoneDTO;
+>>>>>>> Stashed changes
 import jewellery.inventory.model.resources.Gemstone;
 import jewellery.inventory.services.GemstoneService;
 import lombok.RequiredArgsConstructor;
