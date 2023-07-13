@@ -2,10 +2,10 @@ package jewellery.inventory.services;
 
 import jewellery.inventory.dto.ResourceDTO;
 import jewellery.inventory.exeptions.ApiRequestException;
+import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.model.resources.Resource;
 import jewellery.inventory.repositories.ResourceRepository;
 import lombok.AllArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,16 +17,14 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ResourceService {
     @Autowired
-    private final ModelMapper resourceMapper;
-    @Autowired
     private ResourceRepository resourceRepository;
 
     public ResourceDTO map(Resource resource) {
-        return resourceMapper.map(resource, ResourceDTO.class);
+        return ResourceMapper.map(resource);
     }
 
     public Resource map(ResourceDTO resourceDTO) {
-        return resourceMapper.map(resourceDTO, Resource.class);
+        return ResourceMapper.map(resourceDTO);
     }
 
     public List<ResourceDTO> getAllResource() {
@@ -60,7 +58,7 @@ public class ResourceService {
         if (findResource.isEmpty()) {
             throw new ApiRequestException("Resource not found");
         }
-        findResource.get().setName(resourceDTO.getName());
+        findResource.get().setClazz(resourceDTO.getClazz());
         findResource.get().setQuantityType(resourceDTO.getQuantityType());
 
         resourceRepository.save(findResource.get());

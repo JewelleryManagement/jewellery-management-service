@@ -1,12 +1,14 @@
 package jewellery.inventory.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-@Data
+
+@Getter
+@Setter
+@ToString(callSuper = true)
+@SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
 public class GemstoneDTO extends ResourceDTO{
   private String color;
   private double carat;

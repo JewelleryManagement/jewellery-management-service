@@ -1,11 +1,14 @@
 package jewellery.inventory.dto;
 
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-@Data
+@Getter
+@Setter
+@ToString(callSuper = true)
+@SuperBuilder
+@NoArgsConstructor
 public class PearlDTO extends ResourceDTO{
-  private String name;
-  private String quantityType;
   private String type;
   private double size;
   private String quality;

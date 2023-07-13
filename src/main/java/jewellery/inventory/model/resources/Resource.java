@@ -1,22 +1,25 @@
 package jewellery.inventory.model.resources;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
+import lombok.experimental.SuperBuilder;
+
 import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Getter
-@Setter
+@Data
+@SuperBuilder
+@NoArgsConstructor
 public class Resource {
 
     @Id
     @GeneratedValue
     private UUID id;
 
-    private String name;
+    private String clazz;
     private String quantityType;
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL)

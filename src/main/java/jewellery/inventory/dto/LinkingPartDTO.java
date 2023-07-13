@@ -1,10 +1,13 @@
 package jewellery.inventory.dto;
 
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-@Data
+@Getter
+@Setter
+@ToString(callSuper = true)
+@SuperBuilder
+@NoArgsConstructor
 public class LinkingPartDTO extends ResourceDTO{
-  private String name;
-  private String quantityType;
   private String description;
 }
