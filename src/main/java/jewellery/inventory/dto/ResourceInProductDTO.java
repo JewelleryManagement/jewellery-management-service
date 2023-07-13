@@ -5,8 +5,6 @@ import lombok.Data;
 
 @Data
 public class ResourceInProductDTO {
-  private UUID id;
-  private ResourceDTO resource;
+  private UUID resourceId;
   private double quantity;
-  private ProductDTO product;
 }

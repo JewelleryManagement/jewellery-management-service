@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GemstoneDTO {
-  private long id;
+public class GemstoneDTO extends ResourceDTO{
   private String color;
   private double carat;
   private String cut;

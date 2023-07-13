@@ -3,8 +3,7 @@ package jewellery.inventory.dto;
 import lombok.Data;
 
 @Data
-public class PearlDTO {
-  private long id;
+public class PearlDTO extends ResourceDTO{
   private String name;
   private String quantityType;
   private String type;
