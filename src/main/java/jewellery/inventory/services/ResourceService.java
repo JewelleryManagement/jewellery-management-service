@@ -58,10 +58,10 @@ public class ResourceService {
         if (findResource.isEmpty()) {
             throw new ApiRequestException("Resource not found");
         }
-        findResource.get().setClazz(resourceDTO.getClazz());
-        findResource.get().setQuantityType(resourceDTO.getQuantityType());
 
-        resourceRepository.save(findResource.get());
+        Resource toUpdate = ResourceMapper.map(resourceDTO);
+        toUpdate.setId(id);
+        resourceRepository.save(toUpdate);
         return map(findResource.get());
     }
 }

@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.util.UUID;
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "clazz", visible = true)
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "clazz", visible = true, include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = PearlDTO.class, name = "Pearl"),
         @JsonSubTypes.Type(value = GemstoneDTO.class, name = "Gemstone"),
@@ -18,7 +19,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 public class ResourceDTO {
-  private UUID id;
-  private String clazz;
-  private String quantityType;
+    private UUID id;
+    private String clazz;
+    private String quantityType;
 }
