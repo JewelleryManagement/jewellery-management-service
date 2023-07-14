@@ -4,13 +4,14 @@ import jewellery.inventory.model.resources.ResourceInUser;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Getter
 @Setter
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue
@@ -19,9 +20,9 @@ public class User {
     private String name;
     private String email;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     private List<Product> productsOwned;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     private List<ResourceInUser> resourcesOwned;
 }
