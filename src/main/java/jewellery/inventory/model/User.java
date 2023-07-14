@@ -1,5 +1,8 @@
 package jewellery.inventory.model;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import jewellery.inventory.model.resources.ResourceInUser;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,16 +16,27 @@ import java.util.UUID;
 @Setter
 @Table(name = "users")
 public class User {
-    @Id
-    @GeneratedValue
-    private UUID id;
 
-    private String name;
-    private String email;
+  @Id
+  @GeneratedValue
+  private UUID id;
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-    private List<Product> productsOwned;
+  @NotEmpty
+  @Size(min = 3, max = 64)
+  @Pattern(regexp = "^(?!.*__)[A-Za-z0-9_]*$",
+           message = "Name must only contain alphanumeric characters and underscores, and no consecutive underscores.")
+  @Column(unique = true)
+  private String name;
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-    private List<ResourceInUser> resourcesOwned;
+  @NotEmpty
+  @Pattern(regexp = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$",
+           message = "Email must be valid.")
+  @Column(unique = true)
+  private String email;
+
+  @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
+  private List<Product> productsOwned;
+
+  @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
+  private List<ResourceInUser> resourcesOwned;
 }
