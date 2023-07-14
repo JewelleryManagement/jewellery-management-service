@@ -112,7 +112,7 @@ public class ResourceMapper {
 
     private static PreciousMetalDTO map(PreciousMetal preciousMetal) {
         return PreciousMetalDTO.builder()
-                .id(null)
+                .id(preciousMetal.getId())
                 .clazz(preciousMetal.getClazz())
                 .quantityType(preciousMetal.getQuantityType())
                 .type(preciousMetal.getType())
