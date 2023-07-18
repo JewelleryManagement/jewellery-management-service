@@ -6,8 +6,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class PreciousMetal extends Resource {
-    private String type;
-    private int purity;
-    private String color;
-    private String plating;
+  private String type;
+  private int purity;
+  private String color;
+  private String plating;
 }
