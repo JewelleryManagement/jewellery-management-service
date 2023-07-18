@@ -1,4 +1,4 @@
-package jewellery.inventory.repositories;
+package jewellery.inventory.repository;
 
 import java.util.Optional;
 import java.util.UUID;

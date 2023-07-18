@@ -1,5 +1,7 @@
 package jewellery.inventory.controller;
 
+import static jewellery.inventory.constant.ApplicationConstants.DUPLICATE_NAME_ERROR_MSG;
+import static jewellery.inventory.constant.ApplicationConstants.USER_NOT_FOUND_ERROR_MSG;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -13,7 +15,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import jewellery.inventory.exceptions.UserNotFoundException;
+import jewellery.inventory.exception.DuplicateNameException;
+import jewellery.inventory.exception.UserNotFoundException;
 import jewellery.inventory.model.User;
 import jewellery.inventory.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,7 +80,7 @@ class UserControllerTest {
   @Test
   void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
     when(userService.getUser(userId))
-        .thenThrow(new UserNotFoundException("User not found with id: " + userId));
+        .thenThrow(new UserNotFoundException(USER_NOT_FOUND_ERROR_MSG + userId));
 
     mockMvc.perform(get(USERS_PATH + "/{id}", userId)).andExpect(status().isNotFound());
   }
@@ -105,7 +108,7 @@ class UserControllerTest {
   void shouldReturnBadRequestWhenCreatingUserWithInvalidName() throws Exception {
     User invalidUser = new User();
     invalidUser.setName("__"); // Name can't have consecutive underscores
-    invalidUser.setEmail("invalid@mail.com"); // valid mail
+    invalidUser.setEmail("valid@mail.com"); // valid mail
     mockMvc
         .perform(
             post(USERS_PATH)
@@ -155,7 +158,7 @@ class UserControllerTest {
   @Test
   void shouldReturnNotFoundWhenUpdatingNonExistingUser() throws Exception {
     when(userService.updateUser(any(User.class)))
-        .thenThrow(new UserNotFoundException("User not found with id: " + userId));
+        .thenThrow(new UserNotFoundException(USER_NOT_FOUND_ERROR_MSG + userId));
 
     mockMvc
         .perform(
@@ -163,6 +166,31 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenUpdatingWithDuplicateName() throws Exception {
+    userService.createUser(user);
+
+    UUID updatingUserId = UUID.randomUUID();
+    User updatingUser = new User();
+    updatingUser.setId(updatingUserId);
+    updatingUser.setName("newUser");
+    updatingUser.setEmail("updating@example.com");
+    userService.createUser(updatingUser);
+
+    updatingUser.setName("John"); // duplicate name
+    updatingUser.setEmail("updating@example.com");
+
+    when(userService.updateUser(any(User.class)))
+        .thenThrow(new DuplicateNameException(DUPLICATE_NAME_ERROR_MSG));
+
+    mockMvc
+        .perform(
+            put(USERS_PATH + "/{id}", updatingUserId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updatingUser)))
+        .andExpect(status().isBadRequest());
   }
 
   @Test
@@ -174,7 +202,7 @@ class UserControllerTest {
 
   @Test
   void shouldReturnNotFoundWhenDeletingNonExistingUser() throws Exception {
-    doThrow(new UserNotFoundException("User not found with id: " + userId))
+    doThrow(new UserNotFoundException(USER_NOT_FOUND_ERROR_MSG + userId))
         .when(userService)
         .deleteUser(userId);
 

@@ -3,6 +3,8 @@ package jewellery.inventory.controller;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.dto.UserDto;
+import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,15 +36,16 @@ public class UserController {
   }
 
   @PostMapping
-  public User createUser(@Valid @RequestBody User user) {
-    return userService.createUser(user);
+  public User createUser(@Valid @RequestBody UserDto user) {
+    return userService.createUser(UserMapper.INSTANCE.toEntity(user));
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<User> updateUser(@PathVariable UUID id, @Valid @RequestBody User user) {
+  public ResponseEntity<User> updateUser(
+      @PathVariable UUID id, @Valid @RequestBody UserDto userDto) {
+    User user = UserMapper.INSTANCE.toEntity(userDto);
     user.setId(id);
-    User updatedUser = userService.updateUser(user);
-    return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+    return new ResponseEntity<>(userService.updateUser(user), HttpStatus.OK);
   }
 
   @DeleteMapping("/{id}")

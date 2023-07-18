@@ -7,11 +7,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import jewellery.inventory.exceptions.DuplicateEmailException;
-import jewellery.inventory.exceptions.DuplicateNameException;
-import jewellery.inventory.exceptions.UserNotFoundException;
+import jewellery.inventory.exception.DuplicateEmailException;
+import jewellery.inventory.exception.DuplicateNameException;
+import jewellery.inventory.exception.UserNotFoundException;
 import jewellery.inventory.model.User;
-import jewellery.inventory.repositories.UserRepository;
+import jewellery.inventory.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -132,6 +132,46 @@ class UserServiceTest {
     assertEquals(user, updatedUser);
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, times(1)).save(user);
+  }
+
+  @Test
+  void shouldThrowWhenUpdatingWithDuplicateName() {
+    UUID existingUserId = UUID.randomUUID();
+    User existingUser = new User();
+    existingUser.setId(existingUserId);
+    existingUser.setName("existing");
+    existingUser.setEmail("existing@example.com");
+
+    UUID updatingUserId = UUID.randomUUID();
+    User updatingUser = new User();
+    updatingUser.setId(updatingUserId);
+    updatingUser.setName("existing");  // duplicate name
+    updatingUser.setEmail("updating@example.com");
+
+    when(userRepository.findById(updatingUserId)).thenReturn(Optional.of(updatingUser));
+    when(userRepository.findByName("existing")).thenReturn(Optional.of(existingUser));
+
+    assertThrows(DuplicateNameException.class, () -> userService.updateUser(updatingUser));
+  }
+
+  @Test
+  void shouldThrowWhenUpdatingWithDuplicateEmail() {
+    UUID existingUserId = UUID.randomUUID();
+    User existingUser = new User();
+    existingUser.setId(existingUserId);
+    existingUser.setName("existing");
+    existingUser.setEmail("existing@example.com");
+
+    UUID updatingUserId = UUID.randomUUID();
+    User updatingUser = new User();
+    updatingUser.setId(updatingUserId);
+    updatingUser.setName("updating");
+    updatingUser.setEmail("existing@example.com");
+
+    when(userRepository.findById(updatingUserId)).thenReturn(Optional.of(updatingUser));
+    when(userRepository.findByEmail("existing@example.com")).thenReturn(Optional.of(existingUser));
+
+    assertThrows(DuplicateEmailException.class, () -> userService.updateUser(updatingUser));
   }
 
   @Test
