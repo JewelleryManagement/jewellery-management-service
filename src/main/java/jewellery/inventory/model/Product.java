@@ -1,6 +1,6 @@
 package jewellery.inventory.model;
 
-import jewellery.inventory.model.resources.ResourceInProduct;
+import jewellery.inventory.model.resource.ResourceInProduct;
 import lombok.Getter;
 import lombok.Setter;
 

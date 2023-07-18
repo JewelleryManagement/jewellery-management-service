@@ -1,10 +1,10 @@
-package jewellery.inventory.services;
+package jewellery.inventory.service;
 
 import jewellery.inventory.dto.ResourceDTO;
-import jewellery.inventory.exeptions.ApiRequestException;
+import jewellery.inventory.exeption.ApiRequestException;
 import jewellery.inventory.mapper.ResourceMapper;
-import jewellery.inventory.model.resources.Resource;
-import jewellery.inventory.repositories.ResourceRepository;
+import jewellery.inventory.model.resource.Resource;
+import jewellery.inventory.repository.ResourceRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,11 +19,11 @@ public class ResourceService {
     @Autowired
     private ResourceRepository resourceRepository;
 
-    public ResourceDTO map(Resource resource) {
+    private ResourceDTO map(Resource resource) {
         return ResourceMapper.map(resource);
     }
 
-    public Resource map(ResourceDTO resourceDTO) {
+    private Resource map(ResourceDTO resourceDTO) {
         return ResourceMapper.map(resourceDTO);
     }
 
@@ -33,8 +33,7 @@ public class ResourceService {
     }
 
     public ResourceDTO createResource(ResourceDTO resourceDTO) {
-        resourceRepository.save(map(resourceDTO));
-        return resourceDTO;
+        return map(resourceRepository.save(map(resourceDTO)));
     }
 
     public ResourceDTO getResourceById(UUID id) {
@@ -61,7 +60,6 @@ public class ResourceService {
 
         Resource toUpdate = ResourceMapper.map(resourceDTO);
         toUpdate.setId(id);
-        resourceRepository.save(toUpdate);
-        return map(findResource.get());
+        return map(resourceRepository.save(toUpdate));
     }
 }

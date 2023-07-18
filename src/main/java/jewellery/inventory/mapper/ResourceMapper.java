@@ -1,8 +1,8 @@
 package jewellery.inventory.mapper;
 
 import jewellery.inventory.dto.*;
-import jewellery.inventory.exeptions.MappingException;
-import jewellery.inventory.model.resources.*;
+import jewellery.inventory.exeption.MappingException;
+import jewellery.inventory.model.resource.*;
 
 public class ResourceMapper {
     private ResourceMapper() {

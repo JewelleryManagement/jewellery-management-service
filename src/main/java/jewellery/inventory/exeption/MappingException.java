@@ -1,4 +1,4 @@
-package jewellery.inventory.exeptions;
+package jewellery.inventory.exeption;
 
 public class MappingException extends RuntimeException {
     public MappingException(String message) {

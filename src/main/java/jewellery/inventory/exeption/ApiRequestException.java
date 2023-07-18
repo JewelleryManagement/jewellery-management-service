@@ -1,4 +1,4 @@
-package jewellery.inventory.exeptions;
+package jewellery.inventory.exeption;
 
 public class ApiRequestException extends RuntimeException {
     public ApiRequestException(String message) {

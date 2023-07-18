@@ -1,4 +1,4 @@
-package jewellery.inventory.model.resources;
+package jewellery.inventory.model.resource;
 
 import jakarta.persistence.Entity;
 import lombok.*;

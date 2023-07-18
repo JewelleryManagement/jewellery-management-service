@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import jewellery.inventory.dto.ResourceDTO;
-import jewellery.inventory.services.ResourceService;
+import jewellery.inventory.service.ResourceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
