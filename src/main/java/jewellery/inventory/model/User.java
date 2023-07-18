@@ -12,10 +12,7 @@ import lombok.Setter;
 @Setter
 @Table(name = "users")
 public class User {
-
-  @Id
-  @GeneratedValue
-  private UUID id;
+  @Id @GeneratedValue private UUID id;
 
   @Column(unique = true)
   private String name;

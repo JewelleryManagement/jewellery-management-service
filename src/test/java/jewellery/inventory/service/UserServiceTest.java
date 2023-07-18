@@ -145,7 +145,7 @@ class UserServiceTest {
     UUID updatingUserId = UUID.randomUUID();
     User updatingUser = new User();
     updatingUser.setId(updatingUserId);
-    updatingUser.setName("existing");  // duplicate name
+    updatingUser.setName("existing"); // duplicate name
     updatingUser.setEmail("updating@example.com");
 
     when(userRepository.findById(updatingUserId)).thenReturn(Optional.of(updatingUser));
