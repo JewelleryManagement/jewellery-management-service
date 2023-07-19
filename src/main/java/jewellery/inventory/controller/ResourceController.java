@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
-@RequestMapping("/api/v1/resources")
+@RequestMapping("/resources")
 @RequiredArgsConstructor
 public class ResourceController {
 
@@ -24,7 +24,7 @@ public class ResourceController {
 
   @GetMapping
   public ResponseEntity<List<ResourceDTO>> getAllResources() {
-    return ResponseEntity.ok(resourceService.getAllResource());
+    return ResponseEntity.ok(resourceService.getAllResources());
   }
 
   @GetMapping("/{id}")
@@ -37,7 +37,7 @@ public class ResourceController {
       @RequestBody @Valid ResourceDTO resourceDTO, UriComponentsBuilder uriComponentsBuilder) {
     URI location =
         uriComponentsBuilder
-            .path("/api/v1/resources/{id}")
+            .path("/resources/{id}")
             .buildAndExpand(resourceService.createResource(resourceDTO).getId())
             .toUri();
     return ResponseEntity.created(location).build();

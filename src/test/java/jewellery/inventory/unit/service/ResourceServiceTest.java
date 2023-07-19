@@ -43,7 +43,7 @@ class ResourceServiceTest {
   void willGetAllResources() {
     when(resourceRepository.findAll()).thenReturn(provideResources().toList());
 
-    List<ResourceDTO> actualResourceDtos = resourceService.getAllResource();
+    List<ResourceDTO> actualResourceDtos = resourceService.getAllResources();
 
     assertEquals(provideResources().toList().size(), actualResourceDtos.size());
     verify(resourceRepository, times(1)).findAll();

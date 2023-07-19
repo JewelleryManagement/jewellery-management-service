@@ -27,7 +27,7 @@ public class ResourceService {
         return ResourceMapper.map(resourceDTO);
     }
 
-    public List<ResourceDTO> getAllResource() {
+    public List<ResourceDTO> getAllResources() {
         List<Resource> resources = resourceRepository.findAll();
         return resources.stream().map(this::map).toList();
     }
