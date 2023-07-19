@@ -1,8 +1,7 @@
 package jewellery.inventory.model.resource;
 
-import lombok.*;
-
 import jakarta.persistence.Entity;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @EqualsAndHashCode(callSuper = true)
@@ -13,12 +12,12 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 public class Gemstone extends Resource {
-    private String color;
-    private double carat;
-    private String cut;
-    private String clarity;
-    private double dimensionX;
-    private double dimensionY;
-    private double dimensionZ;
-    private String shape;
+  private String color;
+  private double carat;
+  private String cut;
+  private String clarity;
+  private double dimensionX;
+  private double dimensionY;
+  private double dimensionZ;
+  private String shape;
 }

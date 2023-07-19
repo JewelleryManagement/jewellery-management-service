@@ -13,15 +13,11 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ResourceInUser {
-    @Id
-    @GeneratedValue
-    private UUID id;
+  @Id @GeneratedValue private UUID id;
 
-    @ManyToOne
-    private User owner;
+  @ManyToOne private User owner;
 
-    @ManyToOne
-    private Resource resource;
+  @ManyToOne private Resource resource;
 
-    private double quantity;
+  private double quantity;
 }
