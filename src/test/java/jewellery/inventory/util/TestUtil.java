@@ -1,11 +1,10 @@
 package jewellery.inventory.util;
 
+import java.util.UUID;
+import java.util.stream.Stream;
 import jewellery.inventory.dto.*;
 import jewellery.inventory.model.resource.*;
 import org.junit.jupiter.params.provider.Arguments;
-
-import java.util.UUID;
-import java.util.stream.Stream;
 
 public class TestUtil {
   private static final UUID RESOURCE_ID = UUID.randomUUID();
@@ -183,6 +182,14 @@ public class TestUtil {
         Arguments.of(getLinkingPart(), getUpdatedLinkingPartDTO()),
         Arguments.of(getPearl(), getUpdatedPearlDTO()),
         Arguments.of(getPreciousMetal(), getUpdatedPreciousMetalDTO()));
+  }
+
+  public static Stream<ResourceDTO> provideUpdatedResourceDtos() {
+    return Stream.of(
+        getUdpatedGemstoneDTO(),
+        getUpdatedLinkingPartDTO(),
+        getUpdatedPearlDTO(),
+        getUpdatedPreciousMetalDTO());
   }
 
   public static Stream<ResourceDTO> provideResourceDtos() {
