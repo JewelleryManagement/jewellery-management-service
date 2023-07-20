@@ -1,20 +1,28 @@
 package jewellery.inventory.controller;
 
-import static jewellery.inventory.constant.ApplicationConstants.DUPLICATE_NAME_ERROR_MSG;
-import static jewellery.inventory.constant.ApplicationConstants.USER_NOT_FOUND_ERROR_MSG;
+import static jewellery.inventory.helper.UserTestHelper.createInvalidUserRequest;
+import static jewellery.inventory.helper.UserTestHelper.createTestUser;
+import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
+import static jewellery.inventory.helper.UserTestHelper.createTestUserWithStaticId;
+import static jewellery.inventory.helper.UserTestHelper.jsonToListOfUserResponse;
+import static jewellery.inventory.helper.UserTestHelper.jsonToUserResponse;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.dto.UserRequest;
+import jewellery.inventory.dto.UserResponse;
+import jewellery.inventory.exception.DuplicateEmailException;
 import jewellery.inventory.exception.DuplicateNameException;
 import jewellery.inventory.exception.UserNotFoundException;
 import jewellery.inventory.model.User;
@@ -22,7 +30,6 @@ import jewellery.inventory.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -30,25 +37,23 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 @WebMvcTest(UserController.class)
-@AutoConfigureMockMvc
 class UserControllerTest {
-  @Autowired private MockMvc mockMvc;
-
   @MockBean private UserService userService;
+  @Autowired private MockMvc mockMvc;
+  @Autowired private ObjectMapper objectMapper;
 
   private User user;
+  private UserRequest userRequest;
   private UUID userId;
-  private ObjectMapper objectMapper;
+
   private static final String USERS_PATH = "/users";
+  private static final String USER_NOT_FOUND_ERROR_MSG = "User not found with id: ";
 
   @BeforeEach
   public void setup() {
     userId = UUID.randomUUID();
-    user = new User();
-    user.setId(userId);
-    user.setName("John");
-    user.setEmail("john@example.com");
-    objectMapper = new ObjectMapper();
+    user = createTestUser();
+    userRequest = createTestUserRequest();
   }
 
   @Test
@@ -56,9 +61,8 @@ class UserControllerTest {
     when(userService.getAllUsers()).thenReturn(Collections.singletonList(user));
 
     MvcResult mvcResult = mockMvc.perform(get(USERS_PATH)).andExpect(status().isOk()).andReturn();
-
-    String responseBody = mvcResult.getResponse().getContentAsString();
-    List<User> userList = objectMapper.readValue(responseBody, new TypeReference<>() {});
+    List<UserResponse> userList =
+        jsonToListOfUserResponse(mvcResult.getResponse().getContentAsString(), objectMapper);
 
     assertEquals(1, userList.size());
     assertEquals(user.getId(), userList.get(0).getId());
@@ -70,9 +74,8 @@ class UserControllerTest {
 
     MvcResult mvcResult =
         mockMvc.perform(get(USERS_PATH + "/{id}", userId)).andExpect(status().isOk()).andReturn();
-
     String responseBody = mvcResult.getResponse().getContentAsString();
-    User userFromResponse = objectMapper.readValue(responseBody, User.class);
+    UserResponse userFromResponse = jsonToUserResponse(responseBody, objectMapper);
 
     assertEquals(user.getId(), userFromResponse.getId());
   }
@@ -94,26 +97,28 @@ class UserControllerTest {
             .perform(
                 post(USERS_PATH)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(user)))
+                    .content(objectMapper.writeValueAsString(userRequest)))
             .andExpect(status().isOk())
             .andReturn();
 
     String responseBody = mvcResult.getResponse().getContentAsString();
-    User userFromResponse = objectMapper.readValue(responseBody, User.class);
+    UserResponse userFromResponse = jsonToUserResponse(responseBody, objectMapper);
 
     assertEquals(user.getId(), userFromResponse.getId());
+    assertEquals(userRequest.getName(), userFromResponse.getName());
+    assertEquals(userRequest.getEmail(), userFromResponse.getEmail());
   }
 
   @Test
   void shouldReturnBadRequestWhenCreatingUserWithInvalidName() throws Exception {
-    User invalidUser = new User();
-    invalidUser.setName("__"); // Name can't have consecutive underscores
-    invalidUser.setEmail("valid@mail.com"); // valid mail
+    userRequest = createInvalidUserRequest();
+    userRequest.setName("__"); // Name can't have consecutive underscores
+    userRequest.setEmail("valid@mail.com"); // valid email
     mockMvc
         .perform(
             post(USERS_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidUser)))
+                .content(objectMapper.writeValueAsString(userRequest)))
         .andExpect(status().isBadRequest());
   }
 
@@ -132,12 +137,36 @@ class UserControllerTest {
   }
 
   @Test
-  void shouldUpdateUser() throws Exception {
-    User updatedUser = new User();
-    updatedUser.setId(userId);
-    updatedUser.setName("Updated_John");
-    updatedUser.setEmail("updatedjohn@example.com");
+  void shouldReturnBadRequestWhenCreatingUserWithExistingName() throws Exception {
+    when(userService.createUser(any(User.class)))
+        .thenThrow(new DuplicateNameException());
 
+    mockMvc
+        .perform(
+            post(USERS_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userRequest)))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().string(containsString("User with that name already exists")));
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenCreatingUserWithExistingEmail() throws Exception {
+    when(userService.createUser(any(User.class)))
+        .thenThrow(new DuplicateEmailException());
+
+    mockMvc
+        .perform(
+            post(USERS_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userRequest)))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().string(containsString("Email already exists")));
+  }
+
+  @Test
+  void shouldUpdateUser() throws Exception {
+    User updatedUser = createTestUserWithStaticId();
     when(userService.updateUser(any(User.class))).thenReturn(updatedUser);
 
     MvcResult mvcResult =
@@ -145,14 +174,16 @@ class UserControllerTest {
             .perform(
                 put(USERS_PATH + "/{id}", userId)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(updatedUser)))
+                    .content(objectMapper.writeValueAsString(userRequest)))
             .andExpect(status().isOk())
             .andReturn();
 
     String responseBody = mvcResult.getResponse().getContentAsString();
-    User userFromResponse = objectMapper.readValue(responseBody, User.class);
+    UserResponse userFromResponse = objectMapper.readValue(responseBody, UserResponse.class);
 
     assertEquals(updatedUser.getId(), userFromResponse.getId());
+    assertEquals(updatedUser.getName(), userFromResponse.getName());
+    assertEquals(updatedUser.getEmail(), userFromResponse.getEmail());
   }
 
   @Test
@@ -169,34 +200,36 @@ class UserControllerTest {
   }
 
   @Test
-  void shouldReturnBadRequestWhenUpdatingWithDuplicateName() throws Exception {
-    userService.createUser(user);
-
-    UUID updatingUserId = UUID.randomUUID();
-    User updatingUser = new User();
-    updatingUser.setId(updatingUserId);
-    updatingUser.setName("newUser");
-    updatingUser.setEmail("updating@example.com");
-    userService.createUser(updatingUser);
-
-    updatingUser.setName("John"); // duplicate name
-    updatingUser.setEmail("updating@example.com");
-
+  void shouldReturnBadRequestWhenUpdatingUserWithExistingName() throws Exception {
     when(userService.updateUser(any(User.class)))
-        .thenThrow(new DuplicateNameException(DUPLICATE_NAME_ERROR_MSG));
+        .thenThrow(new DuplicateNameException());
 
     mockMvc
         .perform(
-            put(USERS_PATH + "/{id}", updatingUserId)
+            put(USERS_PATH + "/{id}", userId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updatingUser)))
-        .andExpect(status().isBadRequest());
+                .content(objectMapper.writeValueAsString(userRequest)))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().string(containsString("User with that name already exists")));
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenUpdatingUserWithExistingEmail() throws Exception {
+    when(userService.updateUser(any(User.class)))
+        .thenThrow(new DuplicateEmailException());
+
+    mockMvc
+        .perform(
+            put(USERS_PATH + "/{id}", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userRequest)))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().string(containsString("Email already exists")));
   }
 
   @Test
   void shouldDeleteUser() throws Exception {
     doNothing().when(userService).deleteUser(userId);
-
     mockMvc.perform(delete(USERS_PATH + "/{id}", userId)).andExpect(status().isNoContent());
   }
 

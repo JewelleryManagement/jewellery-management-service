@@ -1,9 +1,5 @@
 package jewellery.inventory.service;
 
-import static jewellery.inventory.constant.ApplicationConstants.DUPLICATE_EMAIL_ERROR_MSG;
-import static jewellery.inventory.constant.ApplicationConstants.DUPLICATE_NAME_ERROR_MSG;
-import static jewellery.inventory.constant.ApplicationConstants.USER_NOT_FOUND_ERROR_MSG;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
+  static final String USER_NOT_FOUND_ERROR_MSG = "User not found with id: ";
   @Autowired private UserRepository userRepository;
 
   public List<User> getAllUsers() {
@@ -31,11 +28,11 @@ public class UserService {
 
   public User createUser(User user) {
     if (checkIfEmailExists(user.getEmail())) {
-      throw new DuplicateEmailException(DUPLICATE_EMAIL_ERROR_MSG);
+      throw new DuplicateEmailException();
     }
 
     if (checkIfNameExists(user.getName())) {
-      throw new DuplicateNameException(DUPLICATE_NAME_ERROR_MSG);
+      throw new DuplicateNameException();
     }
     return userRepository.save(user);
   }
@@ -46,11 +43,11 @@ public class UserService {
     }
 
     if (checkIfNameExists(user.getName(), user.getId())) {
-      throw new DuplicateNameException(DUPLICATE_NAME_ERROR_MSG);
+      throw new DuplicateNameException();
     }
 
     if (checkIfEmailExists(user.getEmail(), user.getId())) {
-      throw new DuplicateEmailException(DUPLICATE_EMAIL_ERROR_MSG);
+      throw new DuplicateEmailException();
     }
 
     return userRepository.save(user);

@@ -3,7 +3,8 @@ package jewellery.inventory.controller;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
-import jewellery.inventory.dto.UserDto;
+import jewellery.inventory.dto.UserRequest;
+import jewellery.inventory.dto.UserResponse;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.service.UserService;
@@ -25,27 +26,34 @@ public class UserController {
   @Autowired private UserService userService;
 
   @GetMapping
-  public List<User> getAllUsers() {
-    return userService.getAllUsers();
+  public ResponseEntity<List<UserResponse>> getAllUsers() {
+    List<UserResponse> userResponseList =
+        UserMapper.INSTANCE.toUserResponseList(userService.getAllUsers());
+    return ResponseEntity.ok(userResponseList);
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<User> getUser(@PathVariable UUID id) {
-    User user = userService.getUser(id);
-    return new ResponseEntity<>(user, HttpStatus.OK);
+  public ResponseEntity<UserResponse> getUser(@PathVariable UUID id) {
+    UserResponse userResponse = UserMapper.INSTANCE.toUserResponse(userService.getUser(id));
+    return ResponseEntity.ok(userResponse);
   }
 
   @PostMapping
-  public User createUser(@Valid @RequestBody UserDto user) {
-    return userService.createUser(UserMapper.INSTANCE.toEntity(user));
+  public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest newUser) {
+    UserResponse userResponse =
+        UserMapper.INSTANCE.toUserResponse(
+            userService.createUser(UserMapper.INSTANCE.toUserEntity(newUser)));
+    return ResponseEntity.ok(userResponse);
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<User> updateUser(
-      @PathVariable UUID id, @Valid @RequestBody UserDto userDto) {
-    User user = UserMapper.INSTANCE.toEntity(userDto);
-    user.setId(id);
-    return new ResponseEntity<>(userService.updateUser(user), HttpStatus.OK);
+  public ResponseEntity<UserResponse> updateUser(
+      @PathVariable UUID id, @Valid @RequestBody UserRequest userRequest) {
+    User userToUpdate = UserMapper.INSTANCE.toUserEntity(userRequest);
+    userToUpdate.setId(id);
+    UserResponse userResponse =
+        UserMapper.INSTANCE.toUserResponse(userService.updateUser(userToUpdate));
+    return ResponseEntity.ok(userResponse);
   }
 
   @DeleteMapping("/{id}")
