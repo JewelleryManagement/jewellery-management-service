@@ -161,7 +161,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(userRequest)))
         .andExpect(status().isBadRequest())
-        .andExpect(content().string(containsString("Email already exists")));
+        .andExpect(content().string(containsString("User with that email already exists")));
   }
 
   @Test
@@ -224,7 +224,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(userRequest)))
         .andExpect(status().isBadRequest())
-        .andExpect(content().string(containsString("Email already exists")));
+        .andExpect(content().string(containsString("User with that email already exists")));
   }
 
   @Test
