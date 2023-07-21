@@ -36,11 +36,25 @@ public class UserTestHelper {
     return userRequest;
   }
 
+  public static UserRequest createDifferentUserRequest(){
+    UserRequest userRequest = new UserRequest();
+    userRequest.setName("different_user");
+    userRequest.setEmail("user@example.com");
+    return userRequest;
+  }
+
   public static UserRequest createInvalidUserRequest() {
     UserRequest invalidUserRequest = new UserRequest();
     invalidUserRequest.setName("__");
     invalidUserRequest.setEmail("valid@mail.com");
     return invalidUserRequest;
+  }
+
+  public static UserResponse createUserResponse(){
+    UserResponse userResponse = new UserResponse();
+    userResponse.setName("john");
+    userResponse.setEmail("john@example.com");
+    return userResponse;
   }
 
   public static UserResponse jsonToUserResponse(String json, ObjectMapper objectMapper) {
