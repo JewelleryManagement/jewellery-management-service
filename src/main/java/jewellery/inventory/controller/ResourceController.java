@@ -5,7 +5,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
-import jewellery.inventory.dto.ResourceDTO;
+import jewellery.inventory.dto.request.resource.ResourceRequestDto;
+import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.service.ResourceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,30 +24,30 @@ public class ResourceController {
   private final ResourceService resourceService;
 
   @GetMapping
-  public ResponseEntity<List<ResourceDTO>> getAllResources() {
+  public ResponseEntity<List<ResourceResponseDto>> getAllResources() {
     return ResponseEntity.ok(resourceService.getAllResources());
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ResourceDTO> getResourceById(@PathVariable("id") UUID id) {
+  public ResponseEntity<ResourceResponseDto> getResourceById(@PathVariable("id") UUID id) {
     return ResponseEntity.ok(resourceService.getResourceById(id));
   }
 
   @PostMapping
-  public ResponseEntity<ResourceDTO> createResource(
-      @RequestBody @Valid ResourceDTO resourceDTO, UriComponentsBuilder uriComponentsBuilder) {
+  public ResponseEntity<ResourceResponseDto> createResource(
+          @RequestBody @Valid ResourceRequestDto resourceRequestDto, UriComponentsBuilder uriComponentsBuilder) {
     URI location =
         uriComponentsBuilder
             .path("/resources/{id}")
-            .buildAndExpand(resourceService.createResource(resourceDTO).getId())
+            .buildAndExpand(resourceService.createResource(resourceRequestDto).getId())
             .toUri();
     return ResponseEntity.created(location).build();
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<ResourceDTO> updateResource(
-      @PathVariable("id") UUID id, @Valid @RequestBody ResourceDTO resourceDTO) {
-    return ResponseEntity.ok(resourceService.updateResource(id, resourceDTO));
+  public ResponseEntity<ResourceResponseDto> updateResource(
+      @PathVariable("id") UUID id, @Valid @RequestBody ResourceRequestDto resourceRequestDto) {
+    return ResponseEntity.ok(resourceService.updateResource(id, resourceRequestDto));
   }
 
   @DeleteMapping("/{id}")

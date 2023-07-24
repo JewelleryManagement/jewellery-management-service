@@ -1,5 +1,6 @@
 package jewellery.inventory.unit.service;
 
+import static jewellery.inventory.mapper.ResourceMapper.map;
 import static jewellery.inventory.util.TestUtil.getGemstone;
 import static jewellery.inventory.util.TestUtil.provideResources;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,7 +11,8 @@ import static org.mockito.Mockito.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import jewellery.inventory.dto.ResourceDTO;
+import jewellery.inventory.dto.request.resource.ResourceRequestDto;
+import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.exeption.ApiRequestException;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceRepository;
@@ -29,13 +31,13 @@ class ResourceServiceTest {
   @InjectMocks private ResourceService resourceService;
 
   @ParameterizedTest
-  @MethodSource("jewellery.inventory.util.TestUtil#provideResourcesAndDtos")
-  void willSaveResource(Resource resourceFromDatabase, ResourceDTO inputResourceDTO) {
+  @MethodSource("jewellery.inventory.util.TestUtil#provideResourcesAndRequestDtos")
+  void willSaveResource(Resource resourceFromDatabase, ResourceRequestDto resourceRequestDto) {
     when(resourceRepository.save(any())).thenReturn(resourceFromDatabase);
-    inputResourceDTO.setId(null);
-    ResourceDTO actualResourceDto = resourceService.createResource(inputResourceDTO);
+    ResourceResponseDto actualResourceResponseDto =
+        resourceService.createResource(resourceRequestDto);
 
-    assertEquals(resourceFromDatabase.getId(), actualResourceDto.getId());
+    assertEquals(resourceFromDatabase.getId(), actualResourceResponseDto.getId());
     verify(resourceRepository, times(1)).save(any());
   }
 
@@ -43,37 +45,40 @@ class ResourceServiceTest {
   void willGetAllResources() {
     when(resourceRepository.findAll()).thenReturn(provideResources().toList());
 
-    List<ResourceDTO> actualResourceDtos = resourceService.getAllResources();
+    List<ResourceResponseDto> actualResourceResponseDtos = resourceService.getAllResources();
 
-    assertEquals(provideResources().toList().size(), actualResourceDtos.size());
+    assertEquals(provideResources().toList().size(), actualResourceResponseDtos.size());
     verify(resourceRepository, times(1)).findAll();
   }
 
   @ParameterizedTest
-  @MethodSource("jewellery.inventory.util.TestUtil#provideResourcesAndDtos")
-  void willGetAResource(Resource resourceFromDatabase, ResourceDTO expectedDto) {
+  @MethodSource("jewellery.inventory.util.TestUtil#provideResourcesAndRequestDtos")
+  void willGetAResource(Resource resourceFromDatabase, ResourceRequestDto expectedRequestDto) {
     when(resourceRepository.findById(resourceFromDatabase.getId()))
         .thenReturn(Optional.of(resourceFromDatabase));
 
-    ResourceDTO actualResourceDto = resourceService.getResourceById(expectedDto.getId());
+    ResourceResponseDto actualResourceResponseDto =
+        resourceService.getResourceById(resourceFromDatabase.getId());
 
     verify(resourceRepository, times(1)).findById(any());
-    assertEquals(expectedDto, actualResourceDto);
+    actualResourceResponseDto.setId(null);
+    assertEquals(map(map(expectedRequestDto)), actualResourceResponseDto);
   }
 
   @ParameterizedTest
-  @MethodSource("jewellery.inventory.util.TestUtil#provideResourcesAndUpdatedDtos")
-  void willUpdateAResource(Resource resourceFromDatabase, ResourceDTO expectedDto) {
+  @MethodSource("jewellery.inventory.util.TestUtil#provideUpdatedResourcesAndUpdatedRequestDtos")
+  void willUpdateAResource(Resource resourceFromDatabase, ResourceRequestDto expectedDto) {
     when(resourceRepository.findById(resourceFromDatabase.getId()))
         .thenReturn(Optional.of(resourceFromDatabase));
     when(resourceRepository.save(any())).thenReturn(resourceFromDatabase);
 
-    ResourceDTO actualResourceDto =
-        resourceService.updateResource(expectedDto.getId(), expectedDto);
+    ResourceResponseDto actualResourceResponseDto =
+        resourceService.updateResource(resourceFromDatabase.getId(), expectedDto);
 
     verify(resourceRepository, times(1)).findById(any());
     verify(resourceRepository, times(1)).save(any());
-    assertEquals(expectedDto, actualResourceDto);
+    actualResourceResponseDto.setId(null);
+    assertEquals(map(map(expectedDto)), actualResourceResponseDto);
   }
 
   @Test
@@ -100,7 +105,9 @@ class ResourceServiceTest {
 
     assertThrows(
         ApiRequestException.class,
-        () -> resourceService.updateResource(UUID.randomUUID(), ResourceDTO.builder().build()));
+        () ->
+            resourceService.updateResource(
+                UUID.randomUUID(), ResourceRequestDto.builder().build()));
   }
 
   @Test

@@ -2,7 +2,8 @@ package jewellery.inventory.util;
 
 import java.util.UUID;
 import java.util.stream.Stream;
-import jewellery.inventory.dto.*;
+import jewellery.inventory.dto.request.resource.*;
+import jewellery.inventory.dto.response.resource.*;
 import jewellery.inventory.model.resource.*;
 import org.junit.jupiter.params.provider.Arguments;
 
@@ -16,23 +17,33 @@ public class TestUtil {
   private static final String QUANTITY_TYPE_WEIGHT = "weight";
   private static final String QUANTITY_TYPE_LENGTH = "length";
   private static final String QUALITY = "AA";
+  public static final String UPDATED_QUALITY = QUALITY + "A";
   private static final String SHAPE_PEARL = "oval";
+  public static final String UPDATED_SHAPE_PEARL = SHAPE_PEARL + "ish";
   private static final String SHAPE_GEMSTONEL = "octagon";
   private static final String COLOR_PEARL = "black";
+  public static final String UPDATED_COLOR_PEARL = COLOR_PEARL + "ish";
   private static final String COLOR_METAL = "white";
+  public static final String UPDATED_COLOR_METAL = COLOR_METAL + "ish";
   private static final String COLOR_GEMSTONE = "ruby";
+  public static final String UPDATED_COLOR_GEMSTONE = COLOR_GEMSTONE + "ish";
   private static final String TYPE_PEARL = "Akoya";
   private static final String TYPE_METAL = "gold";
   private static final String PLATING = "silver";
+  public static final String UPDATED_PLATING = PLATING + "ish";
   private static final String CUT = "diamond";
   private static final Double DIMENSION_X = 4.5;
   private static final Double DIMENSION_Y = 4.9;
   private static final Double DIMENSION_Z = 2.5;
   private static final Double SIZE = 0.55;
   private static final Integer PURITY = 925;
+  public static final int UPDATED_PURITY = PURITY + 1;
   private static final Double CARAT_GEMSTONE = 5.0;
+  public static final double UPDATED_CARAT_GEMSTONE = CARAT_GEMSTONE + 2;
   private static final String CLARITY = "opaque";
+  public static final String UPDATED_CLARITY = CLARITY + "ish";
   private static final String DESCRIPTION = "A linking part made of gold";
+  public static final String UPDATED_DESCRIPTION = DESCRIPTION + " and \"real\" silver";
 
   private TestUtil() {}
 
@@ -87,8 +98,8 @@ public class TestUtil {
         .build();
   }
 
-  public static ResourceDTO getPearlDTO() {
-    return PearlDTO.builder()
+  public static ResourceResponseDto getPearlResponseDto() {
+    return PearlResponseDto.builder()
         .id(RESOURCE_ID)
         .clazz(CLAZZ_PEARL)
         .quantityType(QUANTITY_TYPE_UNIT)
@@ -100,16 +111,36 @@ public class TestUtil {
         .build();
   }
 
-  public static PearlDTO getUpdatedPearlDTO() {
-    PearlDTO pearlDTO = (PearlDTO) getPearlDTO();
-    pearlDTO.setColor(COLOR_PEARL + "ish");
-    pearlDTO.setQuality(QUALITY + "A");
-    pearlDTO.setShape(SHAPE_PEARL + "ish");
+  private static ResourceRequestDto getPearlRequestDto() {
+    return PearlRequestDto.builder()
+        .clazz(CLAZZ_PEARL)
+        .quantityType(QUANTITY_TYPE_UNIT)
+        .type(TYPE_PEARL)
+        .size(SIZE)
+        .quality(QUALITY)
+        .color(COLOR_PEARL)
+        .shape(SHAPE_PEARL)
+        .build();
+  }
+
+  public static PearlRequestDto getUpdatedPearlRequestDto() {
+    PearlRequestDto pearlDTO = (PearlRequestDto) getPearlRequestDto();
+    pearlDTO.setColor(UPDATED_COLOR_PEARL);
+    pearlDTO.setQuality(UPDATED_QUALITY);
+    pearlDTO.setShape(UPDATED_SHAPE_PEARL);
     return pearlDTO;
   }
 
-  public static ResourceDTO getPreciousMetalDTO() {
-    return PreciousMetalDTO.builder()
+  public static Pearl getUpdatedPearl() {
+    Pearl pearl = (Pearl) getPearl();
+    pearl.setColor(UPDATED_COLOR_PEARL);
+    pearl.setQuality(UPDATED_QUALITY);
+    pearl.setShape(UPDATED_SHAPE_PEARL);
+    return pearl;
+  }
+
+  public static ResourceResponseDto getPreciousMetalResponseDto() {
+    return PreciousMetalResponseDto.builder()
         .id(RESOURCE_ID)
         .clazz(CLAZZ_PRECIOUS_METAL)
         .quantityType(QUANTITY_TYPE_WEIGHT)
@@ -121,16 +152,37 @@ public class TestUtil {
         .build();
   }
 
-  public static PreciousMetalDTO getUpdatedPreciousMetalDTO() {
-    PreciousMetalDTO preciousMetalDTO = (PreciousMetalDTO) getPreciousMetalDTO();
-    preciousMetalDTO.setColor(COLOR_METAL + "ish");
-    preciousMetalDTO.setPlating(PLATING + "ish");
-    preciousMetalDTO.setPurity(PURITY + 1);
+  private static ResourceRequestDto getPreciousMetalRequestDto() {
+    return PreciousMetalRequestDto.builder()
+        .clazz(CLAZZ_PRECIOUS_METAL)
+        .quantityType(QUANTITY_TYPE_WEIGHT)
+        .type(TYPE_METAL)
+        .plating(PLATING)
+        .color(COLOR_METAL)
+        .type(TYPE_METAL)
+        .purity(PURITY)
+        .build();
+  }
+
+  public static PreciousMetalRequestDto getUpdatedPreciousMetalRequestDto() {
+    PreciousMetalRequestDto preciousMetalDTO =
+        (PreciousMetalRequestDto) getPreciousMetalRequestDto();
+    preciousMetalDTO.setColor(UPDATED_COLOR_METAL);
+    preciousMetalDTO.setPlating(UPDATED_PLATING);
+    preciousMetalDTO.setPurity(UPDATED_PURITY);
     return preciousMetalDTO;
   }
 
-  public static ResourceDTO getGemstoneDTO() {
-    return GemstoneDTO.builder()
+  public static PreciousMetal getUpdatedPreciousMetal() {
+    PreciousMetal preciousMetal = (PreciousMetal) getPreciousMetal();
+    preciousMetal.setColor(UPDATED_COLOR_METAL);
+    preciousMetal.setPlating(UPDATED_PLATING);
+    preciousMetal.setPurity(UPDATED_PURITY);
+    return preciousMetal;
+  }
+
+  public static ResourceResponseDto getGemstoneResponseDto() {
+    return GemstoneResponseDto.builder()
         .id(RESOURCE_ID)
         .clazz(CLAZZ_GEMSTONE)
         .quantityType(QUANTITY_TYPE_UNIT)
@@ -145,16 +197,39 @@ public class TestUtil {
         .build();
   }
 
-  public static GemstoneDTO getUdpatedGemstoneDTO() {
-    GemstoneDTO gemstoneDTO = (GemstoneDTO) getGemstoneDTO();
-    gemstoneDTO.setCarat(CARAT_GEMSTONE + 2);
-    gemstoneDTO.setClarity(CLARITY + "ish");
-    gemstoneDTO.setColor(COLOR_GEMSTONE + "ish");
+  public static ResourceRequestDto getGemstoneRequestDto() {
+    return GemstoneRequestDto.builder()
+        .clazz(CLAZZ_GEMSTONE)
+        .quantityType(QUANTITY_TYPE_UNIT)
+        .carat(CARAT_GEMSTONE)
+        .color(COLOR_GEMSTONE)
+        .cut(CUT)
+        .clarity(CLARITY)
+        .dimensionX(DIMENSION_X)
+        .dimensionY(DIMENSION_Y)
+        .dimensionZ(DIMENSION_Z)
+        .shape(SHAPE_GEMSTONEL)
+        .build();
+  }
+
+  public static GemstoneRequestDto getUdpatedGemstoneRequestDto() {
+    GemstoneRequestDto gemstoneDTO = (GemstoneRequestDto) getGemstoneRequestDto();
+    gemstoneDTO.setCarat(UPDATED_CARAT_GEMSTONE);
+    gemstoneDTO.setClarity(UPDATED_CLARITY);
+    gemstoneDTO.setColor(UPDATED_COLOR_GEMSTONE);
     return gemstoneDTO;
   }
 
-  public static ResourceDTO getLinkingPartDTO() {
-    return LinkingPartDTO.builder()
+  private static Resource getUpdatedGemstone() {
+    Gemstone gemstone = (Gemstone) getGemstone();
+    gemstone.setCarat(UPDATED_CARAT_GEMSTONE);
+    gemstone.setClarity(UPDATED_CLARITY);
+    gemstone.setColor(UPDATED_COLOR_GEMSTONE);
+    return gemstone;
+  }
+
+  public static ResourceResponseDto getLinkingPartResponseDto() {
+    return LinkingPartResponseDto.builder()
         .id(RESOURCE_ID)
         .clazz(CLAZZ_LINKING_PART)
         .quantityType(QUANTITY_TYPE_UNIT)
@@ -162,38 +237,64 @@ public class TestUtil {
         .build();
   }
 
-  public static LinkingPartDTO getUpdatedLinkingPartDTO() {
-    LinkingPartDTO linkingPartDTO = (LinkingPartDTO) getLinkingPartDTO();
-    linkingPartDTO.setDescription(DESCRIPTION + " and \"real\" silver");
+  private static ResourceRequestDto getLinkingPartRequestDto() {
+    return LinkingPartRequestDto.builder()
+        .clazz(CLAZZ_LINKING_PART)
+        .quantityType(QUANTITY_TYPE_UNIT)
+        .description(DESCRIPTION)
+        .build();
+  }
+
+  public static LinkingPartRequestDto getUpdatedLinkingPartRequestDto() {
+    LinkingPartRequestDto linkingPartDTO = (LinkingPartRequestDto) getLinkingPartRequestDto();
+    linkingPartDTO.setDescription(UPDATED_DESCRIPTION);
     return linkingPartDTO;
   }
 
-  public static Stream<Arguments> provideResourcesAndDtos() {
-    return Stream.of(
-        Arguments.of(getGemstone(), getGemstoneDTO()),
-        Arguments.of(getLinkingPart(), getLinkingPartDTO()),
-        Arguments.of(getPearl(), getPearlDTO()),
-        Arguments.of(getPreciousMetal(), getPreciousMetalDTO()));
+  public static LinkingPart getUpdatedLinkingPart() {
+    LinkingPart linkingPart = (LinkingPart) getLinkingPart();
+    linkingPart.setDescription(UPDATED_DESCRIPTION);
+    return linkingPart;
   }
 
-  public static Stream<Arguments> provideResourcesAndUpdatedDtos() {
+  public static Stream<Arguments> provideResourcesAndRequestDtos() {
     return Stream.of(
-        Arguments.of(getGemstone(), getUdpatedGemstoneDTO()),
-        Arguments.of(getLinkingPart(), getUpdatedLinkingPartDTO()),
-        Arguments.of(getPearl(), getUpdatedPearlDTO()),
-        Arguments.of(getPreciousMetal(), getUpdatedPreciousMetalDTO()));
+        Arguments.of(getGemstone(), getGemstoneRequestDto()),
+        Arguments.of(getLinkingPart(), getLinkingPartRequestDto()),
+        Arguments.of(getPearl(), getPearlRequestDto()),
+        Arguments.of(getPreciousMetal(), getPreciousMetalRequestDto()));
   }
 
-  public static Stream<ResourceDTO> provideUpdatedResourceDtos() {
+  public static Stream<Arguments> provideResourcesAndResponseDtos() {
     return Stream.of(
-        getUdpatedGemstoneDTO(),
-        getUpdatedLinkingPartDTO(),
-        getUpdatedPearlDTO(),
-        getUpdatedPreciousMetalDTO());
+        Arguments.of(getGemstone(), getGemstoneResponseDto()),
+        Arguments.of(getLinkingPart(), getLinkingPartResponseDto()),
+        Arguments.of(getPearl(), getPearlResponseDto()),
+        Arguments.of(getPreciousMetal(), getPreciousMetalResponseDto()));
   }
 
-  public static Stream<ResourceDTO> provideResourceDtos() {
-    return Stream.of(getGemstoneDTO(), getLinkingPartDTO(), getPearlDTO(), getPreciousMetalDTO());
+  public static Stream<Arguments> provideUpdatedResourcesAndUpdatedRequestDtos() {
+    return Stream.of(
+        Arguments.of(getUpdatedGemstone(), getUdpatedGemstoneRequestDto()),
+        Arguments.of(getUpdatedLinkingPart(), getUpdatedLinkingPartRequestDto()),
+        Arguments.of(getUpdatedPearl(), getUpdatedPearlRequestDto()),
+        Arguments.of(getUpdatedPreciousMetal(), getUpdatedPreciousMetalRequestDto()));
+  }
+
+  public static Stream<ResourceRequestDto> provideUpdatedResourceRequestDtos() {
+    return Stream.of(
+        getUdpatedGemstoneRequestDto(),
+        getUpdatedLinkingPartRequestDto(),
+        getUpdatedPearlRequestDto(),
+        getUpdatedPreciousMetalRequestDto());
+  }
+
+  public static Stream<ResourceRequestDto> provideResourceRequestDtos() {
+    return Stream.of(
+        getGemstoneRequestDto(),
+        getLinkingPartRequestDto(),
+        getPearlRequestDto(),
+        getPreciousMetalRequestDto());
   }
 
   public static Stream<Resource> provideResources() {
