@@ -13,6 +13,4 @@ public interface LinkingPartMapper {
   LinkingPartResponseDto toResourceResponse(LinkingPart entity);
 
   LinkingPart toResourceEntity(LinkingPartRequestDto dto);
-  //    PearlRequestDto toResourceRequest(Pearl entity);
-  //    Pearl toResourceEntity(PearlResponseDto dto);
 }

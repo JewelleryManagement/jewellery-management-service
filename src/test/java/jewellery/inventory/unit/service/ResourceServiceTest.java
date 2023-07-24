@@ -1,6 +1,6 @@
 package jewellery.inventory.unit.service;
 
-import static jewellery.inventory.mapper.ResourceMapper.map;
+import static jewellery.inventory.mapper.ResourceMapper.toResourceResponse;
 import static jewellery.inventory.util.TestUtil.getGemstone;
 import static jewellery.inventory.util.TestUtil.provideResources;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,6 +14,7 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.exeption.ApiRequestException;
+import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.service.ResourceService;
@@ -62,7 +63,7 @@ class ResourceServiceTest {
 
     verify(resourceRepository, times(1)).findById(any());
     actualResourceResponseDto.setId(null);
-    assertEquals(map(map(expectedRequestDto)), actualResourceResponseDto);
+    assertEquals(toResourceResponse(ResourceMapper.toResourceEntity(expectedRequestDto)), actualResourceResponseDto);
   }
 
   @ParameterizedTest
@@ -78,7 +79,7 @@ class ResourceServiceTest {
     verify(resourceRepository, times(1)).findById(any());
     verify(resourceRepository, times(1)).save(any());
     actualResourceResponseDto.setId(null);
-    assertEquals(map(map(expectedDto)), actualResourceResponseDto);
+    assertEquals(toResourceResponse(ResourceMapper.toResourceEntity(expectedDto)), actualResourceResponseDto);
   }
 
   @Test

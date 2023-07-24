@@ -1,7 +1,6 @@
 package jewellery.inventory.mapper;
 
 import jewellery.inventory.dto.request.resource.GemstoneRequestDto;
-import jewellery.inventory.dto.request.resource.PreciousMetalRequestDto;
 import jewellery.inventory.dto.response.resource.GemstoneResponseDto;
 import jewellery.inventory.model.resource.Gemstone;
 import org.mapstruct.Mapper;
@@ -14,6 +13,4 @@ public interface GemstoneMapper {
   GemstoneResponseDto toResourceResponse(Gemstone entity);
 
   Gemstone toResourceEntity(GemstoneRequestDto dto);
-  //    PearlRequestDto toResourceRequest(Pearl entity);
-  //    Pearl toResourceEntity(PearlResponseDto dto);
 }

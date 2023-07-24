@@ -18,25 +18,25 @@ class ResourceMapperTest {
   @MethodSource("jewellery.inventory.util.TestUtil#provideResourcesAndResponseDtos")
   void willMapValidResourceToDTO(
       Resource resource, ResourceResponseDto expectedResourceResponseDto) {
-    assertEquals(expectedResourceResponseDto, ResourceMapper.map(resource));
+    assertEquals(expectedResourceResponseDto, ResourceMapper.toResourceResponse(resource));
   }
 
   @ParameterizedTest
   @MethodSource("jewellery.inventory.util.TestUtil#provideResourcesAndRequestDtos")
   void willMapValidDtoToResource(Resource expectedResource, ResourceRequestDto resourceRequestDto) {
     expectedResource.setId(null);
-    assertEquals(expectedResource, ResourceMapper.map(resourceRequestDto));
+    assertEquals(expectedResource, ResourceMapper.toResourceEntity(resourceRequestDto));
   }
 
   @Test
   void willFailToMapInvalidResourceToDTO() {
     Resource invalidResource = new Resource();
-    assertThrows(MappingException.class, () -> ResourceMapper.map(invalidResource));
+    assertThrows(MappingException.class, () -> ResourceMapper.toResourceResponse(invalidResource));
   }
 
   @Test
   void willFailToMapInvalidDtoToResource() {
     ResourceRequestDto invalidResourceRequestDto = new ResourceRequestDto();
-    assertThrows(MappingException.class, () -> ResourceMapper.map(invalidResourceRequestDto));
+    assertThrows(MappingException.class, () -> ResourceMapper.toResourceEntity(invalidResourceRequestDto));
   }
 }

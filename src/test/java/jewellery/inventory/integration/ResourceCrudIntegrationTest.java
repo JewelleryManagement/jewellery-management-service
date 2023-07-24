@@ -1,6 +1,6 @@
 package jewellery.inventory.integration;
 
-import static jewellery.inventory.mapper.ResourceMapper.map;
+import static jewellery.inventory.mapper.ResourceMapper.toResourceResponse;
 import static jewellery.inventory.util.TestUtil.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
+import jewellery.inventory.mapper.ResourceMapper;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -165,7 +166,7 @@ class ResourceCrudIntegrationTest {
     List<ResourceResponseDto> updatedResources = getResourcesWithRequest();
     updatedResources.forEach(resourceResponseDto -> resourceResponseDto.setId(null));
     assertEquals(
-            updatedInputDtos.stream().map(resourceRequestDto -> map(map(resourceRequestDto))).toList(),
+            updatedInputDtos.stream().map(resourceRequestDto -> toResourceResponse(ResourceMapper.toResourceEntity(resourceRequestDto))).toList(),
             updatedResources);
   }
 }

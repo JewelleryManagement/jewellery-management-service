@@ -13,6 +13,4 @@ public interface PearlMapper {
   PearlResponseDto toResourceResponse(Pearl entity);
 
   Pearl toResourceEntity(PearlRequestDto dto);
-  //    PearlRequestDto toResourceRequest(Pearl entity);
-  //    Pearl toResourceEntity(PearlResponseDto dto);
 }

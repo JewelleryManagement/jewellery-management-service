@@ -13,6 +13,4 @@ public interface PreciousMetalMapper {
   PreciousMetalResponseDto toResourceResponse(PreciousMetal entity);
 
   PreciousMetal toResourceEntity(PreciousMetalRequestDto dto);
-  //    PearlRequestDto toResourceRequest(Pearl entity);
-  //    Pearl toResourceEntity(PearlResponseDto dto);
 }

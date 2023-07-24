@@ -19,11 +19,11 @@ public class ResourceService {
   @Autowired private ResourceRepository resourceRepository;
 
   private ResourceResponseDto map(Resource resource) {
-    return ResourceMapper.map(resource);
+    return ResourceMapper.toResourceResponse(resource);
   }
 
   private Resource map(ResourceRequestDto resourceRequestDto) {
-    return ResourceMapper.map(resourceRequestDto);
+    return ResourceMapper.toResourceEntity(resourceRequestDto);
   }
 
   public List<ResourceResponseDto> getAllResources() {
@@ -56,7 +56,7 @@ public class ResourceService {
     if (findResource.isEmpty()) {
       throw new ApiRequestException("Resource not found");
     }
-    Resource toUpdate = ResourceMapper.map(resourceRequestDto);
+    Resource toUpdate = ResourceMapper.toResourceEntity(resourceRequestDto);
     toUpdate.setId(id);
     return map(resourceRepository.save(toUpdate));
   }
