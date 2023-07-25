@@ -2,7 +2,7 @@ package jewellery.inventory.mapper;
 
 import jewellery.inventory.dto.request.resource.*;
 import jewellery.inventory.dto.response.resource.*;
-import jewellery.inventory.exeption.MappingException;
+import jewellery.inventory.exception.MappingException;
 import jewellery.inventory.model.resource.*;
 
 public class ResourceMapper {
@@ -22,7 +22,7 @@ public class ResourceMapper {
       return LinkingPartMapper.INSTANCE.toResourceEntity(linkingPartDTO);
     }
 
-    throw new MappingException(String.format("Can't map resourceDTO: %s", resourceRequestDto));
+    throw new MappingException(resourceRequestDto);
   }
 
   public static ResourceResponseDto toResourceResponse(Resource resource) {
@@ -38,6 +38,6 @@ public class ResourceMapper {
     if (resource instanceof LinkingPart linkingPart) {
       return LinkingPartMapper.INSTANCE.toResourceResponse(linkingPart);
     }
-    throw new MappingException(String.format("Can't map resource: %s", resource));
+    throw new MappingException(resource);
   }
 }

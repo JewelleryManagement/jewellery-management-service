@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
-import jewellery.inventory.exeption.MappingException;
+import jewellery.inventory.exception.MappingException;
 import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.model.resource.Resource;
 import org.junit.jupiter.api.Test;
@@ -37,6 +37,7 @@ class ResourceMapperTest {
   @Test
   void willFailToMapInvalidDtoToResource() {
     ResourceRequestDto invalidResourceRequestDto = new ResourceRequestDto();
-    assertThrows(MappingException.class, () -> ResourceMapper.toResourceEntity(invalidResourceRequestDto));
+    assertThrows(
+        MappingException.class, () -> ResourceMapper.toResourceEntity(invalidResourceRequestDto));
   }
 }

@@ -5,7 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
-import jewellery.inventory.exeption.ApiRequestException;
+import jewellery.inventory.exception.ResourceNotFoundException;
 import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceRepository;
@@ -38,7 +38,7 @@ public class ResourceService {
   public ResourceResponseDto getResourceById(UUID id) {
     Optional<Resource> resource = resourceRepository.findById(id);
     if (resource.isEmpty()) {
-      throw new ApiRequestException("This resource is not found");
+      throw new ResourceNotFoundException(id);
     }
     return map(resource.get());
   }
@@ -46,7 +46,7 @@ public class ResourceService {
   public void deleteResourceById(UUID id) {
     Optional<Resource> resource = resourceRepository.findById(id);
     if (resource.isEmpty()) {
-      throw new ApiRequestException("Resource not found for id " + id);
+      throw new ResourceNotFoundException(id);
     }
     resourceRepository.delete(resource.get());
   }
@@ -54,7 +54,7 @@ public class ResourceService {
   public ResourceResponseDto updateResource(UUID id, ResourceRequestDto resourceRequestDto) {
     Optional<Resource> findResource = resourceRepository.findById(id);
     if (findResource.isEmpty()) {
-      throw new ApiRequestException("Resource not found");
+      throw new ResourceNotFoundException(id);
     }
     Resource toUpdate = ResourceMapper.toResourceEntity(resourceRequestDto);
     toUpdate.setId(id);

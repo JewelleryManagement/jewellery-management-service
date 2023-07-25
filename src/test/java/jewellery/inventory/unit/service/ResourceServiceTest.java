@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
-import jewellery.inventory.exeption.ApiRequestException;
+import jewellery.inventory.exception.ResourceNotFoundException;
 import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceRepository;
@@ -97,7 +97,7 @@ class ResourceServiceTest {
     when(resourceRepository.findById(any())).thenReturn(Optional.empty());
 
     assertThrows(
-        ApiRequestException.class, () -> resourceService.deleteResourceById(UUID.randomUUID()));
+        ResourceNotFoundException.class, () -> resourceService.deleteResourceById(UUID.randomUUID()));
   }
 
   @Test
@@ -105,7 +105,7 @@ class ResourceServiceTest {
     when(resourceRepository.findById(any())).thenReturn(Optional.empty());
 
     assertThrows(
-        ApiRequestException.class,
+        ResourceNotFoundException.class,
         () ->
             resourceService.updateResource(
                 UUID.randomUUID(), ResourceRequestDto.builder().build()));
@@ -116,6 +116,6 @@ class ResourceServiceTest {
     when(resourceRepository.findById(any())).thenReturn(Optional.empty());
 
     assertThrows(
-        ApiRequestException.class, () -> resourceService.getResourceById(UUID.randomUUID()));
+        ResourceNotFoundException.class, () -> resourceService.getResourceById(UUID.randomUUID()));
   }
 }
