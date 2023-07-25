@@ -1,5 +1,9 @@
 package jewellery.inventory.service;
 
+import static jewellery.inventory.helper.UserTestHelper.USER_EMAIL;
+import static jewellery.inventory.helper.UserTestHelper.USER_NAME;
+import static jewellery.inventory.helper.UserTestHelper.createSecondTestUser;
+import static jewellery.inventory.helper.UserTestHelper.createTestUser;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -32,9 +36,7 @@ class UserServiceTest {
 
   @BeforeEach
   void setUp() {
-    user = new User();
-    user.setName("John");
-    user.setEmail("john@example.com");
+    user = createTestUser();
     userResponse = UserMapper.INSTANCE.toUserResponse(user);
   }
 
@@ -145,23 +147,22 @@ class UserServiceTest {
   }
 
   @Test
-  void shouldThrowWhenUpdatingWithDuplicateName() {
+  void shouldThrowDuplicateNameExceptionWhenUpdatingWithDuplicateName() {
     UUID existingUserId = UUID.randomUUID();
-    User existingUser = new User();
+    User existingUser = createTestUser();
     existingUser.setId(existingUserId);
-    existingUser.setName("existing");
-    existingUser.setEmail("existing@example.com");
 
     UUID updatingUserId = UUID.randomUUID();
-    User updatingUser = new User();
+    User updatingUser = createSecondTestUser();
     updatingUser.setId(updatingUserId);
-    updatingUser.setName("existing"); // duplicate name
-    updatingUser.setEmail("updating@example.com");
+
+    updatingUser.setName(USER_NAME);
+    updatingUser.setEmail("different@mail.com");
 
     UserRequest updatingUserRequest = UserMapper.INSTANCE.toUserRequest(updatingUser);
 
     when(userRepository.findById(updatingUserId)).thenReturn(Optional.of(updatingUser));
-    when(userRepository.findByName("existing")).thenReturn(Optional.of(existingUser));
+    when(userRepository.findByName(USER_NAME)).thenReturn(Optional.of(existingUser));
 
     assertThrows(
         DuplicateNameException.class,
@@ -171,23 +172,22 @@ class UserServiceTest {
   @Test
   void shouldThrowWhenUpdatingWithDuplicateEmail() {
     UUID existingUserId = UUID.randomUUID();
-    User existingUser = new User();
+    User existingUser = createTestUser();
     existingUser.setId(existingUserId);
-    existingUser.setName("existing");
-    existingUser.setEmail("existing@example.com");
 
     UUID updatingUserId = UUID.randomUUID();
-    User updatingUser = new User();
+    User updatingUser = createSecondTestUser();
     updatingUser.setId(updatingUserId);
-    updatingUser.setName("updating");
-    updatingUser.setEmail("existing@example.com");
+
+    updatingUser.setName("not duplicate name");
+    updatingUser.setEmail(USER_EMAIL);
 
     UserRequest updatingUserRequest = new UserRequest();
     updatingUserRequest.setName(updatingUser.getName());
     updatingUserRequest.setEmail(updatingUser.getEmail());
 
     when(userRepository.findById(updatingUserId)).thenReturn(Optional.of(updatingUser));
-    when(userRepository.findByEmail("existing@example.com")).thenReturn(Optional.of(existingUser));
+    when(userRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(existingUser));
 
     assertThrows(
         DuplicateEmailException.class,

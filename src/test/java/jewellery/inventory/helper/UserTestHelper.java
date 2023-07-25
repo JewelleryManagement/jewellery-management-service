@@ -10,13 +10,20 @@ import jewellery.inventory.dto.UserResponse;
 import jewellery.inventory.model.User;
 
 public class UserTestHelper {
-  private static final String USER_NAME = "john";
-  private static final String USER_EMAIL = "john@example.com";
+  public static final String USER_NAME = "john";
+  public static final String USER_EMAIL = "john@example.com";
 
   public static User createTestUser() {
     User user = new User();
     user.setName(USER_NAME);
     user.setEmail(USER_EMAIL);
+    return user;
+  }
+
+  public static User createSecondTestUser() {
+    User user = new User();
+    user.setName(USER_NAME+2);
+    user.setEmail(USER_EMAIL+2);
     return user;
   }
 
