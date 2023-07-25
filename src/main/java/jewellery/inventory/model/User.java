@@ -14,7 +14,10 @@ import lombok.Setter;
 public class User {
   @Id @GeneratedValue private UUID id;
 
+  @Column(unique = true)
   private String name;
+
+  @Column(unique = true)
   private String email;
 
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
