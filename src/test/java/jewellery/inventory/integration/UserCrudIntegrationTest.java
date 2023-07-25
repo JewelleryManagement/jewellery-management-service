@@ -161,8 +161,7 @@ public class UserCrudIntegrationTest {
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponse.class);
     UserResponse createdUser = userResponseEntity.getBody();
 
-    UserRequest updatedUserRequest =
-        createTestUserRequest(); // You should provide a way to generate different user requests
+    UserRequest updatedUserRequest = createTestUserRequest();
     HttpEntity<UserRequest> requestUpdate = new HttpEntity<>(updatedUserRequest);
     ResponseEntity<UserResponse> response =
         this.testRestTemplate.exchange(
@@ -204,22 +203,12 @@ public class UserCrudIntegrationTest {
 
   @Test
   void willNotUpdateUserWithDuplicateName() {
-    // Create first user
+    UserResponse firstUser = sendUserCreateRequest(createTestUserRequest());
+    UserResponse secondUser = sendUserCreateRequest(createDifferentUserRequest());
+
     UserRequest firstUserRequest = createTestUserRequest();
-    ResponseEntity<UserResponse> firstUserResponseEntity =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), firstUserRequest, UserResponse.class);
-    UserResponse firstUser = firstUserResponseEntity.getBody();
-    assertNotNull(firstUser);
-
-    // Create second user with different name and email
     UserRequest secondUserRequest = createDifferentUserRequest();
-    ResponseEntity<UserResponse> secondUserResponseEntity =
-        this.testRestTemplate.postForEntity(
-            getBaseUserUrl(), secondUserRequest, UserResponse.class);
-    UserResponse secondUser = secondUserResponseEntity.getBody();
-    assertNotNull(secondUser);
 
-    // Update second user with first user's name
     secondUserRequest.setName(firstUserRequest.getName());
     HttpEntity<UserRequest> requestUpdate = new HttpEntity<>(secondUserRequest);
     ResponseEntity<UserResponse> responseEntity =
@@ -236,10 +225,8 @@ public class UserCrudIntegrationTest {
   void willNotUpdateNonexistentUser() {
     UserRequest userRequest = createTestUserRequest();
     UUID fakeId = UUID.randomUUID();
-
     HttpEntity<UserRequest> requestUpdate = new HttpEntity<>(userRequest);
 
-    // Try to update user with a non-existent ID
     ResponseEntity<UserResponse> response =
         this.testRestTemplate.exchange(
             getBaseUserUrl() + "/" + fakeId, HttpMethod.PUT, requestUpdate, UserResponse.class);
