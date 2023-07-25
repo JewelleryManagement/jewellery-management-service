@@ -10,10 +10,13 @@ import jewellery.inventory.dto.UserResponse;
 import jewellery.inventory.model.User;
 
 public class UserTestHelper {
+  private static final String USER_NAME = "john";
+  private static final String USER_EMAIL = "john@example.com";
+
   public static User createTestUser() {
     User user = new User();
-    user.setName("John");
-    user.setEmail("john@example.com");
+    user.setName(USER_NAME);
+    user.setEmail(USER_EMAIL);
     return user;
   }
 
@@ -31,12 +34,12 @@ public class UserTestHelper {
 
   public static UserRequest createTestUserRequest() {
     UserRequest userRequest = new UserRequest();
-    userRequest.setName("John");
-    userRequest.setEmail("john@example.com");
+    userRequest.setName(USER_NAME);
+    userRequest.setEmail(USER_EMAIL);
     return userRequest;
   }
 
-  public static UserRequest createDifferentUserRequest(){
+  public static UserRequest createDifferentUserRequest() {
     UserRequest userRequest = new UserRequest();
     userRequest.setName("different_user");
     userRequest.setEmail("user@example.com");
@@ -50,10 +53,10 @@ public class UserTestHelper {
     return invalidUserRequest;
   }
 
-  public static UserResponse createUserResponse(){
+  public static UserResponse createUserResponse() {
     UserResponse userResponse = new UserResponse();
-    userResponse.setName("john");
-    userResponse.setEmail("john@example.com");
+    userResponse.setName(USER_NAME);
+    userResponse.setEmail(USER_EMAIL);
     return userResponse;
   }
 

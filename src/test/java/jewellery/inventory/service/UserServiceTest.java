@@ -7,9 +7,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import jewellery.inventory.dto.UserRequest;
+import jewellery.inventory.dto.UserResponse;
 import jewellery.inventory.exception.DuplicateEmailException;
 import jewellery.inventory.exception.DuplicateNameException;
 import jewellery.inventory.exception.UserNotFoundException;
+import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,12 +28,14 @@ class UserServiceTest {
   @Mock private UserRepository userRepository;
   @InjectMocks private UserService userService;
   private User user;
+  private UserResponse userResponse;
 
   @BeforeEach
   void setUp() {
     user = new User();
     user.setName("John");
     user.setEmail("john@example.com");
+    userResponse = UserMapper.INSTANCE.toUserResponse(user);
   }
 
   @Test
@@ -40,7 +45,7 @@ class UserServiceTest {
 
     when(userRepository.findAll()).thenReturn(users);
 
-    List<User> returnedUsers = userService.getAllUsers();
+    List<UserResponse> returnedUsers = userService.getAllUsers();
 
     assertEquals(users.size(), returnedUsers.size());
     verify(userRepository, times(1)).findAll();
@@ -63,30 +68,34 @@ class UserServiceTest {
     UUID userId = UUID.randomUUID();
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-    User result = userService.getUser(userId);
+    UserResponse result = userService.getUser(userId);
 
-    assertEquals(user, result);
+    assertEquals(userResponse, result);
     verify(userRepository, times(1)).findById(userId);
   }
 
   @Test
   @DisplayName("Should throw a DuplicateEmailException when the email is already taken")
   void createUserWhenEmailIsAlreadyTakenThenThrowDuplicateEmailException() {
+    UserRequest userRequest = UserMapper.INSTANCE.toUserRequest(user);
+
     when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
-    assertThrows(DuplicateEmailException.class, () -> userService.createUser(user));
+    assertThrows(DuplicateEmailException.class, () -> userService.createUser(userRequest));
 
-    verify(userRepository, never()).save(user);
+    verify(userRepository, never()).save(any(User.class));
   }
 
   @Test
   @DisplayName("Should throw a DuplicateNameException when the name is already taken")
   void createUserWhenNameIsAlreadyTakenThenThrowDuplicateNameException() {
+    UserRequest userRequest = UserMapper.INSTANCE.toUserRequest(user);
+
     when(userRepository.findByName(user.getName())).thenReturn(Optional.of(user));
 
-    assertThrows(DuplicateNameException.class, () -> userService.createUser(user));
+    assertThrows(DuplicateNameException.class, () -> userService.createUser(userRequest));
 
-    verify(userRepository, never()).save(user);
+    verify(userRepository, never()).save(any(User.class));
   }
 
   @Test
@@ -94,14 +103,14 @@ class UserServiceTest {
   void createUserWhenEmailAndNameAreNotTaken() {
     when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
     when(userRepository.findByName(user.getName())).thenReturn(Optional.empty());
-    when(userRepository.save(user)).thenReturn(user);
+    when(userRepository.save(any(User.class))).thenReturn(user);
 
-    User createdUser = userService.createUser(user);
+    UserResponse createdUser = userService.createUser(UserMapper.INSTANCE.toUserRequest(user));
 
-    assertEquals(user, createdUser);
+    assertEquals(userResponse, createdUser);
     verify(userRepository, times(1)).findByEmail(user.getEmail());
     verify(userRepository, times(1)).findByName(user.getName());
-    verify(userRepository, times(1)).save(user);
+    verify(userRepository, times(1)).save(any(User.class));
   }
 
   @Test
@@ -109,10 +118,10 @@ class UserServiceTest {
   void updateUserWhenUserIdDoesNotExistThenThrowException() {
     UUID userId = UUID.randomUUID();
     user.setId(userId);
-
+    UserRequest userRequest = UserMapper.INSTANCE.toUserRequest(user);
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-    assertThrows(UserNotFoundException.class, () -> userService.updateUser(user));
+    assertThrows(UserNotFoundException.class, () -> userService.updateUser(userRequest, userId));
 
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, never()).save(user);
@@ -125,13 +134,14 @@ class UserServiceTest {
     user.setId(userId);
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(userRepository.save(user)).thenReturn(user);
+    when(userRepository.save(any(User.class))).thenReturn(user);
 
-    User updatedUser = userService.updateUser(user);
+    UserResponse updatedUser =
+        userService.updateUser(UserMapper.INSTANCE.toUserRequest(user), userId);
 
-    assertEquals(user, updatedUser);
+    assertEquals(UserMapper.INSTANCE.toUserResponse(user), updatedUser);
     verify(userRepository, times(1)).findById(userId);
-    verify(userRepository, times(1)).save(user);
+    verify(userRepository, times(1)).save(any(User.class));
   }
 
   @Test
@@ -148,10 +158,14 @@ class UserServiceTest {
     updatingUser.setName("existing"); // duplicate name
     updatingUser.setEmail("updating@example.com");
 
+    UserRequest updatingUserRequest = UserMapper.INSTANCE.toUserRequest(updatingUser);
+
     when(userRepository.findById(updatingUserId)).thenReturn(Optional.of(updatingUser));
     when(userRepository.findByName("existing")).thenReturn(Optional.of(existingUser));
 
-    assertThrows(DuplicateNameException.class, () -> userService.updateUser(updatingUser));
+    assertThrows(
+        DuplicateNameException.class,
+        () -> userService.updateUser(updatingUserRequest, updatingUserId));
   }
 
   @Test
@@ -168,10 +182,16 @@ class UserServiceTest {
     updatingUser.setName("updating");
     updatingUser.setEmail("existing@example.com");
 
+    UserRequest updatingUserRequest = new UserRequest();
+    updatingUserRequest.setName(updatingUser.getName());
+    updatingUserRequest.setEmail(updatingUser.getEmail());
+
     when(userRepository.findById(updatingUserId)).thenReturn(Optional.of(updatingUser));
     when(userRepository.findByEmail("existing@example.com")).thenReturn(Optional.of(existingUser));
 
-    assertThrows(DuplicateEmailException.class, () -> userService.updateUser(updatingUser));
+    assertThrows(
+        DuplicateEmailException.class,
+        () -> userService.updateUser(updatingUserRequest, updatingUserId));
   }
 
   @Test

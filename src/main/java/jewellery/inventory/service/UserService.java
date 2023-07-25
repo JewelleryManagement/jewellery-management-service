@@ -3,81 +3,82 @@ package jewellery.inventory.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import jewellery.inventory.dto.UserRequest;
+import jewellery.inventory.dto.UserResponse;
 import jewellery.inventory.exception.DuplicateEmailException;
 import jewellery.inventory.exception.DuplicateNameException;
 import jewellery.inventory.exception.UserNotFoundException;
+import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
-  static final String USER_NOT_FOUND_ERROR_MSG = "User not found with id: ";
-  @Autowired private UserRepository userRepository;
+  private final UserRepository userRepository;
 
-  public List<User> getAllUsers() {
-    return userRepository.findAll();
+  public UserService(UserRepository userRepository) {
+    this.userRepository = userRepository;
   }
 
-  public User getUser(UUID id) {
-    return userRepository
-        .findById(id)
-        .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_ERROR_MSG + id));
+  public List<UserResponse> getAllUsers() {
+    return UserMapper.INSTANCE.toUserResponseList(userRepository.findAll());
   }
 
-  public User createUser(User user) {
-    if (checkIfEmailExists(user.getEmail())) {
-      throw new DuplicateEmailException();
-    }
-
-    if (checkIfNameExists(user.getName())) {
-      throw new DuplicateNameException();
-    }
-    return userRepository.save(user);
+  public UserResponse getUser(UUID id) {
+    return UserMapper.INSTANCE.toUserResponse(
+        userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id)));
   }
 
-  public User updateUser(User user) {
-    if (userRepository.findById(user.getId()).isEmpty()) {
-      throw new UserNotFoundException(USER_NOT_FOUND_ERROR_MSG + user.getId());
+  public UserResponse createUser(UserRequest user) {
+    if (checkIfEmailExists(user.getEmail(), null)) {
+      throw new DuplicateEmailException(user.getEmail());
     }
 
-    if (checkIfNameExists(user.getName(), user.getId())) {
-      throw new DuplicateNameException();
+    if (checkIfNameExists(user.getName(), null)) {
+      throw new DuplicateNameException(user.getName());
     }
+    return UserMapper.INSTANCE.toUserResponse(
+        userRepository.save(UserMapper.INSTANCE.toUserEntity(user)));
+  }
 
-    if (checkIfEmailExists(user.getEmail(), user.getId())) {
-      throw new DuplicateEmailException();
-    }
+  public UserResponse updateUser(UserRequest userRequest, UUID id) {
+    User existingUser =
+        userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
 
-    return userRepository.save(user);
+    User userToUpdate = UserMapper.INSTANCE.toUserEntity(userRequest);
+    userToUpdate.setId(existingUser.getId());
+
+    validateUserDetails(userToUpdate);
+
+    return UserMapper.INSTANCE.toUserResponse(userRepository.save(userToUpdate));
   }
 
   public void deleteUser(UUID id) {
     if (userRepository.existsById(id)) {
       userRepository.deleteById(id);
     } else {
-      throw new UserNotFoundException(USER_NOT_FOUND_ERROR_MSG + id);
+      throw new UserNotFoundException(id);
     }
   }
 
-  private boolean checkIfEmailExists(String email) {
-    Optional<User> user = userRepository.findByEmail(email);
-    return user.isPresent();
+  private void validateUserDetails(User user) {
+    if (checkIfNameExists(user.getName(), user.getId())) {
+      throw new DuplicateNameException(user.getName());
+    }
+
+    if (checkIfEmailExists(user.getEmail(), user.getId())) {
+      throw new DuplicateEmailException(user.getEmail());
+    }
   }
 
   private boolean checkIfEmailExists(String email, UUID id) {
     Optional<User> existingUser = userRepository.findByEmail(email);
-    return existingUser.isPresent() && !existingUser.get().getId().equals(id);
-  }
-
-  private boolean checkIfNameExists(String name) {
-    Optional<User> user = userRepository.findByName(name);
-    return user.isPresent();
+    return existingUser.isPresent() && (id == null || !existingUser.get().getId().equals(id));
   }
 
   private boolean checkIfNameExists(String name, UUID id) {
     Optional<User> existingUser = userRepository.findByName(name);
-    return existingUser.isPresent() && !existingUser.get().getId().equals(id);
+    return existingUser.isPresent() && (id == null || !existingUser.get().getId().equals(id));
   }
 }

@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -25,62 +24,32 @@ public class GlobalExceptionHandler {
   public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
     Map<String, List<String>> fieldErrorsMap = getFieldErrors(ex);
 
-    Map<String, Object> body = new HashMap<>();
-    body.put(
-        TIMESTAMP_KEY,
-        LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT_PATTERN)));
-    body.put("errors", fieldErrorsMap);
-
-    return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    return createErrorResponse(HttpStatus.BAD_REQUEST, fieldErrorsMap);
   }
 
   @ExceptionHandler(UserNotFoundException.class)
   public ResponseEntity<Object> handleUserNotFoundException(UserNotFoundException ex) {
-
-    Map<String, Object> body = new HashMap<>();
-    body.put(
-        TIMESTAMP_KEY,
-        LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT_PATTERN)));
-    body.put(ERROR_KEY, ex.getMessage());
-
-    return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
   }
 
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   public ResponseEntity<Object> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+    String error = String.format("%s should be of type %s", ex.getName(), getRequiredTypeName(ex));
+    return createErrorResponse(HttpStatus.BAD_REQUEST, error);
+  }
 
-    String error =
-        ex.getName()
-            + " should be of type "
-            + Objects.requireNonNull(ex.getRequiredType()).getName();
+  @ExceptionHandler(DuplicateException.class)
+  public ResponseEntity<Object> handleDuplicateException(DuplicateException ex) {
+    return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+  }
 
+  private ResponseEntity<Object> createErrorResponse(HttpStatus status, Object error) {
     Map<String, Object> body = new HashMap<>();
-    body.put(
-        TIMESTAMP_KEY,
-        LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT_PATTERN)));
+    String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT_PATTERN));
+    body.put(TIMESTAMP_KEY, date);
     body.put(ERROR_KEY, error);
 
-    return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
-  }
-
-  @ExceptionHandler(DuplicateEmailException.class)
-  public ResponseEntity<Object> handleDuplicateEmailException(DuplicateEmailException ex) {
-    Map<String, Object> body = new HashMap<>();
-    String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT_PATTERN));
-    body.put(TIMESTAMP_KEY, date);
-    body.put(ERROR_KEY, ex.getMessage());
-
-    return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
-  }
-
-  @ExceptionHandler(DuplicateNameException.class)
-  public ResponseEntity<Object> handleDuplicateNameException(DuplicateNameException ex) {
-    Map<String, Object> body = new HashMap<>();
-    String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT_PATTERN));
-    body.put(TIMESTAMP_KEY, date);
-    body.put(ERROR_KEY, ex.getMessage());
-
-    return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    return new ResponseEntity<>(body, status);
   }
 
   private static Map<String, List<String>> getFieldErrors(MethodArgumentNotValidException ex) {
@@ -101,5 +70,13 @@ public class GlobalExceptionHandler {
       fieldErrorsMap.get(fieldName).add(errorMessage);
     }
     return fieldErrorsMap;
+  }
+
+  private static String getRequiredTypeName(MethodArgumentTypeMismatchException ex) {
+    Class<?> requiredType = ex.getRequiredType();
+    if (requiredType == null) {
+      throw new IllegalStateException("Required type for " + ex.getName() + " was null");
+    }
+    return requiredType.getName();
   }
 }

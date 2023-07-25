@@ -5,10 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.UserRequest;
 import jewellery.inventory.dto.UserResponse;
-import jewellery.inventory.mapper.UserMapper;
-import jewellery.inventory.model.User;
 import jewellery.inventory.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -23,44 +20,42 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/users")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "${cors.origins}")
 public class UserController {
-  @Autowired private UserService userService;
+  private final UserService userService;
+
+  public UserController(UserService userService) {
+    this.userService = userService;
+  }
 
   @GetMapping
   public ResponseEntity<List<UserResponse>> getAllUsers() {
-    List<UserResponse> userResponseList =
-        UserMapper.INSTANCE.toUserResponseList(userService.getAllUsers());
-    return ResponseEntity.ok(userResponseList);
+    List<UserResponse> userResponseList = userService.getAllUsers();
+    return ResponseEntity.status(HttpStatus.FOUND).body(userResponseList);
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<UserResponse> getUser(@PathVariable UUID id) {
-    UserResponse userResponse = UserMapper.INSTANCE.toUserResponse(userService.getUser(id));
-    return ResponseEntity.ok(userResponse);
+    UserResponse userResponse = userService.getUser(id);
+    return ResponseEntity.status(HttpStatus.FOUND).body(userResponse);
   }
 
   @PostMapping
   public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest newUser) {
-    UserResponse userResponse =
-        UserMapper.INSTANCE.toUserResponse(
-            userService.createUser(UserMapper.INSTANCE.toUserEntity(newUser)));
-    return ResponseEntity.ok(userResponse);
+    UserResponse userResponse = userService.createUser(newUser);
+    return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
   }
 
   @PutMapping("/{id}")
   public ResponseEntity<UserResponse> updateUser(
       @PathVariable UUID id, @Valid @RequestBody UserRequest userRequest) {
-    User userToUpdate = UserMapper.INSTANCE.toUserEntity(userRequest);
-    userToUpdate.setId(id);
-    UserResponse userResponse =
-        UserMapper.INSTANCE.toUserResponse(userService.updateUser(userToUpdate));
-    return ResponseEntity.ok(userResponse);
+    UserResponse userResponse = userService.updateUser(userRequest, id);
+    return ResponseEntity.status(HttpStatus.ACCEPTED).body(userResponse);
   }
 
   @DeleteMapping("/{id}")
   public ResponseEntity<HttpStatus> deleteUser(@PathVariable UUID id) {
     userService.deleteUser(id);
-    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
   }
 }
