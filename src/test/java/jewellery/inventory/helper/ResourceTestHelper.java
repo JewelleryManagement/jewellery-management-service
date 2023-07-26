@@ -1,4 +1,4 @@
-package jewellery.inventory.util;
+package jewellery.inventory.helper;
 
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -7,7 +7,7 @@ import jewellery.inventory.dto.response.resource.*;
 import jewellery.inventory.model.resource.*;
 import org.junit.jupiter.params.provider.Arguments;
 
-public class TestUtil {
+public class ResourceTestHelper {
   private static final UUID RESOURCE_ID = UUID.randomUUID();
   private static final String CLAZZ_PEARL = "Pearl";
   private static final String CLAZZ_GEMSTONE = "Gemstone";
@@ -45,7 +45,7 @@ public class TestUtil {
   private static final String DESCRIPTION = "A linking part made of gold";
   public static final String UPDATED_DESCRIPTION = DESCRIPTION + " and \"real\" silver";
 
-  private TestUtil() {}
+  private ResourceTestHelper() {}
 
   public static Resource getPearl() {
     return Pearl.builder()

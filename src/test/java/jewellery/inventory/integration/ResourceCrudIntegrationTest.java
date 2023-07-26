@@ -1,7 +1,7 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.mapper.ResourceMapper.toResourceResponse;
-import static jewellery.inventory.util.TestUtil.*;
+import static jewellery.inventory.helper.ResourceTestHelper.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

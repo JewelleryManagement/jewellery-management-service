@@ -2,8 +2,8 @@ package jewellery.inventory.unit.service;
 
 import static jewellery.inventory.mapper.ResourceMapper.toResourceEntity;
 import static jewellery.inventory.mapper.ResourceMapper.toResourceResponse;
-import static jewellery.inventory.util.TestUtil.getGemstone;
-import static jewellery.inventory.util.TestUtil.provideResources;
+import static jewellery.inventory.helper.ResourceTestHelper.getGemstone;
+import static jewellery.inventory.helper.ResourceTestHelper.provideResources;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
