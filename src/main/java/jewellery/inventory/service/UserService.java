@@ -11,15 +11,13 @@ import jewellery.inventory.exception.UserNotFoundException;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
   private final UserRepository userRepository;
-
-  public UserService(UserRepository userRepository) {
-    this.userRepository = userRepository;
-  }
 
   public List<UserResponse> getAllUsers() {
     return UserMapper.INSTANCE.toUserResponseList(userRepository.findAll());
@@ -31,23 +29,18 @@ public class UserService {
   }
 
   public UserResponse createUser(UserRequest user) {
-    if (checkIfEmailExists(user.getEmail(), null)) {
-      throw new DuplicateEmailException(user.getEmail());
-    }
-
-    if (checkIfNameExists(user.getName(), null)) {
-      throw new DuplicateNameException(user.getName());
-    }
-    return UserMapper.INSTANCE.toUserResponse(
-        userRepository.save(UserMapper.INSTANCE.toUserEntity(user)));
+    User userToCreate = UserMapper.INSTANCE.toUserEntity(user);
+    validateUserDetails(userToCreate);
+    return UserMapper.INSTANCE.toUserResponse(userRepository.save(userToCreate));
   }
 
   public UserResponse updateUser(UserRequest userRequest, UUID id) {
-    User existingUser =
-        userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+    if (!userRepository.existsById(id)) {
+      throw new UserNotFoundException(id);
+    }
 
     User userToUpdate = UserMapper.INSTANCE.toUserEntity(userRequest);
-    userToUpdate.setId(existingUser.getId());
+    userToUpdate.setId(id);
 
     validateUserDetails(userToUpdate);
 
@@ -63,21 +56,21 @@ public class UserService {
   }
 
   private void validateUserDetails(User user) {
-    if (checkIfNameExists(user.getName(), user.getId())) {
+    if (isNameUsedByOtherUser(user.getName(), user.getId())) {
       throw new DuplicateNameException(user.getName());
     }
 
-    if (checkIfEmailExists(user.getEmail(), user.getId())) {
+    if (isEmailUsedByOtherUser(user.getEmail(), user.getId())) {
       throw new DuplicateEmailException(user.getEmail());
     }
   }
 
-  private boolean checkIfEmailExists(String email, UUID id) {
+  private boolean isEmailUsedByOtherUser(String email, UUID id) {
     Optional<User> existingUser = userRepository.findByEmail(email);
     return existingUser.isPresent() && (id == null || !existingUser.get().getId().equals(id));
   }
 
-  private boolean checkIfNameExists(String name, UUID id) {
+  private boolean isNameUsedByOtherUser(String name, UUID id) {
     Optional<User> existingUser = userRepository.findByName(name);
     return existingUser.isPresent() && (id == null || !existingUser.get().getId().equals(id));
   }
