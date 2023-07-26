@@ -81,36 +81,36 @@ class ResourceCrudIntegrationTest {
     assertInputMatchesFetchedFromServer(updatedInputDtos);
   }
 
-    @Test
-    void willDeleteAResourceFromDatabase() throws JsonProcessingException {
-      sendCreateRequestsFor(List.of(getGemstoneRequestDto()));
-      List<ResourceResponseDto> createdDtos = getResourcesWithRequest();
+  @Test
+  void willDeleteAResourceFromDatabase() throws JsonProcessingException {
+    sendCreateRequestsFor(List.of(getGemstoneRequestDto()));
+    List<ResourceResponseDto> createdDtos = getResourcesWithRequest();
 
-      testRestTemplate.delete(getBaseResourceUrl() + "/" + createdDtos.get(0).getId());
+    testRestTemplate.delete(getBaseResourceUrl() + "/" + createdDtos.get(0).getId());
 
-      List<ResourceResponseDto> afterDeleteDtos = getResourcesWithRequest();
-      assertEquals(0, afterDeleteDtos.size());
-    }
+    List<ResourceResponseDto> afterDeleteDtos = getResourcesWithRequest();
+    assertEquals(0, afterDeleteDtos.size());
+  }
 
-    @Test
-    void willFailToGetResourceFromDatabaseWithWrongId() {
-      assertTrue(
-          testRestTemplate
-              .getForEntity(getBaseResourceUrl() + INEXISTENT_ID, String.class)
-              .getStatusCode()
-              .is4xxClientError());
-    }
+  @Test
+  void willFailToGetResourceFromDatabaseWithWrongId() {
+    assertTrue(
+        testRestTemplate
+            .getForEntity(getBaseResourceUrl() + INEXISTENT_ID, String.class)
+            .getStatusCode()
+            .is4xxClientError());
+  }
 
-    @Test
-    void willFailToUpdateResourceFromDatabaseWithWrongId() {
-      ResponseEntity<String> response =
-          testRestTemplate.exchange(
-              getBaseResourceUrl() + INEXISTENT_ID,
-              HttpMethod.PUT,
-              new HttpEntity<>(getGemstoneResponseDto()),
-              String.class);
-      assertTrue(response.getStatusCode().is4xxClientError());
-    }
+  @Test
+  void willFailToUpdateResourceFromDatabaseWithWrongId() {
+    ResponseEntity<String> response =
+        testRestTemplate.exchange(
+            getBaseResourceUrl() + INEXISTENT_ID,
+            HttpMethod.PUT,
+            new HttpEntity<>(getGemstoneResponseDto()),
+            String.class);
+    assertTrue(response.getStatusCode().is4xxClientError());
+  }
 
   @Test
   void willFailToDeleteResourceFromDatabaseWithWrongId() {
@@ -162,11 +162,16 @@ class ResourceCrudIntegrationTest {
     return StreamUtils.zip(resourceRequestDtos.stream(), ids.stream(), Pair::of).toList();
   }
 
-  private void assertInputMatchesFetchedFromServer(List<ResourceRequestDto> updatedInputDtos) throws JsonProcessingException {
+  private void assertInputMatchesFetchedFromServer(List<ResourceRequestDto> updatedInputDtos)
+      throws JsonProcessingException {
     List<ResourceResponseDto> updatedResources = getResourcesWithRequest();
     updatedResources.forEach(resourceResponseDto -> resourceResponseDto.setId(null));
     assertEquals(
-            updatedInputDtos.stream().map(resourceRequestDto -> toResourceResponse(ResourceMapper.toResourceEntity(resourceRequestDto))).toList(),
-            updatedResources);
+        updatedInputDtos.stream()
+            .map(
+                resourceRequestDto ->
+                    toResourceResponse(ResourceMapper.toResourceEntity(resourceRequestDto)))
+            .toList(),
+        updatedResources);
   }
 }

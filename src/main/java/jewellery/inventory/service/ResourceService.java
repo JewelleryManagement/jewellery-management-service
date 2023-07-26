@@ -1,29 +1,31 @@
 package jewellery.inventory.service;
 
+import static jewellery.inventory.mapper.ResourceMapper.toResourceEntity;
+import static jewellery.inventory.mapper.ResourceMapper.toResourceResponse;
+
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.exception.ResourceNotFoundException;
-import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceRepository;
-import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-@AllArgsConstructor
 public class ResourceService {
-  @Autowired private ResourceRepository resourceRepository;
+  private final ResourceRepository resourceRepository;
+
+  ResourceService(ResourceRepository resourceRepository) {
+    this.resourceRepository = resourceRepository;
+  }
 
   private ResourceResponseDto map(Resource resource) {
-    return ResourceMapper.toResourceResponse(resource);
+    return toResourceResponse(resource);
   }
 
   private Resource map(ResourceRequestDto resourceRequestDto) {
-    return ResourceMapper.toResourceEntity(resourceRequestDto);
+    return toResourceEntity(resourceRequestDto);
   }
 
   public List<ResourceResponseDto> getAllResources() {
@@ -36,27 +38,20 @@ public class ResourceService {
   }
 
   public ResourceResponseDto getResourceById(UUID id) {
-    Optional<Resource> resource = resourceRepository.findById(id);
-    if (resource.isEmpty()) {
-      throw new ResourceNotFoundException(id);
-    }
-    return map(resource.get());
+    Resource resource =
+        resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
+    return map(resource);
   }
 
   public void deleteResourceById(UUID id) {
-    Optional<Resource> resource = resourceRepository.findById(id);
-    if (resource.isEmpty()) {
-      throw new ResourceNotFoundException(id);
-    }
-    resourceRepository.delete(resource.get());
+    Resource resource =
+        resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
+    resourceRepository.delete(resource);
   }
 
   public ResourceResponseDto updateResource(UUID id, ResourceRequestDto resourceRequestDto) {
-    Optional<Resource> findResource = resourceRepository.findById(id);
-    if (findResource.isEmpty()) {
-      throw new ResourceNotFoundException(id);
-    }
-    Resource toUpdate = ResourceMapper.toResourceEntity(resourceRequestDto);
+    resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
+    Resource toUpdate = toResourceEntity(resourceRequestDto);
     toUpdate.setId(id);
     return map(resourceRepository.save(toUpdate));
   }

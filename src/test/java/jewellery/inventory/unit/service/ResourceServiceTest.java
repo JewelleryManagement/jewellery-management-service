@@ -1,5 +1,6 @@
 package jewellery.inventory.unit.service;
 
+import static jewellery.inventory.mapper.ResourceMapper.toResourceEntity;
 import static jewellery.inventory.mapper.ResourceMapper.toResourceResponse;
 import static jewellery.inventory.util.TestUtil.getGemstone;
 import static jewellery.inventory.util.TestUtil.provideResources;
@@ -14,7 +15,6 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.exception.ResourceNotFoundException;
-import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.service.ResourceService;
@@ -63,7 +63,8 @@ class ResourceServiceTest {
 
     verify(resourceRepository, times(1)).findById(any());
     actualResourceResponseDto.setId(null);
-    assertEquals(toResourceResponse(ResourceMapper.toResourceEntity(expectedRequestDto)), actualResourceResponseDto);
+    assertEquals(
+        toResourceResponse(toResourceEntity(expectedRequestDto)), actualResourceResponseDto);
   }
 
   @ParameterizedTest
@@ -79,7 +80,7 @@ class ResourceServiceTest {
     verify(resourceRepository, times(1)).findById(any());
     verify(resourceRepository, times(1)).save(any());
     actualResourceResponseDto.setId(null);
-    assertEquals(toResourceResponse(ResourceMapper.toResourceEntity(expectedDto)), actualResourceResponseDto);
+    assertEquals(toResourceResponse(toResourceEntity(expectedDto)), actualResourceResponseDto);
   }
 
   @Test
@@ -97,7 +98,8 @@ class ResourceServiceTest {
     when(resourceRepository.findById(any())).thenReturn(Optional.empty());
 
     assertThrows(
-        ResourceNotFoundException.class, () -> resourceService.deleteResourceById(UUID.randomUUID()));
+        ResourceNotFoundException.class,
+        () -> resourceService.deleteResourceById(UUID.randomUUID()));
   }
 
   @Test

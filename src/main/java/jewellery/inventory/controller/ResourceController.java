@@ -6,18 +6,20 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.service.ResourceService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/resources")
-@RequiredArgsConstructor
+@CrossOrigin(origins = "${cors.origins}")
 public class ResourceController {
 
-  @Autowired private final ResourceService resourceService;
+  private final ResourceService resourceService;
+
+  public ResourceController(ResourceService resourceService) {
+    this.resourceService = resourceService;
+  }
 
   @GetMapping
   public ResponseEntity<List<ResourceResponseDto>> getAllResources() {
