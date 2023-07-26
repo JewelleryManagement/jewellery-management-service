@@ -1,4 +1,4 @@
-package jewellery.inventory.dto;
+package jewellery.inventory.dto.response;
 
 import java.util.UUID;
 import lombok.Data;

@@ -11,8 +11,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 import java.util.List;
 import java.util.UUID;
-import jewellery.inventory.dto.UserRequest;
-import jewellery.inventory.dto.UserResponse;
+import jewellery.inventory.dto.request.UserRequest;
+import jewellery.inventory.dto.response.UserResponse;
 import jewellery.inventory.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -5,8 +5,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.UUID;
-import jewellery.inventory.dto.UserRequest;
-import jewellery.inventory.dto.UserResponse;
+import jewellery.inventory.dto.request.UserRequest;
+import jewellery.inventory.dto.response.UserResponse;
 import jewellery.inventory.model.User;
 
 public class UserTestHelper {

@@ -1,8 +1,8 @@
 package jewellery.inventory.mapper;
 
 import java.util.List;
-import jewellery.inventory.dto.UserRequest;
-import jewellery.inventory.dto.UserResponse;
+import jewellery.inventory.dto.request.UserRequest;
+import jewellery.inventory.dto.response.UserResponse;
 import jewellery.inventory.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;

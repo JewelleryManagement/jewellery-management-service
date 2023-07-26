@@ -1,4 +1,4 @@
-package jewellery.inventory.dto;
+package jewellery.inventory.dto.request;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
