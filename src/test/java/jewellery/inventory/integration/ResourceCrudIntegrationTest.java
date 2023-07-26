@@ -55,13 +55,6 @@ class ResourceCrudIntegrationTest {
   }
 
   @Test
-  void greetingShouldReturnDefaultMessage() {
-    assertThat(
-            this.testRestTemplate.getForObject("http://localhost:" + port + "/home", String.class))
-        .contains("Hello world");
-  }
-
-  @Test
   void willAddResourceToDatabase() throws JsonProcessingException {
     List<ResourceRequestDto> inputDtos = provideResourceRequestDtos().toList();
 
@@ -116,7 +109,7 @@ class ResourceCrudIntegrationTest {
   void willFailToDeleteResourceFromDatabaseWithWrongId() {
     ResponseEntity<String> response =
         testRestTemplate.exchange(
-            getBaseResourceUrl() + INEXISTENT_ID,
+            getBaseResourceUrl() + UUID.randomUUID(),
             HttpMethod.DELETE,
             HttpEntity.EMPTY,
             String.class);

@@ -1,9 +1,9 @@
 package jewellery.inventory.unit.service;
 
-import static jewellery.inventory.mapper.ResourceMapper.toResourceEntity;
-import static jewellery.inventory.mapper.ResourceMapper.toResourceResponse;
 import static jewellery.inventory.helper.ResourceTestHelper.getGemstone;
 import static jewellery.inventory.helper.ResourceTestHelper.provideResources;
+import static jewellery.inventory.mapper.ResourceMapper.toResourceEntity;
+import static jewellery.inventory.mapper.ResourceMapper.toResourceResponse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,7 +32,7 @@ class ResourceServiceTest {
   @InjectMocks private ResourceService resourceService;
 
   @ParameterizedTest
-  @MethodSource("jewellery.inventory.util.TestUtil#provideResourcesAndRequestDtos")
+  @MethodSource("jewellery.inventory.helper.ResourceTestHelper#provideResourcesAndRequestDtos")
   void willSaveResource(Resource resourceFromDatabase, ResourceRequestDto resourceRequestDto) {
     when(resourceRepository.save(any())).thenReturn(resourceFromDatabase);
     ResourceResponseDto actualResourceResponseDto =
@@ -53,7 +53,7 @@ class ResourceServiceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("jewellery.inventory.util.TestUtil#provideResourcesAndRequestDtos")
+  @MethodSource("jewellery.inventory.helper.ResourceTestHelper#provideResourcesAndRequestDtos")
   void willGetAResource(Resource resourceFromDatabase, ResourceRequestDto expectedRequestDto) {
     when(resourceRepository.findById(resourceFromDatabase.getId()))
         .thenReturn(Optional.of(resourceFromDatabase));
@@ -68,7 +68,8 @@ class ResourceServiceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("jewellery.inventory.util.TestUtil#provideUpdatedResourcesAndUpdatedRequestDtos")
+  @MethodSource(
+      "jewellery.inventory.helper.ResourceTestHelper#provideUpdatedResourcesAndUpdatedRequestDtos")
   void willUpdateAResource(Resource resourceFromDatabase, ResourceRequestDto expectedDto) {
     when(resourceRepository.findById(resourceFromDatabase.getId()))
         .thenReturn(Optional.of(resourceFromDatabase));

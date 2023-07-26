@@ -16,14 +16,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 class ResourceMapperTest {
 
   @ParameterizedTest
-  @MethodSource("jewellery.inventory.util.TestUtil#provideResourcesAndResponseDtos")
+  @MethodSource("jewellery.inventory.helper.ResourceTestHelper#provideResourcesAndResponseDtos")
   void willMapValidResourceToDTO(
       Resource resource, ResourceResponseDto expectedResourceResponseDto) {
     assertEquals(expectedResourceResponseDto, toResourceResponse(resource));
   }
 
   @ParameterizedTest
-  @MethodSource("jewellery.inventory.util.TestUtil#provideResourcesAndRequestDtos")
+  @MethodSource("jewellery.inventory.helper.ResourceTestHelper#provideResourcesAndRequestDtos")
   void willMapValidDtoToResource(Resource expectedResource, ResourceRequestDto resourceRequestDto) {
     expectedResource.setId(null);
     assertEquals(expectedResource, toResourceEntity(resourceRequestDto));
