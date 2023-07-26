@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.UserRequest;
@@ -103,7 +102,7 @@ public class UserCrudIntegrationTest {
   }
 
   @Test
-  void willGetUsersFromDatabase() throws JsonProcessingException {
+  void willGetUsersFromDatabase() {
     UserRequest userRequest = createTestUserRequest();
 
     ResponseEntity<UserResponse> userResponseEntity =
@@ -115,9 +114,9 @@ public class UserCrudIntegrationTest {
             getBaseUserUrl(),
             HttpMethod.GET,
             null,
-            new ParameterizedTypeReference<List<UserResponse>>() {});
+            new ParameterizedTypeReference<>() {});
 
-    assertEquals(HttpStatus.FOUND, response.getStatusCode());
+    assertEquals(HttpStatus.OK, response.getStatusCode());
 
     List<UserResponse> users = response.getBody();
     assertNotNull(users);
@@ -137,7 +136,7 @@ public class UserCrudIntegrationTest {
         this.testRestTemplate.getForEntity(
             getBaseUserUrl() + "/" + createdUser.getId(), UserResponse.class);
 
-    assertEquals(HttpStatus.FOUND, response.getStatusCode());
+    assertEquals(HttpStatus.OK, response.getStatusCode());
     UserResponse fetchedUser = response.getBody();
 
     assertNotNull(fetchedUser);
@@ -170,7 +169,7 @@ public class UserCrudIntegrationTest {
             requestUpdate,
             UserResponse.class);
 
-    assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
+    assertEquals(HttpStatus.OK, response.getStatusCode());
     UserResponse updatedUser = response.getBody();
 
     assertNotNull(updatedUser);

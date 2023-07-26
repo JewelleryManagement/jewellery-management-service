@@ -121,11 +121,11 @@ class UserServiceTest {
     UUID userId = UUID.randomUUID();
     user.setId(userId);
     UserRequest userRequest = UserMapper.INSTANCE.toUserRequest(user);
-    when(userRepository.findById(userId)).thenReturn(Optional.empty());
+    when(userRepository.existsById(userId)).thenReturn(false);
 
     assertThrows(UserNotFoundException.class, () -> userService.updateUser(userRequest, userId));
 
-    verify(userRepository, times(1)).findById(userId);
+    verify(userRepository, times(1)).existsById(userId);
     verify(userRepository, never()).save(user);
   }
 
@@ -135,14 +135,14 @@ class UserServiceTest {
     UUID userId = UUID.randomUUID();
     user.setId(userId);
 
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(userRepository.existsById(userId)).thenReturn(true);
     when(userRepository.save(any(User.class))).thenReturn(user);
 
     UserResponse updatedUser =
         userService.updateUser(UserMapper.INSTANCE.toUserRequest(user), userId);
 
     assertEquals(UserMapper.INSTANCE.toUserResponse(user), updatedUser);
-    verify(userRepository, times(1)).findById(userId);
+    verify(userRepository, times(1)).existsById(userId);
     verify(userRepository, times(1)).save(any(User.class));
   }
 
@@ -161,7 +161,7 @@ class UserServiceTest {
 
     UserRequest updatingUserRequest = UserMapper.INSTANCE.toUserRequest(updatingUser);
 
-    when(userRepository.findById(updatingUserId)).thenReturn(Optional.of(updatingUser));
+    when(userRepository.existsById(updatingUserId)).thenReturn(true);
     when(userRepository.findByName(USER_NAME)).thenReturn(Optional.of(existingUser));
 
     assertThrows(
@@ -186,7 +186,7 @@ class UserServiceTest {
     updatingUserRequest.setName(updatingUser.getName());
     updatingUserRequest.setEmail(updatingUser.getEmail());
 
-    when(userRepository.findById(updatingUserId)).thenReturn(Optional.of(updatingUser));
+    when(userRepository.existsById(updatingUserId)).thenReturn(true);
     when(userRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(existingUser));
 
     assertThrows(
@@ -198,6 +198,7 @@ class UserServiceTest {
   @DisplayName("Should delete the user when the user id exists")
   void deleteUserWhenUserIdExists() {
     UUID userId = UUID.randomUUID();
+    user.setId(userId);
     when(userRepository.existsById(userId)).thenReturn(true);
 
     assertDoesNotThrow(() -> userService.deleteUser(userId));
