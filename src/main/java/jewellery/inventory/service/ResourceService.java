@@ -10,15 +10,13 @@ import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.exception.ResourceNotFoundException;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class ResourceService {
   private final ResourceRepository resourceRepository;
-
-  ResourceService(ResourceRepository resourceRepository) {
-    this.resourceRepository = resourceRepository;
-  }
 
   private ResourceResponseDto map(Resource resource) {
     return toResourceResponse(resource);
