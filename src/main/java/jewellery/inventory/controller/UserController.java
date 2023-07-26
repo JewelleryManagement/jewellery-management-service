@@ -6,8 +6,8 @@ import java.util.UUID;
 import jewellery.inventory.dto.UserRequest;
 import jewellery.inventory.dto.UserResponse;
 import jewellery.inventory.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,46 +16,44 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/users")
 @CrossOrigin(origins = "${cors.origins}")
+@RequiredArgsConstructor
 public class UserController {
   private final UserService userService;
 
-  public UserController(UserService userService) {
-    this.userService = userService;
-  }
-
+  @ResponseStatus(HttpStatus.OK)
   @GetMapping
-  public ResponseEntity<List<UserResponse>> getAllUsers() {
-    List<UserResponse> userResponseList = userService.getAllUsers();
-    return ResponseEntity.status(HttpStatus.FOUND).body(userResponseList);
+  public List<UserResponse> getAllUsers() {
+    return userService.getAllUsers();
   }
 
+  @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")
-  public ResponseEntity<UserResponse> getUser(@PathVariable UUID id) {
-    UserResponse userResponse = userService.getUser(id);
-    return ResponseEntity.status(HttpStatus.FOUND).body(userResponse);
+  public UserResponse getUser(@PathVariable UUID id) {
+    return userService.getUser(id);
   }
 
+  @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
-  public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest newUser) {
-    UserResponse userResponse = userService.createUser(newUser);
-    return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
+  public UserResponse createUser(@Valid @RequestBody UserRequest newUser) {
+    return userService.createUser(newUser);
   }
 
+  @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{id}")
-  public ResponseEntity<UserResponse> updateUser(
+  public UserResponse updateUser(
       @PathVariable UUID id, @Valid @RequestBody UserRequest userRequest) {
-    UserResponse userResponse = userService.updateUser(userRequest, id);
-    return ResponseEntity.status(HttpStatus.ACCEPTED).body(userResponse);
+    return userService.updateUser(userRequest, id);
   }
 
+  @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")
-  public ResponseEntity<HttpStatus> deleteUser(@PathVariable UUID id) {
+  public void deleteUser(@PathVariable UUID id) {
     userService.deleteUser(id);
-    return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
   }
 }
