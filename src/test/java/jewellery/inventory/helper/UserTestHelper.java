@@ -5,8 +5,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.UUID;
-import jewellery.inventory.dto.UserRequest;
-import jewellery.inventory.dto.UserResponse;
+import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.User;
 
 public class UserTestHelper {
@@ -39,43 +39,43 @@ public class UserTestHelper {
     return user;
   }
 
-  public static UserRequest createTestUserRequest() {
-    UserRequest userRequest = new UserRequest();
+  public static UserRequestDto createTestUserRequest() {
+    UserRequestDto userRequest = new UserRequestDto();
     userRequest.setName(USER_NAME);
     userRequest.setEmail(USER_EMAIL);
     return userRequest;
   }
 
-  public static UserRequest createDifferentUserRequest() {
-    UserRequest userRequest = new UserRequest();
+  public static UserRequestDto createDifferentUserRequest() {
+    UserRequestDto userRequest = new UserRequestDto();
     userRequest.setName("different_user");
     userRequest.setEmail("user@example.com");
     return userRequest;
   }
 
-  public static UserRequest createInvalidUserRequest() {
-    UserRequest invalidUserRequest = new UserRequest();
+  public static UserRequestDto createInvalidUserRequest() {
+    UserRequestDto invalidUserRequest = new UserRequestDto();
     invalidUserRequest.setName("__");
     invalidUserRequest.setEmail("valid@mail.com");
     return invalidUserRequest;
   }
 
-  public static UserResponse createUserResponse() {
-    UserResponse userResponse = new UserResponse();
+  public static UserResponseDto createUserResponse() {
+    UserResponseDto userResponse = new UserResponseDto();
     userResponse.setName(USER_NAME);
     userResponse.setEmail(USER_EMAIL);
     return userResponse;
   }
 
-  public static UserResponse jsonToUserResponse(String json, ObjectMapper objectMapper) {
+  public static UserResponseDto jsonToUserResponse(String json, ObjectMapper objectMapper) {
     try {
-      return objectMapper.readValue(json, UserResponse.class);
+      return objectMapper.readValue(json, UserResponseDto.class);
     } catch (JsonProcessingException e) {
       throw new RuntimeException("Failed to convert json to UserResponse object", e);
     }
   }
 
-  public static List<UserResponse> jsonToListOfUserResponse(
+  public static List<UserResponseDto> jsonToListOfUserResponse(
       String json, ObjectMapper objectMapper) {
     try {
       return objectMapper.readValue(json, new TypeReference<>() {});

@@ -1,12 +1,16 @@
-package jewellery.inventory.model.resources;
+package jewellery.inventory.model.resource;
 
 import jakarta.persistence.Entity;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Getter
 @Setter
+@ToString(callSuper = true)
+@SuperBuilder
+@NoArgsConstructor
 public class Gemstone extends Resource {
   private String color;
   private double carat;

@@ -1,4 +1,4 @@
-package jewellery.inventory.dto;
+package jewellery.inventory.dto.request;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class UserRequest {
+public class UserRequestDto {
   private static final String NAME_PATTERN_REGEX = "^(?!.*__)[A-Za-z0-9_]*$";
   private static final String EMAIL_PATTERN_REGEX =
       "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$";
