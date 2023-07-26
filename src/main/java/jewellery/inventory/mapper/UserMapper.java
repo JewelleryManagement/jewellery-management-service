@@ -1,8 +1,8 @@
 package jewellery.inventory.mapper;
 
 import java.util.List;
-import jewellery.inventory.dto.request.UserRequest;
-import jewellery.inventory.dto.response.UserResponse;
+import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -11,11 +11,11 @@ import org.mapstruct.factory.Mappers;
 public interface UserMapper {
   UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
 
-  UserRequest toUserRequest(User user);
+  UserRequestDto toUserRequest(User user);
 
-  UserResponse toUserResponse(User user);
+  UserResponseDto toUserResponse(User user);
 
-  List<UserResponse> toUserResponseList(List<User> userList);
+  List<UserResponseDto> toUserResponseList(List<User> userList);
 
-  User toUserEntity(UserRequest userDto);
+  User toUserEntity(UserRequestDto userDto);
 }

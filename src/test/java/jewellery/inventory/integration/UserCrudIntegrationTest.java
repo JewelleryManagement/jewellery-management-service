@@ -11,8 +11,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 import java.util.List;
 import java.util.UUID;
-import jewellery.inventory.dto.request.UserRequest;
-import jewellery.inventory.dto.response.UserResponse;
+import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,14 +48,14 @@ public class UserCrudIntegrationTest {
 
   @Test
   void willCreateNewUser() {
-    UserRequest userRequest = createTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
 
-    ResponseEntity<UserResponse> response =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponse.class);
+    ResponseEntity<UserResponseDto> response =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
-    UserResponse userResponse = response.getBody();
+    UserResponseDto userResponse = response.getBody();
 
     assertNotNull(userResponse);
     assertNotNull(userResponse.getId());
@@ -67,49 +67,49 @@ public class UserCrudIntegrationTest {
   void willNotCreateNewUserWithInvalidName() {
     assertTrue(
         this.testRestTemplate
-            .postForEntity(getBaseUserUrl(), createInvalidUserRequest(), UserResponse.class)
+            .postForEntity(getBaseUserUrl(), createInvalidUserRequest(), UserResponseDto.class)
             .getStatusCode()
             .is4xxClientError());
   }
 
   @Test
   void willNotCreateUserWithDuplicateEmail() {
-    UserRequest userRequest = createTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
 
-    this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponse.class);
+    this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
 
-    ResponseEntity<UserResponse> response =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponse.class);
+    ResponseEntity<UserResponseDto> response =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
 
   @Test
   void willNotCreateUserWithDuplicateName() {
-    UserRequest userRequest = createTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
 
-    this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponse.class);
+    this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
 
-    UserRequest duplicateNameUserRequest = new UserRequest();
+    UserRequestDto duplicateNameUserRequest = new UserRequestDto();
     duplicateNameUserRequest.setName(userRequest.getName());
     duplicateNameUserRequest.setEmail("differentEmail@example.com");
 
-    ResponseEntity<UserResponse> response =
+    ResponseEntity<UserResponseDto> response =
         this.testRestTemplate.postForEntity(
-            getBaseUserUrl(), duplicateNameUserRequest, UserResponse.class);
+            getBaseUserUrl(), duplicateNameUserRequest, UserResponseDto.class);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
 
   @Test
   void willGetUsersFromDatabase() {
-    UserRequest userRequest = createTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
 
-    ResponseEntity<UserResponse> userResponseEntity =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponse.class);
+    ResponseEntity<UserResponseDto> userResponseEntity =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
     assertNotNull(userResponseEntity.getBody());
 
-    ResponseEntity<List<UserResponse>> response =
+    ResponseEntity<List<UserResponseDto>> response =
         this.testRestTemplate.exchange(
             getBaseUserUrl(),
             HttpMethod.GET,
@@ -118,7 +118,7 @@ public class UserCrudIntegrationTest {
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
 
-    List<UserResponse> users = response.getBody();
+    List<UserResponseDto> users = response.getBody();
     assertNotNull(users);
     assertFalse(users.isEmpty());
     assertEquals(userRequest.getName(), users.get(0).getName());
@@ -127,17 +127,17 @@ public class UserCrudIntegrationTest {
 
   @Test
   void willGetSpecificUser() {
-    UserRequest userRequest = createTestUserRequest();
-    ResponseEntity<UserResponse> userResponseEntity =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponse.class);
-    UserResponse createdUser = userResponseEntity.getBody();
+    UserRequestDto userRequest = createTestUserRequest();
+    ResponseEntity<UserResponseDto> userResponseEntity =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
+    UserResponseDto createdUser = userResponseEntity.getBody();
 
-    ResponseEntity<UserResponse> response =
+    ResponseEntity<UserResponseDto> response =
         this.testRestTemplate.getForEntity(
-            getBaseUserUrl() + "/" + createdUser.getId(), UserResponse.class);
+            getBaseUserUrl() + "/" + createdUser.getId(), UserResponseDto.class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    UserResponse fetchedUser = response.getBody();
+    UserResponseDto fetchedUser = response.getBody();
 
     assertNotNull(fetchedUser);
     assertEquals(createdUser.getId(), fetchedUser.getId());
@@ -155,22 +155,22 @@ public class UserCrudIntegrationTest {
 
   @Test
   void willUpdateUser() {
-    UserRequest userRequest = createTestUserRequest();
-    ResponseEntity<UserResponse> userResponseEntity =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponse.class);
-    UserResponse createdUser = userResponseEntity.getBody();
+    UserRequestDto userRequest = createTestUserRequest();
+    ResponseEntity<UserResponseDto> userResponseEntity =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
+    UserResponseDto createdUser = userResponseEntity.getBody();
 
-    UserRequest updatedUserRequest = createTestUserRequest();
-    HttpEntity<UserRequest> requestUpdate = new HttpEntity<>(updatedUserRequest);
-    ResponseEntity<UserResponse> response =
+    UserRequestDto updatedUserRequest = createTestUserRequest();
+    HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(updatedUserRequest);
+    ResponseEntity<UserResponseDto> response =
         this.testRestTemplate.exchange(
             getBaseUserUrl() + "/" + createdUser.getId(),
             HttpMethod.PUT,
             requestUpdate,
-            UserResponse.class);
+            UserResponseDto.class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    UserResponse updatedUser = response.getBody();
+    UserResponseDto updatedUser = response.getBody();
 
     assertNotNull(updatedUser);
     assertEquals(createdUser.getId(), updatedUser.getId());
@@ -181,64 +181,64 @@ public class UserCrudIntegrationTest {
   @Test
   void willNotUpdateUserWithDuplicateEmail() {
 
-    UserResponse firstUser = sendUserCreateRequest(createTestUserRequest());
+    UserResponseDto firstUser = sendUserCreateRequest(createTestUserRequest());
 
-    UserResponse secondUser = sendUserCreateRequest(createDifferentUserRequest());
+    UserResponseDto secondUser = sendUserCreateRequest(createDifferentUserRequest());
 
-    UserRequest secondUserRequest = new UserRequest();
+    UserRequestDto secondUserRequest = new UserRequestDto();
     secondUserRequest.setName(secondUser.getName());
     secondUserRequest.setEmail(firstUser.getEmail());
 
-    HttpEntity<UserRequest> requestUpdate = new HttpEntity<>(secondUserRequest);
-    ResponseEntity<UserResponse> responseEntity =
+    HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(secondUserRequest);
+    ResponseEntity<UserResponseDto> responseEntity =
         this.testRestTemplate.exchange(
             getBaseUserUrl() + "/" + secondUser.getId(),
             HttpMethod.PUT,
             requestUpdate,
-            UserResponse.class);
+            UserResponseDto.class);
 
     assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
   }
 
   @Test
   void willNotUpdateUserWithDuplicateName() {
-    UserResponse firstUser = sendUserCreateRequest(createTestUserRequest());
-    UserResponse secondUser = sendUserCreateRequest(createDifferentUserRequest());
+    UserResponseDto firstUser = sendUserCreateRequest(createTestUserRequest());
+    UserResponseDto secondUser = sendUserCreateRequest(createDifferentUserRequest());
 
-    UserRequest firstUserRequest = createTestUserRequest();
-    UserRequest secondUserRequest = createDifferentUserRequest();
+    UserRequestDto firstUserRequest = createTestUserRequest();
+    UserRequestDto secondUserRequest = createDifferentUserRequest();
 
     secondUserRequest.setName(firstUserRequest.getName());
-    HttpEntity<UserRequest> requestUpdate = new HttpEntity<>(secondUserRequest);
-    ResponseEntity<UserResponse> responseEntity =
+    HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(secondUserRequest);
+    ResponseEntity<UserResponseDto> responseEntity =
         this.testRestTemplate.exchange(
             getBaseUserUrl() + "/" + secondUser.getId(),
             HttpMethod.PUT,
             requestUpdate,
-            UserResponse.class);
+            UserResponseDto.class);
 
     assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
   }
 
   @Test
   void willNotUpdateNonexistentUser() {
-    UserRequest userRequest = createTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
     UUID fakeId = UUID.randomUUID();
-    HttpEntity<UserRequest> requestUpdate = new HttpEntity<>(userRequest);
+    HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(userRequest);
 
-    ResponseEntity<UserResponse> response =
+    ResponseEntity<UserResponseDto> response =
         this.testRestTemplate.exchange(
-            getBaseUserUrl() + "/" + fakeId, HttpMethod.PUT, requestUpdate, UserResponse.class);
+            getBaseUserUrl() + "/" + fakeId, HttpMethod.PUT, requestUpdate, UserResponseDto.class);
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
 
   @Test
   void willDeleteUser() {
-    UserRequest userRequest = createTestUserRequest();
-    ResponseEntity<UserResponse> userResponseEntity =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponse.class);
-    UserResponse createdUser = userResponseEntity.getBody();
+    UserRequestDto userRequest = createTestUserRequest();
+    ResponseEntity<UserResponseDto> userResponseEntity =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
+    UserResponseDto createdUser = userResponseEntity.getBody();
 
     ResponseEntity<HttpStatus> response =
         this.testRestTemplate.exchange(
@@ -266,10 +266,10 @@ public class UserCrudIntegrationTest {
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
 
-  private UserResponse sendUserCreateRequest(UserRequest userRequest) {
-    ResponseEntity<UserResponse> userResponseEntity =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponse.class);
-    UserResponse createdUser = userResponseEntity.getBody();
+  private UserResponseDto sendUserCreateRequest(UserRequestDto userRequest) {
+    ResponseEntity<UserResponseDto> userResponseEntity =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
+    UserResponseDto createdUser = userResponseEntity.getBody();
     assertNotNull(createdUser);
     return createdUser;
   }
