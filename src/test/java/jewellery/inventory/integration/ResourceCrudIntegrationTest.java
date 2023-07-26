@@ -1,8 +1,7 @@
 package jewellery.inventory.integration;
 
-import static jewellery.inventory.mapper.ResourceMapper.toResourceResponse;
 import static jewellery.inventory.helper.ResourceTestHelper.*;
-import static org.assertj.core.api.Assertions.assertThat;
+import static jewellery.inventory.mapper.ResourceMapper.toResourceResponse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -27,14 +26,13 @@ import org.springframework.data.util.Pair;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 class ResourceCrudIntegrationTest {
-
-  public static final String INEXISTENT_ID = "/inexistent-id";
 
   private String getBaseResourceUrl() {
     return "http://localhost:" + port + "/resources";
@@ -87,22 +85,21 @@ class ResourceCrudIntegrationTest {
 
   @Test
   void willFailToGetResourceFromDatabaseWithWrongId() {
-    assertTrue(
-        testRestTemplate
-            .getForEntity(getBaseResourceUrl() + INEXISTENT_ID, String.class)
-            .getStatusCode()
-            .is4xxClientError());
+    ResponseEntity<String> response =
+        testRestTemplate.getForEntity(getBaseResourceUrl() + UUID.randomUUID(), String.class);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
 
   @Test
   void willFailToUpdateResourceFromDatabaseWithWrongId() {
     ResponseEntity<String> response =
         testRestTemplate.exchange(
-            getBaseResourceUrl() + INEXISTENT_ID,
+            getBaseResourceUrl() + UUID.randomUUID(),
             HttpMethod.PUT,
             new HttpEntity<>(getGemstoneResponseDto()),
             String.class);
-    assertTrue(response.getStatusCode().is4xxClientError());
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
 
   @Test
@@ -113,7 +110,7 @@ class ResourceCrudIntegrationTest {
             HttpMethod.DELETE,
             HttpEntity.EMPTY,
             String.class);
-    assertTrue(response.getStatusCode().is4xxClientError());
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
 
   @NotNull
