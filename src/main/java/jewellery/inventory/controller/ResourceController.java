@@ -7,7 +7,6 @@ import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.service.ResourceService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,35 +20,36 @@ public class ResourceController {
     this.resourceService = resourceService;
   }
 
+  @ResponseStatus(HttpStatus.OK)
   @GetMapping
-  public ResponseEntity<List<ResourceResponseDto>> getAllResources() {
-    return ResponseEntity.ok(resourceService.getAllResources());
+  public List<ResourceResponseDto> getAllResources() {
+    return resourceService.getAllResources();
   }
 
+  @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")
-  public ResponseEntity<ResourceResponseDto> getResourceById(@PathVariable("id") UUID id) {
-    return ResponseEntity.ok(resourceService.getResourceById(id));
+  public ResourceResponseDto getResourceById(@PathVariable("id") UUID id) {
+    return resourceService.getResourceById(id);
   }
 
+  @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
-  public ResponseEntity<ResourceResponseDto> createResource(
+  public ResourceResponseDto createResource(
       @RequestBody @Valid ResourceRequestDto resourceRequestDto) {
 
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(resourceService.createResource(resourceRequestDto));
+    return resourceService.createResource(resourceRequestDto);
   }
 
+  @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{id}")
-  public ResponseEntity<ResourceResponseDto> updateResource(
+  public ResourceResponseDto updateResource(
       @PathVariable("id") UUID id, @Valid @RequestBody ResourceRequestDto resourceRequestDto) {
-    return ResponseEntity.status(HttpStatus.ACCEPTED)
-        .body(resourceService.updateResource(id, resourceRequestDto));
+    return resourceService.updateResource(id, resourceRequestDto);
   }
 
+  @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")
-  public ResponseEntity<String> deleteResourceById(@PathVariable("id") UUID id) {
+  public void deleteResourceById(@PathVariable("id") UUID id) {
     resourceService.deleteResourceById(id);
-    return ResponseEntity.status(HttpStatus.NO_CONTENT)
-        .body("Resource with id: " + id + " has been deleted successfully!");
   }
 }
