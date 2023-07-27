@@ -3,8 +3,8 @@ package jewellery.inventory.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import jewellery.inventory.dto.UserRequest;
-import jewellery.inventory.dto.UserResponse;
+import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.DuplicateEmailException;
 import jewellery.inventory.exception.DuplicateNameException;
 import jewellery.inventory.exception.UserNotFoundException;
@@ -19,22 +19,22 @@ import org.springframework.stereotype.Service;
 public class UserService {
   private final UserRepository userRepository;
 
-  public List<UserResponse> getAllUsers() {
+  public List<UserResponseDto> getAllUsers() {
     return UserMapper.INSTANCE.toUserResponseList(userRepository.findAll());
   }
 
-  public UserResponse getUser(UUID id) {
+  public UserResponseDto getUser(UUID id) {
     return UserMapper.INSTANCE.toUserResponse(
         userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id)));
   }
 
-  public UserResponse createUser(UserRequest user) {
+  public UserResponseDto createUser(UserRequestDto user) {
     User userToCreate = UserMapper.INSTANCE.toUserEntity(user);
     validateUserDetails(userToCreate);
     return UserMapper.INSTANCE.toUserResponse(userRepository.save(userToCreate));
   }
 
-  public UserResponse updateUser(UserRequest userRequest, UUID id) {
+  public UserResponseDto updateUser(UserRequestDto userRequest, UUID id) {
     if (!userRepository.existsById(id)) {
       throw new UserNotFoundException(id);
     }
