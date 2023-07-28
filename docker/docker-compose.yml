@@ -1,0 +1,39 @@
+version: '3.8'
+name: jms-db-and-app
+services:
+  app:
+    image: jms-app
+    build:
+      context: .
+      dockerfile: Dockerfile_app
+    container_name: app
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${JMS_DATABASE_NAME}?autoreconnect=true&createDatabaseIfNotExist=true&characterEncoding=utf8
+      JMS_DATABASE_NAME: ${JMS_DATABASE_NAME}
+      JMS_DATABASE_USER: ${JMS_DATABASE_USER}
+      JMS_DATABASE_PASSWORD: ${JMS_DATABASE_PASSWORD}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../target/jewellery-inventory-0.0.1-SNAPSHOT.jar:/jar/app.jar
+  db:
+    container_name: postgres
+    image: jms-db
+    build:
+      context: .
+      dockerfile: Dockerfile_DB
+    restart: always
+    environment:
+      POSTGRES_DB: ${JMS_DATABASE_NAME}
+      POSTGRES_USER: ${JMS_DATABASE_USER}
+      POSTGRES_PASSWORD: ${JMS_DATABASE_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
+
