@@ -32,7 +32,7 @@ jobs:
 
     - uses: aws-actions/configure-aws-credentials@v2
       with:
-        role-to-assume: arn:aws:iam::364149455845:role/GithubAction
+        role-to-assume: ${{ secrets.IAMROLE_GITHUB }}
         role-session-name: GithubAction
         aws-region: ${{ env.AWS_REGION }}
 
@@ -47,5 +47,5 @@ jobs:
 
     - name: Push jar and docker files to AWS S3
       run: |
-        cp ${{ env.applicationfolder }}/target/*.jar ${{ env.applicationfolder }}/docker
-        aws s3 cp --recursive docker s3://${{ env.S3BUCKET }}/
+        cp ./target/*.jar ./docker
+        aws s3 cp --recursive docker s3://${{ secrets.S3BUCKET }}/
