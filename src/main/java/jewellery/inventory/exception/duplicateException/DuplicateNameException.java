@@ -1,4 +1,4 @@
-package jewellery.inventory.exception;
+package jewellery.inventory.exception.duplicateException;
 
 public class DuplicateNameException extends DuplicateException {
   public DuplicateNameException(String name) {

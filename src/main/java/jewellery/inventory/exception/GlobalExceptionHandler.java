@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import jewellery.inventory.exception.duplicateException.DuplicateException;
+import jewellery.inventory.exception.invalidResourceException.InvalidResourceQuantityException;
+import jewellery.inventory.exception.notFoundException.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -23,7 +26,6 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
     Map<String, List<String>> fieldErrorsMap = getFieldErrors(ex);
-
     return createErrorResponse(HttpStatus.BAD_REQUEST, fieldErrorsMap);
   }
 
@@ -40,6 +42,18 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(DuplicateException.class)
   public ResponseEntity<Object> handleDuplicateException(DuplicateException ex) {
+    return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+  }
+
+  @ExceptionHandler(InvalidResourceQuantityException.class)
+  public ResponseEntity<Object> handleInvalidResourceQuantityException(
+      InvalidResourceQuantityException ex) {
+    return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+  }
+
+  @ExceptionHandler(UserDoesNotOwnResourceException.class)
+  public ResponseEntity<Object> handleUserDoesNotOwnResourceException(
+      UserDoesNotOwnResourceException ex) {
     return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
 

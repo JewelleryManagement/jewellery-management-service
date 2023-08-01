@@ -13,9 +13,10 @@ import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.exception.DuplicateEmailException;
-import jewellery.inventory.exception.DuplicateNameException;
-import jewellery.inventory.exception.UserNotFoundException;
+
+import jewellery.inventory.exception.duplicateException.DuplicateEmailException;
+import jewellery.inventory.exception.duplicateException.DuplicateNameException;
+import jewellery.inventory.exception.notFoundException.UserNotFoundException;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;

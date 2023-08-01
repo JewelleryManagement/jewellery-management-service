@@ -1,6 +1,7 @@
 package jewellery.inventory.model;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.model.resource.ResourceInUser;
@@ -21,8 +22,8 @@ public class User {
   private String email;
 
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-  private List<Product> productsOwned;
+  private List<Product> productsOwned = new ArrayList<>();
 
-  @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-  private List<ResourceInUser> resourcesOwned;
+  @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<ResourceInUser> resourcesOwned = new ArrayList<>();
 }
