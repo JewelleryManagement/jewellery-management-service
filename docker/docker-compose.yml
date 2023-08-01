@@ -17,7 +17,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ../target/jewellery-inventory-0.0.1-SNAPSHOT.jar:/jar/app.jar
+      - ./jewellery-inventory-0.0.1-SNAPSHOT.jar:/jar/app.jar
   db:
     container_name: postgres
     image: jms-db
