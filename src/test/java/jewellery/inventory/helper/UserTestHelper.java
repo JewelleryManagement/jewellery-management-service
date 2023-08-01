@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.request.resource.ResourceInUserRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.User;
 
@@ -22,8 +23,8 @@ public class UserTestHelper {
 
   public static User createSecondTestUser() {
     User user = new User();
-    user.setName(USER_NAME+2);
-    user.setEmail(USER_EMAIL+2);
+    user.setName(USER_NAME + 2);
+    user.setEmail(USER_EMAIL + 2);
     return user;
   }
 
@@ -82,5 +83,14 @@ public class UserTestHelper {
     } catch (JsonProcessingException e) {
       throw new RuntimeException("Failed to convert JSON to List<UserResponse>", e);
     }
+  }
+
+  public static ResourceInUserRequestDto createResourceInUserRequestDto(
+      UUID userId, UUID resourceId, int quantity) {
+    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
+    resourceInUserRequestDto.setUserId(userId);
+    resourceInUserRequestDto.setResourceId(resourceId);
+    resourceInUserRequestDto.setQuantity(quantity);
+    return resourceInUserRequestDto;
   }
 }

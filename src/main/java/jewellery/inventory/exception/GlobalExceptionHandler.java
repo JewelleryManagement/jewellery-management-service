@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import jewellery.inventory.exception.duplicateException.DuplicateException;
-import jewellery.inventory.exception.invalidResourceException.InvalidResourceQuantityException;
+import jewellery.inventory.exception.invalidResourceQuantityException.InvalidResourceQuantityException;
 import jewellery.inventory.exception.notFoundException.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

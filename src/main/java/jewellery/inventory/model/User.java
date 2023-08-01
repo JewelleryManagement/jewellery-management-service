@@ -26,4 +26,10 @@ public class User {
 
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ResourceInUser> resourcesOwned = new ArrayList<>();
+
+  public void addResource(ResourceInUser resourceInUser) {
+    resourcesOwned.add(resourceInUser);
+    resourceInUser.setOwner(this);
+  }
+
 }
