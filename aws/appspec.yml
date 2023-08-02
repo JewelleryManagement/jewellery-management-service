@@ -25,6 +25,9 @@ os: linux
         # If you are not running any commands on the Amazon EC2 instance, then remove
         #   the "hooks" section altogether. A blank or incomplete "hooks" section
       #   may cause associated deployments to fail.
+files:
+  - source: /docker/
+    destination: /tmp
 hooks:
   # For each deployment lifecycle event, specify multiple "location" entries
   #   if you want to run multiple scripts during that event.
@@ -51,17 +54,17 @@ hooks:
   #   revision's file bundle.
   ApplicationStop:
     - location: scripts/stop_docker_containers.sh
-      timeout: 300
+      timeout: 180
       runas: root
   # During the BeforeInstall deployment lifecycle event, run the commands
   #   in the script specified in "location".
   BeforeInstall:
     - location: scripts/install_docker.sh
-      timeout: 300
+      timeout: 180
       runas: root
   # During the ApplicationStart deployment lifecycle event, run the commands
   #   in the script specified in "location".
   ApplicationStart:
     - location: scripts/start_docker.sh
-      timeout: 300
+      timeout: 180
       runas: root

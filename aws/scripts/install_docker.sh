@@ -1,1 +1,1 @@
-yum install docker > ~/logs/install.log
+yum install docker > /logs/install.log

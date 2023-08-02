@@ -1,1 +1,1 @@
-docker compose -f ../docker/docker-compose.yml up --build > ~/logs/startup.log
+docker compose -f /tmp/docker-compose.yml up --build > /logs/startup.log
