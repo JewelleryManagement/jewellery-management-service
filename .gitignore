@@ -37,7 +37,7 @@ build/
 build/
 
 # Spring Boot properties
-docker/.env
+aws/docker/.env
 
 pom.xml.tag
 pom.xml.releaseBackup
