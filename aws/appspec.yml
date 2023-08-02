@@ -52,16 +52,16 @@ hooks:
   # During the ApplicationStop deployment lifecycle event, run the commands
   #   in the script specified in "location" starting from the root of the
   #   revision's file bundle.
-#  ApplicationStop:
-#    - location: scripts/stop_docker_containers.sh
-#      timeout: 180
-#      runas: root
+  ApplicationStop:
+    - location: scripts/stop_docker_containers.sh
+      timeout: 180
+      runas: root
   # During the BeforeInstall deployment lifecycle event, run the commands
   #   in the script specified in "location".
-#  BeforeInstall:
-#    - location: scripts/install_docker.sh
-#      timeout: 180
-#      runas: root
+  BeforeInstall:
+    - location: scripts/install_docker.sh
+      timeout: 180
+      runas: root
   # During the ApplicationStart deployment lifecycle event, run the commands
   #   in the script specified in "location".
   ApplicationStart:
