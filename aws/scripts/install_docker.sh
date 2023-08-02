@@ -1,3 +1,3 @@
 #!/bin/bash
 
-yum install docker #> /logs/install.log
+yum install -y docker #> /logs/install.log
