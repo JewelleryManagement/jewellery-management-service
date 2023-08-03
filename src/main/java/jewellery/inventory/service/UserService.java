@@ -18,7 +18,6 @@ import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInUser;
-import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
   private final UserRepository userRepository;
   private final ResourceRepository resourceRepository;
-  private final ResourceInUserRepository resourceInUserRepository;
 
   public List<UserResponseDto> getAllUsers() {
     return UserMapper.INSTANCE.toUserResponseList(userRepository.findAll());
@@ -120,7 +118,14 @@ public class UserService {
   @Transactional
   public void removeResourceFromUser(UUID userId, UUID resourceId) {
     User user = findUserById(userId);
-    user.getResourcesOwned().removeIf(r -> r.getResource().getId().equals(resourceId));
+
+    ResourceInUser resourceToRemove =
+        user.getResourcesOwned().stream()
+            .filter(r -> r.getResource().getId().equals(resourceId))
+            .findFirst()
+            .orElseThrow(() -> new ResourceNotFoundException(resourceId));
+
+    user.getResourcesOwned().remove(resourceToRemove);
     userRepository.save(user);
   }
 

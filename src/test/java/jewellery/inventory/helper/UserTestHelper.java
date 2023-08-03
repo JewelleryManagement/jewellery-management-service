@@ -1,14 +1,11 @@
 package jewellery.inventory.helper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.request.resource.GemstoneRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceInUserRequestDto;
-import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.User;
+import org.jetbrains.annotations.NotNull;
 
 public class UserTestHelper {
   public static final String USER_NAME = "john";
@@ -57,32 +54,23 @@ public class UserTestHelper {
   public static UserRequestDto createInvalidUserRequest() {
     UserRequestDto invalidUserRequest = new UserRequestDto();
     invalidUserRequest.setName("__");
-    invalidUserRequest.setEmail("valid@mail.com");
+    invalidUserRequest.setEmail(USER_EMAIL);
     return invalidUserRequest;
   }
-
-  public static UserResponseDto createUserResponse() {
-    UserResponseDto userResponse = new UserResponseDto();
-    userResponse.setName(USER_NAME);
-    userResponse.setEmail(USER_EMAIL);
-    return userResponse;
-  }
-
-  public static UserResponseDto jsonToUserResponse(String json, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(json, UserResponseDto.class);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException("Failed to convert json to UserResponse object", e);
-    }
-  }
-
-  public static List<UserResponseDto> jsonToListOfUserResponse(
-      String json, ObjectMapper objectMapper) {
-    try {
-      return objectMapper.readValue(json, new TypeReference<>() {});
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException("Failed to convert JSON to List<UserResponse>", e);
-    }
+  
+  public static GemstoneRequestDto createTestGemstoneRequestDto() {
+    GemstoneRequestDto gemstoneRequestDto = new GemstoneRequestDto();
+    gemstoneRequestDto.setClazz("Gemstone");
+    gemstoneRequestDto.setQuantityType("5");
+    gemstoneRequestDto.setColor("blue");
+    gemstoneRequestDto.setCarat(15.0);
+    gemstoneRequestDto.setCut("round");
+    gemstoneRequestDto.setClarity("VS1");
+    gemstoneRequestDto.setDimensionX(1.0);
+    gemstoneRequestDto.setDimensionY(1.0);
+    gemstoneRequestDto.setDimensionZ(1.0);
+    gemstoneRequestDto.setShape("oval");
+    return gemstoneRequestDto;
   }
 
   public static ResourceInUserRequestDto createResourceInUserRequestDto(
@@ -92,5 +80,14 @@ public class UserTestHelper {
     resourceInUserRequestDto.setResourceId(resourceId);
     resourceInUserRequestDto.setQuantity(quantity);
     return resourceInUserRequestDto;
+  }
+  
+  public static @NotNull ResourceInUserRequestDto createResourceInUserRequestDto(
+      UUID userId, UUID resourceId, double quantity) {
+    ResourceInUserRequestDto requestDto = new ResourceInUserRequestDto();
+    requestDto.setUserId(userId);
+    requestDto.setResourceId(resourceId);
+    requestDto.setQuantity(quantity);
+    return requestDto;
   }
 }

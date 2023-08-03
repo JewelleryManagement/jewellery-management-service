@@ -523,15 +523,17 @@ class UserServiceTest {
   }
 
   @Test
-  @DisplayName("Should not make changes when user does not have the specified resource")
-  void removeResourceFromUserWhenUserDoesNotHaveResourceThenDoNothing() {
+  @DisplayName("Should throw ResourceNotFoundException when user does not have the specified resource")
+  void removeResourceFromUserWhenUserDoesNotHaveResourceThenThrowResourceNotFoundException() {
     User user = createTestUserWithId();
+    UUID nonExistentResourceId = UUID.randomUUID();
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-    userService.removeResourceFromUser(userId, resourceId);
+    assertThrows(ResourceNotFoundException.class, () ->
+        userService.removeResourceFromUser(userId, nonExistentResourceId));
 
     verify(userRepository, times(1)).findById(userId);
-    verify(userRepository, times(1)).save(any(User.class));
+    verify(userRepository, never()).save(any(User.class));
   }
 }
