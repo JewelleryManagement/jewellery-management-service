@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker compose down --remove-orphans #>> /logs/stop.log
+docker-compose down --remove-orphans #>> /logs/stop.log
