@@ -1,7 +1,7 @@
 package jewellery.inventory.integration;
 
+import static jewellery.inventory.helper.ResourceTestHelper.getGemstoneRequestDto;
 import static jewellery.inventory.helper.UserTestHelper.createResourceInUserRequestDto;
-import static jewellery.inventory.helper.UserTestHelper.createTestGemstoneRequestDto;
 import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -17,6 +17,8 @@ import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.dto.response.resource.GemstoneResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceInUserResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceResponseDto;
+import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -36,10 +38,11 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-public class ResourceAvailabilityCrudIntegrationTest {
+public class ResourceInUserCrudIntegrationTest {
   @Autowired TestRestTemplate testRestTemplate;
   @Autowired UserRepository userRepository;
   @Autowired ResourceRepository resourceRepository;
+  @Autowired ResourceInUserRepository resourceInUserRepository;
 
   @Value(value = "${local.server.port}")
   private int port;
@@ -75,10 +78,11 @@ public class ResourceAvailabilityCrudIntegrationTest {
   void cleanup() {
     userRepository.deleteAll();
     resourceRepository.deleteAll();
+    resourceInUserRepository.deleteAll();
   }
 
   @Test
-  void willAddResourceToUser() {
+  void addResourceToUserSuccessfully() {
     UserResponseDto createdUser = getUserResponseDto();
     GemstoneResponseDto createdResource = getGemstoneResponseDto();
 
@@ -86,17 +90,19 @@ public class ResourceAvailabilityCrudIntegrationTest {
         createResourceInUserRequestDto(
             createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY);
 
-    ResponseEntity<UserResponseDto> response =
-        testRestTemplate.postForEntity(
-            getBaseResourceAvailabilityUrl(), requestDto, UserResponseDto.class);
+    System.out.println(createdUser.getId());
+    System.out.println(createdResource.getId());
+    String url = getBaseResourceAvailabilityUrl();
+    ResponseEntity<ResourceInUserResponseDto> response =
+        testRestTemplate.postForEntity(url, requestDto, ResourceInUserResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     assertNotNull(response.getBody());
-    assertEquals(createdUser.getId(), response.getBody().getId());
+    assertEquals(createdUser.getId(), response.getBody().getOwner().getId());
   }
 
   @Test
-  void willNotAddResourceToNonExistingUser() {
+  void addResourceToUserFailsWhenUserNotFound() {
     ResourceInUserRequestDto requestDto =
         createResourceInUserRequestDto(existingUserId, existingResourceId, RESOURCE_QUANTITY);
     ResponseEntity<UserResponseDto> response =
@@ -107,7 +113,7 @@ public class ResourceAvailabilityCrudIntegrationTest {
   }
 
   @Test
-  void willNotAddNonExistingResourceToUser() {
+  void addResourceToUserFailsWhenResourceNotFound() {
     ResourceInUserRequestDto requestDto =
         createResourceInUserRequestDto(existingUserId, existingResourceId, RESOURCE_QUANTITY);
 
@@ -119,7 +125,7 @@ public class ResourceAvailabilityCrudIntegrationTest {
   }
 
   @Test
-  void willNotAddResourceWithInvalidQuantity() {
+  void addResourceToUserFailsWhenQuantityInvalid() {
     ResourceInUserRequestDto requestDto =
         createResourceInUserRequestDto(existingUserId, existingResourceId, -5);
 
@@ -131,7 +137,7 @@ public class ResourceAvailabilityCrudIntegrationTest {
   }
 
   @Test
-  void willUpdateResourceQuantityWhenAddedMultipleTimes() {
+  void updateResourceInUserSuccessfullyWhenAddedMultipleTimes() {
     UserResponseDto createdUser = getUserResponseDto();
     GemstoneResponseDto createdResource = getGemstoneResponseDto();
 
@@ -139,69 +145,28 @@ public class ResourceAvailabilityCrudIntegrationTest {
         createResourceInUserRequestDto(
             createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY);
 
-    ResponseEntity<UserResponseDto> response =
+    ResponseEntity<ResourceInUserResponseDto> response =
         testRestTemplate.postForEntity(
-            getBaseResourceAvailabilityUrl(), requestDto, UserResponseDto.class);
+            getBaseResourceAvailabilityUrl(), requestDto, ResourceInUserResponseDto.class);
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
-    ResponseEntity<UserResponseDto> response2 =
+    ResponseEntity<ResourceInUserResponseDto> response2 =
         testRestTemplate.postForEntity(
-            getBaseResourceAvailabilityUrl(), requestDto, UserResponseDto.class);
+            getBaseResourceAvailabilityUrl(), requestDto, ResourceInUserResponseDto.class);
     assertEquals(HttpStatus.CREATED, response2.getStatusCode());
 
-    UserResponseDto userResponseDto2 = response2.getBody();
+    ResourceInUserResponseDto userResponseDto2 = response2.getBody();
     assertNotNull(userResponseDto2);
 
-    List<ResourceInUserResponseDto> resources = userResponseDto2.getResources();
+    List<ResourceResponseDto> resources = response2.getBody().getResources();
     assertNotNull(resources);
     assertFalse(resources.isEmpty());
 
-    assertEquals(10.00, resources.get(0).getQuantity(), 0.001);
+    assertEquals(10.00, response2.getBody().getQuantity(), 0.001);
   }
 
   @Test
-  void willGetUserResourceQuantitySuccessfully() {
-    UserResponseDto createdUser = getUserResponseDto();
-    GemstoneResponseDto createdResource = getGemstoneResponseDto();
-
-    ResourceInUserRequestDto requestDto =
-        createResourceInUserRequestDto(createdUser.getId(), createdResource.getId(), 5.00);
-    testRestTemplate.postForEntity(
-        getBaseResourceAvailabilityUrl(), requestDto, UserResponseDto.class);
-
-    String url = getResourceAvailabilityUrl(createdUser.getId(), createdResource.getId());
-
-    ResponseEntity<Double> response = this.testRestTemplate.getForEntity(url, Double.class);
-
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertNotNull(response.getBody(), "Response body is null");
-    assertEquals(5.00, response.getBody(), 0.001);
-  }
-
-  @Test
-  void willReturnNotFoundWhenUserDoesNotExist() {
-    UUID nonExistentUserId = UUID.randomUUID();
-    GemstoneResponseDto createdResource = getGemstoneResponseDto();
-
-    String url = getResourceAvailabilityUrl(nonExistentUserId, createdResource.getId());
-    ResponseEntity<String> response = this.testRestTemplate.getForEntity(url, String.class);
-
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-  }
-
-  @Test
-  void willReturnNotFoundWhenResourceDoesNotExist() {
-    UserResponseDto createdUser = getUserResponseDto();
-    UUID nonExistentResourceId = UUID.randomUUID();
-
-    String url = getResourceAvailabilityUrl(createdUser.getId(), nonExistentResourceId);
-    ResponseEntity<String> response = this.testRestTemplate.getForEntity(url, String.class);
-
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-  }
-
-  @Test
-  void willGetAllResourcesFromUserSuccessfully() {
+  void getAllResourcesFromUserSuccessfully() {
     UserResponseDto createdUser = getUserResponseDto();
     GemstoneResponseDto createdResource1 = getGemstoneResponseDto();
     GemstoneResponseDto createdResource2 = getGemstoneResponseDto();
@@ -226,7 +191,7 @@ public class ResourceAvailabilityCrudIntegrationTest {
   }
 
   @Test
-  void willReturnEmptyListWhenUserHasNoResources() {
+  void getAllResourcesFromUserReturnsEmptyWhenUserHasNoResources() {
     UserResponseDto createdUser = getUserResponseDto();
 
     String url = getBaseResourceAvailabilityUrl() + "/" + createdUser.getId();
@@ -240,18 +205,7 @@ public class ResourceAvailabilityCrudIntegrationTest {
   }
 
   @Test
-  void willReturnNotFoundWhenGettingResourcesFromNonExistingUser() {
-    UUID nonExistingUserId = UUID.randomUUID();
-
-    String url = getBaseResourceAvailabilityUrl() + "/" + nonExistingUserId;
-    ResponseEntity<ResourceInUserResponseDto> response =
-        this.testRestTemplate.exchange(url, HttpMethod.GET, null, ResourceInUserResponseDto.class);
-
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-  }
-
-  @Test
-  void willRemoveResourceFromUser() {
+  void removeResourceFromUserSuccessfully() {
     UserResponseDto createdUser = getUserResponseDto();
     GemstoneResponseDto createdResource = getGemstoneResponseDto();
     addResourceToUser(createdUser, createdResource);
@@ -261,11 +215,12 @@ public class ResourceAvailabilityCrudIntegrationTest {
     List<ResourceInUserResponseDto> userResources = getUserResources(createdUser);
     assertFalse(
         userResources.stream()
-            .anyMatch(resource -> resource.getResourceId().equals(createdResource.getId())));
+            .flatMap(resourceInUser -> resourceInUser.getResources().stream())
+            .anyMatch(resource -> resource.getId().equals(createdResource.getId())));
   }
 
   @Test
-  public void willReturnNotFoundWhenDeletingNonExistentResourceFromUser() {
+  public void removeResourceFromUserFailsWhenResourceNotFound() {
     UserResponseDto createdUser = getUserResponseDto();
     UUID nonExistentResourceId = UUID.randomUUID();
 
@@ -279,7 +234,7 @@ public class ResourceAvailabilityCrudIntegrationTest {
   }
 
   @Test
-  public void willReturnNotFoundWhenDeletingResourceFromNonExistentUser() {
+  public void removeResourceFromUserFailsWhenUserNotFound() {
     UUID nonExistentUserId = UUID.randomUUID();
     GemstoneResponseDto createdResource = getGemstoneResponseDto();
     String url = getResourceAvailabilityUrl(nonExistentUserId, createdResource.getId());
@@ -291,7 +246,7 @@ public class ResourceAvailabilityCrudIntegrationTest {
   }
 
   @Test
-  void willRemoveResourceQuantityFromUser() {
+  void removeResourceQuantityFromUserSuccessfully() {
     UserResponseDto createdUser = getUserResponseDto();
     assertNotNull(createdUser);
 
@@ -303,17 +258,22 @@ public class ResourceAvailabilityCrudIntegrationTest {
 
     testRestTemplate.delete(url);
     List<ResourceInUserResponseDto> userResources = getUserResources(createdUser);
-    ResourceInUserResponseDto userResource =
+
+    ResourceInUserResponseDto resourceInUser =
         userResources.stream()
-            .filter(resource -> resource.getResourceId().equals(createdResource.getId()))
+            .filter(
+                resourceUserDto ->
+                    resourceUserDto.getResources().stream()
+                        .anyMatch(
+                            resourceDto -> resourceDto.getId().equals(createdResource.getId())))
             .findFirst()
             .orElseThrow();
 
-    assertEquals(RESOURCE_QUANTITY - 1, userResource.getQuantity(), 0.01);
+    assertEquals(RESOURCE_QUANTITY - 1, resourceInUser.getQuantity(), 0.01);
   }
 
   @Test
-  void willThrowResourceNotFoundExceptionWhenRemovingNonExistentResourceQuantity() {
+  void removeResourceQuantityFromUserFailsWhenResourceNotFound() {
     UserResponseDto createdUser = getUserResponseDto();
     assertNotNull(createdUser);
 
@@ -327,7 +287,7 @@ public class ResourceAvailabilityCrudIntegrationTest {
   }
 
   @Test
-  void willThrowUserNotExistsExceptionWhenUserDoesNotExist() {
+  void removeResourceQuantityFromUserFailsWhenUserNotFound() {
     UUID nonExistentUserId = UUID.randomUUID();
     GemstoneResponseDto createdResource = getGemstoneResponseDto();
     assertNotNull(createdResource);
@@ -341,7 +301,7 @@ public class ResourceAvailabilityCrudIntegrationTest {
   }
 
   @Test
-  void willThrowInsufficientResourceQuantityExceptionWhenRemovingMoreThanAvailable() {
+  void removeResourceQuantityFromUserFailsWhenInsufficientQuantity() {
     UserResponseDto createdUser = getUserResponseDto();
     assertNotNull(createdUser);
 
@@ -361,7 +321,7 @@ public class ResourceAvailabilityCrudIntegrationTest {
   }
 
   @Test
-  void willThrowNegativeResourceQuantityExceptionWhenRemovingNegativeQuantity() {
+  void removeResourceQuantityFromUserFailsWhenQuantityNegative() {
     UserResponseDto createdUser = getUserResponseDto();
     assertNotNull(createdUser);
 
@@ -379,12 +339,16 @@ public class ResourceAvailabilityCrudIntegrationTest {
   }
 
   private GemstoneResponseDto getGemstoneResponseDto() {
-    ResourceRequestDto resourceRequest = createTestGemstoneRequestDto();
+    ResourceRequestDto resourceRequest = getGemstoneRequestDto();
     ResponseEntity<GemstoneResponseDto> resourceResponseEntity =
         this.testRestTemplate.postForEntity(
             getBaseResourceUrl(), resourceRequest, GemstoneResponseDto.class);
+
+    assertEquals(HttpStatus.CREATED, resourceResponseEntity.getStatusCode());
+
     GemstoneResponseDto createdResource = resourceResponseEntity.getBody();
     assertNotNull(createdResource);
+    assertNotNull(createdResource.getId());
     return createdResource;
   }
 

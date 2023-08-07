@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import jewellery.inventory.exception.duplicateException.DuplicateException;
-import jewellery.inventory.exception.invalidResourceQuantityException.InvalidResourceQuantityException;
-import jewellery.inventory.exception.notFoundException.NotFoundException;
+import jewellery.inventory.exception.duplicate.DuplicateException;
+import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
+import jewellery.inventory.exception.not_found.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -45,15 +45,9 @@ public class GlobalExceptionHandler {
     return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
 
-  @ExceptionHandler(InvalidResourceQuantityException.class)
-  public ResponseEntity<Object> handleInvalidResourceQuantityException(
-      InvalidResourceQuantityException ex) {
-    return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
-  }
-
-  @ExceptionHandler(UserDoesNotOwnResourceException.class)
-  public ResponseEntity<Object> handleUserDoesNotOwnResourceException(
-      UserDoesNotOwnResourceException ex) {
+  @ExceptionHandler({InvalidResourceQuantityException.class, UserDoesNotOwnResourceException.class})
+  public ResponseEntity<Object> handleResourceExceptions(
+      RuntimeException  ex) {
     return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
 

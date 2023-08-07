@@ -2,7 +2,6 @@ package jewellery.inventory.helper;
 
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
-import jewellery.inventory.dto.request.resource.GemstoneRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceInUserRequestDto;
 import jewellery.inventory.model.User;
 import org.jetbrains.annotations.NotNull;
@@ -57,21 +56,6 @@ public class UserTestHelper {
     invalidUserRequest.setEmail(USER_EMAIL);
     return invalidUserRequest;
   }
-  
-  public static GemstoneRequestDto createTestGemstoneRequestDto() {
-    GemstoneRequestDto gemstoneRequestDto = new GemstoneRequestDto();
-    gemstoneRequestDto.setClazz("Gemstone");
-    gemstoneRequestDto.setQuantityType("5");
-    gemstoneRequestDto.setColor("blue");
-    gemstoneRequestDto.setCarat(15.0);
-    gemstoneRequestDto.setCut("round");
-    gemstoneRequestDto.setClarity("VS1");
-    gemstoneRequestDto.setDimensionX(1.0);
-    gemstoneRequestDto.setDimensionY(1.0);
-    gemstoneRequestDto.setDimensionZ(1.0);
-    gemstoneRequestDto.setShape("oval");
-    return gemstoneRequestDto;
-  }
 
   public static ResourceInUserRequestDto createResourceInUserRequestDto(
       UUID userId, UUID resourceId, int quantity) {
@@ -81,7 +65,7 @@ public class UserTestHelper {
     resourceInUserRequestDto.setQuantity(quantity);
     return resourceInUserRequestDto;
   }
-  
+
   public static @NotNull ResourceInUserRequestDto createResourceInUserRequestDto(
       UUID userId, UUID resourceId, double quantity) {
     ResourceInUserRequestDto requestDto = new ResourceInUserRequestDto();

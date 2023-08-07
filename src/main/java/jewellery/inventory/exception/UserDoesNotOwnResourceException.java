@@ -1,7 +1,7 @@
 package jewellery.inventory.exception;
 
 import java.util.UUID;
-import jewellery.inventory.exception.notFoundException.NotFoundException;
+import jewellery.inventory.exception.not_found.NotFoundException;
 
 public class UserDoesNotOwnResourceException extends NotFoundException {
   public UserDoesNotOwnResourceException(UUID userId, UUID resourceId) {

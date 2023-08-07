@@ -1,4 +1,4 @@
-package jewellery.inventory.exception.invalidResourceQuantityException;
+package jewellery.inventory.exception.invalid_resource_quantity;
 
 public class InsufficientResourceQuantityException extends InvalidResourceQuantityException {
   public InsufficientResourceQuantityException(double quantity, double total) {

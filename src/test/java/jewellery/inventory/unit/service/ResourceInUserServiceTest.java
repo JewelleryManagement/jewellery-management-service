@@ -20,17 +20,19 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceInUserRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceInUserResponseDto;
-import jewellery.inventory.exception.invalidResourceQuantityException.InsufficientResourceQuantityException;
-import jewellery.inventory.exception.invalidResourceQuantityException.NegativeResourceQuantityException;
-import jewellery.inventory.exception.notFoundException.ResourceNotFoundException;
-import jewellery.inventory.exception.notFoundException.UserNotFoundException;
+import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
+import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
+import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
+import jewellery.inventory.exception.not_found.ResourceNotFoundException;
+import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInUser;
+import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
-import jewellery.inventory.service.ResourceAvailabilityService;
+import jewellery.inventory.service.ResourceInUserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,11 +42,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class ResourceAvailabilityServiceTest {
+public class ResourceInUserServiceTest {
   @Mock private UserRepository userRepository;
-  @InjectMocks private ResourceAvailabilityService resourceAvailabilityService;
+  @InjectMocks private ResourceInUserService resourceInUserService;
 
   @Mock private ResourceRepository resourceRepository;
+  @Mock private ResourceInUserRepository resourceInUserRepository;
   private User user;
   private UserResponseDto userResponse;
   private UUID userId;
@@ -73,11 +76,11 @@ public class ResourceAvailabilityServiceTest {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(resourceRepository.findById(resourceId)).thenReturn(Optional.of(resource));
 
-    resourceAvailabilityService.addResourceToUser(resourceUserDto);
+    resourceInUserService.addResourceToUser(resourceUserDto);
 
     verify(userRepository, times(1)).findById(userId);
     verify(resourceRepository, times(1)).findById(resourceId);
-    verify(userRepository, times(1)).save(any(User.class));
+    verify(resourceInUserRepository, times(1)).save(any(ResourceInUser.class));
   }
 
   @Test
@@ -90,11 +93,11 @@ public class ResourceAvailabilityServiceTest {
 
     assertThrows(
         UserNotFoundException.class,
-        () -> resourceAvailabilityService.addResourceToUser(resourceUserDto));
+        () -> resourceInUserService.addResourceToUser(resourceUserDto));
 
     verify(userRepository, times(1)).findById(userId);
     verify(resourceRepository, never()).findById(resourceId);
-    verify(userRepository, never()).save(any(User.class));
+    verify(resourceInUserRepository, never()).save(any(ResourceInUser.class));
   }
 
   @Test
@@ -103,12 +106,12 @@ public class ResourceAvailabilityServiceTest {
     ResourceInUserRequestDto resourceUserDto =
         createResourceInUserRequestDto(userId, resourceId, 10);
 
-    when(userRepository.findById(userId)).thenReturn(Optional.of(new User())); // changed this line
+    when(userRepository.findById(userId)).thenReturn(Optional.of(new User()));
     when(resourceRepository.findById(resourceId)).thenReturn(Optional.empty());
 
     assertThrows(
         ResourceNotFoundException.class,
-        () -> resourceAvailabilityService.addResourceToUser(resourceUserDto));
+        () -> resourceInUserService.addResourceToUser(resourceUserDto));
 
     verify(userRepository, times(1)).findById(userId);
     verify(resourceRepository, times(1)).findById(resourceId);
@@ -132,18 +135,19 @@ public class ResourceAvailabilityServiceTest {
     ResourceInUser existingResourceInUser = new ResourceInUser();
     existingResourceInUser.setResource(resource);
     existingResourceInUser.setQuantity(initialResourceQuantity);
-    user.addResource(existingResourceInUser);
+    user.getResourcesOwned().add(existingResourceInUser);
+    existingResourceInUser.setOwner(user);
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(resourceRepository.findById(resourceId)).thenReturn(Optional.of(resource));
 
-    resourceAvailabilityService.addResourceToUser(resourceUserDto);
+    resourceInUserService.addResourceToUser(resourceUserDto);
 
     assertEquals(
         initialResourceQuantity + addedResourceQuantity, existingResourceInUser.getQuantity());
     verify(userRepository, times(1)).findById(userId);
     verify(resourceRepository, times(1)).findById(resourceId);
-    verify(userRepository, times(1)).save(any(User.class));
+    verify(resourceInUserRepository, times(1)).save(any(ResourceInUser.class));
   }
 
   @Test
@@ -159,7 +163,7 @@ public class ResourceAvailabilityServiceTest {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
     List<ResourceInUserResponseDto> resources =
-        resourceAvailabilityService.getAllResourcesFromUser(userId);
+        resourceInUserService.getAllResourcesFromUser(userId);
 
     verify(userRepository, times(1)).findById(userId);
 
@@ -175,7 +179,7 @@ public class ResourceAvailabilityServiceTest {
 
     assertThrows(
         UserNotFoundException.class,
-        () -> resourceAvailabilityService.getAllResourcesFromUser(userId));
+        () -> resourceInUserService.getAllResourcesFromUser(userId));
 
     verify(userRepository, times(1)).findById(userId);
   }
@@ -188,62 +192,12 @@ public class ResourceAvailabilityServiceTest {
     user.setResourcesOwned(new ArrayList<>());
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     List<ResourceInUserResponseDto> resources =
-        resourceAvailabilityService.getAllResourcesFromUser(userId);
+        resourceInUserService.getAllResourcesFromUser(userId);
     verify(userRepository, times(1)).findById(userId);
 
     assertTrue(resources.isEmpty());
   }
 
-  @Test
-  @DisplayName(
-      "Should throw an exception when user does not exist while fetching resource quantity")
-  void getUserResourceQuantityWhenUserNotFoundThenThrowException() {
-    when(userRepository.findById(userId)).thenReturn(Optional.empty());
-
-    assertThrows(
-        UserNotFoundException.class,
-        () -> resourceAvailabilityService.getUserResourceQuantity(userId, resourceId));
-
-    verify(userRepository, times(1)).findById(userId);
-  }
-
-  @Test
-  @DisplayName("Should throw an exception when user exists but does not have the resource")
-  void getUserResourceQuantityWhenUserHasNoResourceThenThrowException() {
-    User user = createTestUserWithId();
-    user.setResourcesOwned(new ArrayList<>());
-
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-
-    assertThrows(
-        ResourceNotFoundException.class,
-        () -> resourceAvailabilityService.getUserResourceQuantity(userId, resourceId));
-
-    verify(userRepository, times(1)).findById(userId);
-  }
-
-  @Test
-  @DisplayName("Should return the quantity of the resource that the user has")
-  void getUserResourceQuantityWhenUserHasResource() {
-    User user = createTestUserWithId();
-
-    ResourceInUser resourceInUser = new ResourceInUser();
-    Resource resource = new Resource();
-    resource.setId(resourceId);
-    resourceInUser.setResource(resource);
-    resourceInUser.setQuantity(10);
-    resourceInUser.setOwner(user);
-
-    user.setResourcesOwned(new ArrayList<>(List.of(resourceInUser)));
-
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-
-    double quantity = resourceAvailabilityService.getUserResourceQuantity(userId, resourceId);
-
-    verify(userRepository, times(1)).findById(userId);
-
-    assertEquals(10, quantity);
-  }
 
   @Test
   @DisplayName(
@@ -253,7 +207,7 @@ public class ResourceAvailabilityServiceTest {
 
     assertThrows(
         UserNotFoundException.class,
-        () -> resourceAvailabilityService.removeQuantityFromResource(userId, resourceId, 10));
+        () -> resourceInUserService.removeQuantityFromResource(userId, resourceId, 10));
 
     verify(userRepository, times(1)).findById(userId);
   }
@@ -267,8 +221,8 @@ public class ResourceAvailabilityServiceTest {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
     assertThrows(
-        ResourceNotFoundException.class,
-        () -> resourceAvailabilityService.removeQuantityFromResource(userId, resourceId, 10));
+        ResourceInUserNotFoundException.class,
+        () -> resourceInUserService.removeQuantityFromResource(userId, resourceId, 10));
 
     verify(userRepository, times(1)).findById(userId);
   }
@@ -278,7 +232,7 @@ public class ResourceAvailabilityServiceTest {
   void removeQuantityFromResourceWhenNegativeQuantityProvidedThenThrowException() {
     assertThrows(
         NegativeResourceQuantityException.class,
-        () -> resourceAvailabilityService.removeQuantityFromResource(userId, resourceId, -10));
+        () -> resourceInUserService.removeQuantityFromResource(userId, resourceId, -10));
   }
 
   @Test
@@ -299,7 +253,7 @@ public class ResourceAvailabilityServiceTest {
 
     assertThrows(
         InsufficientResourceQuantityException.class,
-        () -> resourceAvailabilityService.removeQuantityFromResource(userId, resourceId, 10));
+        () -> resourceInUserService.removeQuantityFromResource(userId, resourceId, 10));
 
     verify(userRepository, times(1)).findById(userId);
   }
@@ -320,7 +274,7 @@ public class ResourceAvailabilityServiceTest {
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-    resourceAvailabilityService.removeQuantityFromResource(userId, resourceId, 10);
+    resourceInUserService.removeQuantityFromResource(userId, resourceId, 10);
 
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, times(1)).save(any(User.class));
@@ -340,7 +294,7 @@ public class ResourceAvailabilityServiceTest {
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-    resourceAvailabilityService.removeResourceFromUser(userId, resourceId);
+    resourceInUserService.removeResourceFromUser(userId, resourceId);
 
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, times(1)).save(any(User.class));
@@ -353,7 +307,7 @@ public class ResourceAvailabilityServiceTest {
 
     assertThrows(
         UserNotFoundException.class,
-        () -> resourceAvailabilityService.removeResourceFromUser(userId, resourceId));
+        () -> resourceInUserService.removeResourceFromUser(userId, resourceId));
 
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, never()).save(any(User.class));
@@ -369,8 +323,8 @@ public class ResourceAvailabilityServiceTest {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
     assertThrows(
-        ResourceNotFoundException.class,
-        () -> resourceAvailabilityService.removeResourceFromUser(userId, nonExistentResourceId));
+        ResourceInUserNotFoundException.class,
+        () -> resourceInUserService.removeResourceFromUser(userId, nonExistentResourceId));
 
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, never()).save(any(User.class));

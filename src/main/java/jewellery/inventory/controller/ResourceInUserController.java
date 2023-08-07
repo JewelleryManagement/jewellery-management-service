@@ -4,9 +4,8 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceInUserRequestDto;
-import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceInUserResponseDto;
-import jewellery.inventory.service.ResourceAvailabilityService;
+import jewellery.inventory.service.ResourceInUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -23,20 +22,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/resources/availability")
 @CrossOrigin(origins = "${cors.origins}")
 @RequiredArgsConstructor
-public class ResourceAvailabilityController {
-  private final ResourceAvailabilityService resourceAvailabilityService;
+public class ResourceInUserController {
+  private final ResourceInUserService resourceAvailabilityService;
 
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
-  public UserResponseDto addResourceToUser(
+  public ResourceInUserResponseDto addResourceToUser(
       @RequestBody @Valid ResourceInUserRequestDto resourceUserDto) {
     return resourceAvailabilityService.addResourceToUser(resourceUserDto);
-  }
-
-  @ResponseStatus(HttpStatus.OK)
-  @GetMapping("/{userId}/{resourceId}")
-  public double getUserResourceQuantity(@PathVariable UUID userId, @PathVariable UUID resourceId) {
-    return resourceAvailabilityService.getUserResourceQuantity(userId, resourceId);
   }
 
   @ResponseStatus(HttpStatus.OK)

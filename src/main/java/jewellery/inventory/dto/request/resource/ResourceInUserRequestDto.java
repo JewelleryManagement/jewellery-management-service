@@ -15,7 +15,7 @@ public class ResourceInUserRequestDto {
   @NotNull private UUID userId;
   @NotNull private UUID resourceId;
 
-  @Min(value = 1, message = QUANTITY_MIN_VALUE_MSG)
+  @Min(value = 0, message = QUANTITY_MIN_VALUE_MSG)
   @Digits(integer = 10, fraction = 2, message = QUANTITY_DECIMAL_PLACES_MSG)
   private double quantity;
 }

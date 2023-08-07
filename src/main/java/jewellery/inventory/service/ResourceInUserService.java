@@ -5,16 +5,17 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import jewellery.inventory.dto.request.resource.ResourceInUserRequestDto;
-import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceInUserResponseDto;
-import jewellery.inventory.exception.invalidResourceQuantityException.InsufficientResourceQuantityException;
-import jewellery.inventory.exception.invalidResourceQuantityException.NegativeResourceQuantityException;
-import jewellery.inventory.exception.notFoundException.ResourceNotFoundException;
-import jewellery.inventory.exception.notFoundException.UserNotFoundException;
+import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
+import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
+import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
+import jewellery.inventory.exception.not_found.ResourceNotFoundException;
+import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInUser;
+import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +24,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class ResourceAvailabilityService {
+public class ResourceInUserService {
   private final UserRepository userRepository;
   private final ResourceRepository resourceRepository;
+  private final ResourceInUserRepository resourceInUserRepository;
 
   @Transactional
-  public UserResponseDto addResourceToUser(ResourceInUserRequestDto resourceUserDto) {
+  public ResourceInUserResponseDto addResourceToUser(ResourceInUserRequestDto resourceUserDto) {
     User user = findUserById(resourceUserDto.getUserId());
     Resource resource = findResourceById(resourceUserDto.getResourceId());
 
@@ -38,15 +40,8 @@ public class ResourceAvailabilityService {
 
     resourceInUser.setQuantity(resourceInUser.getQuantity() + resourceUserDto.getQuantity());
 
-    return UserMapper.INSTANCE.toUserResponse(userRepository.save(user));
-  }
-
-  public double getUserResourceQuantity(UUID userId, UUID resourceId) {
-    User user = findUserById(userId);
-    ResourceInUser resourceInUser =
-        findResourceInUser(user, resourceId)
-            .orElseThrow(() -> new ResourceNotFoundException(resourceId));
-    return resourceInUser.getQuantity();
+    return UserMapper.INSTANCE.toResourceInUserResponseDto(
+        resourceInUserRepository.save(resourceInUser));
   }
 
   public List<ResourceInUserResponseDto> getAllResourcesFromUser(UUID userId) {
@@ -64,7 +59,7 @@ public class ResourceAvailabilityService {
     User user = findUserById(userId);
     ResourceInUser resourceInUser =
         findResourceInUser(user, resourceId)
-            .orElseThrow(() -> new ResourceNotFoundException(resourceId));
+            .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId));
 
     double totalQuantity = resourceInUser.getQuantity();
     double newQuantity = totalQuantity - quantity;
@@ -73,6 +68,9 @@ public class ResourceAvailabilityService {
     }
 
     resourceInUser.setQuantity(newQuantity);
+    if (newQuantity == 0) {
+      user.getResourcesOwned().remove(resourceInUser);
+    }
     userRepository.save(user);
   }
 
@@ -84,7 +82,7 @@ public class ResourceAvailabilityService {
         user.getResourcesOwned().stream()
             .filter(r -> r.getResource().getId().equals(resourceId))
             .findFirst()
-            .orElseThrow(() -> new ResourceNotFoundException(resourceId));
+            .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId));
 
     user.getResourcesOwned().remove(resourceToRemove);
     userRepository.save(user);

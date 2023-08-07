@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
-import jewellery.inventory.exception.notFoundException.ResourceNotFoundException;
+import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.service.ResourceService;
