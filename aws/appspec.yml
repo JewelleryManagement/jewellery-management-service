@@ -27,7 +27,7 @@ os: linux
       #   may cause associated deployments to fail.
 files:
   - source: /docker/
-    destination: /tmp
+    destination: /tmp/be
 hooks:
   # For each deployment lifecycle event, specify multiple "location" entries
   #   if you want to run multiple scripts during that event.
