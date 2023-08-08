@@ -15,7 +15,7 @@ services:
       JMS_DATABASE_USER: ${JMS_DATABASE_USER}
       JMS_DATABASE_PASSWORD: ${JMS_DATABASE_PASSWORD}
     ports:
-      - "8080:443"
+      - "443:8080"
     volumes:
       - ./jewellery-inventory-0.0.1-SNAPSHOT.jar:/jar/app.jar
   db:
