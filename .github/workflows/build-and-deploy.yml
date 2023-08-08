@@ -6,7 +6,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Build and test
+name: Build and copy to S3
 
 on:
   push:
@@ -48,5 +48,5 @@ jobs:
     - name: Push jar and docker files to AWS S3
       run: |
         cp ./target/*.jar ./aws/docker
-        zip -r docker.zip aws
-        aws s3 cp docker.zip s3://${{ secrets.S3BUCKET }}/
+        zip -r backend_codedeploy.zip aws
+        aws s3 cp backend_codedeploy.zip s3://${{ secrets.S3BUCKET }}/
