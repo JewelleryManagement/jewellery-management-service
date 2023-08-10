@@ -11,13 +11,13 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.dto.ResourceQuantityDto;
 import jewellery.inventory.dto.request.UserRequestDto;
-import jewellery.inventory.dto.request.resource.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
+import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.dto.response.resource.GemstoneResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceInUserResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
@@ -47,20 +47,30 @@ public class ResourceInUserCrudIntegrationTest {
   @Value(value = "${local.server.port}")
   private int port;
 
+  private static final String BASE_URL_PATH = "http://localhost:";
+
+  private String getBaseUrl() {
+    return BASE_URL_PATH + port;
+  }
+
+  private String buildUrl(String... paths) {
+    return getBaseUrl() + "/" + String.join("/", paths);
+  }
+
   private String getBaseResourceAvailabilityUrl() {
-    return "http://localhost:" + port + "/resources/availability";
+    return buildUrl("resources", "availability");
   }
 
   private String getResourceAvailabilityUrl(UUID userId, UUID resourceId) {
-    return "http://localhost:" + port + "/resources/availability/" + userId + "/" + resourceId;
+    return buildUrl("resources", "availability", userId.toString(), resourceId.toString());
   }
 
   private String getBaseUserUrl() {
-    return "http://localhost:" + port + "/users";
+    return buildUrl("users");
   }
 
   private String getBaseResourceUrl() {
-    return "http://localhost:" + port + "/resources";
+    return buildUrl("resources");
   }
 
   private UUID existingUserId;
@@ -71,7 +81,6 @@ public class ResourceInUserCrudIntegrationTest {
   void setup() {
     existingUserId = UUID.randomUUID();
     existingResourceId = UUID.randomUUID();
-    testRestTemplate = new TestRestTemplate();
   }
 
   @AfterEach
@@ -90,11 +99,9 @@ public class ResourceInUserCrudIntegrationTest {
         createResourceInUserRequestDto(
             createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY);
 
-    System.out.println(createdUser.getId());
-    System.out.println(createdResource.getId());
     String url = getBaseResourceAvailabilityUrl();
-    ResponseEntity<ResourceInUserResponseDto> response =
-        testRestTemplate.postForEntity(url, requestDto, ResourceInUserResponseDto.class);
+    ResponseEntity<ResourcesInUserResponseDto> response =
+        testRestTemplate.postForEntity(url, requestDto, ResourcesInUserResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     assertNotNull(response.getBody());
@@ -145,24 +152,27 @@ public class ResourceInUserCrudIntegrationTest {
         createResourceInUserRequestDto(
             createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY);
 
-    ResponseEntity<ResourceInUserResponseDto> response =
+    ResponseEntity<ResourcesInUserResponseDto> response =
         testRestTemplate.postForEntity(
-            getBaseResourceAvailabilityUrl(), requestDto, ResourceInUserResponseDto.class);
+            getBaseResourceAvailabilityUrl(), requestDto, ResourcesInUserResponseDto.class);
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
-    ResponseEntity<ResourceInUserResponseDto> response2 =
+    ResponseEntity<ResourcesInUserResponseDto> response2 =
         testRestTemplate.postForEntity(
-            getBaseResourceAvailabilityUrl(), requestDto, ResourceInUserResponseDto.class);
+            getBaseResourceAvailabilityUrl(), requestDto, ResourcesInUserResponseDto.class);
     assertEquals(HttpStatus.CREATED, response2.getStatusCode());
 
-    ResourceInUserResponseDto userResponseDto2 = response2.getBody();
+    ResourcesInUserResponseDto userResponseDto2 = response2.getBody();
     assertNotNull(userResponseDto2);
 
-    List<ResourceResponseDto> resources = response2.getBody().getResources();
-    assertNotNull(resources);
-    assertFalse(resources.isEmpty());
+    List<ResourceQuantityDto> resourceQuantities = userResponseDto2.getResources();
+    assertNotNull(resourceQuantities);
+    assertFalse(resourceQuantities.isEmpty());
 
-    assertEquals(10.00, response2.getBody().getQuantity(), 0.001);
+    double totalQuantity =
+        resourceQuantities.stream().mapToDouble(ResourceQuantityDto::getQuantity).sum();
+
+    assertEquals(10.00, totalQuantity, 0.001);
   }
 
   @Test
@@ -170,7 +180,7 @@ public class ResourceInUserCrudIntegrationTest {
     UserResponseDto createdUser = getUserResponseDto();
     GemstoneResponseDto createdResource1 = getGemstoneResponseDto();
     GemstoneResponseDto createdResource2 = getGemstoneResponseDto();
-    String url = getBaseResourceAvailabilityUrl() + "/" + createdUser.getId();
+
     ResourceInUserRequestDto requestDto1 =
         createResourceInUserRequestDto(createdUser.getId(), createdResource1.getId(), 5.00);
     testRestTemplate.postForEntity(
@@ -181,13 +191,14 @@ public class ResourceInUserCrudIntegrationTest {
     testRestTemplate.postForEntity(
         getBaseResourceAvailabilityUrl(), requestDto2, UserResponseDto.class);
 
-    ResponseEntity<List<ResourceInUserResponseDto>> response =
-        this.testRestTemplate.exchange(
-            url, HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
+    String url = getBaseResourceAvailabilityUrl() + "/" + createdUser.getId();
+
+    ResponseEntity<ResourcesInUserResponseDto> response =
+        this.testRestTemplate.getForEntity(url, ResourcesInUserResponseDto.class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
-    assertEquals(2, response.getBody().size());
+    assertEquals(2, response.getBody().getResources().size());
   }
 
   @Test
@@ -195,13 +206,13 @@ public class ResourceInUserCrudIntegrationTest {
     UserResponseDto createdUser = getUserResponseDto();
 
     String url = getBaseResourceAvailabilityUrl() + "/" + createdUser.getId();
-    ResponseEntity<List<ResourceInUserResponseDto>> response =
+    ResponseEntity<ResourcesInUserResponseDto> response =
         this.testRestTemplate.exchange(
             url, HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
-    assertTrue(response.getBody().isEmpty());
+    assertTrue(response.getBody().getResources().isEmpty());
   }
 
   @Test
@@ -212,11 +223,14 @@ public class ResourceInUserCrudIntegrationTest {
 
     removeResourceFromUser(createdUser, createdResource);
 
-    List<ResourceInUserResponseDto> userResources = getUserResources(createdUser);
-    assertFalse(
-        userResources.stream()
-            .flatMap(resourceInUser -> resourceInUser.getResources().stream())
-            .anyMatch(resource -> resource.getId().equals(createdResource.getId())));
+    ResourcesInUserResponseDto userResources = getUserResources(createdUser);
+
+    boolean resourceStillExists =
+        userResources.getResources().stream()
+            .anyMatch(
+                resourceQuantity ->
+                    resourceQuantity.getResource().getId().equals(createdResource.getId()));
+    assertFalse(resourceStillExists);
   }
 
   @Test
@@ -257,19 +271,17 @@ public class ResourceInUserCrudIntegrationTest {
     String url = getResourceAvailabilityUrl(createdUser.getId(), createdResource.getId()) + "/" + 1;
 
     testRestTemplate.delete(url);
-    List<ResourceInUserResponseDto> userResources = getUserResources(createdUser);
+    ResourcesInUserResponseDto userResources = getUserResources(createdUser);
 
-    ResourceInUserResponseDto resourceInUser =
-        userResources.stream()
-            .filter(
-                resourceUserDto ->
-                    resourceUserDto.getResources().stream()
-                        .anyMatch(
-                            resourceDto -> resourceDto.getId().equals(createdResource.getId())))
+    // Extract the specific resource whose quantity we decreased
+    ResourceQuantityDto resourceQuantity =
+        userResources.getResources().stream()
+            .filter(rq -> rq.getResource().getId().equals(createdResource.getId()))
             .findFirst()
-            .orElseThrow();
+            .orElseThrow(() -> new AssertionError("Expected resource not found"));
 
-    assertEquals(RESOURCE_QUANTITY - 1, resourceInUser.getQuantity(), 0.01);
+    // Assert that the resource's quantity is decremented
+    assertEquals(RESOURCE_QUANTITY - 1, resourceQuantity.getQuantity(), 0.01);
   }
 
   @Test
@@ -376,9 +388,9 @@ public class ResourceInUserCrudIntegrationTest {
     testRestTemplate.delete(removeResourceUrl);
   }
 
-  private List<ResourceInUserResponseDto> getUserResources(UserResponseDto user) {
+  private ResourcesInUserResponseDto getUserResources(UserResponseDto user) {
     String getUserResourcesUrl = getBaseResourceAvailabilityUrl() + "/" + user.getId();
-    ResponseEntity<List<ResourceInUserResponseDto>> getUserResourcesResponse =
+    ResponseEntity<ResourcesInUserResponseDto> getUserResourcesResponse =
         testRestTemplate.exchange(
             getUserResourcesUrl, HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
     return getUserResourcesResponse.getBody();

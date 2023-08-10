@@ -1,10 +1,9 @@
 package jewellery.inventory.controller;
 
 import jakarta.validation.Valid;
-import java.util.List;
 import java.util.UUID;
-import jewellery.inventory.dto.request.resource.ResourceInUserRequestDto;
-import jewellery.inventory.dto.response.resource.ResourceInUserResponseDto;
+import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.service.ResourceInUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,14 +26,14 @@ public class ResourceInUserController {
 
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
-  public ResourceInUserResponseDto addResourceToUser(
+  public ResourcesInUserResponseDto addResourceToUser(
       @RequestBody @Valid ResourceInUserRequestDto resourceUserDto) {
     return resourceAvailabilityService.addResourceToUser(resourceUserDto);
   }
 
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{userId}")
-  public List<ResourceInUserResponseDto> getAllResourcesFromUser(@PathVariable UUID userId) {
+  public ResourcesInUserResponseDto getAllResourcesFromUser(@PathVariable UUID userId) {
     return resourceAvailabilityService.getAllResourcesFromUser(userId);
   }
 

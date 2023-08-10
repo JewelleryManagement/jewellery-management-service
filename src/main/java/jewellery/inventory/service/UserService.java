@@ -18,20 +18,21 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserService {
   private final UserRepository userRepository;
+  private final UserMapper userMapper;
 
   public List<UserResponseDto> getAllUsers() {
-    return UserMapper.INSTANCE.toUserResponseList(userRepository.findAll());
+    return userMapper.toUserResponseList(userRepository.findAll());
   }
 
   public UserResponseDto getUser(UUID id) {
-    return UserMapper.INSTANCE.toUserResponse(
+    return userMapper.toUserResponse(
         userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id)));
   }
 
   public UserResponseDto createUser(UserRequestDto user) {
-    User userToCreate = UserMapper.INSTANCE.toUserEntity(user);
+    User userToCreate = userMapper.toUserEntity(user);
     validateUserEmailAndName(userToCreate);
-    return UserMapper.INSTANCE.toUserResponse(userRepository.save(userToCreate));
+    return userMapper.toUserResponse(userRepository.save(userToCreate));
   }
 
   public UserResponseDto updateUser(UserRequestDto userRequest, UUID id) {
@@ -39,12 +40,12 @@ public class UserService {
       throw new UserNotFoundException(id);
     }
 
-    User userToUpdate = UserMapper.INSTANCE.toUserEntity(userRequest);
+    User userToUpdate = userMapper.toUserEntity(userRequest);
     userToUpdate.setId(id);
 
     validateUserEmailAndName(userToUpdate);
 
-    return UserMapper.INSTANCE.toUserResponse(userRepository.save(userToUpdate));
+    return userMapper.toUserResponse(userRepository.save(userToUpdate));
   }
 
   public void deleteUser(UUID id) {

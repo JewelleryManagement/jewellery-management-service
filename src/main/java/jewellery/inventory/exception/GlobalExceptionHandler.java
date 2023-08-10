@@ -9,6 +9,7 @@ import java.util.Map;
 import jewellery.inventory.exception.duplicate.DuplicateException;
 import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
 import jewellery.inventory.exception.not_found.NotFoundException;
+import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -29,7 +30,7 @@ public class GlobalExceptionHandler {
     return createErrorResponse(HttpStatus.BAD_REQUEST, fieldErrorsMap);
   }
 
-  @ExceptionHandler(NotFoundException.class)
+  @ExceptionHandler({NotFoundException.class, ResourceInUserNotFoundException.class})
   public ResponseEntity<Object> handleNotFoundException(NotFoundException ex) {
     return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
   }
@@ -40,14 +41,8 @@ public class GlobalExceptionHandler {
     return createErrorResponse(HttpStatus.BAD_REQUEST, error);
   }
 
-  @ExceptionHandler(DuplicateException.class)
-  public ResponseEntity<Object> handleDuplicateException(DuplicateException ex) {
-    return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
-  }
-
-  @ExceptionHandler({InvalidResourceQuantityException.class, UserDoesNotOwnResourceException.class})
-  public ResponseEntity<Object> handleResourceExceptions(
-      RuntimeException  ex) {
+  @ExceptionHandler({InvalidResourceQuantityException.class, DuplicateException.class})
+  public ResponseEntity<Object> handleBadDataExceptions(RuntimeException ex) {
     return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
 

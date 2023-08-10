@@ -1,4 +1,4 @@
-package jewellery.inventory.dto.request.resource;
+package jewellery.inventory.dto.request;
 
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;

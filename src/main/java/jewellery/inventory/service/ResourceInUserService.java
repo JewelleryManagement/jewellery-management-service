@@ -4,17 +4,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import jewellery.inventory.dto.request.resource.ResourceInUserRequestDto;
-import jewellery.inventory.dto.response.resource.ResourceInUserResponseDto;
+import jewellery.inventory.dto.ResourceQuantityDto;
+import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
-import jewellery.inventory.mapper.UserMapper;
+import jewellery.inventory.mapper.ResourcesInUserMapper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
-import jewellery.inventory.model.resource.ResourceInUser;
+import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
@@ -28,9 +29,11 @@ public class ResourceInUserService {
   private final UserRepository userRepository;
   private final ResourceRepository resourceRepository;
   private final ResourceInUserRepository resourceInUserRepository;
+  private final ResourcesInUserMapper resourcesInUserMapper;
+  private static final double EPSILON = 1e-10;
 
   @Transactional
-  public ResourceInUserResponseDto addResourceToUser(ResourceInUserRequestDto resourceUserDto) {
+  public ResourcesInUserResponseDto addResourceToUser(ResourceInUserRequestDto resourceUserDto) {
     User user = findUserById(resourceUserDto.getUserId());
     Resource resource = findResourceById(resourceUserDto.getResourceId());
 
@@ -40,15 +43,22 @@ public class ResourceInUserService {
 
     resourceInUser.setQuantity(resourceInUser.getQuantity() + resourceUserDto.getQuantity());
 
-    return UserMapper.INSTANCE.toResourceInUserResponseDto(
+    return resourcesInUserMapper.toResourceInUserResponseDto(
         resourceInUserRepository.save(resourceInUser));
   }
 
-  public List<ResourceInUserResponseDto> getAllResourcesFromUser(UUID userId) {
+  public ResourcesInUserResponseDto getAllResourcesFromUser(UUID userId) {
     User user = findUserById(userId);
-    return user.getResourcesOwned().stream()
-        .map(UserMapper.INSTANCE::toResourceInUserResponseDto)
-        .collect(Collectors.toList());
+    List<ResourceQuantityDto> resourcesWithQuantities =
+        user.getResourcesOwned().stream()
+            .map(resourcesInUserMapper::toResourceQuantityDto)
+            .collect(Collectors.toList());
+
+    ResourcesInUserResponseDto responseDto = new ResourcesInUserResponseDto();
+    responseDto.setOwner(resourcesInUserMapper.toUserResponse(user));
+    responseDto.setResources(resourcesWithQuantities);
+
+    return responseDto;
   }
 
   @Transactional
@@ -59,16 +69,17 @@ public class ResourceInUserService {
     User user = findUserById(userId);
     ResourceInUser resourceInUser =
         findResourceInUser(user, resourceId)
-            .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId));
+            .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, userId));
 
     double totalQuantity = resourceInUser.getQuantity();
     double newQuantity = totalQuantity - quantity;
+
     if (newQuantity < 0) {
       throw new InsufficientResourceQuantityException(quantity, totalQuantity);
     }
 
     resourceInUser.setQuantity(newQuantity);
-    if (newQuantity == 0) {
+    if (Math.abs(newQuantity) < EPSILON) {
       user.getResourcesOwned().remove(resourceInUser);
     }
     userRepository.save(user);
@@ -82,7 +93,7 @@ public class ResourceInUserService {
         user.getResourcesOwned().stream()
             .filter(r -> r.getResource().getId().equals(resourceId))
             .findFirst()
-            .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId));
+            .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, userId));
 
     user.getResourcesOwned().remove(resourceToRemove);
     userRepository.save(user);

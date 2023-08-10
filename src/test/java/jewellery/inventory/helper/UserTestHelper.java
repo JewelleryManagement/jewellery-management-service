@@ -2,7 +2,7 @@ package jewellery.inventory.helper;
 
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
-import jewellery.inventory.dto.request.resource.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.model.User;
 import org.jetbrains.annotations.NotNull;
 

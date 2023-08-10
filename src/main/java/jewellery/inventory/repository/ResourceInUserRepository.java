@@ -1,8 +1,7 @@
 package jewellery.inventory.repository;
 
-import java.util.Optional;
 import java.util.UUID;
-import jewellery.inventory.model.resource.ResourceInUser;
+import jewellery.inventory.model.ResourceInUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
