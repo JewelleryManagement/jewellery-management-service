@@ -5,8 +5,8 @@ import java.util.stream.Collectors;
 import jewellery.inventory.dto.ResourceQuantityDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.model.User;
 import jewellery.inventory.model.ResourceInUser;
+import jewellery.inventory.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -14,21 +14,26 @@ import org.mapstruct.Named;
 @Mapper(componentModel = "spring")
 public interface ResourcesInUserMapper {
 
-    @Mapping(source = "resourceInUser", target = "resources", qualifiedByName = "toResourceQuantityList")
-    ResourcesInUserResponseDto toResourceInUserResponseDto(ResourceInUser resourceInUser);
+  @Mapping(
+      source = "resourceInUser",
+      target = "resources",
+      qualifiedByName = "toResourceQuantityList")
+  ResourcesInUserResponseDto toResourceInUserResponseDto(ResourceInUser resourceInUser);
 
-    @Named("toResourceQuantityList")
-    default List<ResourceQuantityDto> toResourceQuantityList(ResourceInUser resourceInUser) {
-        return resourceInUser.getOwner().getResourcesOwned().stream()
-                             .map(this::toResourceQuantityDto)
-                             .collect(Collectors.toList());
-    }
+  @Mapping(source = "user", target = "owner", qualifiedByName = "toUserResponse")
+  @Mapping(source = "resourcesOwned", target = "resources")
+  ResourcesInUserResponseDto toResourcesInUserResponseDto(User user);
 
-    @Mapping(source = "resource", target = "resource")
-    ResourceQuantityDto toResourceQuantityDto(ResourceInUser resourceInUser);
+  @Named("toResourceQuantityList")
+  default List<ResourceQuantityDto> toResourceQuantityList(ResourceInUser resourceInUser) {
+    return resourceInUser.getOwner().getResourcesOwned().stream()
+        .map(this::toResourceQuantityDto)
+        .collect(Collectors.toList());
+  }
 
-    @Named("toUserResponse")
-    UserResponseDto toUserResponse(User user);
+  @Mapping(source = "resource", target = "resource")
+  ResourceQuantityDto toResourceQuantityDto(ResourceInUser resourceInUser);
+
+  @Named("toUserResponse")
+  UserResponseDto toUserResponse(User user);
 }
-
-
