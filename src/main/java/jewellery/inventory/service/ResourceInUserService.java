@@ -1,10 +1,7 @@
 package jewellery.inventory.service;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import jewellery.inventory.dto.ResourceQuantityDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
@@ -13,9 +10,9 @@ import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.mapper.ResourcesInUserMapper;
+import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
-import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
@@ -42,23 +39,13 @@ public class ResourceInUserService {
             .orElseGet(() -> createAndAddNewResourceInUser(user, resource, 0));
 
     resourceInUser.setQuantity(resourceInUser.getQuantity() + resourceUserDto.getQuantity());
-
-    return resourcesInUserMapper.toResourceInUserResponseDto(
-        resourceInUserRepository.save(resourceInUser));
+    resourceInUserRepository.save(resourceInUser);
+    return resourcesInUserMapper.toResourcesInUserResponseDto(user);
   }
 
   public ResourcesInUserResponseDto getAllResourcesFromUser(UUID userId) {
     User user = findUserById(userId);
-    List<ResourceQuantityDto> resourcesWithQuantities =
-        user.getResourcesOwned().stream()
-            .map(resourcesInUserMapper::toResourceQuantityDto)
-            .collect(Collectors.toList());
-
-    ResourcesInUserResponseDto responseDto = new ResourcesInUserResponseDto();
-    responseDto.setOwner(resourcesInUserMapper.toUserResponse(user));
-    responseDto.setResources(resourcesWithQuantities);
-
-    return responseDto;
+    return resourcesInUserMapper.toResourcesInUserResponseDto(user);
   }
 
   @Transactional

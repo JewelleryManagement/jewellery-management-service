@@ -19,16 +19,15 @@ import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
-import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.mapper.ResourcesInUserMapper;
+import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
-import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
@@ -42,21 +41,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class ResourceInUserServiceTest {
+class ResourceInUserServiceTest {
   @Mock private UserRepository userRepository;
   @InjectMocks private ResourceInUserService resourceInUserService;
   @Mock private ResourceRepository resourceRepository;
   @Mock private ResourceInUserRepository resourceInUserRepository;
   @Mock private ResourcesInUserMapper resourcesInUserMapper;
   private User user;
-  private UserResponseDto userResponse;
   private UUID userId;
   private UUID resourceId;
 
   @BeforeEach
   void setUp() {
     user = createTestUser();
-    userResponse = resourcesInUserMapper.toUserResponse(user);
     userId = UUID.randomUUID();
     resourceId = UUID.randomUUID();
   }
@@ -151,26 +148,6 @@ public class ResourceInUserServiceTest {
   }
 
   @Test
-  @DisplayName("Should get all resources of a user")
-  void getAllResourcesFromUser() {
-    User user = createTestUser();
-    user.setId(userId);
-
-    ResourceInUser resourceInUser1 = new ResourceInUser();
-    ResourceInUser resourceInUser2 = new ResourceInUser();
-    user.setResourcesOwned(Arrays.asList(resourceInUser1, resourceInUser2));
-
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-
-    ResourcesInUserResponseDto resourcesInUser =
-        resourceInUserService.getAllResourcesFromUser(userId);
-
-    verify(userRepository, times(1)).findById(userId);
-
-    assertEquals(2, resourcesInUser.getResources().size());
-  }
-
-  @Test
   @DisplayName("Should throw UserNotFoundException when user not found")
   void getAllResourcesFromUserWhenUserNotFoundThenThrowException() {
     UUID userId = UUID.randomUUID();
@@ -181,20 +158,6 @@ public class ResourceInUserServiceTest {
         UserNotFoundException.class, () -> resourceInUserService.getAllResourcesFromUser(userId));
 
     verify(userRepository, times(1)).findById(userId);
-  }
-
-  @Test
-  @DisplayName("Should return empty list when user has no resources")
-  void getAllResourcesFromUserWhenNoResources() {
-    User user = createTestUser();
-    user.setId(userId);
-    user.setResourcesOwned(new ArrayList<>());
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    ResourcesInUserResponseDto resourcesInUser =
-        resourceInUserService.getAllResourcesFromUser(userId);
-    verify(userRepository, times(1)).findById(userId);
-
-    assertTrue(resourcesInUser.getResources().isEmpty());
   }
 
   @Test

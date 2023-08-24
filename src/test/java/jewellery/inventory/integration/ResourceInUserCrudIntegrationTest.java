@@ -165,7 +165,7 @@ public class ResourceInUserCrudIntegrationTest {
     ResourcesInUserResponseDto userResponseDto2 = response2.getBody();
     assertNotNull(userResponseDto2);
 
-    List<ResourceQuantityDto> resourceQuantities = userResponseDto2.getResources();
+    List<ResourceQuantityDto> resourceQuantities = userResponseDto2.getResourcesAndQuantities();
     assertNotNull(resourceQuantities);
     assertFalse(resourceQuantities.isEmpty());
 
@@ -198,7 +198,7 @@ public class ResourceInUserCrudIntegrationTest {
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
-    assertEquals(2, response.getBody().getResources().size());
+    assertEquals(2, response.getBody().getResourcesAndQuantities().size());
   }
 
   @Test
@@ -212,7 +212,7 @@ public class ResourceInUserCrudIntegrationTest {
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
-    assertTrue(response.getBody().getResources().isEmpty());
+    assertTrue(response.getBody().getResourcesAndQuantities().isEmpty());
   }
 
   @Test
@@ -226,7 +226,7 @@ public class ResourceInUserCrudIntegrationTest {
     ResourcesInUserResponseDto userResources = getUserResources(createdUser);
 
     boolean resourceStillExists =
-        userResources.getResources().stream()
+        userResources.getResourcesAndQuantities().stream()
             .anyMatch(
                 resourceQuantity ->
                     resourceQuantity.getResource().getId().equals(createdResource.getId()));
@@ -275,7 +275,7 @@ public class ResourceInUserCrudIntegrationTest {
 
     // Extract the specific resource whose quantity we decreased
     ResourceQuantityDto resourceQuantity =
-        userResources.getResources().stream()
+        userResources.getResourcesAndQuantities().stream()
             .filter(rq -> rq.getResource().getId().equals(createdResource.getId()))
             .findFirst()
             .orElseThrow(() -> new AssertionError("Expected resource not found"));

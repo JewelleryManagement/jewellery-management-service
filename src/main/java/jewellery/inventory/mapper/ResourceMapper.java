@@ -16,14 +16,14 @@ public class ResourceMapper {
   private final PreciousMetalMapper preciousMetalMapper;
 
   public ResourceResponseDto toResourceResponse(Resource resource) {
-    if (resource instanceof Pearl) {
-      return pearlMapper.toResourceResponse((Pearl) resource);
-    } else if (resource instanceof Gemstone) {
-      return gemstoneMapper.toResourceResponse((Gemstone) resource);
-    } else if (resource instanceof LinkingPart) {
-      return linkingPartMapper.toResourceResponse((LinkingPart) resource);
-    } else if (resource instanceof PreciousMetal) {
-      return preciousMetalMapper.toResourceResponse((PreciousMetal) resource);
+    if (resource instanceof Pearl pearl) {
+      return pearlMapper.toResourceResponse(pearl);
+    } else if (resource instanceof Gemstone gemstone) {
+      return gemstoneMapper.toResourceResponse(gemstone);
+    } else if (resource instanceof LinkingPart linkingPart) {
+      return linkingPartMapper.toResourceResponse(linkingPart);
+    } else if (resource instanceof PreciousMetal preciousMetal) {
+      return preciousMetalMapper.toResourceResponse(preciousMetal);
     }
     throw new MappingException(resource);
   }

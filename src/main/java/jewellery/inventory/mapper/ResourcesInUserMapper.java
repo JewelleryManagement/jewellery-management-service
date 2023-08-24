@@ -1,39 +1,34 @@
 package jewellery.inventory.mapper;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import jewellery.inventory.dto.ResourceQuantityDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
-import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
-public interface ResourcesInUserMapper {
+@Component
+@RequiredArgsConstructor
+public class ResourcesInUserMapper {
+  private final UserMapper userMapper;
 
-  @Mapping(
-      source = "resourceInUser",
-      target = "resources",
-      qualifiedByName = "toResourceQuantityList")
-  ResourcesInUserResponseDto toResourceInUserResponseDto(ResourceInUser resourceInUser);
+  private final ResourceMapper resourceMapper;
 
-  @Mapping(source = "user", target = "owner", qualifiedByName = "toUserResponse")
-  @Mapping(source = "resourcesOwned", target = "resources")
-  ResourcesInUserResponseDto toResourcesInUserResponseDto(User user);
+  public ResourcesInUserResponseDto toResourcesInUserResponseDto(User user) {
+    List<ResourceQuantityDto> resourcesWithQuantities =
+        user.getResourcesOwned().stream()
+            .map(
+                resourceInUser ->
+                    ResourceQuantityDto.builder()
+                        .resource(resourceMapper.toResourceResponse(resourceInUser.getResource()))
+                        .quantity(resourceInUser.getQuantity())
+                        .build())
+            .toList();
 
-  @Named("toResourceQuantityList")
-  default List<ResourceQuantityDto> toResourceQuantityList(ResourceInUser resourceInUser) {
-    return resourceInUser.getOwner().getResourcesOwned().stream()
-        .map(this::toResourceQuantityDto)
-        .collect(Collectors.toList());
+    ResourcesInUserResponseDto responseDto = new ResourcesInUserResponseDto();
+
+    responseDto.setOwner(userMapper.toUserResponse(user));
+    responseDto.setResourcesAndQuantities(resourcesWithQuantities);
+    return responseDto;
   }
-
-  @Mapping(source = "resource", target = "resource")
-  ResourceQuantityDto toResourceQuantityDto(ResourceInUser resourceInUser);
-
-  @Named("toUserResponse")
-  UserResponseDto toUserResponse(User user);
 }
