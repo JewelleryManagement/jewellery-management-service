@@ -1,24 +1,17 @@
 package jewellery.inventory.unit.service;
 
-import static jewellery.inventory.helper.UserTestHelper.createResourceInUserRequestDto;
-import static jewellery.inventory.helper.UserTestHelper.createTestUser;
-import static jewellery.inventory.helper.UserTestHelper.createTestUserWithId;
+import static jewellery.inventory.helper.ResourceTestHelper.getPearl;
+import static jewellery.inventory.helper.UserTestHelper.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
-import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
@@ -33,7 +26,6 @@ import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
 import jewellery.inventory.service.ResourceInUserService;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -48,28 +40,37 @@ class ResourceInUserServiceTest {
   @Mock private ResourceInUserRepository resourceInUserRepository;
   @Mock private ResourcesInUserMapper resourcesInUserMapper;
   private User user;
+  private Resource resource;
+
   private UUID userId;
   private UUID resourceId;
+  private ResourceInUser resourceInUser;
+  private static final double INITIAL_QUANTITY = 5;
 
   @BeforeEach
   void setUp() {
-    user = createTestUser();
-    userId = UUID.randomUUID();
-    resourceId = UUID.randomUUID();
+    user = createTestUserWithRandomId();
+    resource = getPearl();
+    resourceInUser = getResourceInUser();
+    user.setResourcesOwned(new ArrayList<>(Collections.singletonList(resourceInUser)));
+
+    resourceId = resource.getId();
+    userId = user.getId();
+  }
+
+  private ResourceInUser getResourceInUser() {
+    return ResourceInUser.builder()
+        .id(UUID.randomUUID())
+        .owner(user)
+        .resource(resource)
+        .quantity(INITIAL_QUANTITY)
+        .build();
   }
 
   @Test
-  @DisplayName("Should add resource to user")
-  void addResourceToUser() {
+  void willAddResourceToUser() {
     ResourceInUserRequestDto resourceUserDto =
         createResourceInUserRequestDto(userId, resourceId, 10);
-
-    User user = new User();
-    user.setId(userId);
-
-    Resource resource = new Resource();
-    resource.setId(resourceId);
-
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(resourceRepository.findById(resourceId)).thenReturn(Optional.of(resource));
 
@@ -81,16 +82,14 @@ class ResourceInUserServiceTest {
   }
 
   @Test
-  @DisplayName("Should throw an exception when user not found while adding resource")
-  void addResourceToUserWhenUserNotFoundThenThrowException() {
-    ResourceInUserRequestDto resourceUserDto =
+  void willThrowUserNotFoundExceptionWhenAddResourceToUserAndUserNonexistent() {
+    ResourceInUserRequestDto resourceInUserRequestDto =
         createResourceInUserRequestDto(userId, resourceId, 10);
-
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
     assertThrows(
         UserNotFoundException.class,
-        () -> resourceInUserService.addResourceToUser(resourceUserDto));
+        () -> resourceInUserService.addResourceToUser(resourceInUserRequestDto));
 
     verify(userRepository, times(1)).findById(userId);
     verify(resourceRepository, never()).findById(resourceId);
@@ -98,12 +97,10 @@ class ResourceInUserServiceTest {
   }
 
   @Test
-  @DisplayName("Should throw ResourceNotFoundException when resource does not exist")
-  void addResourceToUserWhenResourceDoesNotExistThenThrowException() {
+  void willThrowResourceNotFoundExceptionWhenAddResourceToUserAndResourceNotFound() {
     ResourceInUserRequestDto resourceUserDto =
         createResourceInUserRequestDto(userId, resourceId, 10);
-
-    when(userRepository.findById(userId)).thenReturn(Optional.of(new User()));
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(resourceRepository.findById(resourceId)).thenReturn(Optional.empty());
 
     assertThrows(
@@ -115,43 +112,7 @@ class ResourceInUserServiceTest {
   }
 
   @Test
-  @DisplayName("Should update the quantity of an existing resource in user")
-  void addResourceToUserWhenResourceAlreadyInUser() {
-    int initialResourceQuantity = 10;
-    int addedResourceQuantity = 5;
-
-    ResourceInUserRequestDto resourceUserDto =
-        createResourceInUserRequestDto(userId, resourceId, addedResourceQuantity);
-
-    User user = new User();
-    user.setId(userId);
-
-    Resource resource = new Resource();
-    resource.setId(resourceId);
-
-    ResourceInUser existingResourceInUser = new ResourceInUser();
-    existingResourceInUser.setResource(resource);
-    existingResourceInUser.setQuantity(initialResourceQuantity);
-    user.getResourcesOwned().add(existingResourceInUser);
-    existingResourceInUser.setOwner(user);
-
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(resourceRepository.findById(resourceId)).thenReturn(Optional.of(resource));
-
-    resourceInUserService.addResourceToUser(resourceUserDto);
-
-    assertEquals(
-        initialResourceQuantity + addedResourceQuantity, existingResourceInUser.getQuantity());
-    verify(userRepository, times(1)).findById(userId);
-    verify(resourceRepository, times(1)).findById(resourceId);
-    verify(resourceInUserRepository, times(1)).save(any(ResourceInUser.class));
-  }
-
-  @Test
-  @DisplayName("Should throw UserNotFoundException when user not found")
-  void getAllResourcesFromUserWhenUserNotFoundThenThrowException() {
-    UUID userId = UUID.randomUUID();
-
+  void willThrowUserNotFoundExceptionWhenGetResourceInUserForNonexistentUser() {
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
     assertThrows(
@@ -161,9 +122,7 @@ class ResourceInUserServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "Should throw an exception when user does not exist while removing resource quantity")
-  void removeQuantityFromResourceWhenUserNotFoundThenThrowException() {
+  void willThrowUserNotFoundExceptionWhenRemovingResourceFromNonexistentUser() {
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
     assertThrows(
@@ -174,11 +133,8 @@ class ResourceInUserServiceTest {
   }
 
   @Test
-  @DisplayName("Should throw an exception when user exists but does not have the resource")
-  void removeQuantityFromResourceWhenUserHasNoResourceThenThrowException() {
-    User user = createTestUserWithId();
-    user.setResourcesOwned(new ArrayList<>());
-
+  void willThrowResourceInUserNotFoundExceptionWhenRemoveQuantityOfNotOwnedResource() {
+    user.setResourcesOwned(List.of());
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
     assertThrows(
@@ -189,27 +145,14 @@ class ResourceInUserServiceTest {
   }
 
   @Test
-  @DisplayName("Should throw an exception when negative quantity provided")
-  void removeQuantityFromResourceWhenNegativeQuantityProvidedThenThrowException() {
+  void willThrowNegativeResourceQuantityExceptionWhenRemoveWithNegativeQuantity() {
     assertThrows(
         NegativeResourceQuantityException.class,
         () -> resourceInUserService.removeQuantityFromResource(userId, resourceId, -10));
   }
 
   @Test
-  @DisplayName("Should throw an exception when user does not have sufficient resource quantity")
-  void removeQuantityFromResourceWhenInsufficientResourceQuantityThenThrowException() {
-    User user = createTestUserWithId();
-
-    ResourceInUser resourceInUser = new ResourceInUser();
-    Resource resource = new Resource();
-    resource.setId(resourceId);
-    resourceInUser.setResource(resource);
-    resourceInUser.setQuantity(5);
-    resourceInUser.setOwner(user);
-
-    user.setResourcesOwned(new ArrayList<>(List.of(resourceInUser)));
-
+  void willThrowInsufficientResourceQuantityExceptionWhenRemoveQuantityMoreThanAvailable() {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
     assertThrows(
@@ -220,39 +163,19 @@ class ResourceInUserServiceTest {
   }
 
   @Test
-  @DisplayName("Should reduce the resource quantity when user has sufficient resource quantity")
-  void removeQuantityFromResourceWhenSufficientResourceQuantity() {
-    User user = createTestUserWithId();
-
-    ResourceInUser resourceInUser = new ResourceInUser();
-    Resource resource = new Resource();
-    resource.setId(resourceId);
-    resourceInUser.setResource(resource);
-    resourceInUser.setQuantity(20);
-    resourceInUser.setOwner(user);
-
-    user.setResourcesOwned(new ArrayList<>(List.of(resourceInUser)));
-
+  void willRemoveQuantityFromResourceInUserSuccessfully() {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    final double quantityToRemove = 2;
 
-    resourceInUserService.removeQuantityFromResource(userId, resourceId, 10);
+    resourceInUserService.removeQuantityFromResource(userId, resourceId, quantityToRemove);
 
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, times(1)).save(any(User.class));
-
-    assertEquals(10, resourceInUser.getQuantity());
+    assertEquals(INITIAL_QUANTITY - quantityToRemove, resourceInUser.getQuantity());
   }
 
   @Test
-  @DisplayName("Should remove resource from user when resource exists in user's resources")
-  void removeResourceFromUserWhenResourceExists() {
-    User user = createTestUserWithId();
-    ResourceInUser resourceInUser = new ResourceInUser();
-    Resource resource = new Resource();
-    resource.setId(resourceId);
-    resourceInUser.setResource(resource);
-    user.setResourcesOwned(new ArrayList<>(List.of(resourceInUser)));
-
+  void willRemoveResourceInUserSuccessfully() {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
     resourceInUserService.removeResourceFromUser(userId, resourceId);
@@ -262,8 +185,7 @@ class ResourceInUserServiceTest {
   }
 
   @Test
-  @DisplayName("Should throw UserNotFoundException when user does not exist")
-  void removeResourceFromUserWhenUserDoesNotExistThenThrowException() {
+  void willThrowUserNotFoundExceptionWhenRemoveFromNonexistentUser() {
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
     assertThrows(
@@ -275,10 +197,7 @@ class ResourceInUserServiceTest {
   }
 
   @Test
-  @DisplayName(
-      "Should throw ResourceNotFoundException when user does not have the specified resource")
-  void removeResourceFromUserWhenUserDoesNotHaveResourceThenThrowResourceNotFoundException() {
-    User user = createTestUserWithId();
+  void willThrowResourceInUserNotFoundExceptionWhenRemoveResourceNotOwnedByUser() {
     UUID nonExistentResourceId = UUID.randomUUID();
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));

@@ -10,6 +10,12 @@ public class UserTestHelper {
   public static final String USER_NAME = "john";
   public static final String USER_EMAIL = "john@example.com";
 
+  public static User createTestUserWithRandomId() {
+    User user = createTestUser();
+    user.setId(UUID.randomUUID());
+    return user;
+  }
+
   public static User createTestUser() {
     User user = new User();
     user.setName(USER_NAME);
@@ -27,12 +33,6 @@ public class UserTestHelper {
   public static User createTestUserWithId() {
     User user = createTestUser();
     user.setId(UUID.randomUUID());
-    return user;
-  }
-
-  public static User createTestUserWithStaticId() {
-    User user = createTestUser();
-    user.setId(UUID.fromString("413c1afa-0f19-4649-bdf7-2f63cbc73998"));
     return user;
   }
 
