@@ -2,7 +2,6 @@ package jewellery.inventory.dto;
 
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter

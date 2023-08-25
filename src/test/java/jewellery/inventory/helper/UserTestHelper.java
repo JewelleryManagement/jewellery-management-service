@@ -57,15 +57,6 @@ public class UserTestHelper {
     return invalidUserRequest;
   }
 
-  public static ResourceInUserRequestDto createResourceInUserRequestDto(
-      UUID userId, UUID resourceId, int quantity) {
-    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
-    resourceInUserRequestDto.setUserId(userId);
-    resourceInUserRequestDto.setResourceId(resourceId);
-    resourceInUserRequestDto.setQuantity(quantity);
-    return resourceInUserRequestDto;
-  }
-
   public static @NotNull ResourceInUserRequestDto createResourceInUserRequestDto(
       UUID userId, UUID resourceId, double quantity) {
     ResourceInUserRequestDto requestDto = new ResourceInUserRequestDto();

@@ -46,7 +46,7 @@ public class ResourceInUserController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{userId}/{resourceId}/{quantity}")
   public void removeQuantityFromUserResource(
-      @PathVariable UUID userId, @PathVariable UUID resourceId, @PathVariable int quantity) {
+      @PathVariable UUID userId, @PathVariable UUID resourceId, @PathVariable double quantity) {
     resourceAvailabilityService.removeQuantityFromResource(userId, resourceId, quantity);
   }
 }
