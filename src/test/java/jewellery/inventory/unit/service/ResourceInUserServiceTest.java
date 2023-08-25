@@ -2,8 +2,7 @@ package jewellery.inventory.unit.service;
 
 import static jewellery.inventory.helper.ResourceTestHelper.getPearl;
 import static jewellery.inventory.helper.UserTestHelper.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -12,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.*;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
@@ -69,6 +69,7 @@ class ResourceInUserServiceTest {
 
   @Test
   void willAddResourceToUser() {
+    user.setResourcesOwned(new ArrayList<>());
     ResourceInUserRequestDto resourceUserDto =
         createResourceInUserRequestDto(userId, resourceId, 10);
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -109,6 +110,18 @@ class ResourceInUserServiceTest {
 
     verify(userRepository, times(1)).findById(userId);
     verify(resourceRepository, times(1)).findById(resourceId);
+  }
+
+  @Test
+  void willGetResourceInUserSuccessfully() {
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(resourcesInUserMapper.toResourcesInUserResponseDto(user))
+        .thenReturn(ResourcesInUserResponseDto.builder().build());
+
+    resourceInUserService.getAllResourcesFromUser(userId);
+
+    verify(userRepository, times(1)).findById(userId);
+    verify(resourcesInUserMapper, times(1)).toResourcesInUserResponseDto(user);
   }
 
   @Test
@@ -172,6 +185,17 @@ class ResourceInUserServiceTest {
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, times(1)).save(any(User.class));
     assertEquals(INITIAL_QUANTITY - quantityToRemove, resourceInUser.getQuantity());
+  }
+
+  @Test
+  void willRemoveResourceFromResourceInUserSuccessfullyWhenExactQuantityPassed() {
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+    resourceInUserService.removeQuantityFromResource(userId, resourceId, INITIAL_QUANTITY);
+
+    verify(userRepository, times(1)).findById(userId);
+    verify(userRepository, times(1)).save(any(User.class));
+    assertTrue(user.getResourcesOwned().isEmpty());
   }
 
   @Test
