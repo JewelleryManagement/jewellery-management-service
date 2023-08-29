@@ -1,7 +1,6 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ResourceTestHelper.*;
-import static jewellery.inventory.mapper.ResourceMapper.toResourceResponse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -42,7 +41,7 @@ class ResourceCrudIntegrationTest {
   private int port;
 
   private final ObjectMapper objectMapper = new ObjectMapper();
-
+  @Autowired private ResourceMapper resourceMapper;
   @Autowired TestRestTemplate testRestTemplate;
 
   @AfterEach
@@ -156,11 +155,13 @@ class ResourceCrudIntegrationTest {
       throws JsonProcessingException {
     List<ResourceResponseDto> updatedResources = getResourcesWithRequest();
     updatedResources.forEach(resourceResponseDto -> resourceResponseDto.setId(null));
+
     assertEquals(
         updatedInputDtos.stream()
             .map(
                 resourceRequestDto ->
-                    toResourceResponse(ResourceMapper.toResourceEntity(resourceRequestDto)))
+                    resourceMapper.toResourceResponse(
+                        resourceMapper.toResourceEntity(resourceRequestDto)))
             .toList(),
         updatedResources);
   }

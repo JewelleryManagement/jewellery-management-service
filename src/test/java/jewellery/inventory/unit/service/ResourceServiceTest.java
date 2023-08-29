@@ -2,8 +2,6 @@ package jewellery.inventory.unit.service;
 
 import static jewellery.inventory.helper.ResourceTestHelper.getGemstone;
 import static jewellery.inventory.helper.ResourceTestHelper.provideResources;
-import static jewellery.inventory.mapper.ResourceMapper.toResourceEntity;
-import static jewellery.inventory.mapper.ResourceMapper.toResourceResponse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -14,7 +12,8 @@ import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
-import jewellery.inventory.exception.ResourceNotFoundException;
+import jewellery.inventory.exception.not_found.ResourceNotFoundException;
+import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.service.ResourceService;
@@ -29,16 +28,27 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ResourceServiceTest {
   @Mock private ResourceRepository resourceRepository;
+  @Mock private ResourceMapper resourceMapper;
   @InjectMocks private ResourceService resourceService;
 
   @ParameterizedTest
   @MethodSource("jewellery.inventory.helper.ResourceTestHelper#provideResourcesAndRequestDtos")
   void willSaveResource(Resource resourceFromDatabase, ResourceRequestDto resourceRequestDto) {
+
     when(resourceRepository.save(any())).thenReturn(resourceFromDatabase);
+
+    Resource expectedResource = new Resource();
+    expectedResource.setId(resourceFromDatabase.getId());
+    when(resourceMapper.toResourceEntity(resourceRequestDto)).thenReturn(expectedResource);
+
+    ResourceResponseDto expectedResponseDto = new ResourceResponseDto();
+    expectedResponseDto.setId(resourceFromDatabase.getId());
+    when(resourceMapper.toResourceResponse(resourceFromDatabase)).thenReturn(expectedResponseDto);
+
     ResourceResponseDto actualResourceResponseDto =
         resourceService.createResource(resourceRequestDto);
 
-    assertEquals(resourceFromDatabase.getId(), actualResourceResponseDto.getId());
+    assertEquals(expectedResponseDto.getId(), actualResourceResponseDto.getId());
     verify(resourceRepository, times(1)).save(any());
   }
 
@@ -58,13 +68,15 @@ class ResourceServiceTest {
     when(resourceRepository.findById(resourceFromDatabase.getId()))
         .thenReturn(Optional.of(resourceFromDatabase));
 
+    ResourceResponseDto expectedResponseDto = new ResourceResponseDto();
+    expectedResponseDto.setId(resourceFromDatabase.getId());
+    when(resourceMapper.toResourceResponse(resourceFromDatabase)).thenReturn(expectedResponseDto);
+
     ResourceResponseDto actualResourceResponseDto =
         resourceService.getResourceById(resourceFromDatabase.getId());
 
     verify(resourceRepository, times(1)).findById(any());
-    actualResourceResponseDto.setId(null);
-    assertEquals(
-        toResourceResponse(toResourceEntity(expectedRequestDto)), actualResourceResponseDto);
+    assertEquals(expectedResponseDto, actualResourceResponseDto);
   }
 
   @ParameterizedTest
@@ -73,15 +85,24 @@ class ResourceServiceTest {
   void willUpdateAResource(Resource resourceFromDatabase, ResourceRequestDto expectedDto) {
     when(resourceRepository.findById(resourceFromDatabase.getId()))
         .thenReturn(Optional.of(resourceFromDatabase));
+
+    Resource expectedResource = new Resource();
+    expectedResource.setId(resourceFromDatabase.getId());
+    when(resourceMapper.toResourceEntity(expectedDto)).thenReturn(expectedResource);
+
     when(resourceRepository.save(any())).thenReturn(resourceFromDatabase);
+
+    ResourceResponseDto expectedResponseDto = new ResourceResponseDto();
+    expectedResponseDto.setId(resourceFromDatabase.getId());
+    when(resourceMapper.toResourceResponse(resourceFromDatabase)).thenReturn(expectedResponseDto);
 
     ResourceResponseDto actualResourceResponseDto =
         resourceService.updateResource(resourceFromDatabase.getId(), expectedDto);
 
     verify(resourceRepository, times(1)).findById(any());
     verify(resourceRepository, times(1)).save(any());
-    actualResourceResponseDto.setId(null);
-    assertEquals(toResourceResponse(toResourceEntity(expectedDto)), actualResourceResponseDto);
+
+    assertEquals(expectedResponseDto, actualResourceResponseDto);
   }
 
   @Test

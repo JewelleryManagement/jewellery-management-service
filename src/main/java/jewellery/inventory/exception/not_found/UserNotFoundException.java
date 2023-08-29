@@ -1,4 +1,4 @@
-package jewellery.inventory.exception;
+package jewellery.inventory.exception.not_found;
 
 import java.util.UUID;
 
