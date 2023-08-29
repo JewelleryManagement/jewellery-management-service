@@ -3,6 +3,7 @@ package jewellery.inventory.model.resource;
 import jakarta.persistence.*;
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.model.ResourceInUser;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;

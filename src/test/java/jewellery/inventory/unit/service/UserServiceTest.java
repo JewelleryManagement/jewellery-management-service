@@ -1,4 +1,4 @@
-package jewellery.inventory.service;
+package jewellery.inventory.unit.service;
 
 import static jewellery.inventory.helper.UserTestHelper.USER_EMAIL;
 import static jewellery.inventory.helper.UserTestHelper.USER_NAME;
@@ -13,12 +13,13 @@ import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.exception.DuplicateEmailException;
-import jewellery.inventory.exception.DuplicateNameException;
-import jewellery.inventory.exception.UserNotFoundException;
+import jewellery.inventory.exception.duplicate.DuplicateEmailException;
+import jewellery.inventory.exception.duplicate.DuplicateNameException;
+import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
+import jewellery.inventory.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,13 +32,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class UserServiceTest {
   @Mock private UserRepository userRepository;
   @InjectMocks private UserService userService;
+  @Mock private UserMapper userMapper;
+
   private User user;
   private UserResponseDto userResponse;
+  private UUID userId;
+  private UUID resourceId;
 
   @BeforeEach
   void setUp() {
     user = createTestUser();
-    userResponse = UserMapper.INSTANCE.toUserResponse(user);
+    userResponse = userMapper.toUserResponse(user);
+    userId = UUID.randomUUID();
+    resourceId = UUID.randomUUID();
   }
 
   @Test
@@ -46,6 +53,13 @@ class UserServiceTest {
     List<User> users = Arrays.asList(user, new User(), new User());
 
     when(userRepository.findAll()).thenReturn(users);
+    when(userMapper.toUserResponseList(users))
+        .thenReturn(
+            Arrays.asList(
+                new UserResponseDto(),
+                new UserResponseDto(),
+                new UserResponseDto())); // This mock ensures that the mapper returns a list of 3
+    // UserResponseDto objects.
 
     List<UserResponseDto> returnedUsers = userService.getAllUsers();
 
@@ -56,7 +70,6 @@ class UserServiceTest {
   @Test
   @DisplayName("Should throw UserNotFoundException when the user id does not exist")
   void getUserWhenUserIdDoesNotExistThenThrowException() {
-    UUID userId = UUID.randomUUID();
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
     assertThrows(UserNotFoundException.class, () -> userService.getUser(userId));
@@ -67,7 +80,6 @@ class UserServiceTest {
   @Test
   @DisplayName("Should return the user when the user id exists")
   void getUserWhenUserIdExists() {
-    UUID userId = UUID.randomUUID();
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
     UserResponseDto result = userService.getUser(userId);
@@ -79,9 +91,10 @@ class UserServiceTest {
   @Test
   @DisplayName("Should throw a DuplicateEmailException when the email is already taken")
   void createUserWhenEmailIsAlreadyTakenThenThrowDuplicateEmailException() {
-    UserRequestDto userRequest = UserMapper.INSTANCE.toUserRequest(user);
+    UserRequestDto userRequest = userMapper.toUserRequest(user);
 
     when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+    when(userMapper.toUserEntity(userRequest)).thenReturn(user);
 
     assertThrows(DuplicateEmailException.class, () -> userService.createUser(userRequest));
 
@@ -91,9 +104,10 @@ class UserServiceTest {
   @Test
   @DisplayName("Should throw a DuplicateNameException when the name is already taken")
   void createUserWhenNameIsAlreadyTakenThenThrowDuplicateNameException() {
-    UserRequestDto userRequest = UserMapper.INSTANCE.toUserRequest(user);
+    UserRequestDto userRequest = userMapper.toUserRequest(user);
 
     when(userRepository.findByName(user.getName())).thenReturn(Optional.of(user));
+    when(userMapper.toUserEntity(userRequest)).thenReturn(user);
 
     assertThrows(DuplicateNameException.class, () -> userService.createUser(userRequest));
 
@@ -103,11 +117,15 @@ class UserServiceTest {
   @Test
   @DisplayName("Should create a new user when the email and name are not taken")
   void createUserWhenEmailAndNameAreNotTaken() {
+    UserRequestDto userRequest = userMapper.toUserRequest(user);
+
     when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
     when(userRepository.findByName(user.getName())).thenReturn(Optional.empty());
     when(userRepository.save(any(User.class))).thenReturn(user);
+    when(userMapper.toUserEntity(userRequest)).thenReturn(user);
+    when(userMapper.toUserResponse(user)).thenReturn(userResponse);
 
-    UserResponseDto createdUser = userService.createUser(UserMapper.INSTANCE.toUserRequest(user));
+    UserResponseDto createdUser = userService.createUser(userMapper.toUserRequest(user));
 
     assertEquals(userResponse, createdUser);
     verify(userRepository, times(1)).findByEmail(user.getEmail());
@@ -118,9 +136,8 @@ class UserServiceTest {
   @Test
   @DisplayName("Should throw an exception when the user id does not exist")
   void updateUserWhenUserIdDoesNotExistThenThrowException() {
-    UUID userId = UUID.randomUUID();
     user.setId(userId);
-    UserRequestDto userRequest = UserMapper.INSTANCE.toUserRequest(user);
+    UserRequestDto userRequest = userMapper.toUserRequest(user);
     when(userRepository.existsById(userId)).thenReturn(false);
 
     assertThrows(UserNotFoundException.class, () -> userService.updateUser(userRequest, userId));
@@ -132,16 +149,18 @@ class UserServiceTest {
   @Test
   @DisplayName("Should update the user when the user id exists")
   void updateUserWhenUserIdExists() {
-    UUID userId = UUID.randomUUID();
     user.setId(userId);
 
     when(userRepository.existsById(userId)).thenReturn(true);
     when(userRepository.save(any(User.class))).thenReturn(user);
 
-    UserResponseDto updatedUser =
-        userService.updateUser(UserMapper.INSTANCE.toUserRequest(user), userId);
+    UserRequestDto userRequestDto = new UserRequestDto();
+    when(userMapper.toUserRequest(user)).thenReturn(userRequestDto);
+    when(userMapper.toUserEntity(userRequestDto)).thenReturn(user);
 
-    assertEquals(UserMapper.INSTANCE.toUserResponse(user), updatedUser);
+    UserResponseDto updatedUser = userService.updateUser(userMapper.toUserRequest(user), userId);
+
+    assertEquals(userMapper.toUserResponse(user), updatedUser);
     verify(userRepository, times(1)).existsById(userId);
     verify(userRepository, times(1)).save(any(User.class));
   }
@@ -159,10 +178,11 @@ class UserServiceTest {
     updatingUser.setName(USER_NAME);
     updatingUser.setEmail("different@mail.com");
 
-    UserRequestDto updatingUserRequest = UserMapper.INSTANCE.toUserRequest(updatingUser);
+    UserRequestDto updatingUserRequest = userMapper.toUserRequest(updatingUser);
 
     when(userRepository.existsById(updatingUserId)).thenReturn(true);
     when(userRepository.findByName(USER_NAME)).thenReturn(Optional.of(existingUser));
+    when(userMapper.toUserEntity(updatingUserRequest)).thenReturn(updatingUser);
 
     assertThrows(
         DuplicateNameException.class,
@@ -188,6 +208,7 @@ class UserServiceTest {
 
     when(userRepository.existsById(updatingUserId)).thenReturn(true);
     when(userRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(existingUser));
+    when(userMapper.toUserEntity(updatingUserRequest)).thenReturn(updatingUser);
 
     assertThrows(
         DuplicateEmailException.class,
@@ -197,7 +218,6 @@ class UserServiceTest {
   @Test
   @DisplayName("Should delete the user when the user id exists")
   void deleteUserWhenUserIdExists() {
-    UUID userId = UUID.randomUUID();
     user.setId(userId);
     when(userRepository.existsById(userId)).thenReturn(true);
 
@@ -209,8 +229,6 @@ class UserServiceTest {
   @Test
   @DisplayName("Should throw an exception when the user id does not exist")
   void deleteUserWhenUserIdDoesNotExistThenThrowException() {
-    UUID userId = UUID.randomUUID();
-
     when(userRepository.existsById(userId)).thenReturn(false);
 
     assertThrows(UserNotFoundException.class, () -> userService.deleteUser(userId));
