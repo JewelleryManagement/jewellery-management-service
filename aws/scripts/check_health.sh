@@ -4,7 +4,7 @@
 sleep 20
 
 # Perform the health check
-if curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/health | grep -q "200"; then
+if curl -s -o /dev/null -w "%{http_code}" http://3.123.158.214:8080/health | grep -q "200"; then
     echo "Application is healthy."
     exit 0  # Success
 else
