@@ -1,5 +1,5 @@
 version: '3.8'
-name: jms-docker
+name: jms-docker-be
 services:
   jms-be:
     image: jms-be
@@ -18,8 +18,6 @@ services:
       - "8080:8080"
     volumes:
       - ./jewellery-inventory-0.0.1-SNAPSHOT.jar:/jar/app.jar
-    networks:
-      - jms-network
   db:
     container_name: postgres
     image: jms-db
@@ -35,13 +33,6 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    networks:
-      - jms-network
-
-networks:
-  jms-network:
-    name: jms-network
-    driver: bridge
 
 volumes:
   postgres_data:

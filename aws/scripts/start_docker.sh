@@ -11,4 +11,4 @@ export JMS_DATABASE_PASSWORD="$JMS_DATABASE_PASSWORD"
 
 service docker start
 docker-compose build --no-cache --file /tmp/be/docker-compose.yml
-docker-compose --file /tmp/be/docker-compose.yml up -d --build #> /logs/startup.log
+docker-compose --file /tmp/be/docker-compose.yml up -d --build
