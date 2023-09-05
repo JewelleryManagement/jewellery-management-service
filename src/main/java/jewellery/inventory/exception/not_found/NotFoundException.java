@@ -1,4 +1,4 @@
-package jewellery.inventory.exception;
+package jewellery.inventory.exception.not_found;
 
 public class NotFoundException extends RuntimeException {
     public NotFoundException(String message) {
