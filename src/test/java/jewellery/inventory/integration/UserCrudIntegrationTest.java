@@ -47,7 +47,7 @@ public class UserCrudIntegrationTest {
   }
 
   @Test
-  void willCreateNewUser() {
+  void createUserSuccessfully() {
     UserRequestDto userRequest = createTestUserRequest();
 
     ResponseEntity<UserResponseDto> response =
@@ -64,7 +64,7 @@ public class UserCrudIntegrationTest {
   }
 
   @Test
-  void willNotCreateNewUserWithInvalidName() {
+  void createUserFailsWhenNameInvalid() {
     assertTrue(
         this.testRestTemplate
             .postForEntity(getBaseUserUrl(), createInvalidUserRequest(), UserResponseDto.class)
@@ -73,7 +73,7 @@ public class UserCrudIntegrationTest {
   }
 
   @Test
-  void willNotCreateUserWithDuplicateEmail() {
+  void createUserFailsWhenEmailDuplicate() {
     UserRequestDto userRequest = createTestUserRequest();
 
     this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
@@ -85,7 +85,7 @@ public class UserCrudIntegrationTest {
   }
 
   @Test
-  void willNotCreateUserWithDuplicateName() {
+  void createUserFailsWhenNameDuplicate() {
     UserRequestDto userRequest = createTestUserRequest();
 
     this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
@@ -102,7 +102,7 @@ public class UserCrudIntegrationTest {
   }
 
   @Test
-  void willGetUsersFromDatabase() {
+  void getAllUsersSuccessfully() {
     UserRequestDto userRequest = createTestUserRequest();
 
     ResponseEntity<UserResponseDto> userResponseEntity =
@@ -111,10 +111,7 @@ public class UserCrudIntegrationTest {
 
     ResponseEntity<List<UserResponseDto>> response =
         this.testRestTemplate.exchange(
-            getBaseUserUrl(),
-            HttpMethod.GET,
-            null,
-            new ParameterizedTypeReference<>() {});
+            getBaseUserUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
 
@@ -126,7 +123,7 @@ public class UserCrudIntegrationTest {
   }
 
   @Test
-  void willGetSpecificUser() {
+  void getSpecificUserSuccessfully() {
     UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
@@ -146,7 +143,7 @@ public class UserCrudIntegrationTest {
   }
 
   @Test
-  void willGetNonexistentUser() {
+  void getUserFailsWhenUserNotFound() {
     UUID randomId = UUID.randomUUID();
     ResponseEntity<String> response =
         this.testRestTemplate.getForEntity(getBaseUserUrl() + "/" + randomId, String.class);
@@ -154,7 +151,7 @@ public class UserCrudIntegrationTest {
   }
 
   @Test
-  void willUpdateUser() {
+  void updateUserSuccessfully() {
     UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
@@ -179,7 +176,7 @@ public class UserCrudIntegrationTest {
   }
 
   @Test
-  void willNotUpdateUserWithDuplicateEmail() {
+  void updateUserFailsWhenEmailDuplicate() {
 
     UserResponseDto firstUser = sendUserCreateRequest(createTestUserRequest());
 
@@ -201,7 +198,7 @@ public class UserCrudIntegrationTest {
   }
 
   @Test
-  void willNotUpdateUserWithDuplicateName() {
+  void updateUserFailsWhenNameDuplicate() {
     UserResponseDto firstUser = sendUserCreateRequest(createTestUserRequest());
     UserResponseDto secondUser = sendUserCreateRequest(createDifferentUserRequest());
 
@@ -221,7 +218,7 @@ public class UserCrudIntegrationTest {
   }
 
   @Test
-  void willNotUpdateNonexistentUser() {
+  void updateUserFailsWhenUserNotFound() {
     UserRequestDto userRequest = createTestUserRequest();
     UUID fakeId = UUID.randomUUID();
     HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(userRequest);
@@ -234,7 +231,7 @@ public class UserCrudIntegrationTest {
   }
 
   @Test
-  void willDeleteUser() {
+  void deleteUserSuccessfully() {
     UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
@@ -256,7 +253,7 @@ public class UserCrudIntegrationTest {
   }
 
   @Test
-  void willNotDeleteNonexistentUser() {
+  void deleteUserFailsWhenUserNotFound() {
     UUID fakeId = UUID.randomUUID();
 
     ResponseEntity<Void> response =

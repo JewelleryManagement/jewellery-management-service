@@ -1,4 +1,4 @@
-package jewellery.inventory.exception;
+package jewellery.inventory.exception.duplicate;
 
 public class DuplicateException extends RuntimeException {
   public DuplicateException(String message) {
