@@ -20,7 +20,7 @@ import jewellery.inventory.dto.response.resource.GemstoneResponseDto;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +69,7 @@ class ResourceInUserCrudIntegrationTest {
 
   private static final double RESOURCE_QUANTITY = 5.00;
 
-  @AfterEach
+  @BeforeEach
   void cleanup() {
     userRepository.deleteAll();
     resourceRepository.deleteAll();
