@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -29,17 +30,24 @@ public class SecurityConfig {
 
   @Value("${cors.allowedMethods}")
   private String[] allowedMethods;
-  
+
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http.authorizeHttpRequests(
-            authz -> authz
-                .requestMatchers(HttpMethod.POST, "/users").permitAll()
-                .requestMatchers("/auth/**").permitAll()
-                .anyRequest().authenticated())
+            authz ->
+                authz
+                    .requestMatchers(HttpMethod.POST, "/users")
+                    .permitAll()
+                    .requestMatchers("/auth/**")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
         .csrf(csrf -> csrf.disable())
         .httpBasic(httpBasic -> httpBasic.disable())
         .formLogin(formLogin -> formLogin.disable())
+        .exceptionHandling(
+            exceptionHandling ->
+                exceptionHandling.authenticationEntryPoint(new BasicAuthenticationEntryPoint()))
         .cors(Customizer.withDefaults())
         .sessionManagement(
             (session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -56,9 +64,9 @@ public class SecurityConfig {
     source.registerCorsConfiguration("/**", configuration);
     return source;
   }
-  
+
   @Bean
-  public AuthenticationManager authManager(AuthenticationConfiguration config) throws Exception{
+  public AuthenticationManager authManager(AuthenticationConfiguration config) throws Exception {
     return config.getAuthenticationManager();
   }
 }
