@@ -23,4 +23,9 @@ public class UserRequestDto {
   @NotEmpty
   @Pattern(regexp = EMAIL_PATTERN_REGEX, message = EMAIL_VALIDATION_MSG)
   private String email;
+
+  @NotEmpty
+  @Size(min = 3, max = 64, message = NAME_SIZE_VALIDATION_MSG)
+ // @Pattern(regexp = NAME_PATTERN_REGEX, message = NAME_PATTERN_VALIDATION_MSG)
+  private String password;
 }
