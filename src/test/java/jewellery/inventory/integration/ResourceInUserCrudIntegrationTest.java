@@ -6,7 +6,6 @@ import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,26 +21,15 @@ import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = RANDOM_PORT)
-class ResourceInUserCrudIntegrationTest {
-  @Autowired TestRestTemplate testRestTemplate;
+class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
+
+  private static final double RESOURCE_QUANTITY = 5.00;
   @Autowired UserRepository userRepository;
   @Autowired ResourceRepository resourceRepository;
   @Autowired ResourceInUserRepository resourceInUserRepository;
-
-  @Value(value = "${local.server.port}")
-  private int port;
-
-  private static final String BASE_URL_PATH = "http://localhost:";
 
   private String getBaseUrl() {
     return BASE_URL_PATH + port;
@@ -66,8 +54,6 @@ class ResourceInUserCrudIntegrationTest {
   private String getBaseResourceUrl() {
     return buildUrl("resources");
   }
-
-  private static final double RESOURCE_QUANTITY = 5.00;
 
   @BeforeEach
   void cleanup() {
