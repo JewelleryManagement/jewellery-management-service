@@ -35,11 +35,15 @@ public class User implements UserDetails {
   @Enumerated(EnumType.STRING)
   private Role role;
 
+  // This field is essential for the application's business logic.
+  // It is not marked as transient despite SonarQube's recommendation.
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-  private transient List<Product> productsOwned = new ArrayList<>();
+  private List<Product> productsOwned = new ArrayList<>();
 
+  // This field is essential for the application's business logic.
+  // It is not marked as transient despite SonarQube's recommendation.
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
-  private transient List<ResourceInUser> resourcesOwned = new ArrayList<>();
+  private List<ResourceInUser> resourcesOwned = new ArrayList<>();
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
