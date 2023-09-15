@@ -5,19 +5,30 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
 public class JwtService {
+  @Autowired
+  private Environment env;
 
-  private static final String SECRET_KEY = "9dDDE3/Z7EdcCqA35PbruWDfEt0Dxk5cbPGaaudhJ5o=";
-
+  private String secretKey;
+  @PostConstruct
+  public void init() {
+    secretKey = env.getProperty("SECRET_KEY");
+    if (secretKey == null) {
+      throw new IllegalArgumentException("SECRET_KEY not found in environment properties");
+    }
+  }
   public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
     return Jwts.builder()
         .setClaims(extraClaims)
@@ -63,7 +74,7 @@ public class JwtService {
   }
 
   private Key getSigningKey() {
-    byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+    byte[] keyBytes = Decoders.BASE64.decode(secretKey);
     return Keys.hmacShaKeyFor(keyBytes);
   }
 }

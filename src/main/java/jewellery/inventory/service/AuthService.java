@@ -20,8 +20,6 @@ public class AuthService {
   public AuthenticationResponseDto authenticate(AuthenticationRequestDto authRequest) {
     authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword()));
-    System.out.println("Email: " + authRequest.getEmail());
-    System.out.println("Password: " + authRequest.getPassword());
     var user =
         repository.findByEmail(authRequest.getEmail()).orElseThrow(UserNotFoundException::new);
 

@@ -36,10 +36,10 @@ public class User implements UserDetails {
   private Role role;
 
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-  private List<Product> productsOwned = new ArrayList<>();
+  private transient List<Product> productsOwned = new ArrayList<>();
 
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<ResourceInUser> resourcesOwned = new ArrayList<>();
+  private transient List<ResourceInUser> resourcesOwned = new ArrayList<>();
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {

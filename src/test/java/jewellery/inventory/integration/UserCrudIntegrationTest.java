@@ -22,7 +22,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-public class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
+class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Autowired UserRepository userRepository;
 
   private String getBaseUserUrl() {

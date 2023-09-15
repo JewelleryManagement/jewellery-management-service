@@ -49,7 +49,7 @@ public class SecurityConfig {
                 exceptionHandling.authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
         .cors(Customizer.withDefaults())
         .sessionManagement(
-            (session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
     return http.build();
   }
