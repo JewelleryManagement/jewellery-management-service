@@ -3,6 +3,7 @@ package jewellery.inventory.service;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
@@ -86,6 +87,11 @@ public class ResourceInUserService {
     userRepository.save(user);
   }
 
+  public ResourceOwnedByUsersResponseDto getUsersAndQuantities(UUID resourceId) {
+    Resource resource = findResourceById(resourceId);
+    return resourcesInUserMapper.toResourcesOwnedByUsersResponseDto(resource);
+  }
+
   private User findUserById(UUID userId) {
     return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
   }
@@ -111,4 +117,5 @@ public class ResourceInUserService {
     user.getResourcesOwned().add(resourceInUser);
     return resourceInUser;
   }
+
 }
