@@ -1,8 +1,7 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ResourceTestHelper.getGemstoneRequestDto;
-import static jewellery.inventory.helper.UserTestHelper.createResourceInUserRequestDto;
-import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
+import static jewellery.inventory.helper.UserTestHelper.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -14,6 +13,7 @@ import jewellery.inventory.dto.ResourceQuantityDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
+import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.dto.response.resource.GemstoneResponseDto;
@@ -171,6 +171,24 @@ class ResourceInUserCrudIntegrationTest {
   }
 
   @Test
+  void getAllUsersOwningResourceSuccessfully() {
+    UserResponseDto firstCreatedUser = sendCreateUserRequest(createTestUserRequest());
+    UserResponseDto secondCreatedUser = sendCreateUserRequest(createDifferentUserRequest());
+    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    sendAddResourceInUserRequest(
+        createResourceInUserRequestDto(firstCreatedUser.getId(), createdResource.getId(), 5.00));
+    sendAddResourceInUserRequest(
+        createResourceInUserRequestDto(secondCreatedUser.getId(), createdResource.getId(), 3.00));
+
+    ResponseEntity<ResourceOwnedByUsersResponseDto> response =
+        sendGetUsersAndQuantitiesForResourceRequest(createdResource.getId());
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(2, response.getBody().getUsersAndQuantities().size());
+  }
+
+  @Test
   void getAllResourcesFromUserReturnsEmptyWhenUserHasNoResources() {
     UserResponseDto createdUser = sendCreateUserRequest();
 
@@ -305,6 +323,14 @@ class ResourceInUserCrudIntegrationTest {
     return createdResource;
   }
 
+  private UserResponseDto sendCreateUserRequest(UserRequestDto userRequest) {
+    ResponseEntity<UserResponseDto> userResponseEntity =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
+    UserResponseDto createdUser = userResponseEntity.getBody();
+    assertNotNull(createdUser);
+    return createdUser;
+  }
+
   private UserResponseDto sendCreateUserRequest() {
     UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<UserResponseDto> userResponseEntity =
@@ -339,6 +365,13 @@ class ResourceInUserCrudIntegrationTest {
   private ResponseEntity<ResourcesInUserResponseDto> sendGetResourcesInUserRequest(UUID userId) {
     return testRestTemplate.getForEntity(
         getBaseResourceAvailabilityUrl() + "/" + userId, ResourcesInUserResponseDto.class);
+  }
+
+  private ResponseEntity<ResourceOwnedByUsersResponseDto>
+      sendGetUsersAndQuantitiesForResourceRequest(UUID resourceId) {
+    return testRestTemplate.getForEntity(
+        getBaseResourceAvailabilityUrl() + "/by-resource/" + resourceId,
+        ResourceOwnedByUsersResponseDto.class);
   }
 
   private static void assertCreatedResourceIsInResourcesInUser(
