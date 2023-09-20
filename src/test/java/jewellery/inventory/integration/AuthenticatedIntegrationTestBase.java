@@ -7,7 +7,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 import java.util.Collections;
 import jewellery.inventory.model.User;
-import jewellery.inventory.security.JwtService;
+import jewellery.inventory.security.JwtTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ public abstract class AuthenticatedIntegrationTestBase {
 
   @Autowired protected TestRestTemplate testRestTemplate;
 
-  @Autowired private JwtService jwtService;
+  @Autowired private JwtTokenService jwtService;
 
   @MockBean private UserDetailsService userDetailsService;
 

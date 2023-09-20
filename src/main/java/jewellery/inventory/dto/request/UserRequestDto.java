@@ -9,7 +9,8 @@ import lombok.Data;
 public class UserRequestDto {
   private static final String NAME_PATTERN_REGEX = "^(?!.*__)[A-Za-z0-9_]*$";
   private static final String EMAIL_PATTERN_REGEX =
-      "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$";
+      "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$";
+  // "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$";
   private static final String NAME_SIZE_VALIDATION_MSG = "Size must be between 3 and 64";
   private static final String NAME_PATTERN_VALIDATION_MSG =
       "Name must only contain alphanumeric characters and underscores, and no consecutive underscores";

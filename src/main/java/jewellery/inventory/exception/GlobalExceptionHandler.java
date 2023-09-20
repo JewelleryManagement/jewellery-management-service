@@ -8,10 +8,12 @@ import java.util.List;
 import java.util.Map;
 import jewellery.inventory.exception.duplicate.DuplicateException;
 import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
+import jewellery.inventory.exception.jwt.JwtAuthenticationBaseException;
 import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -44,6 +46,13 @@ public class GlobalExceptionHandler {
   @ExceptionHandler({InvalidResourceQuantityException.class, DuplicateException.class})
   public ResponseEntity<Object> handleBadDataExceptions(RuntimeException ex) {
     return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+  }
+
+  @ExceptionHandler({JwtAuthenticationBaseException.class, AuthenticationException.class})
+  public ResponseEntity<Object> handleExpiredJwtException(AuthenticationException ex) {
+    System.out.println(
+        "Handling exception: " + ex.getClass().getName() + " with message: " + ex.getMessage());
+    return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
   }
 
   private ResponseEntity<Object> createErrorResponse(HttpStatus status, Object error) {

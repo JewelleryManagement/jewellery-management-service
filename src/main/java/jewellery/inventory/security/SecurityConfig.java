@@ -31,8 +31,15 @@ public class SecurityConfig {
   private String[] allowedMethods;
 
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http.authorizeHttpRequests(
+  public SecurityFilterChain filterChain(
+      HttpSecurity http, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) throws Exception {
+    http.csrf(csrf -> csrf.disable())
+        .httpBasic(httpBasic -> httpBasic.disable())
+        .formLogin(formLogin -> formLogin.disable())
+        .sessionManagement(
+            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .cors(Customizer.withDefaults())
+        .authorizeHttpRequests(
             authz ->
                 authz
                     .requestMatchers(HttpMethod.POST, "/users")
@@ -41,16 +48,11 @@ public class SecurityConfig {
                     .permitAll()
                     .anyRequest()
                     .authenticated())
-        .csrf(csrf -> csrf.disable())
-        .httpBasic(httpBasic -> httpBasic.disable())
-        .formLogin(formLogin -> formLogin.disable())
         .exceptionHandling(
             exceptionHandling ->
-                exceptionHandling.authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
-        .cors(Customizer.withDefaults())
-        .sessionManagement(
-            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint))
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
     return http.build();
   }
 
@@ -69,3 +71,4 @@ public class SecurityConfig {
     return config.getAuthenticationManager();
   }
 }
+
