@@ -1,6 +1,5 @@
 package jewellery.inventory.security;
 
-import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +24,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
   }
 
   public void commence(
-      HttpServletRequest request,
-      HttpServletResponse response,
-      SignatureException signatureException) {
-    resolver.resolveException(request, response, null, signatureException);
+      HttpServletRequest request, HttpServletResponse response, Exception exception) {
+    resolver.resolveException(request, response, null, exception);
   }
 }

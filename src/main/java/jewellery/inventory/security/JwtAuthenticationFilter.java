@@ -1,6 +1,5 @@
 package jewellery.inventory.security;
 
-import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,9 +45,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     try {
       authenticateRequest(request);
     } catch (AuthenticationException e) {
-      clearSecurityContextAndCommenceEntryPoint(request, response, e);
-      return;
-    } catch (SignatureException e) {
       clearSecurityContextAndCommenceEntryPoint(request, response, e);
       return;
     }
@@ -97,13 +93,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   }
 
   private void clearSecurityContextAndCommenceEntryPoint(
-      HttpServletRequest request, HttpServletResponse response, AuthenticationException e) {
-    SecurityContextHolder.clearContext();
-    jwtAuthenticationEntryPoint.commence(request, response, e);
-  }
-
-  private void clearSecurityContextAndCommenceEntryPoint(
-      HttpServletRequest request, HttpServletResponse response, SignatureException e) {
+      HttpServletRequest request, HttpServletResponse response, Exception e) {
     SecurityContextHolder.clearContext();
     jwtAuthenticationEntryPoint.commence(request, response, e);
   }

@@ -29,7 +29,7 @@ public abstract class AuthenticatedIntegrationTestBase {
 
   @Autowired private JwtTokenService jwtService;
 
-  @MockBean private UserDetailsService userDetailsService;
+  @MockBean protected UserDetailsService userDetailsService;
 
   @Value(value = "${local.server.port}")
   protected int port;
@@ -43,19 +43,19 @@ public abstract class AuthenticatedIntegrationTestBase {
     setupTestRestTemplateWithAuthHeaders();
   }
 
-  private void setupMockSecurityContext(User user) {
-    String mockToken = generateTokenForUser(user);
-    when(userDetailsService.loadUserByUsername(anyString())).thenReturn(user);
-    headers = new HttpHeaders();
-    headers.setBearerAuth(mockToken);
-  }
-
-  private String generateTokenForUser(User user) {
+  protected String generateTokenForUser(User user) {
     try {
       return jwtService.generateToken(user);
     } catch (Exception e) {
       throw new RuntimeException("Error generating token for mock user", e);
     }
+  }
+
+  private void setupMockSecurityContext(User user) {
+    String mockToken = generateTokenForUser(user);
+    when(userDetailsService.loadUserByUsername(anyString())).thenReturn(user);
+    headers = new HttpHeaders();
+    headers.setBearerAuth(mockToken);
   }
 
   private void setupTestRestTemplateWithAuthHeaders() {

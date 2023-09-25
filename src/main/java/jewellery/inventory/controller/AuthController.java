@@ -16,8 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
   private final AuthService authService;
+
   @ResponseStatus(HttpStatus.CREATED)
-  @PostMapping("/authenticate")
+  @PostMapping("/token")
   public AuthenticationResponseDto authenticate(@RequestBody AuthenticationRequestDto authRequest) {
     return authService.authenticate(authRequest);
   }

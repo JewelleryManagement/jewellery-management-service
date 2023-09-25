@@ -52,7 +52,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<Object> handleExpiredJwtException(AuthenticationException ex) {
     System.out.println(
         "Handling exception: " + ex.getClass().getName() + " with message: " + ex.getMessage());
-    return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+   return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
   }
 
   private ResponseEntity<Object> createErrorResponse(HttpStatus status, Object error) {
