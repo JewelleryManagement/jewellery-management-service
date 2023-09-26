@@ -1,16 +1,16 @@
 package jewellery.inventory.service;
 
 import java.util.Optional;
-import jewellery.inventory.dto.auth.AuthenticationRequestDto;
-import jewellery.inventory.dto.auth.AuthenticationResponseDto;
-import jewellery.inventory.exception.jwt.JwtAuthenticationBaseException;
+import jewellery.inventory.dto.request.AuthenticationRequestDto;
+import jewellery.inventory.dto.response.AuthenticationResponseDto;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
+import jewellery.inventory.exception.security.InvalidCredentialsException;
+import jewellery.inventory.exception.security.jwt.JwtAuthenticationBaseException;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
 import jewellery.inventory.security.JwtTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
@@ -22,10 +22,10 @@ public class AuthService {
   private final JwtTokenService jwtService;
 
   public AuthenticationResponseDto authenticate(AuthenticationRequestDto authRequest) {
-
     if (!tryAuthenticate(authRequest)) {
-      throw new BadCredentialsException("Invalid credentials provided.");
+      throw new InvalidCredentialsException();
     }
+
     User user = getUserByEmail(authRequest.getEmail()).orElseThrow(UserNotFoundException::new);
 
     String token = generateTokenForUser(user);

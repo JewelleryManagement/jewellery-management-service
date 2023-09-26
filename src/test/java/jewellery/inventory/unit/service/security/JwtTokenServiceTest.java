@@ -1,4 +1,4 @@
-package jewellery.inventory.security;
+package jewellery.inventory.unit.service.security;
 
 import static jewellery.inventory.helper.UserTestHelper.USER_NAME;
 import static org.assertj.core.api.Assertions.*;
@@ -11,6 +11,7 @@ import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.util.HashMap;
 import java.util.Map;
+import jewellery.inventory.security.JwtTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,7 +34,6 @@ public class JwtTokenServiceTest {
 
   @BeforeEach
   public void setUp() {
-
     ReflectionTestUtils.setField(jwtTokenService, "secretKey", SECRET_KEY);
     ReflectionTestUtils.setField(jwtTokenService, "tokenExpiration", TOKEN_EXPIRATION);
     when(userDetails.getUsername()).thenReturn(USER_NAME);
@@ -42,7 +42,6 @@ public class JwtTokenServiceTest {
   @Test
   public void generateTokenWithValidInputsReturnsNotNullToken() {
     String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
-    System.out.println(token);
     assertThat(token).isNotNull();
   }
 

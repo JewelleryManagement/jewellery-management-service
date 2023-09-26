@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public class UserTestHelper {
   public static final String USER_NAME = "john";
   public static final String USER_EMAIL = "john@example.com";
-  public static final String USER_PASSWORD = "1234";
+  public static final String USER_PASSWORD = "1P@ssword";
 
   public static final String FAKE_USER = "fake_user";
 

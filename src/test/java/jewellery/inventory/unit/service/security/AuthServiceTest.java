@@ -1,4 +1,4 @@
-package jewellery.inventory.service;
+package jewellery.inventory.unit.service.security;
 
 import static jewellery.inventory.helper.UserTestHelper.USER_EMAIL;
 import static jewellery.inventory.helper.UserTestHelper.USER_PASSWORD;
@@ -7,12 +7,13 @@ import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 import java.util.UUID;
-import jewellery.inventory.dto.auth.AuthenticationRequestDto;
-import jewellery.inventory.dto.auth.AuthenticationResponseDto;
+import jewellery.inventory.dto.request.AuthenticationRequestDto;
+import jewellery.inventory.dto.response.AuthenticationResponseDto;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
 import jewellery.inventory.security.JwtTokenService;
+import jewellery.inventory.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,7 +52,7 @@ public class AuthServiceTest {
   @Test
   public void authenticateWithValidCredentialsReturnsToken() {
     when(authenticationManager.authenticate(any()))
-        .thenReturn(null); // assuming no exception means success
+        .thenReturn(null);
     when(userRepository.findByEmail(authRequest.getEmail())).thenReturn(Optional.of(user));
     when(jwtTokenService.generateToken(user)).thenReturn(TEST_TOKEN);
 

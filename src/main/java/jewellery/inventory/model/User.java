@@ -31,7 +31,7 @@ public class User implements UserDetails {
   @Column(unique = true)
   private String password;
 
-  @Column(unique = true)
+  @Column
   @Enumerated(EnumType.STRING)
   private Role role;
 

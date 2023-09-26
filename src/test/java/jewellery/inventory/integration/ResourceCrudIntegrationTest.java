@@ -79,7 +79,6 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void willFailToUpdateResourceFromDatabaseWithWrongId() {
-
     ResponseEntity<String> response =
         testRestTemplate.exchange(
             getBaseResourceUrl() + "/" + UUID.randomUUID(),

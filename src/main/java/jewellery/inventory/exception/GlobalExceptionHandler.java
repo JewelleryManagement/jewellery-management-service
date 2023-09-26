@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Map;
 import jewellery.inventory.exception.duplicate.DuplicateException;
 import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
-import jewellery.inventory.exception.jwt.JwtAuthenticationBaseException;
 import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
+import jewellery.inventory.exception.security.jwt.JwtAuthenticationBaseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -50,9 +50,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler({JwtAuthenticationBaseException.class, AuthenticationException.class})
   public ResponseEntity<Object> handleExpiredJwtException(AuthenticationException ex) {
-    System.out.println(
-        "Handling exception: " + ex.getClass().getName() + " with message: " + ex.getMessage());
-   return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
   }
 
   private ResponseEntity<Object> createErrorResponse(HttpStatus status, Object error) {

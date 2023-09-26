@@ -10,8 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import jewellery.inventory.dto.auth.AuthenticationRequestDto;
-import jewellery.inventory.dto.auth.AuthenticationResponseDto;
+import jewellery.inventory.dto.request.AuthenticationRequestDto;
+import jewellery.inventory.dto.response.AuthenticationResponseDto;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;

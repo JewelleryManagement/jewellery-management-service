@@ -1,7 +1,7 @@
 package jewellery.inventory.controller;
 
-import jewellery.inventory.dto.auth.AuthenticationRequestDto;
-import jewellery.inventory.dto.auth.AuthenticationResponseDto;
+import jewellery.inventory.dto.request.AuthenticationRequestDto;
+import jewellery.inventory.dto.response.AuthenticationResponseDto;
 import jewellery.inventory.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

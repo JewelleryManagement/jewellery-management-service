@@ -1,4 +1,4 @@
-package jewellery.inventory.dto.auth;
+package jewellery.inventory.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

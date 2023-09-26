@@ -5,8 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import jewellery.inventory.exception.jwt.InvalidJwtException;
-import jewellery.inventory.exception.jwt.NoJwtTokenException;
+import jewellery.inventory.exception.security.jwt.InvalidJwtException;
+import jewellery.inventory.exception.security.jwt.JwtTokenNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -59,11 +59,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private void authenticateRequest(HttpServletRequest request) {
     String authHeader = request.getHeader(AUTHORIZATION_HEADER);
-    validateJwtHeader(authHeader);
-
-    String token = authHeader.substring(TOKEN_OFFSET);
-    String userEmail = jwtService.extractName(token);
-    validateUserEmail(userEmail);
+    String token = validateJwtHeader(authHeader);
+    String userEmail = extractUserEmail(token);
 
     if (SecurityContextHolder.getContext().getAuthentication() == null) {
       UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
@@ -73,16 +70,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
   }
 
-  private void validateJwtHeader(String authHeader) {
+  private String validateJwtHeader(String authHeader) {
     if (authHeader == null || !authHeader.startsWith(TOKEN_PREFIX)) {
-      throw new NoJwtTokenException();
+      throw new JwtTokenNotFoundException();
     }
+    return authHeader.substring(TOKEN_OFFSET);
   }
 
-  private void validateUserEmail(String userEmail) {
+  private String extractUserEmail(String token) {
+    String userEmail = jwtService.extractName(token);
     if (userEmail == null || userEmail.trim().isEmpty()) {
       throw new InvalidJwtException();
     }
+    return userEmail;
   }
 
   private void setAuthenticationContext(HttpServletRequest request, UserDetails userDetails) {
