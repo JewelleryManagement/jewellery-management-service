@@ -51,13 +51,19 @@ public class JwtTokenService {
       if (!name.equals(userDetails.getUsername())) {
         throw new JwtIsNotValidException();
       }
-      if (isTokenExpired(token)) {
-        throw new JwtExpiredException();
-      }
-      return true;
     } catch (SignatureException e) {
       throw new JwtIsNotValidException();
     }
+
+    try {
+      if (isTokenExpired(token)) {
+        throw new JwtExpiredException();
+      }
+    } catch (SignatureException e) {
+      throw new JwtIsNotValidException();
+    }
+
+    return true;
   }
 
   public String extractName(String token) {

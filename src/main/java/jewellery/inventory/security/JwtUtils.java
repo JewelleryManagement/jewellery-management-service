@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import io.jsonwebtoken.security.WeakKeyException;
 import java.security.Key;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import jewellery.inventory.exception.security.jwt.JwtExpiredException;
@@ -23,7 +24,7 @@ public class JwtUtils {
     try {
       byte[] keyBytes = Decoders.BASE64.decode(secretKey);
       return Keys.hmacShaKeyFor(keyBytes);
-    } catch (IllegalArgumentException e) {
+    } catch (WeakKeyException e) {
       throw new InvalidSecretKeyException();
     }
   }

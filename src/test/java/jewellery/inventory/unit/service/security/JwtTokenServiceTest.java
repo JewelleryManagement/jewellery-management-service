@@ -11,6 +11,8 @@ import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.util.HashMap;
 import java.util.Map;
+import jewellery.inventory.exception.security.jwt.JwtExpiredException;
+import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
 import jewellery.inventory.security.JwtTokenService;
 import jewellery.inventory.security.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +44,9 @@ class JwtTokenServiceTest {
     key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_KEY));
     when(jwtUtils.getSigningKey()).thenReturn(key);
     when(userDetails.getUsername()).thenReturn(USER_NAME);
+
+    Claims claims = Jwts.claims().setSubject(USER_NAME);
+    lenient().doReturn(claims).when(jwtUtils).extractAllClaims(anyString());
   }
 
   @Test
@@ -68,6 +73,44 @@ class JwtTokenServiceTest {
 
     Claims claims = parseClaimsFromToken(token);
     assertThat(claims.getSubject()).isEqualTo(USER_NAME);
+  }
+
+  @Test
+  public void extractNameWithValidTokenReturnsCorrectName() {
+    String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
+
+    String name = jwtTokenService.extractName(token);
+
+    assertThat(name).isEqualTo(USER_NAME);
+  }
+
+  @Test
+  public void isTokenValidWithTokenHavingInvalidNameThrowsInvalidNameInJwtException() {
+    String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
+
+    when(userDetails.getUsername()).thenReturn("invalid_name");
+
+    assertThatThrownBy(() -> jwtTokenService.isTokenValid(token, userDetails))
+        .isInstanceOf(JwtIsNotValidException.class);
+  }
+
+  @Test
+  public void isTokenValidWithExpiredTokenThrowsJwtExpiredException() {
+    ReflectionTestUtils.setField(jwtTokenService, "tokenExpiration", -1L);
+    String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
+
+    assertThatThrownBy(() -> jwtTokenService.isTokenValid(token, userDetails))
+        .isInstanceOf(JwtExpiredException.class);
+  }
+
+  @Test
+  public void generateTokenWithNullUserDetailsThrowsIllegalArgumentException() {
+    lenient().when(jwtUtils.getSigningKey()).thenReturn(key);
+    lenient().when(userDetails.getUsername()).thenReturn(USER_NAME);
+
+    assertThatThrownBy(() -> jwtTokenService.generateToken(null))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("UserDetails cannot be null");
   }
 
   private Map<String, Object> createExtraClaims() {
