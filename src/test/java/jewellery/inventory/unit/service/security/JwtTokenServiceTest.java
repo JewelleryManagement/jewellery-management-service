@@ -76,7 +76,7 @@ class JwtTokenServiceTest {
   }
 
   @Test
-  public void extractNameWithValidTokenReturnsCorrectName() {
+  void extractNameWithValidTokenReturnsCorrectName() {
     String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
 
     String name = jwtTokenService.extractName(token);
@@ -85,7 +85,7 @@ class JwtTokenServiceTest {
   }
 
   @Test
-  public void isTokenValidWithTokenHavingInvalidNameThrowsInvalidNameInJwtException() {
+  void isTokenValidWithTokenHavingInvalidNameThrowsInvalidNameInJwtException() {
     String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
 
     when(userDetails.getUsername()).thenReturn("invalid_name");
@@ -95,7 +95,7 @@ class JwtTokenServiceTest {
   }
 
   @Test
-  public void isTokenValidWithExpiredTokenThrowsJwtExpiredException() {
+  void isTokenValidWithExpiredTokenThrowsJwtExpiredException() {
     ReflectionTestUtils.setField(jwtTokenService, "tokenExpiration", -1L);
     String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
 
@@ -104,7 +104,7 @@ class JwtTokenServiceTest {
   }
 
   @Test
-  public void generateTokenWithNullUserDetailsThrowsIllegalArgumentException() {
+  void generateTokenWithNullUserDetailsThrowsIllegalArgumentException() {
     lenient().when(jwtUtils.getSigningKey()).thenReturn(key);
     lenient().when(userDetails.getUsername()).thenReturn(USER_NAME);
 
