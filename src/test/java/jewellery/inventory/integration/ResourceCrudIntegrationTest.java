@@ -7,8 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.dto.ResourceQuantityDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.mapper.ResourceMapper;
@@ -45,6 +47,34 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     sendCreateRequestsFor(inputDtos);
 
     assertInputMatchesFetchedFromServer(inputDtos);
+  }
+
+  @Test
+  void willGetAllResourceQuantities() throws JsonProcessingException {
+    List<ResourceResponseDto> createdResources =
+        sendCreateRequestsFor(provideResourceRequestDtos().toList());
+
+    List<ResourceQuantityDto> resourceQuantityDtos = getResourceQuantitiesWithRequest();
+
+    resourceQuantityDtos.forEach(
+        resourceQuantityDto -> {
+          assertEquals(0.0, resourceQuantityDto.getQuantity());
+        });
+    assertEquals(
+        createdResources,
+        resourceQuantityDtos.stream().map(ResourceQuantityDto::getResource).toList());
+  }
+
+  @Test
+  void willGetSingleResourceQuantity() throws JsonProcessingException {
+    List<ResourceResponseDto> createdResources =
+        sendCreateRequestsFor(List.of(getGemstoneRequestDto()));
+
+    ResourceQuantityDto fetchedResourceQuantity =
+        getResourceQuantityWithRequest(createdResources.get(0).getId());
+
+    assertEquals(0.0, fetchedResourceQuantity.getQuantity());
+    assertEquals(createdResources.get(0), fetchedResourceQuantity.getResource());
   }
 
   @Test
@@ -110,14 +140,34 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return objectMapper.readValue(response, new TypeReference<>() {});
   }
 
-  private void sendCreateRequestsFor(List<ResourceRequestDto> inputDtos) {
+  @NotNull
+  private List<ResourceQuantityDto> getResourceQuantitiesWithRequest()
+      throws JsonProcessingException {
+    String response =
+        this.testRestTemplate.getForObject(getBaseResourceUrl() + "/quantity", String.class);
+    return objectMapper.readValue(response, new TypeReference<>() {});
+  }
+
+  @NotNull
+  private ResourceQuantityDto getResourceQuantityWithRequest(UUID resourceId)
+      throws JsonProcessingException {
+    String response =
+        this.testRestTemplate.getForObject(
+            getBaseResourceUrl() + "/quantity/" + resourceId, String.class);
+    return objectMapper.readValue(response, new TypeReference<>() {});
+  }
+
+  private List<ResourceResponseDto> sendCreateRequestsFor(List<ResourceRequestDto> inputDtos) {
+    List<ResourceResponseDto> responses = new ArrayList<>();
     inputDtos.forEach(
         resourceDTO -> {
           ResponseEntity<ResourceResponseDto> responseEntity =
               this.testRestTemplate.postForEntity(
                   getBaseResourceUrl(), resourceDTO, ResourceResponseDto.class);
           assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
+          responses.add(responseEntity.getBody());
         });
+    return responses;
   }
 
   private void sendUpdateRequestsFor(

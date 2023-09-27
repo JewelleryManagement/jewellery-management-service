@@ -3,6 +3,8 @@ package jewellery.inventory.controller;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
+
+import jewellery.inventory.dto.ResourceQuantityDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.service.ResourceService;
@@ -47,5 +49,17 @@ public class ResourceController {
   @DeleteMapping("/{id}")
   public void deleteResourceById(@PathVariable("id") UUID id) {
     resourceService.deleteResourceById(id);
+  }
+
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/quantity/{id}")
+  public ResourceQuantityDto getResourceQuantityById(@PathVariable("id") UUID id) {
+    return resourceService.getResourceQuantity(id);
+  }
+
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/quantity")
+  public List<ResourceQuantityDto> getAllResourceQuantities() {
+    return resourceService.getAllResourceQuantities();
   }
 }
