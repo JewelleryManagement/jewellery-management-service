@@ -50,9 +50,8 @@ class AuthServiceTest {
   }
 
   @Test
-  public void authenticateWithValidCredentialsReturnsToken() {
-    when(authenticationManager.authenticate(any()))
-        .thenReturn(null);
+  void authenticateWithValidCredentialsReturnsToken() {
+    when(authenticationManager.authenticate(any())).thenReturn(null);
     when(userRepository.findByEmail(authRequest.getEmail())).thenReturn(Optional.of(user));
     when(jwtTokenService.generateToken(user)).thenReturn(TEST_TOKEN);
 
@@ -62,7 +61,7 @@ class AuthServiceTest {
   }
 
   @Test
-  public void authenticateWithInvalidCredentialsThrowsBadCredentialsException() {
+  void authenticateWithInvalidCredentialsThrowsBadCredentialsException() {
     when(authenticationManager.authenticate(any()))
         .thenThrow(new BadCredentialsException("Invalid credentials"));
 
@@ -70,7 +69,7 @@ class AuthServiceTest {
   }
 
   @Test
-  public void authenticateWithNonExistentUserThrowsUserNotFoundException() {
+  void authenticateWithNonExistentUserThrowsUserNotFoundException() {
     when(authenticationManager.authenticate(any())).thenReturn(null);
     when(userRepository.findByEmail(authRequest.getEmail())).thenReturn(Optional.empty());
 

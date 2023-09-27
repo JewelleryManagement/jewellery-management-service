@@ -8,8 +8,8 @@ import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import java.security.Key;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
-import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
 import jewellery.inventory.exception.security.jwt.JwtExpiredException;
+import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -29,7 +29,6 @@ public class JwtUtils {
   }
 
   public Claims extractAllClaims(String token) {
-    System.out.println(token);
     try {
       return Jwts.parserBuilder()
           .setSigningKey(getSigningKey())

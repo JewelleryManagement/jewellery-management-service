@@ -9,10 +9,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
-import jewellery.inventory.exception.security.jwt.JwtMissingDateException;
-import jewellery.inventory.exception.security.jwt.JwtNameInIsNotValidException;
 import jewellery.inventory.exception.security.jwt.JwtExpiredException;
+import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,8 +25,7 @@ public class JwtTokenService {
   @Value("${jwt.token.expiration}")
   private Long tokenExpiration;
 
-  @Autowired
-  private final JwtUtils jwtUtils;
+  @Autowired private final JwtUtils jwtUtils;
   private static final SignatureAlgorithm SIGNATURE_ALGORITHM = SignatureAlgorithm.HS256;
 
   public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
@@ -52,7 +49,7 @@ public class JwtTokenService {
     try {
       final String name = extractName(token);
       if (!name.equals(userDetails.getUsername())) {
-        throw new JwtNameInIsNotValidException();
+        throw new JwtIsNotValidException();
       }
       if (isTokenExpired(token)) {
         throw new JwtExpiredException();
@@ -83,9 +80,8 @@ public class JwtTokenService {
   private Instant extractExpiration(String token) {
     Date expirationDate = extractClaim(token, Claims::getExpiration);
     if (expirationDate == null) {
-      throw new JwtMissingDateException();
+      throw new JwtIsNotValidException();
     }
     return expirationDate.toInstant();
   }
-
 }

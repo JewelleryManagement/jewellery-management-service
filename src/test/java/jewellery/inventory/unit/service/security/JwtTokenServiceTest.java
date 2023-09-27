@@ -39,9 +39,7 @@ public class JwtTokenServiceTest {
   public void setUp() {
     ReflectionTestUtils.setField(jwtUtils, "secretKey", SECRET_KEY);
     ReflectionTestUtils.setField(jwtTokenService, "tokenExpiration", TOKEN_EXPIRATION);
-    key =
-        Keys.hmacShaKeyFor(
-            Decoders.BASE64.decode(SECRET_KEY));
+    key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_KEY));
     when(jwtUtils.getSigningKey()).thenReturn(key);
     when(userDetails.getUsername()).thenReturn(USER_NAME);
   }
@@ -59,7 +57,7 @@ public class JwtTokenServiceTest {
     String token = jwtTokenService.generateToken(extraClaims, userDetails);
 
     Claims claims = parseClaimsFromToken(token);
-    assertThat(claims.get(CLAIM_KEY)).isEqualTo(CLAIM_VALUE);
+    assertThat(claims).containsEntry(CLAIM_KEY, CLAIM_VALUE);
   }
 
   @Test
