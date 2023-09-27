@@ -56,6 +56,7 @@ public class UserTestHelper {
     UserRequestDto userRequest = new UserRequestDto();
     userRequest.setName("different_user");
     userRequest.setEmail("user@example.com");
+    userRequest.setPassword(USER_PASSWORD);
     return userRequest;
   }
 
