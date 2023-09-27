@@ -23,7 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
-public class JwtTokenServiceTest {
+class JwtTokenServiceTest {
 
   @InjectMocks private JwtTokenService jwtTokenService;
   @Mock private UserDetails userDetails;
@@ -45,13 +45,13 @@ public class JwtTokenServiceTest {
   }
 
   @Test
-  public void generateTokenWithValidInputsReturnsNotNullToken() {
+  void generateTokenWithValidInputsReturnsNotNullToken() {
     String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
     assertThat(token).isNotNull();
   }
 
   @Test
-  public void generateTokenWithExtraClaimsReturnsCorrectClaims() {
+  void generateTokenWithExtraClaimsReturnsCorrectClaims() {
     Map<String, Object> extraClaims = createExtraClaims();
 
     String token = jwtTokenService.generateToken(extraClaims, userDetails);
@@ -61,7 +61,7 @@ public class JwtTokenServiceTest {
   }
 
   @Test
-  public void generateTokenWithValidInputsReturnsCorrectSubject() {
+  void generateTokenWithValidInputsReturnsCorrectSubject() {
     Map<String, Object> extraClaims = new HashMap<>();
 
     String token = jwtTokenService.generateToken(extraClaims, userDetails);
