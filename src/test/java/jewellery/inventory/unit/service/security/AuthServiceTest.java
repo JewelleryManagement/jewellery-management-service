@@ -24,7 +24,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 
 @ExtendWith(MockitoExtension.class)
-public class AuthServiceTest {
+class AuthServiceTest {
   private static final String TEST_TOKEN = "token";
   @InjectMocks private AuthService authService;
 

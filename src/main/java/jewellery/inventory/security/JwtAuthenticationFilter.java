@@ -5,7 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import jewellery.inventory.exception.security.jwt.InvalidJwtException;
+import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
 import jewellery.inventory.exception.security.jwt.JwtTokenNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
@@ -80,7 +80,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private String extractUserEmail(String token) {
     String userEmail = jwtService.extractName(token);
     if (userEmail == null || userEmail.trim().isEmpty()) {
-      throw new InvalidJwtException();
+      throw new JwtIsNotValidException();
     }
     return userEmail;
   }

@@ -1,5 +1,6 @@
 package jewellery.inventory.exception;
 
+import io.jsonwebtoken.security.SignatureException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import jewellery.inventory.exception.duplicate.DuplicateException;
 import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
 import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
+import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
 import jewellery.inventory.exception.security.jwt.JwtAuthenticationBaseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,6 +52,11 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler({JwtAuthenticationBaseException.class, AuthenticationException.class})
   public ResponseEntity<Object> handleExpiredJwtException(AuthenticationException ex) {
+    return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+  }
+
+  @ExceptionHandler({ SignatureException.class, JwtIsNotValidException.class})
+  public ResponseEntity<Object> handleExpiredJwtException(SignatureException ex) {
     return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
   }
 

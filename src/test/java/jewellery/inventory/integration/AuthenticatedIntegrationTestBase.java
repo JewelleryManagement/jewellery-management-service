@@ -21,7 +21,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-public abstract class AuthenticatedIntegrationTestBase {
+abstract class AuthenticatedIntegrationTestBase {
 
   protected static final String BASE_URL_PATH = "http://localhost:";
 

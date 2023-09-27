@@ -1,37 +1,34 @@
 package jewellery.inventory.security;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.InvalidKeyException;
-import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
-import java.security.Key;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import jewellery.inventory.exception.security.InvalidSecretKeyException;
-import jewellery.inventory.exception.security.jwt.InvalidNameInJwtException;
-import jewellery.inventory.exception.security.jwt.InvalidJwtException;
+import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
+import jewellery.inventory.exception.security.jwt.JwtMissingDateException;
+import jewellery.inventory.exception.security.jwt.JwtNameInIsNotValidException;
 import jewellery.inventory.exception.security.jwt.JwtExpiredException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class JwtTokenService {
-
-  @Value("${jwt.secret.key}")
-  private String secretKey;
 
   @Value("${jwt.token.expiration}")
   private Long tokenExpiration;
 
+  @Autowired
+  private final JwtUtils jwtUtils;
   private static final SignatureAlgorithm SIGNATURE_ALGORITHM = SignatureAlgorithm.HS256;
 
   public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
@@ -40,7 +37,7 @@ public class JwtTokenService {
         .setSubject(userDetails.getUsername())
         .setIssuedAt(Date.from(Instant.now()))
         .setExpiration(Date.from(Instant.now().plusMillis(tokenExpiration)))
-        .signWith(getSigningKey(), SIGNATURE_ALGORITHM)
+        .signWith(jwtUtils.getSigningKey(), SIGNATURE_ALGORITHM)
         .compact();
   }
 
@@ -55,14 +52,14 @@ public class JwtTokenService {
     try {
       final String name = extractName(token);
       if (!name.equals(userDetails.getUsername())) {
-        throw new InvalidNameInJwtException();
+        throw new JwtNameInIsNotValidException();
       }
       if (isTokenExpired(token)) {
         throw new JwtExpiredException();
       }
       return true;
     } catch (SignatureException e) {
-      throw new InvalidJwtException();
+      throw new JwtIsNotValidException();
     }
   }
 
@@ -79,34 +76,16 @@ public class JwtTokenService {
   }
 
   private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-    final Claims claims = extractAllClaims(token);
+    final Claims claims = jwtUtils.extractAllClaims(token);
     return claimsResolver.apply(claims);
   }
 
   private Instant extractExpiration(String token) {
-    return extractClaim(token, Claims::getExpiration).toInstant();
+    Date expirationDate = extractClaim(token, Claims::getExpiration);
+    if (expirationDate == null) {
+      throw new JwtMissingDateException();
+    }
+    return expirationDate.toInstant();
   }
 
-  private Claims extractAllClaims(String token) {
-    try {
-      return Jwts.parserBuilder()
-          .setSigningKey(getSigningKey())
-          .build()
-          .parseClaimsJws(token)
-          .getBody();
-    } catch (ExpiredJwtException e) {
-      throw new JwtExpiredException();
-    } catch (SignatureException e) {
-      throw new InvalidJwtException();
-    }
-  }
-
-  private Key getSigningKey() {
-    try {
-      byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-      return Keys.hmacShaKeyFor(keyBytes);
-    } catch (IllegalArgumentException e) {
-      throw new InvalidSecretKeyException();
-    }
-  }
 }

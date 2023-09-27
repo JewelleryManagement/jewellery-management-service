@@ -27,7 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-public class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
+class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Autowired private UserRepository userRepository;
   @MockBean private PasswordEncoder passwordEncoder;
