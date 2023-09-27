@@ -12,6 +12,7 @@ import java.security.Key;
 import java.util.HashMap;
 import java.util.Map;
 import jewellery.inventory.security.JwtTokenService;
+import jewellery.inventory.security.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,18 +25,24 @@ import org.springframework.test.util.ReflectionTestUtils;
 @ExtendWith(MockitoExtension.class)
 public class JwtTokenServiceTest {
 
+  @InjectMocks private JwtTokenService jwtTokenService;
   @Mock private UserDetails userDetails;
 
-  @InjectMocks private JwtTokenService jwtTokenService;
+  @Mock private JwtUtils jwtUtils;
   private final String SECRET_KEY = "QdzigVY4XWNItestqpRdNuCGXx+FXok5e++GeMm1OlE=";
   private static final String CLAIM_KEY = "claim1";
   private static final String CLAIM_VALUE = "value1";
   private static final long TOKEN_EXPIRATION = 3600000L;
+  private Key key;
 
   @BeforeEach
   public void setUp() {
-    ReflectionTestUtils.setField(jwtTokenService, "secretKey", SECRET_KEY);
+    ReflectionTestUtils.setField(jwtUtils, "secretKey", SECRET_KEY);
     ReflectionTestUtils.setField(jwtTokenService, "tokenExpiration", TOKEN_EXPIRATION);
+    key =
+        Keys.hmacShaKeyFor(
+            Decoders.BASE64.decode(SECRET_KEY));
+    when(jwtUtils.getSigningKey()).thenReturn(key);
     when(userDetails.getUsername()).thenReturn(USER_NAME);
   }
 
