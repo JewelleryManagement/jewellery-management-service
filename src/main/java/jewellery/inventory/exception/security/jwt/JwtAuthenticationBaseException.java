@@ -6,4 +6,8 @@ public class JwtAuthenticationBaseException extends AuthenticationException {
   public JwtAuthenticationBaseException(String msg) {
     super(msg);
   }
+
+  public JwtAuthenticationBaseException(String msg, Throwable cause) {
+    super(msg, cause);
+  }
 }

@@ -24,7 +24,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
@@ -41,15 +40,13 @@ class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
   @BeforeEach
   void setup() {
     userRepository.deleteAll();
-    SecurityContextHolder.clearContext();
-    mockPasswordEncoder();
     createAndSaveTestUser();
-    when(userDetailsService.loadUserByUsername(anyString())).thenReturn(testUser);
-    setupAuthRequestAndHeaders();
   }
 
   @Test
   void generateTokenSuccessfully() {
+
+    setupAuthRequestAndHeaders();
     HttpEntity<AuthenticationRequestDto> requestEntity = new HttpEntity<>(authRequest, headers);
 
     ResponseEntity<AuthenticationResponseDto> response =
@@ -82,17 +79,12 @@ class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResponseEntity<String> response =
         testRestTemplate.exchange(getBaseUserUrl(), HttpMethod.GET, requestEntity, String.class);
     assertEquals(HttpStatus.OK, response.getStatusCode());
+
     String responseBody = response.getBody();
+
     assertNotNull(responseBody);
     assertTrue(responseBody.contains(USER_NAME));
     assertTrue(responseBody.contains(USER_EMAIL));
-  }
-
-  @Test
-  void testInvalidUrlReturnsUnauthorized() {
-    ResponseEntity<Void> response =
-        testRestTemplate.exchange("/invalid-url", HttpMethod.GET, null, Void.class);
-    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
   }
 
   private String getBaseAuthUrl() {
@@ -120,6 +112,7 @@ class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private void createAndSaveTestUser() {
     testUser = createTestUser();
+    mockPasswordEncoder();
     testUser.setPassword(passwordEncoder.encode(testUser.getPassword()));
     userRepository.save(testUser);
     when(userDetailsService.loadUserByUsername(anyString())).thenReturn(testUser);

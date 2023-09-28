@@ -25,8 +25,9 @@ public class AuthService {
     if (!tryAuthenticate(authRequest)) {
       throw new InvalidCredentialsException();
     }
+    String userEmail = authRequest.getEmail();
 
-    User user = getUserByEmail(authRequest.getEmail()).orElseThrow(UserNotFoundException::new);
+    User user = getUserByEmail(userEmail).orElseThrow(() -> new UserNotFoundException(userEmail));
 
     String token = generateTokenForUser(user);
 

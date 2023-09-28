@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -28,7 +27,6 @@ public class SecurityConfig {
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
   private final ApplicationContext applicationContext;
 
-  private static final String USERS_ENDPOINT = "/users";
   private static final String AUTH_ENDPOINT = "/auth/**";
 
   @Value("${cors.allowedOrigins}")
@@ -61,8 +59,6 @@ public class SecurityConfig {
         new AuthorizeHttpRequestsConfigurer<>(applicationContext);
     authorizeRequests
         .getRegistry()
-        .requestMatchers(HttpMethod.POST, USERS_ENDPOINT)
-        .permitAll()
         .requestMatchers(AUTH_ENDPOINT)
         .permitAll()
         .anyRequest()

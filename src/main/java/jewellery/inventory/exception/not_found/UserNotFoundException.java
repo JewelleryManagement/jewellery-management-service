@@ -7,7 +7,7 @@ public class UserNotFoundException extends NotFoundException {
     super("User with id " + id + " was not found");
   }
 
-  public UserNotFoundException() {
-    super("User was not found");
+  public UserNotFoundException(String email) {
+    super("User with email " + email + " was not found");
   }
 }

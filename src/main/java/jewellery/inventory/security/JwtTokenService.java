@@ -1,9 +1,9 @@
 package jewellery.inventory.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.SignatureException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,7 +14,6 @@ import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -46,34 +45,30 @@ public class JwtTokenService {
   }
 
   public boolean isTokenValid(String token, UserDetails userDetails) {
-    try {
-      final String name = extractName(token);
-      if (!name.equals(userDetails.getUsername())) {
-        throw new JwtIsNotValidException();
-      }
-    } catch (SignatureException e) {
-      throw new JwtIsNotValidException();
-    }
+    isNameValid(token, userDetails);
+    isTokenExpired(token);
 
     try {
-      if (isTokenExpired(token)) {
-        throw new JwtExpiredException();
-      }
-    } catch (SignatureException e) {
+      jwtUtils.extractAllClaims(token);
+    } catch (JwtException e) {
       throw new JwtIsNotValidException();
     }
-
     return true;
+  }
+
+  private void isNameValid(String token, UserDetails userDetails) {
+    final String name = extractName(token);
+    if (!name.equals(userDetails.getUsername())) {
+      throw new JwtIsNotValidException();
+    }
   }
 
   public String extractName(String token) {
     return extractClaim(token, Claims::getSubject);
   }
 
-  private boolean isTokenExpired(String token) {
-    try {
-      return extractExpiration(token).isBefore(Instant.now());
-    } catch (AuthenticationException e) {
+  private void isTokenExpired(String token) {
+    if (extractExpiration(token).isBefore(Instant.now())) {
       throw new JwtExpiredException();
     }
   }
@@ -86,7 +81,7 @@ public class JwtTokenService {
   private Instant extractExpiration(String token) {
     Date expirationDate = extractClaim(token, Claims::getExpiration);
     if (expirationDate == null) {
-      throw new JwtIsNotValidException();
+      throw new JwtExpiredException();
     }
     return expirationDate.toInstant();
   }

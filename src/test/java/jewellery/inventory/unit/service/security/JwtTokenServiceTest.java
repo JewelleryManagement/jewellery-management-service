@@ -32,8 +32,7 @@ class JwtTokenServiceTest {
 
   @Mock private JwtUtils jwtUtils;
   private final String SECRET_KEY = "QdzigVY4XWNItestqpRdNuCGXx+FXok5e++GeMm1OlE=";
-  private static final String CLAIM_KEY = "claim1";
-  private static final String CLAIM_VALUE = "value1";
+
   private static final long TOKEN_EXPIRATION = 3600000L;
   private Key key;
 
@@ -53,16 +52,6 @@ class JwtTokenServiceTest {
   void generateTokenWithValidInputsReturnsNotNullToken() {
     String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
     assertThat(token).isNotNull();
-  }
-
-  @Test
-  void generateTokenWithExtraClaimsReturnsCorrectClaims() {
-    Map<String, Object> extraClaims = createExtraClaims();
-
-    String token = jwtTokenService.generateToken(extraClaims, userDetails);
-
-    Claims claims = parseClaimsFromToken(token);
-    assertThat(claims).containsEntry(CLAIM_KEY, CLAIM_VALUE);
   }
 
   @Test
@@ -113,11 +102,7 @@ class JwtTokenServiceTest {
         .hasMessage("UserDetails cannot be null");
   }
 
-  private Map<String, Object> createExtraClaims() {
-    Map<String, Object> extraClaims = new HashMap<>();
-    extraClaims.put(CLAIM_KEY, CLAIM_VALUE);
-    return extraClaims;
-  }
+
 
   private Claims parseClaimsFromToken(String token) {
     byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);

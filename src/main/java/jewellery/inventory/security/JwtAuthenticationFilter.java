@@ -52,8 +52,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private boolean isUnprotectedEndpoint(HttpServletRequest request) {
     String requestURI = request.getRequestURI();
-    return (requestURI.equals("/users") && request.getMethod().equals("POST"))
-        || requestURI.startsWith("/auth/");
+    return requestURI.startsWith("/auth/");
   }
 
   private void authenticateRequest(HttpServletRequest request) {
@@ -92,7 +91,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   }
 
   private void clearSecurityContextAndCommenceEntryPoint(
-      HttpServletRequest request, HttpServletResponse response, Exception e) {
+      HttpServletRequest request, HttpServletResponse response, AuthenticationException e) {
     SecurityContextHolder.clearContext();
     jwtAuthenticationEntryPoint.commence(request, response, e);
   }

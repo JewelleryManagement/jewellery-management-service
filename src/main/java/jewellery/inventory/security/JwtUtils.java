@@ -25,7 +25,7 @@ public class JwtUtils {
       byte[] keyBytes = Decoders.BASE64.decode(secretKey);
       return Keys.hmacShaKeyFor(keyBytes);
     } catch (WeakKeyException e) {
-      throw new InvalidSecretKeyException();
+      throw new InvalidSecretKeyException(e);
     }
   }
 
@@ -39,7 +39,7 @@ public class JwtUtils {
     } catch (ExpiredJwtException e) {
       throw new JwtExpiredException();
     } catch (SignatureException e) {
-      throw new JwtIsNotValidException();
+      throw new JwtIsNotValidException(e);
     }
   }
 }

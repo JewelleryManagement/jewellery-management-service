@@ -22,9 +22,4 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
       AuthenticationException authException) {
     resolver.resolveException(request, response, null, authException);
   }
-
-  public void commence(
-      HttpServletRequest request, HttpServletResponse response, Exception exception) {
-    resolver.resolveException(request, response, null, exception);
-  }
 }

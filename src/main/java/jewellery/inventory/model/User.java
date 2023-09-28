@@ -20,7 +20,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 @AllArgsConstructor
 @Table(name = "users")
 public class User implements UserDetails {
-  @Id @GeneratedValue private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
   @Column(unique = true)
   private String name;
@@ -28,20 +30,15 @@ public class User implements UserDetails {
   @Column(unique = true)
   private String email;
 
-  @Column(unique = true)
-  private String password;
+  @Column private String password;
 
   @Column
   @Enumerated(EnumType.STRING)
-  private Role role;
+  private Role role = Role.USER;
 
-  // This field is essential for the application's business logic.
-  // It is not marked as transient despite SonarQube's recommendation.
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
   private List<Product> productsOwned = new ArrayList<>();
 
-  // This field is essential for the application's business logic.
-  // It is not marked as transient despite SonarQube's recommendation.
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ResourceInUser> resourcesOwned = new ArrayList<>();
 

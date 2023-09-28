@@ -11,7 +11,7 @@ import jewellery.inventory.exception.duplicate.DuplicateException;
 import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
 import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
-import jewellery.inventory.exception.security.jwt.JwtAuthenticationBaseException;
+import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -49,9 +49,14 @@ public class GlobalExceptionHandler {
     return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
 
-  @ExceptionHandler({JwtAuthenticationBaseException.class,  SignatureException.class, AuthenticationException.class})
-  public ResponseEntity<Object> handleExpiredJwtException(AuthenticationException ex) {
+  @ExceptionHandler({SignatureException.class, AuthenticationException.class})
+  public ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex) {
     return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+  }
+
+  @ExceptionHandler({ InvalidSecretKeyException.class })
+  public ResponseEntity<Object> handleBadSecretKey(RuntimeException ex) {
+    return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
 
   private ResponseEntity<Object> createErrorResponse(HttpStatus status, Object error) {
