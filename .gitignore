@@ -37,6 +37,7 @@ build/
 
 # Spring Boot properties
 .env
+/src/main/resources/data.sql
 
 pom.xml.tag
 pom.xml.releaseBackup
