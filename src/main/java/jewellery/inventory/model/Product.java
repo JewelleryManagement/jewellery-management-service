@@ -13,6 +13,9 @@ import lombok.Setter;
 public class Product {
   @Id @GeneratedValue private UUID id;
 
+  @Column(name = "name")
+  private String name;
+
   @ElementCollection private List<String> authors;
 
   @ManyToOne private User owner;
