@@ -2,6 +2,8 @@ package jewellery.inventory.unit.service.security;
 
 import static jewellery.inventory.helper.UserTestHelper.USER_NAME;
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 import io.jsonwebtoken.Claims;
@@ -9,6 +11,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import java.security.Key;
+import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import jewellery.inventory.exception.security.jwt.JwtExpiredException;
@@ -21,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -29,29 +34,42 @@ class JwtTokenServiceTest {
 
   @InjectMocks private JwtTokenService jwtTokenService;
   @Mock private UserDetails userDetails;
-
   @Mock private JwtUtils jwtUtils;
   private final String SECRET_KEY = "QdzigVY4XWNItestqpRdNuCGXx+FXok5e++GeMm1OlE=";
-
-  private static final long TOKEN_EXPIRATION = 3600000L;
+  private static final long TOKEN_EXPIRATION = 36000200000L;
   private Key key;
+  private static final String INVALID_TOKEN =
+      "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyb290QGdtYWlsLmNvbSIsImlhdCI6MTY5NTk5NTI4MCwiZXhwIjoxNjk1OTk2NzIwfQ.WZopY5dSj0v3g28dorFHk7XhuH2R-e6k6zmZ_G5C9ow";
 
   @BeforeEach
   public void setUp() {
     ReflectionTestUtils.setField(jwtUtils, "secretKey", SECRET_KEY);
     ReflectionTestUtils.setField(jwtTokenService, "tokenExpiration", TOKEN_EXPIRATION);
     key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_KEY));
-    when(jwtUtils.getSigningKey()).thenReturn(key);
-    when(userDetails.getUsername()).thenReturn(USER_NAME);
-
-    Claims claims = Jwts.claims().setSubject(USER_NAME);
-    lenient().doReturn(claims).when(jwtUtils).extractAllClaims(anyString());
+    lenient().when(jwtUtils.getSigningKey()).thenReturn(key);
+    lenient().when(userDetails.getUsername()).thenReturn(USER_NAME);
   }
 
   @Test
   void generateTokenWithValidInputsReturnsNotNullToken() {
     String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
     assertThat(token).isNotNull();
+  }
+
+  @Test
+  void isTokenValidWithValidTokenReturnsTrue() {
+    setupDefaultExtractAllClaimsBehavior();
+    String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
+
+    assertTrue(jwtTokenService.isTokenValid(token, userDetails));
+  }
+
+  @Test
+  void isTokenValidWhenJwtExceptionThrownThrowsJwtIsNotValidException() {
+    String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
+    when(jwtUtils.extractAllClaims(anyString())).thenThrow(JwtIsNotValidException.class);
+    assertThrows(
+        JwtIsNotValidException.class, () -> jwtTokenService.isTokenValid(token, userDetails));
   }
 
   @Test
@@ -66,6 +84,7 @@ class JwtTokenServiceTest {
 
   @Test
   void extractNameWithValidTokenReturnsCorrectName() {
+    setupDefaultExtractAllClaimsBehavior();
     String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
 
     String name = jwtTokenService.extractName(token);
@@ -75,6 +94,7 @@ class JwtTokenServiceTest {
 
   @Test
   void isTokenValidWithTokenHavingInvalidNameThrowsInvalidNameInJwtException() {
+    setupDefaultExtractAllClaimsBehavior();
     String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
 
     when(userDetails.getUsername()).thenReturn("invalid_name");
@@ -85,8 +105,13 @@ class JwtTokenServiceTest {
 
   @Test
   void isTokenValidWithExpiredTokenThrowsJwtExpiredException() {
-    ReflectionTestUtils.setField(jwtTokenService, "tokenExpiration", -1L);
     String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
+
+    Claims expiredClaims =
+        Jwts.claims()
+            .setSubject(USER_NAME)
+            .setExpiration(Date.from(Instant.now().minusMillis(1000L)));
+    doReturn(expiredClaims).when(jwtUtils).extractAllClaims(anyString());
 
     assertThatThrownBy(() -> jwtTokenService.isTokenValid(token, userDetails))
         .isInstanceOf(JwtExpiredException.class);
@@ -98,15 +123,39 @@ class JwtTokenServiceTest {
     lenient().when(userDetails.getUsername()).thenReturn(USER_NAME);
 
     assertThatThrownBy(() -> jwtTokenService.generateToken(null))
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(BadCredentialsException.class)
         .hasMessage("UserDetails cannot be null");
   }
 
+  @Test
+  void generateTokenAndValidateWithDifferentKeyThrowsJwtIsNotValidException() {
+    setupDefaultExtractAllClaimsBehavior();
+    when(userDetails.getUsername()).thenReturn("fakeUser");
+    String token = jwtTokenService.generateToken(userDetails);
 
+    ReflectionTestUtils.setField(jwtUtils, "secretKey", "anotherSecretKey");
+
+    assertThatThrownBy(() -> jwtTokenService.isTokenValid(token, userDetails))
+        .isInstanceOf(JwtIsNotValidException.class);
+  }
+
+  @Test
+  void extractNameWithInvalidSignatureThrowsJwtIsNotValidException() {
+    doThrow(new JwtIsNotValidException()).when(jwtUtils).extractAllClaims(eq(INVALID_TOKEN));
+    assertThatThrownBy(() -> jwtTokenService.extractName(INVALID_TOKEN))
+        .isInstanceOf(JwtIsNotValidException.class);
+  }
 
   private Claims parseClaimsFromToken(String token) {
     byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
     Key key = Keys.hmacShaKeyFor(keyBytes);
     return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+  }
+
+  private void setupDefaultExtractAllClaimsBehavior() {
+    Claims claims = Jwts.claims().setSubject(USER_NAME);
+    claims.setExpiration(Date.from(Instant.now().plusMillis(TOKEN_EXPIRATION)));
+
+    lenient().doReturn(claims).when(jwtUtils).extractAllClaims(anyString());
   }
 }

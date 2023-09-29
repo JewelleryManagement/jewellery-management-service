@@ -1,5 +1,6 @@
 package jewellery.inventory.controller;
 
+import jakarta.validation.Valid;
 import jewellery.inventory.dto.request.AuthenticationRequestDto;
 import jewellery.inventory.dto.response.AuthenticationResponseDto;
 import jewellery.inventory.service.AuthService;
@@ -19,7 +20,8 @@ public class AuthController {
 
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/token")
-  public AuthenticationResponseDto authenticate(@RequestBody AuthenticationRequestDto authRequest) {
+  public AuthenticationResponseDto authenticate(
+      @Valid @RequestBody AuthenticationRequestDto authRequest) {
     return authService.authenticate(authRequest);
   }
 }

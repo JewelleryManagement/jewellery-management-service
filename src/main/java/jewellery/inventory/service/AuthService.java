@@ -25,20 +25,14 @@ public class AuthService {
     tryAuthenticate(authRequest);
 
     String userEmail = authRequest.getEmail();
-
     User user = getUserByEmail(userEmail).orElseThrow(() -> new UserNotFoundException(userEmail));
-
-    String token = generateTokenForUser(user);
+    String token = jwtService.generateToken(user);
 
     return new AuthenticationResponseDto(token);
   }
 
   private Optional<User> getUserByEmail(String email) {
     return repository.findByEmail(email);
-  }
-
-  private String generateTokenForUser(User user) {
-    return jwtService.generateToken(user);
   }
 
   private void tryAuthenticate(AuthenticationRequestDto authRequest) {

@@ -12,8 +12,8 @@ import java.util.function.Function;
 import jewellery.inventory.exception.security.jwt.JwtExpiredException;
 import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +24,7 @@ public class JwtTokenService {
   @Value("${jwt.token.expiration}")
   private Long tokenExpiration;
 
-  @Autowired private final JwtUtils jwtUtils;
+  private final JwtUtils jwtUtils;
   private static final SignatureAlgorithm SIGNATURE_ALGORITHM = SignatureAlgorithm.HS256;
 
   public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
@@ -39,7 +39,7 @@ public class JwtTokenService {
 
   public String generateToken(UserDetails userDetails) {
     if (userDetails == null) {
-      throw new IllegalArgumentException("UserDetails cannot be null");
+      throw new BadCredentialsException("UserDetails cannot be null");
     }
     return generateToken(new HashMap<>(), userDetails);
   }
@@ -74,7 +74,7 @@ public class JwtTokenService {
   }
 
   private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-    final Claims claims = jwtUtils.extractAllClaims(token);
+    Claims claims = jwtUtils.extractAllClaims(token);
     return claimsResolver.apply(claims);
   }
 
