@@ -1,5 +1,6 @@
 package jewellery.inventory.model.resource;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -15,9 +16,13 @@ import lombok.Setter;
 public class ResourceInProduct {
   @Id @GeneratedValue private UUID id;
 
-  @ManyToOne private Resource resource;
+  @JsonIgnore
+  @ManyToOne
+  private Resource resource;
 
   private double quantity;
 
-  @ManyToOne private Product product;
+  @JsonIgnore
+  @ManyToOne
+  private Product product;
 }

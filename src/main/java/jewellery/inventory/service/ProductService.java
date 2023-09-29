@@ -12,13 +12,9 @@ import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInProduct;
-import jewellery.inventory.repository.ProductRepository;
-import jewellery.inventory.repository.ResourceInUserRepository;
-import jewellery.inventory.repository.ResourceRepository;
-import jewellery.inventory.repository.UserRepository;
+import jewellery.inventory.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +29,7 @@ public class ProductService {
     private final UserRepository userRepository;
     private final ResourceRepository resourceRepository;
     private final ResourceInUserRepository resourceInUserRepository;
+    private final ResourceInProductRepository resourceInProductRepository;
     private final ProductMapper productMapper;
 
     public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
@@ -50,9 +47,13 @@ public class ProductService {
         product.setDescription(productRequestDto.getDescription());
         product.setSalePrice(productRequestDto.getSalePrice());
 
-        productRepository.save(product);
+//        for (ResourceInProduct resourceInProduct : resourcesInProducts) {
+//            resourceInProduct.setProduct(product);
+//        }
+//
+//        resourceInProductRepository.saveAll(resourcesInProducts);
 
-        return productMapper.toProductResponse(product);
+        return productMapper.toProductResponse(productRepository.save(product));
     }
 
     private User getUser(ProductRequestDto productRequestDto, Product product) {
@@ -65,23 +66,25 @@ public class ProductService {
 
         List<ResourceInProduct> resourcesInProducts = new ArrayList<>();
 
+        ResourceInProduct resourceInProduct = new ResourceInProduct();
+
         for (String resourceName : resourcesInRequest) {
             Resource resource = resourceRepository.findByClazz(resourceName)
                     .orElseThrow(() -> new ResourceNotFoundException(resourceName));
 
-            ResourceInProduct resourceInProduct = new ResourceInProduct();
             boolean contains = false;
 
             for (ResourceInUser resourceInUser : resourcesInUsers) {
-                if (resourceInUser.getId() == resource.getId()) {
+                if (resourceInUser.getResource().getId() == resource.getId()) {
                     resourceInProduct.setResource(resource);
 
                     double quantity = resourceInUser.getQuantity();
                     resourceInProduct.setQuantity(quantity);
 
-                    resourceInUser.setQuantity(quantity);
+                    resourceInUser.setQuantity(resourceInUser.getQuantity() - quantity);
 
                     resourcesInProducts.add(resourceInProduct);
+                    resourceInProductRepository.save(resourceInProduct);
                     resourceInUserRepository.save(resourceInUser);
                     contains = true;
                     break;
@@ -92,17 +95,20 @@ public class ProductService {
                 throw new ResourceInUserNotFoundException(resource.getId(), user.getId());
             }
         }
+
         return resourcesInProducts;
     }
 
     private List<Product> getProducts(List<String> names) {
         List<Product> products = new ArrayList<>();
 
-        for (String name : names) {
-            Product current = productRepository.findByName(name)
-                    .orElseThrow(() -> new ProductNotFoundException(name));
+        if (names != null) {
+            for (String name : names) {
+                Product current = productRepository.findByName(name)
+                        .orElseThrow(() -> new ProductNotFoundException(name));
 
-            products.add(current);
+                products.add(current);
+            }
         }
         return products;
     }
@@ -119,8 +125,10 @@ public class ProductService {
     }
 
     public void deleteProduct(UUID id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException(id));
-        productRepository.deleteById(id);
+        if (productRepository.existsById(id)) {
+            productRepository.deleteById(id);
+        } else {
+            throw new ProductNotFoundException(id);
+        }
     }
 }

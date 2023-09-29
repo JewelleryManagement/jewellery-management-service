@@ -1,6 +1,9 @@
 package jewellery.inventory.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.model.resource.ResourceInProduct;
@@ -16,8 +19,10 @@ public class Product {
   @Column(name = "name")
   private String name;
 
-  @ElementCollection private List<String> authors;
+  @ElementCollection
+  private List<String> authors;
 
+  @JsonIgnore
   @ManyToOne private User owner;
 
   @Lob private byte[] picture;
