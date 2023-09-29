@@ -1,8 +1,9 @@
 package jewellery.inventory.exception.security;
 
-import org.springframework.security.core.AuthenticationException;
+import jewellery.inventory.exception.security.jwt.JwtAuthenticationBaseException;
 
-public class InvalidCredentialsException extends AuthenticationException {
+
+public class InvalidCredentialsException extends JwtAuthenticationBaseException {
     public InvalidCredentialsException() {
         super("Invalid credentials");
     }

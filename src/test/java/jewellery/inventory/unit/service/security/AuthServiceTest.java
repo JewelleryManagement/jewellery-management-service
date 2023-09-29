@@ -10,6 +10,8 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.AuthenticationRequestDto;
 import jewellery.inventory.dto.response.AuthenticationResponseDto;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
+import jewellery.inventory.exception.security.InvalidCredentialsException;
+import jewellery.inventory.exception.security.jwt.JwtAuthenticationBaseException;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
 import jewellery.inventory.security.JwtTokenService;
@@ -21,7 +23,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -63,9 +64,9 @@ class AuthServiceTest {
   @Test
   void authenticateWithInvalidCredentialsThrowsBadCredentialsException() {
     when(authenticationManager.authenticate(any()))
-        .thenThrow(new BadCredentialsException("Invalid credentials"));
+        .thenThrow(new InvalidCredentialsException());
 
-    assertThrows(BadCredentialsException.class, () -> authService.authenticate(authRequest));
+    assertThrows(InvalidCredentialsException.class, () -> authService.authenticate(authRequest));
   }
 
   @Test
@@ -74,5 +75,12 @@ class AuthServiceTest {
     when(userRepository.findByEmail(authRequest.getEmail())).thenReturn(Optional.empty());
 
     assertThrows(UserNotFoundException.class, () -> authService.authenticate(authRequest));
+  }
+
+  @Test
+  void authenticateWhenJwtAuthenticationBaseExceptionIsThrownThrowsInvalidCredentialsException() {
+    when(authenticationManager.authenticate(any()))
+        .thenThrow(new JwtAuthenticationBaseException("error"));
+    assertThrows(InvalidCredentialsException.class, () -> authService.authenticate(authRequest));
   }
 }

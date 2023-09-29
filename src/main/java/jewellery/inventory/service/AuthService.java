@@ -22,9 +22,8 @@ public class AuthService {
   private final JwtTokenService jwtService;
 
   public AuthenticationResponseDto authenticate(AuthenticationRequestDto authRequest) {
-    if (!tryAuthenticate(authRequest)) {
-      throw new InvalidCredentialsException();
-    }
+    tryAuthenticate(authRequest);
+
     String userEmail = authRequest.getEmail();
 
     User user = getUserByEmail(userEmail).orElseThrow(() -> new UserNotFoundException(userEmail));
@@ -42,14 +41,13 @@ public class AuthService {
     return jwtService.generateToken(user);
   }
 
-  private boolean tryAuthenticate(AuthenticationRequestDto authRequest) {
+  private void tryAuthenticate(AuthenticationRequestDto authRequest) {
     try {
       authenticationManager.authenticate(
           new UsernamePasswordAuthenticationToken(
               authRequest.getEmail(), authRequest.getPassword()));
-      return true;
     } catch (JwtAuthenticationBaseException e) {
-      return false;
+      throw new InvalidCredentialsException();
     }
   }
 }
