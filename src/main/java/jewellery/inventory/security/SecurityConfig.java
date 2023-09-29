@@ -12,7 +12,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -55,16 +54,9 @@ public class SecurityConfig {
                 exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint))
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-    AuthorizeHttpRequestsConfigurer<HttpSecurity> authorizeRequests =
-        new AuthorizeHttpRequestsConfigurer<>(applicationContext);
-    authorizeRequests
-        .getRegistry()
-        .requestMatchers(AUTH_ENDPOINT)
-        .permitAll()
-        .anyRequest()
-        .authenticated();
-
-    http.apply(authorizeRequests);
+    http.authorizeHttpRequests(
+        authorize ->
+            authorize.requestMatchers(AUTH_ENDPOINT).permitAll().anyRequest().hasRole("ADMIN"));
   }
 
   @Bean
