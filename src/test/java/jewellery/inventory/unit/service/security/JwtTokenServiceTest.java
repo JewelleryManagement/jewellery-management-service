@@ -37,6 +37,7 @@ class JwtTokenServiceTest {
   private final String SECRET_KEY = "QdzigVY4XWNItestqpRdNuCGXx+FXok5e++GeMm1OlE=";
   private static final long TOKEN_EXPIRATION = 36000200000L;
   private Key key;
+  private static final String TOKEN_MOCK = "some_token_string_here";
   private static final String INVALID_TOKEN =
       "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyb290QGdtYWlsLmNvbSIsImlhdCI6MTY5NTk5NTI4MCwiZXhwIjoxNjk1OTk2NzIwfQ.WZopY5dSj0v3g28dorFHk7XhuH2R-e6k6zmZ_G5C9ow";
 
@@ -102,19 +103,19 @@ class JwtTokenServiceTest {
         .isInstanceOf(JwtIsNotValidException.class);
   }
 
-    @Test
-    void isTokenValidWithExpiredTokenThrowsJwtExpiredException() {
-      String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
+  @Test
+  void isTokenValidWithExpiredTokenThrowsJwtExpiredException() {
+    String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
 
-      Claims expiredClaims =
-          Jwts.claims()
-              .setSubject(USER_NAME)
-              .setExpiration(Date.from(Instant.now().minusMillis(10200L)));
-      doReturn(expiredClaims).when(jwtUtils).extractAllClaims(anyString());
+    Claims expiredClaims =
+        Jwts.claims()
+            .setSubject(USER_NAME)
+            .setExpiration(Date.from(Instant.now().minusMillis(10200L)));
+    doReturn(expiredClaims).when(jwtUtils).extractAllClaims(anyString());
 
-      assertThatThrownBy(() -> jwtTokenService.isTokenValid(token, userDetails))
-          .isInstanceOf(JwtExpiredException.class);
-    }
+    assertThatThrownBy(() -> jwtTokenService.isTokenValid(token, userDetails))
+        .isInstanceOf(JwtExpiredException.class);
+  }
 
   @Test
   void generateTokenWithNullUserDetailsThrowsIllegalArgumentException() {
@@ -145,6 +146,33 @@ class JwtTokenServiceTest {
         .isInstanceOf(JwtIsNotValidException.class);
   }
 
+  @Test
+  void whenTokenHasNullExpiration_thenThrowJwtExpiredException() {
+    String tokenWithNullExpiration = TOKEN_MOCK;
+    Claims claimsWithNullExpiration = mock(Claims.class);
+
+    lenient()
+        .when(jwtUtils.extractAllClaims(tokenWithNullExpiration))
+        .thenReturn(claimsWithNullExpiration);
+    lenient().when(claimsWithNullExpiration.getExpiration()).thenReturn(null);
+    assertThrows(
+        Exception.class, () -> jwtTokenService.isTokenValid(tokenWithNullExpiration, userDetails));
+  }
+
+  @Test
+  void whenTokenHasValidExpiration_thenTokenIsValid() {
+    String tokenWithValidExpiration = TOKEN_MOCK;
+    Claims claimsWithValidExpiration = mock(Claims.class);
+
+    when(claimsWithValidExpiration.getSubject()).thenReturn(USER_NAME);
+    when(claimsWithValidExpiration.getExpiration())
+        .thenReturn(new Date(System.currentTimeMillis() + 1000000));
+
+    when(jwtUtils.extractAllClaims(tokenWithValidExpiration)).thenReturn(claimsWithValidExpiration);
+
+    assertTrue(jwtTokenService.isTokenValid(tokenWithValidExpiration, userDetails));
+  }
+
   private Claims parseClaimsFromToken(String token) {
     byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
     Key key = Keys.hmacShaKeyFor(keyBytes);
@@ -157,5 +185,4 @@ class JwtTokenServiceTest {
 
     lenient().doReturn(claims).when(jwtUtils).extractAllClaims(anyString());
   }
-
 }
