@@ -26,7 +26,7 @@ public class SecurityConfig {
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
   private final ApplicationContext applicationContext;
 
-  private static final String AUTH_ENDPOINT = "/auth/**";
+  private static final String AUTH_ENDPOINT = "/login";
 
   @Value("${cors.allowedOrigins}")
   private String[] allowedOrigins;

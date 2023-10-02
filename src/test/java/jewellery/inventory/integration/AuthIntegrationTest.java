@@ -11,7 +11,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import jewellery.inventory.dto.request.AuthenticationRequestDto;
-import jewellery.inventory.dto.response.AuthenticationResponseDto;
+import jewellery.inventory.dto.response.UserAuthDetailsDto;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,9 +30,7 @@ class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Autowired private UserRepository userRepository;
   @MockBean private PasswordEncoder passwordEncoder;
-
   private User testUser;
-
   private final AuthenticationRequestDto authRequest = new AuthenticationRequestDto();
   private final HttpHeaders headers = new HttpHeaders();
 
@@ -49,12 +47,9 @@ class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
     setupAuthRequestAndHeaders();
     HttpEntity<AuthenticationRequestDto> requestEntity = new HttpEntity<>(authRequest, headers);
 
-    ResponseEntity<AuthenticationResponseDto> response =
+    ResponseEntity<UserAuthDetailsDto> response =
         testRestTemplate.exchange(
-            getBaseAuthUrl() + "/token",
-            HttpMethod.POST,
-            requestEntity,
-            AuthenticationResponseDto.class);
+            getBaseAuthUrl(), HttpMethod.POST, requestEntity, UserAuthDetailsDto.class);
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
   }
@@ -87,8 +82,36 @@ class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertTrue(responseBody.contains(USER_EMAIL));
   }
 
+  @Test
+  void requestWithNullEmailShouldReturnBadRequest() {
+    setupAuthRequestAndHeaders();
+    authRequest.setEmail(null);
+    HttpEntity<AuthenticationRequestDto> requestEntity = new HttpEntity<>(authRequest, null);
+    ResponseEntity<String> response =
+        testRestTemplate.exchange(getBaseAuthUrl(), HttpMethod.POST, requestEntity, String.class);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertTrue(response.getBody().contains("email"));
+    assertTrue(response.getBody().contains("Email must not be blank, empty or null"));
+  }
+
+  @Test
+  void requestWithNullPasswordShouldReturnBadRequest() {
+    setupAuthRequestAndHeaders();
+    authRequest.setPassword(null);
+    HttpEntity<AuthenticationRequestDto> requestEntity = new HttpEntity<>(authRequest, null);
+    ResponseEntity<String> response =
+        testRestTemplate.exchange(getBaseAuthUrl(), HttpMethod.POST, requestEntity, String.class);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertTrue(response.getBody().contains("password"));
+    assertTrue(response.getBody().contains("Password must not be blank, empty or null"));
+  }
+
   private String getBaseAuthUrl() {
-    return BASE_URL_PATH + port + "/auth";
+    return BASE_URL_PATH + port + "/login";
   }
 
   private String getBaseUserUrl() {

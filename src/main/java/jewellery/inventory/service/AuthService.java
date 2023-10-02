@@ -1,11 +1,12 @@
 package jewellery.inventory.service;
 
-import java.util.Optional;
 import jewellery.inventory.dto.request.AuthenticationRequestDto;
-import jewellery.inventory.dto.response.AuthenticationResponseDto;
+import jewellery.inventory.dto.response.UserAuthDetailsDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.exception.security.InvalidCredentialsException;
 import jewellery.inventory.exception.security.jwt.JwtAuthenticationBaseException;
+import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
 import jewellery.inventory.security.JwtTokenService;
@@ -20,22 +21,15 @@ public class AuthService {
   private final UserRepository repository;
   private final AuthenticationManager authenticationManager;
   private final JwtTokenService jwtService;
+  private final UserMapper userMapper;
 
-  public AuthenticationResponseDto authenticate(AuthenticationRequestDto authRequest) {
-    tryAuthenticate(authRequest);
-
-    String userEmail = authRequest.getEmail();
-    User user = getUserByEmail(userEmail).orElseThrow(() -> new UserNotFoundException(userEmail));
-    String token = jwtService.generateToken(user);
-
-    return new AuthenticationResponseDto(token);
+  public UserAuthDetailsDto login(AuthenticationRequestDto authRequest) {
+    User user = findUserByEmail(authRequest.getEmail());
+    authenticate(authRequest);
+    return createAuthUserResponse(user);
   }
 
-  private Optional<User> getUserByEmail(String email) {
-    return repository.findByEmail(email);
-  }
-
-  private void tryAuthenticate(AuthenticationRequestDto authRequest) {
+  private void authenticate(AuthenticationRequestDto authRequest) {
     try {
       authenticationManager.authenticate(
           new UsernamePasswordAuthenticationToken(
@@ -43,5 +37,19 @@ public class AuthService {
     } catch (JwtAuthenticationBaseException e) {
       throw new InvalidCredentialsException();
     }
+  }
+
+  private User findUserByEmail(String email) {
+    return repository.findByEmail(email).orElseThrow(() -> new UserNotFoundException(email));
+  }
+
+  private UserAuthDetailsDto createAuthUserResponse(User user) {
+    UserResponseDto userResponse = userMapper.toUserResponse(user);
+    String tokenResponse = generateTokenResponse(user);
+    return new UserAuthDetailsDto(tokenResponse, userResponse);
+  }
+
+  private String generateTokenResponse(User user) {
+    return jwtService.generateToken(user);
   }
 }

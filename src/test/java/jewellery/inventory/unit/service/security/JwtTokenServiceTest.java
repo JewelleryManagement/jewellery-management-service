@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import jewellery.inventory.exception.security.jwt.JwtExpiredException;
 import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
 import jewellery.inventory.security.JwtTokenService;
 import jewellery.inventory.security.JwtUtils;
@@ -101,19 +102,19 @@ class JwtTokenServiceTest {
         .isInstanceOf(JwtIsNotValidException.class);
   }
 
-  //  @Test
-  //  void isTokenValidWithExpiredTokenThrowsJwtExpiredException() {
-  //    String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
-  //
-  //    Claims expiredClaims =
-  //        Jwts.claims()
-  //            .setSubject(USER_NAME)
-  //            .setExpiration(Date.from(Instant.now().minusMillis(1000L)));
-  //    doReturn(expiredClaims).when(jwtUtils).extractAllClaims(anyString());
-  //
-  //    assertThatThrownBy(() -> jwtTokenService.isTokenValid(token, userDetails))
-  //        .isInstanceOf(JwtExpiredException.class);
-  //  }
+    @Test
+    void isTokenValidWithExpiredTokenThrowsJwtExpiredException() {
+      String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
+
+      Claims expiredClaims =
+          Jwts.claims()
+              .setSubject(USER_NAME)
+              .setExpiration(Date.from(Instant.now().minusMillis(10200L)));
+      doReturn(expiredClaims).when(jwtUtils).extractAllClaims(anyString());
+
+      assertThatThrownBy(() -> jwtTokenService.isTokenValid(token, userDetails))
+          .isInstanceOf(JwtExpiredException.class);
+    }
 
   @Test
   void generateTokenWithNullUserDetailsThrowsIllegalArgumentException() {
@@ -144,28 +145,6 @@ class JwtTokenServiceTest {
         .isInstanceOf(JwtIsNotValidException.class);
   }
 
-  //  @Test
-  //  void testWeakKeyException() {
-  //    ReflectionTestUtils.setField(jwtUtils, "secretKey", "shortKey");
-  //
-  //    assertThatThrownBy(() -> jwtUtils.getSigningKey())
-  //        .isInstanceOf(InvalidSecretKeyException.class);
-  //  }
-  //
-  //  @Test
-  //  void testExpiredJwtException() {
-  //    // Create an expired token
-  //    String expiredToken = Jwts.builder()
-  //                              .setExpiration(new Date(System.currentTimeMillis() - 1000)) // set
-  // to past
-  //                              // ... other token settings ...
-  //                              .compact();
-  //
-  //    // Assert that a JwtExpiredException is thrown
-  //    assertThatThrownBy(() -> jwtUtils.extractAllClaims(expiredToken))
-  //        .isInstanceOf(JwtExpiredException.class);
-  //  }
-
   private Claims parseClaimsFromToken(String token) {
     byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
     Key key = Keys.hmacShaKeyFor(keyBytes);
@@ -178,4 +157,5 @@ class JwtTokenServiceTest {
 
     lenient().doReturn(claims).when(jwtUtils).extractAllClaims(anyString());
   }
+
 }
