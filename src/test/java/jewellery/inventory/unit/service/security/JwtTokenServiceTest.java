@@ -2,6 +2,7 @@ package jewellery.inventory.unit.service.security;
 
 import static jewellery.inventory.helper.UserTestHelper.USER_NAME;
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
@@ -37,7 +38,8 @@ class JwtTokenServiceTest {
   private final String SECRET_KEY = "QdzigVY4XWNItestqpRdNuCGXx+FXok5e++GeMm1OlE=";
   private static final long TOKEN_EXPIRATION = 36000200000L;
   private Key key;
-  private static final String TOKEN_MOCK = "some_token_string_here";
+  private static final String TOKEN_MOCK =
+      "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyb290QGdtYWlsLmNvbSIsImlhdCI6MTY5NjI0OTQxOSwiZXhwIjoxNjk2MzM1ODE5fQ.z5ZNMMRkFzJ7qYdIy-lI9ii2hLjomgav0prE2_DKUkQ";
   private static final String INVALID_TOKEN =
       "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyb290QGdtYWlsLmNvbSIsImlhdCI6MTY5NTk5NTI4MCwiZXhwIjoxNjk1OTk2NzIwfQ.WZopY5dSj0v3g28dorFHk7XhuH2R-e6k6zmZ_G5C9ow";
 
@@ -146,10 +148,7 @@ class JwtTokenServiceTest {
 
   @Test
   void isTokenValidWithNullTokenExpirationThrowsJwtExpiredException() {
-    Claims expiredClaims =
-        Jwts.claims()
-            .setSubject(USER_NAME)
-            .setExpiration(null);
+    Claims expiredClaims = Jwts.claims().setSubject(USER_NAME).setExpiration(null);
     doReturn(expiredClaims).when(jwtUtils).extractAllClaims(anyString());
 
     assertThatThrownBy(() -> jwtTokenService.isTokenValid(TOKEN_MOCK, userDetails))
@@ -178,6 +177,45 @@ class JwtTokenServiceTest {
 
     assertThrows(
         JwtIsNotValidException.class, () -> jwtTokenService.isTokenValid(token, userDetailsMock));
+  }
+
+  @Test
+  void extractUserEmailSuccessfullyExtractsValidEmail() {
+    mockClaims();
+    when(jwtTokenService.extractName(TOKEN_MOCK)).thenReturn(USER_NAME);
+
+    String actualEmail = jwtTokenService.extractUserEmail(TOKEN_MOCK);
+
+    assertEquals(USER_NAME, actualEmail);
+  }
+
+  @Test
+  void extractUserEmailThrowsExceptionWhenEmailIsNull() {
+    mockClaims();
+    when(jwtTokenService.extractName(TOKEN_MOCK)).thenReturn(null);
+
+    assertThrows(JwtIsNotValidException.class, () -> jwtTokenService.extractUserEmail(TOKEN_MOCK));
+  }
+
+  @Test
+  void extractUserEmailThrowsExceptionWhenEmailIsEmpty() {
+    mockClaims();
+    when(jwtTokenService.extractName(TOKEN_MOCK)).thenReturn("");
+
+    assertThrows(JwtIsNotValidException.class, () -> jwtTokenService.extractUserEmail(TOKEN_MOCK));
+  }
+
+  @Test
+  void extractUserEmailThrowsExceptionWhenEmailIsBlank() {
+    mockClaims();
+    when(jwtTokenService.extractName(TOKEN_MOCK)).thenReturn(" ");
+
+    assertThrows(JwtIsNotValidException.class, () -> jwtTokenService.extractUserEmail(TOKEN_MOCK));
+  }
+
+  private void mockClaims() {
+    Claims claimsWithValidExpiration = mock(Claims.class);
+    when(jwtUtils.extractAllClaims(TOKEN_MOCK)).thenReturn(claimsWithValidExpiration);
   }
 
   private Claims parseClaimsFromToken(String token) {
