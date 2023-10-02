@@ -3,7 +3,6 @@ package jewellery.inventory.dto.response;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
-import jewellery.inventory.model.resource.ResourceInProduct;
 import lombok.*;
 
 import java.util.List;

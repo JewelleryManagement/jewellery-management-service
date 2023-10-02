@@ -2,6 +2,7 @@ package jewellery.inventory.service;
 
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.ProductNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -30,7 +32,9 @@ public class ProductService {
     private final ResourceRepository resourceRepository;
     private final ResourceInUserRepository resourceInUserRepository;
     private final ResourceInProductRepository resourceInProductRepository;
+    private final ResourceInUserService resourceInUserService;
     private final ProductMapper productMapper;
+
 
     public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
 
@@ -42,75 +46,19 @@ public class ProductService {
         product.setName(productRequestDto.getName());
         product.setAuthors(productRequestDto.getAuthors());
         product.setResourcesContent(resourcesInProducts);
-        product.setProductsContent(getProducts(productRequestDto.getProductsContent()));
+        product.setProductsContent(getProductsInProduct(productRequestDto.getProductsContent()));
         product.setSold(false);
         product.setDescription(productRequestDto.getDescription());
         product.setSalePrice(productRequestDto.getSalePrice());
 
-//        for (ResourceInProduct resourceInProduct : resourcesInProducts) {
-//            resourceInProduct.setProduct(product);
-//        }
-//
-//        resourceInProductRepository.saveAll(resourcesInProducts);
+        productRepository.save(product);
 
-        return productMapper.toProductResponse(productRepository.save(product));
-    }
-
-    private User getUser(ProductRequestDto productRequestDto, Product product) {
-        return userRepository.findByName(productRequestDto.getOwnerName())
-                .orElseThrow(() -> new UserNotFoundException(productRequestDto.getOwnerName()));
-    }
-
-    private List<ResourceInProduct> getResourceInProducts(User user, List<String> resourcesInRequest) {
-        List<ResourceInUser> resourcesInUsers = user.getResourcesOwned();
-
-        List<ResourceInProduct> resourcesInProducts = new ArrayList<>();
-
-        ResourceInProduct resourceInProduct = new ResourceInProduct();
-
-        for (String resourceName : resourcesInRequest) {
-            Resource resource = resourceRepository.findByClazz(resourceName)
-                    .orElseThrow(() -> new ResourceNotFoundException(resourceName));
-
-            boolean contains = false;
-
-            for (ResourceInUser resourceInUser : resourcesInUsers) {
-                if (resourceInUser.getResource().getId() == resource.getId()) {
-                    resourceInProduct.setResource(resource);
-
-                    double quantity = resourceInUser.getQuantity();
-                    resourceInProduct.setQuantity(quantity);
-
-                    resourceInUser.setQuantity(resourceInUser.getQuantity() - quantity);
-
-                    resourcesInProducts.add(resourceInProduct);
-                    resourceInProductRepository.save(resourceInProduct);
-                    resourceInUserRepository.save(resourceInUser);
-                    contains = true;
-                    break;
-                }
-            }
-
-            if (!contains) {
-                throw new ResourceInUserNotFoundException(resource.getId(), user.getId());
-            }
+        for (ResourceInProduct resourceInProduct : resourcesInProducts) {
+            resourceInProduct.setProduct(product);
         }
 
-        return resourcesInProducts;
-    }
-
-    private List<Product> getProducts(List<String> names) {
-        List<Product> products = new ArrayList<>();
-
-        if (names != null) {
-            for (String name : names) {
-                Product current = productRepository.findByName(name)
-                        .orElseThrow(() -> new ProductNotFoundException(name));
-
-                products.add(current);
-            }
-        }
-        return products;
+        resourceInProductRepository.saveAll(resourcesInProducts);
+        return productMapper.toProductResponse(product);
     }
 
     public List<ProductResponseDto> getAllProducts() {
@@ -125,10 +73,92 @@ public class ProductService {
     }
 
     public void deleteProduct(UUID id) {
-        if (productRepository.existsById(id)) {
-            productRepository.deleteById(id);
-        } else {
-            throw new ProductNotFoundException(id);
+        Product product = productRepository.findById(id).orElseThrow(
+                () -> new ProductNotFoundException(id));
+
+        List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
+        User owner = product.getOwner();
+        List<ResourceInUser> resourcesInUser = owner.getResourcesOwned();
+
+        for (ResourceInProduct resourceInProduct : resourcesInProduct) {
+            Resource resource = resourceInProduct.getResource();
+
+            ResourceInUser resourceInUser = resourceInUserRepository.findByResourceId(resource.getId());
+            if (resourceInUser == null) {
+                resourceInUser = new ResourceInUser();
+                resourceInUser.setResource(resource);
+                resourceInUser.setQuantity(resourceInProduct.getQuantity());
+                resourceInUser.setOwner(owner);
+            } else {
+                resourceInUser.setQuantity(resourceInUser.getQuantity() + resourceInProduct.getQuantity());
+            }
+
+            resourcesInUser.add(resourceInUser);
+            resourceInProductRepository.deleteById(resourceInProduct.getId());
         }
+
+        resourceInUserRepository.saveAll(resourcesInUser);
+        productRepository.deleteById(id);
+    }
+
+    private User getUser(ProductRequestDto productRequestDto, Product product) {
+        return userRepository.findByName(productRequestDto.getOwnerName())
+                .orElseThrow(() -> new UserNotFoundException(productRequestDto.getOwnerName()));
+    }
+
+    private List<ResourceInProduct> getResourceInProducts(User user, Map<String, Double> resourcesInRequest) {
+        List<ResourceInUser> resourcesInUsers = user.getResourcesOwned();
+
+        List<ResourceInProduct> resourcesInProducts = new ArrayList<>();
+
+        ResourceInProduct resourceInProduct = new ResourceInProduct();
+
+        for (Map.Entry<String, Double> entry : resourcesInRequest.entrySet()) {
+            Resource resource = resourceRepository.findByClazz(entry.getKey())
+                    .orElseThrow(() -> new ResourceNotFoundException(entry.getKey()));
+
+            double quantity = entry.getValue();
+            boolean contains = false;
+
+            for (ResourceInUser resourceInUser : resourcesInUsers) {
+                if (resourceInUser.getResource().getId() == resource.getId()) {
+                    resourceInProduct.setResource(resource);
+                    resourceInProduct.setQuantity(quantity);
+
+                    resourceInUser.setQuantity(resourceInUser.getQuantity() - quantity);
+
+                    if (resourceInUser.getQuantity() < 0) {
+                        throw new NegativeResourceQuantityException(resourceInUser.getQuantity());
+                    } else if (resourceInUser.getQuantity() == 0) {
+                        resourceInUserService.removeResourceFromUser(user.getId(), resource.getId());
+                    } else {
+                        resourceInUserRepository.save(resourceInUser);
+                        resourcesInProducts.add(resourceInProduct);
+                        resourceInProductRepository.save(resourceInProduct);
+                    }
+
+                    contains = true;
+                }
+            }
+            if (!contains) {
+                throw new ResourceInUserNotFoundException(resource.getId(), user.getId());
+            }
+        }
+
+        return resourcesInProducts;
+    }
+
+    private List<Product> getProductsInProduct(List<String> productsNamesInRequest) {
+        List<Product> products = new ArrayList<>();
+
+        if (productsNamesInRequest != null) {
+            for (String name : productsNamesInRequest) {
+                Product product = productRepository.findByName(name)
+                        .orElseThrow(() -> new ProductNotFoundException(name));
+
+                products.add(product);
+            }
+        }
+        return products;
     }
 }
