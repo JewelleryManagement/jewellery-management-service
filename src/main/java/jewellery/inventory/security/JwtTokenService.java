@@ -1,7 +1,6 @@
 package jewellery.inventory.security;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.time.Instant;
@@ -47,13 +46,20 @@ public class JwtTokenService {
   public boolean isTokenValid(String token, UserDetails userDetails) {
     isNameValid(token, userDetails);
     isTokenExpired(token);
+    jwtUtils.extractAllClaims(token);
+    return true;
+  }
 
-    try {
-      jwtUtils.extractAllClaims(token);
-    } catch (JwtException e) {
+  public String extractUserEmail(String token) {
+    String userEmail = extractName(token);
+    if (userEmail == null || userEmail.trim().isEmpty()) {
       throw new JwtIsNotValidException();
     }
-    return true;
+    return userEmail;
+  }
+
+  public String extractName(String token) {
+    return extractClaim(token, Claims::getSubject);
   }
 
   private void isNameValid(String token, UserDetails userDetails) {
@@ -61,10 +67,6 @@ public class JwtTokenService {
     if (!name.equals(userDetails.getUsername())) {
       throw new JwtIsNotValidException();
     }
-  }
-
-  public String extractName(String token) {
-    return extractClaim(token, Claims::getSubject);
   }
 
   private void isTokenExpired(String token) {

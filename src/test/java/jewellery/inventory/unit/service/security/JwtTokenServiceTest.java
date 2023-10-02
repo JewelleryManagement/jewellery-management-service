@@ -105,15 +105,13 @@ class JwtTokenServiceTest {
 
   @Test
   void isTokenValidWithExpiredTokenThrowsJwtExpiredException() {
-    String token = jwtTokenService.generateToken(new HashMap<>(), userDetails);
-
     Claims expiredClaims =
         Jwts.claims()
             .setSubject(USER_NAME)
             .setExpiration(Date.from(Instant.now().minusMillis(10200L)));
     doReturn(expiredClaims).when(jwtUtils).extractAllClaims(anyString());
 
-    assertThatThrownBy(() -> jwtTokenService.isTokenValid(token, userDetails))
+    assertThatThrownBy(() -> jwtTokenService.isTokenValid(TOKEN_MOCK, userDetails))
         .isInstanceOf(JwtExpiredException.class);
   }
 
@@ -147,20 +145,19 @@ class JwtTokenServiceTest {
   }
 
   @Test
-  void whenTokenHasNullExpiration_thenThrowJwtExpiredException() {
-    String tokenWithNullExpiration = TOKEN_MOCK;
-    Claims claimsWithNullExpiration = mock(Claims.class);
+  void isTokenValidWithNullTokenExpirationThrowsJwtExpiredException() {
+    Claims expiredClaims =
+        Jwts.claims()
+            .setSubject(USER_NAME)
+            .setExpiration(null);
+    doReturn(expiredClaims).when(jwtUtils).extractAllClaims(anyString());
 
-    lenient()
-        .when(jwtUtils.extractAllClaims(tokenWithNullExpiration))
-        .thenReturn(claimsWithNullExpiration);
-    lenient().when(claimsWithNullExpiration.getExpiration()).thenReturn(null);
-    assertThrows(
-        Exception.class, () -> jwtTokenService.isTokenValid(tokenWithNullExpiration, userDetails));
+    assertThatThrownBy(() -> jwtTokenService.isTokenValid(TOKEN_MOCK, userDetails))
+        .isInstanceOf(JwtExpiredException.class);
   }
 
   @Test
-  void whenTokenHasValidExpiration_thenTokenIsValid() {
+  void isTokenValidReturnsTrueWhenTokenHasValidExpiration() {
     String tokenWithValidExpiration = TOKEN_MOCK;
     Claims claimsWithValidExpiration = mock(Claims.class);
 
@@ -171,6 +168,16 @@ class JwtTokenServiceTest {
     when(jwtUtils.extractAllClaims(tokenWithValidExpiration)).thenReturn(claimsWithValidExpiration);
 
     assertTrue(jwtTokenService.isTokenValid(tokenWithValidExpiration, userDetails));
+  }
+
+  @Test
+  void isTokenValidThrowsJwtIsNotValidExceptionWhenTokenIsInvalid() {
+    String token = INVALID_TOKEN;
+    UserDetails userDetailsMock = mock(UserDetails.class);
+    when(jwtUtils.extractAllClaims(token)).thenThrow(JwtIsNotValidException.class);
+
+    assertThrows(
+        JwtIsNotValidException.class, () -> jwtTokenService.isTokenValid(token, userDetailsMock));
   }
 
   private Claims parseClaimsFromToken(String token) {
