@@ -9,6 +9,7 @@ import static org.mockito.Mockito.*;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import java.security.Key;
@@ -16,6 +17,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 import jewellery.inventory.exception.security.jwt.JwtExpiredException;
 import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
 import jewellery.inventory.security.JwtTokenService;
@@ -23,6 +25,8 @@ import jewellery.inventory.security.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -189,28 +193,27 @@ class JwtTokenServiceTest {
     assertEquals(USER_NAME, actualEmail);
   }
 
-  @Test
-  void extractUserEmailThrowsExceptionWhenEmailIsNull() {
+  @ParameterizedTest
+  @MethodSource("invalidEmailProvider")
+  void extractUserEmailThrowsExceptionWhenEmailIsInvalid(String invalidEmail) {
     mockClaims();
-    when(jwtTokenService.extractName(TOKEN_MOCK)).thenReturn(null);
+    when(jwtTokenService.extractName(TOKEN_MOCK)).thenReturn(invalidEmail);
 
     assertThrows(JwtIsNotValidException.class, () -> jwtTokenService.extractUserEmail(TOKEN_MOCK));
   }
 
   @Test
-  void extractUserEmailThrowsExceptionWhenEmailIsEmpty() {
-    mockClaims();
-    when(jwtTokenService.extractName(TOKEN_MOCK)).thenReturn("");
+  void extractAllClaimsThrowsJwtExpiredExceptionOnExpiredJwtException() {
+    String expiredToken = generateExpiredToken();
 
-    assertThrows(JwtIsNotValidException.class, () -> jwtTokenService.extractUserEmail(TOKEN_MOCK));
+    when(jwtUtils.extractAllClaims(expiredToken)).thenCallRealMethod();
+    assertThrows(JwtExpiredException.class, () -> jwtUtils.extractAllClaims(expiredToken));
   }
 
   @Test
-  void extractUserEmailThrowsExceptionWhenEmailIsBlank() {
-    mockClaims();
-    when(jwtTokenService.extractName(TOKEN_MOCK)).thenReturn(" ");
-
-    assertThrows(JwtIsNotValidException.class, () -> jwtTokenService.extractUserEmail(TOKEN_MOCK));
+  void extractAllClaimsThrowsJwtIsNotValidExceptionOnSignatureException() {
+    when(jwtUtils.extractAllClaims(INVALID_TOKEN)).thenCallRealMethod();
+    assertThrows(JwtIsNotValidException.class, () -> jwtUtils.extractAllClaims(INVALID_TOKEN));
   }
 
   private void mockClaims() {
@@ -229,5 +232,20 @@ class JwtTokenServiceTest {
     claims.setExpiration(Date.from(Instant.now().plusMillis(TOKEN_EXPIRATION)));
 
     lenient().doReturn(claims).when(jwtUtils).extractAllClaims(anyString());
+  }
+
+  private static Stream<String> invalidEmailProvider() {
+    return Stream.of(null, "", " ");
+  }
+
+  private String generateExpiredToken() {
+    Date expiredDate =
+        new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24)); // 1 day in the past
+
+    return Jwts.builder()
+        .setSubject("testUser")
+        .setExpiration(expiredDate)
+        .signWith(jwtUtils.getSigningKey(), SignatureAlgorithm.HS256)
+        .compact();
   }
 }
