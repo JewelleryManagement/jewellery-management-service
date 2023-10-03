@@ -1,6 +1,5 @@
 package jewellery.inventory.controller;
 
-import jakarta.validation.Valid;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.service.ProductService;
@@ -8,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,7 +20,7 @@ public class ProductController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public ProductResponseDto createProduct(@RequestBody ProductRequestDto productRequestDto) throws IOException {
+    public ProductResponseDto createProduct(@RequestBody ProductRequestDto productRequestDto) {
         return productService.createProduct(productRequestDto);
     }
 

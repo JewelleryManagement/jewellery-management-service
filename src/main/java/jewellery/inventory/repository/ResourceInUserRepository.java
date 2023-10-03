@@ -13,5 +13,5 @@ public interface ResourceInUserRepository extends JpaRepository<ResourceInUser, 
       "SELECT COALESCE(SUM(riu.quantity), 0.0) FROM ResourceInUser riu WHERE riu.resource.id = :resourceId")
   Double sumQuantityByResource(@Param("resourceId") UUID resourceId);
 
-  ResourceInUser findByResourceId(UUID ResourceId);
+  ResourceInUser findByResourceId(UUID resourceId);
 }

@@ -26,11 +26,13 @@ public class Product implements Serializable {
     private List<String> authors;
 
     @JsonIgnore
+    @Transient
     @ManyToOne
     private User owner;
 
 //  @Lob private byte[] picture;
 
+    @Transient
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<ResourceInProduct> resourcesContent;
 

@@ -64,7 +64,7 @@ public class ProductService {
 
     public List<ProductResponseDto> getAllProducts() {
         List<Product> products = productRepository.findAll();
-        return products.stream().map(productMapper::toProductResponse).collect(Collectors.toList());
+        return products.stream().map(productMapper::toProductResponse).toList();
     }
 
     public ProductResponseDto getProduct(UUID id) {
