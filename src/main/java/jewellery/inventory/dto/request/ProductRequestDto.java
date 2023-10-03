@@ -3,7 +3,7 @@ package jewellery.inventory.dto.request;
 import lombok.*;
 
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -14,9 +14,9 @@ public class ProductRequestDto {
     private String name;
     private List<String> authors;
     private String ownerName;
-//    private byte[] picture;
-    Map<String, Double> resourcesContent;
-    private List<String> productsContent;
+
+    List<ResourceInProductRequestDto> resourcesContent;
+    private List<UUID> productsContent;
 
     private String description;
     private double salePrice;

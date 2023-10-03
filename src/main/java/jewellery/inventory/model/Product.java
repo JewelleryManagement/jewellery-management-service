@@ -3,8 +3,10 @@ package jewellery.inventory.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
+
 import jewellery.inventory.model.resource.ResourceInProduct;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,26 +14,34 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-public class Product {
-  @Id @GeneratedValue private UUID id;
+public class Product implements Serializable {
+    @Id
+    @GeneratedValue
+    private UUID id;
 
-  @Column(name = "name")
-  private String name;
+    @Column(name = "name")
+    private String name;
 
-  @ElementCollection
-  private List<String> authors;
+    @ElementCollection
+    private List<String> authors;
 
-  @JsonIgnore
-  @ManyToOne private User owner;
+    @JsonIgnore
+    @ManyToOne
+    private User owner;
 
-  @Lob private byte[] picture;
+//  @Lob private byte[] picture;
 
-  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-  private List<ResourceInProduct> resourcesContent;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    private List<ResourceInProduct> resourcesContent;
 
-  @ManyToMany private List<Product> productsContent;
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "content_id")
+    private Product content;
+    @OneToMany(mappedBy = "content", cascade = CascadeType.ALL)
+    private List<Product> productsContent;
 
-  private String description;
-  private double salePrice;
-  private boolean isSold;
+    private String description;
+    private double salePrice;
+    private boolean isSold;
 }

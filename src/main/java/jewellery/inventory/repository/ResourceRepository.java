@@ -8,5 +8,4 @@ import java.util.UUID;
 
 public interface ResourceRepository extends JpaRepository<Resource, UUID> {
 
-    Optional<Resource> findByClazz(String clazz);
 }

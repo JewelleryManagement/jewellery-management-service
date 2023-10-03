@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,7 +22,7 @@ public class ProductController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public ProductResponseDto createProduct(@RequestBody ProductRequestDto productRequestDto) {
+    public ProductResponseDto createProduct(@RequestBody ProductRequestDto productRequestDto) throws IOException {
         return productService.createProduct(productRequestDto);
     }
 
