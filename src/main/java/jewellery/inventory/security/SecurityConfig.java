@@ -34,6 +34,9 @@ public class SecurityConfig {
   @Value("${cors.allowedMethods}")
   private String[] allowedMethods;
 
+  @Value("${cors.allowedHeaders}")
+  private String[] allowedHeaders;
+
   @Bean
   public SecurityFilterChain filterChain(
       HttpSecurity http, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) throws Exception {
@@ -63,6 +66,7 @@ public class SecurityConfig {
   CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
     configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
+    configuration.setAllowedHeaders(Arrays.asList(allowedHeaders));
     configuration.setAllowedMethods(Arrays.asList(allowedMethods));
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);
