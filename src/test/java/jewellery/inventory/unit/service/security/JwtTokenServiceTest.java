@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 import jewellery.inventory.exception.security.jwt.JwtExpiredException;
 import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
-import jewellery.inventory.security.JwtTokenService;
+import jewellery.inventory.service.security.JwtTokenService;
 import jewellery.inventory.security.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

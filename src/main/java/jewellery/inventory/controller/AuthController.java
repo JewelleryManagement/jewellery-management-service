@@ -3,7 +3,7 @@ package jewellery.inventory.controller;
 import jakarta.validation.Valid;
 import jewellery.inventory.dto.request.AuthenticationRequestDto;
 import jewellery.inventory.dto.response.UserAuthDetailsDto;
-import jewellery.inventory.service.AuthService;
+import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;

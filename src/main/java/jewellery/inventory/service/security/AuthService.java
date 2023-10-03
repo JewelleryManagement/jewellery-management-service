@@ -1,4 +1,4 @@
-package jewellery.inventory.service;
+package jewellery.inventory.service.security;
 
 import jewellery.inventory.dto.request.AuthenticationRequestDto;
 import jewellery.inventory.dto.response.UserAuthDetailsDto;
@@ -9,7 +9,6 @@ import jewellery.inventory.exception.security.jwt.JwtAuthenticationBaseException
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
-import jewellery.inventory.security.JwtTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
