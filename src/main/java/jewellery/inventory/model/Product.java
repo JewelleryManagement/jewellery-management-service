@@ -7,13 +7,16 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
+import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.model.resource.ResourceInProduct;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Getter
 @Setter
+@RequiredArgsConstructor
 public class Product implements Serializable {
     @Id
     @GeneratedValue

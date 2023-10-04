@@ -13,11 +13,9 @@ public class ProductRequestDto {
 
     private String name;
     private List<String> authors;
-    private String ownerName;
-
+    private UUID ownerId;
     List<ResourceInProductRequestDto> resourcesContent;
     private List<UUID> productsContent;
-
     private String description;
     private double salePrice;
 

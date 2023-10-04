@@ -3,11 +3,14 @@ package jewellery.inventory.service;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceInProductResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductContainsException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.mapper.ProductMapper;
+import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
@@ -16,11 +19,11 @@ import jewellery.inventory.model.resource.ResourceInProduct;
 import jewellery.inventory.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,8 +36,9 @@ public class ProductService {
     private final ResourceInProductRepository resourceInProductRepository;
     private final ResourceInUserService resourceInUserService;
     private final ProductMapper productMapper;
+    private final UserMapper userMapper;
 
-
+    @Transactional
     public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
 
         Product product = new Product();
@@ -59,6 +63,7 @@ public class ProductService {
         }
 
         resourceInProductRepository.saveAll(resourcesInProducts);
+
         return productMapper.toProductResponse(product);
     }
 
@@ -70,7 +75,8 @@ public class ProductService {
     public ProductResponseDto getProduct(UUID id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
-        return productMapper.toProductResponse(product);
+
+        return mapToProductResponseDto(product);
     }
 
     public void deleteProduct(UUID id) {
@@ -131,8 +137,8 @@ public class ProductService {
     }
 
     private User getUser(ProductRequestDto productRequestDto) {
-        return userRepository.findByName(productRequestDto.getOwnerName())
-                .orElseThrow(() -> new UserNotFoundException(productRequestDto.getOwnerName()));
+        return userRepository.findById(productRequestDto.getOwnerId())
+                .orElseThrow(() -> new UserNotFoundException(productRequestDto.getOwnerId()));
     }
 
     private List<ResourceInProduct> getResourceInProducts(User user, List<ResourceInProductRequestDto> resourcesInProductRequestDto) {
@@ -176,16 +182,45 @@ public class ProductService {
         List<Product> products = new ArrayList<>();
 
         if (productsIdInRequest != null) {
-           productsIdInRequest.forEach(productId -> {
+            productsIdInRequest.forEach(productId -> {
 
-               Product product = productRepository.findById(productId)
-                       .orElseThrow(() -> new ProductNotFoundException(productId));
+                Product product = productRepository.findById(productId)
+                        .orElseThrow(() -> new ProductNotFoundException(productId));
 
-               product.setContent(parentProduct);
-               productRepository.save(product);
-               products.add(product);
-           });
+                product.setContent(parentProduct);
+                productRepository.save(product);
+                products.add(product);
+            });
         }
         return products;
+    }
+
+    private ProductResponseDto mapToProductResponseDto(Product product) {
+        ProductResponseDto response = new ProductResponseDto();
+        response.setId(product.getId());
+        response.setSold(product.isSold());
+        response.setAuthors(product.getAuthors());
+        response.setDescription(product.getDescription());
+        response.setSalePrice(product.getSalePrice());
+        response.setOwner(userMapper.toUserResponse(product.getOwner()));
+        response.setName(product.getName());
+        response.setContentId(product.getContent() == null ? null : product.getContent().getId());
+        response.setResourcesContent(product.getResourcesContent()
+                .stream().map(res -> {
+                    ResourceInProductResponseDto resourceInProductResponseDto = new ResourceInProductResponseDto();
+                    ResourceResponseDto resourceResponseDto = new ResourceResponseDto();
+                    resourceResponseDto.setClazz(res.getResource() == null ? null : res.getResource().getClazz());
+                    resourceResponseDto.setQuantityType(res.getResource() == null ? null : res.getResource().getQuantityType());
+                    resourceResponseDto.setId(res.getResource() == null ? null : res.getResource().getId());
+                    resourceInProductResponseDto.setResource(resourceResponseDto);
+                    resourceInProductResponseDto.setQuantity(res.getQuantity());
+                    return resourceInProductResponseDto;
+                }).toList());
+        response.setProductsContent(product.getProductsContent() == null
+                ? null
+                : product.getProductsContent()
+                .stream().map(p -> getProduct(p.getId()))
+                .toList());
+        return response;
     }
 }
