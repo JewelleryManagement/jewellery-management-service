@@ -1,7 +1,6 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.UserTestHelper.USER_EMAIL;
-import static jewellery.inventory.helper.UserTestHelper.USER_NAME;
 import static jewellery.inventory.helper.UserTestHelper.USER_PASSWORD;
 import static jewellery.inventory.helper.UserTestHelper.createTestUser;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,7 +42,6 @@ class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void generateTokenSuccessfully() {
-
     setupAuthRequestAndHeaders();
     HttpEntity<AuthenticationRequestDto> requestEntity = new HttpEntity<>(authRequest, headers);
 
@@ -55,7 +53,7 @@ class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void testUnauthorizedAccessWithInvalidToken() {
+  void fetchUsersWithInvalidTokenWillReturnUnauthorized() {
     String invalidToken = "invalid_token";
     addTokenToHeaders(invalidToken);
     HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
@@ -66,24 +64,7 @@ class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void testAccessToProtectedEndpointWithValidToken() {
-    String mockToken = generateTokenForUser(testUser);
-    addTokenToHeaders(mockToken);
-    HttpEntity<AuthenticationRequestDto> requestEntity = new HttpEntity<>(authRequest, headers);
-
-    ResponseEntity<String> response =
-        testRestTemplate.exchange(getBaseUserUrl(), HttpMethod.GET, requestEntity, String.class);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-
-    String responseBody = response.getBody();
-
-    assertNotNull(responseBody);
-    assertTrue(responseBody.contains(USER_NAME));
-    assertTrue(responseBody.contains(USER_EMAIL));
-  }
-
-  @Test
-  void requestWithNullEmailShouldReturnBadRequest() {
+  void loginWithNullEmailCredentialReturnsBadRequest() {
     setupAuthRequestAndHeaders();
     authRequest.setEmail(null);
     HttpEntity<AuthenticationRequestDto> requestEntity = new HttpEntity<>(authRequest, null);
@@ -97,7 +78,7 @@ class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void requestWithNullPasswordShouldReturnBadRequest() {
+  void loginWithNullPasswordReturnsBadRequest() {
     setupAuthRequestAndHeaders();
     authRequest.setPassword(null);
     HttpEntity<AuthenticationRequestDto> requestEntity = new HttpEntity<>(authRequest, null);

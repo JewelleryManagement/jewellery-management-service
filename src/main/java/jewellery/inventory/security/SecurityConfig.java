@@ -1,5 +1,7 @@
 package jewellery.inventory.security;
 
+import static jewellery.inventory.model.Role.ADMIN;
+
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,7 +61,7 @@ public class SecurityConfig {
 
     http.authorizeHttpRequests(
         authorize ->
-            authorize.requestMatchers(AUTH_ENDPOINT).permitAll().anyRequest().hasRole("ADMIN"));
+            authorize.requestMatchers(AUTH_ENDPOINT).permitAll().anyRequest().hasRole(ADMIN.name()));
   }
 
   @Bean

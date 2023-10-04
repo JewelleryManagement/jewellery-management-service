@@ -240,7 +240,7 @@ class JwtTokenServiceTest {
 
   private String generateExpiredToken() {
     Date expiredDate =
-        new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24)); // 1 day in the past
+        new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
 
     return Jwts.builder()
         .setSubject("testUser")
