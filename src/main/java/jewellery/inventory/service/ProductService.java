@@ -19,7 +19,6 @@ import jewellery.inventory.model.resource.ResourceInProduct;
 import jewellery.inventory.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +37,7 @@ public class ProductService {
     private final ProductMapper productMapper;
     private final UserMapper userMapper;
 
-    @Transactional
+
     public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
 
         Product product = new Product();
