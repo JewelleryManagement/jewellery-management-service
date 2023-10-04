@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.stream.Stream;
 import jewellery.inventory.exception.security.jwt.JwtExpiredException;
 import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
-import jewellery.inventory.service.security.JwtTokenService;
 import jewellery.inventory.security.JwtUtils;
+import jewellery.inventory.service.security.JwtTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,11 +41,13 @@ class JwtTokenServiceTest {
   @Mock private JwtUtils jwtUtils;
   private final String SECRET_KEY = "QdzigVY4XWNItestqpRdNuCGXx+FXok5e++GeMm1OlE=";
   private static final long TOKEN_EXPIRATION = 36000200000L;
-  private Key key;
+  private static final long ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
+
   private static final String TOKEN_MOCK =
       "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyb290QGdtYWlsLmNvbSIsImlhdCI6MTY5NjI0OTQxOSwiZXhwIjoxNjk2MzM1ODE5fQ.z5ZNMMRkFzJ7qYdIy-lI9ii2hLjomgav0prE2_DKUkQ";
   private static final String INVALID_TOKEN =
       "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyb290QGdtYWlsLmNvbSIsImlhdCI6MTY5NTk5NTI4MCwiZXhwIjoxNjk1OTk2NzIwfQ.WZopY5dSj0v3g28dorFHk7XhuH2R-e6k6zmZ_G5C9ow";
+  private Key key;
 
   @BeforeEach
   public void setUp() {
@@ -240,7 +242,7 @@ class JwtTokenServiceTest {
 
   private String generateExpiredToken() {
     Date expiredDate =
-        new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
+        new Date(System.currentTimeMillis() - ONE_DAY_IN_MILLISECONDS);
 
     return Jwts.builder()
         .setSubject("testUser")
