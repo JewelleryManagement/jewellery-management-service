@@ -68,7 +68,7 @@ public class ProductService {
 
     public List<ProductResponseDto> getAllProducts() {
         List<Product> products = productRepository.findAll();
-        return products.stream().map(productMapper::toProductResponse).toList();
+        return products.stream().map(this::mapToProductResponseDto).toList();
     }
 
     public ProductResponseDto getProduct(UUID id) {
@@ -204,7 +204,7 @@ public class ProductService {
         response.setOwner(userMapper.toUserResponse(product.getOwner()));
         response.setName(product.getName());
         response.setContentId(product.getContent() == null ? null : product.getContent().getId());
-        response.setResourcesContent(product.getResourcesContent()
+        response.setResourcesContent(product.getResourcesContent() == null ? null : product.getResourcesContent()
                 .stream().map(res -> {
                     ResourceInProductResponseDto resourceInProductResponseDto = new ResourceInProductResponseDto();
                     ResourceResponseDto resourceResponseDto = new ResourceResponseDto();

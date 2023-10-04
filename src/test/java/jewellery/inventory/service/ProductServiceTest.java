@@ -1,4 +1,4 @@
-package jewellery.inventory.unit.service;
+package jewellery.inventory.service;
 
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.not_found.ProductNotFoundException;
@@ -32,21 +32,9 @@ public class ProductServiceTest {
     @InjectMocks
     private ProductService productService;
     @Mock
-    private UserRepository userRepository;
-    @Mock
     private ProductRepository productRepository;
     @Mock
-    private ResourceRepository resourceRepository;
-    @Mock
-    private ResourceInUserRepository resourceInUserRepository;
-    @Mock
-    private ResourceInProductRepository resourceInProductRepository;
-    @Mock
-    private ResourceInUserService resourceInUserService;
-    @Mock
-    private ProductMapper productMapper;
-    @Mock
-    private UserMapper userMapper;
+    UserMapper userMapper;
 
     private User user;
     private Product testProduct;
@@ -62,7 +50,15 @@ public class ProductServiceTest {
         user.setName("Pesho");
         user.setEmail("pesho@pesho.com");
 
+        pearl = new Pearl();
+        resourceInUser = new ResourceInUser();
+        resourceInUser.setOwner(user);
+        resourceInUser.setResource(pearl);
+        resourceInUser.setQuantity(20);
+
         resourceInProduct = new ResourceInProduct();
+        resourceInProduct.setResource(pearl);
+        resourceInProduct.setQuantity(5);
 
         testProduct = new Product();
         testProduct.setId(UUID.randomUUID());
