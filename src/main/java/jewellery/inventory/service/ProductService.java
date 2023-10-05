@@ -19,6 +19,7 @@ import jewellery.inventory.model.resource.ResourceInProduct;
 import jewellery.inventory.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +39,7 @@ public class ProductService {
     private final UserMapper userMapper;
 
 
+    @Transactional
     public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
 
         Product product = new Product();
@@ -173,7 +175,7 @@ public class ProductService {
                 }
             }
         }
-        resourceInProductRepository.saveAll(resourcesInProducts);
+
         return resourcesInProducts;
     }
 
@@ -187,7 +189,7 @@ public class ProductService {
                         .orElseThrow(() -> new ProductNotFoundException(productId));
 
                 product.setContent(parentProduct);
-                productRepository.save(product);
+//                productRepository.save(product);
                 products.add(product);
             });
         }
