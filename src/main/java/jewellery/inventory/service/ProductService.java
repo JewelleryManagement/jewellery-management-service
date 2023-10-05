@@ -189,7 +189,6 @@ public class ProductService {
                         .orElseThrow(() -> new ProductNotFoundException(productId));
 
                 product.setContent(parentProduct);
-//                productRepository.save(product);
                 products.add(product);
             });
         }
