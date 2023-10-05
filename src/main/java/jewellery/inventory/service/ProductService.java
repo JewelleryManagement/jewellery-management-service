@@ -9,7 +9,6 @@ import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQ
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductContainsException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
-import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInUser;
@@ -35,7 +34,6 @@ public class ProductService {
     private final ResourceInUserRepository resourceInUserRepository;
     private final ResourceInProductRepository resourceInProductRepository;
     private final ResourceInUserService resourceInUserService;
-    private final ProductMapper productMapper;
     private final UserMapper userMapper;
 
 
@@ -65,7 +63,7 @@ public class ProductService {
 
         resourceInProductRepository.saveAll(resourcesInProducts);
 
-        return productMapper.toProductResponse(product);
+        return mapToProductResponseDto(product);
     }
 
     public List<ProductResponseDto> getAllProducts() {
@@ -89,7 +87,7 @@ public class ProductService {
             if (product.getContent() == null) {
                 List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
                 User owner = product.getOwner();
-                List<ResourceInUser> resourcesInUser = resourcesDestroy(owner, resourcesInProduct);
+                List<ResourceInUser> resourcesInUser = destroyResourceInProductToResourceInUser(owner, resourcesInProduct);
 
                 resourceInUserRepository.saveAll(resourcesInUser);
 
@@ -112,7 +110,7 @@ public class ProductService {
         }
     }
 
-    private List<ResourceInUser> resourcesDestroy(User owner, List<ResourceInProduct> resourcesInProduct) {
+    private List<ResourceInUser> destroyResourceInProductToResourceInUser(User owner, List<ResourceInProduct> resourcesInProduct) {
         List<ResourceInUser> resourcesInUser = owner.getResourcesOwned();
 
         for (ResourceInProduct resourceInProduct : resourcesInProduct) {

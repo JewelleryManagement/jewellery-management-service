@@ -1,7 +1,12 @@
 package jewellery.inventory.service;
 
+import jewellery.inventory.dto.request.ProductRequestDto;
+import jewellery.inventory.dto.request.ResourceInProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.not_found.ProductNotFoundException;
+import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
+import jewellery.inventory.exception.not_found.ResourceNotFoundException;
+import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.exception.product.ProductContainsException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.mapper.ProductMapper;
@@ -35,26 +40,43 @@ public class ProductServiceTest {
     private ProductRepository productRepository;
     @Mock
     UserMapper userMapper;
+    @Mock
+    ProductMapper productMapper;
+    @Mock
+    UserRepository userRepository;
+    @Mock
+    ResourceRepository resourceRepository;
+    @Mock
+    ResourceInUserRepository resourceInUserRepository;
+    @Mock
+    ResourceInProductRepository resourceInProductRepository;
+
 
     private User user;
     private Product testProduct;
     private Pearl pearl;
     private ResourceInProduct resourceInProduct;
     private ResourceInUser resourceInUser;
-
+    private ProductRequestDto productRequestDto;
+    private ResourceInProductRequestDto resourceInProductRequestDto;
 
     @BeforeEach
     void setUp() {
 
         user = new User();
+        user.setId(UUID.randomUUID());
         user.setName("Pesho");
         user.setEmail("pesho@pesho.com");
 
         pearl = new Pearl();
+        pearl.setId(UUID.randomUUID());
+
         resourceInUser = new ResourceInUser();
+        resourceInUser.setId(UUID.randomUUID());
         resourceInUser.setOwner(user);
         resourceInUser.setResource(pearl);
         resourceInUser.setQuantity(20);
+        user.setResourcesOwned(List.of(resourceInUser));
 
         resourceInProduct = new ResourceInProduct();
         resourceInProduct.setResource(pearl);
@@ -72,6 +94,79 @@ public class ProductServiceTest {
         testProduct.setProductsContent(null);
         testProduct.setContent(null);
 
+        resourceInProductRequestDto = new ResourceInProductRequestDto();
+        resourceInProductRequestDto.setId(pearl.getId());
+        resourceInProductRequestDto.setQuantity(5);
+
+        productRequestDto = new ProductRequestDto();
+        productRequestDto.setOwnerId(user.getId());
+        productRequestDto.setName("TestProductDto");
+        productRequestDto.setAuthors(List.of("Ivan", "Petar"));
+        productRequestDto.setDescription("This is test product");
+        productRequestDto.setResourcesContent(List.of(resourceInProductRequestDto));
+        productRequestDto.setSalePrice(10000);
+
+    }
+
+
+    @Test
+    void testDeleteProductShouldThrowExceptionWhenProductIsPartOfProduct() {
+        testProduct.setContent(new Product());
+        when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
+        assertThrows(ProductContainsException.class,
+                () -> productService.deleteProduct(testProduct.getId()));
+    }
+
+    @Test
+    void testDeleteProductShouldThrowExceptionWhenProductIsSold() {
+        testProduct.setSold(true);
+        when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
+        assertThrows(ProductIsSoldException.class,
+                () -> productService.deleteProduct(testProduct.getId()));
+    }
+
+    @Test
+    void testDeleteProductGetProductShouldThrowExceptionWhenProductNotExist() {
+        assertThrows(ProductNotFoundException.class,
+                () -> productService.deleteProduct(UUID.randomUUID()));
+    }
+
+    @Test
+    void createProductSuccessfully() {
+
+        when(userRepository.findById(productRequestDto.getOwnerId())).thenReturn(Optional.of(user));
+        when(resourceRepository.findById(resourceInProductRequestDto.getId())).thenReturn(Optional.of(pearl));
+        when(resourceInUserRepository.findByResourceId(pearl.getId()))
+                .thenReturn(resourceInUser);
+
+
+        ProductResponseDto actual = productService.createProduct(productRequestDto);
+
+        assertEquals(actual.getName(), productRequestDto.getName());
+        assertEquals(actual.getSalePrice(), productRequestDto.getSalePrice());
+    }
+
+    @Test
+    void testCreateProductShouldThrowWhenProductNotFound() {
+        productRequestDto.setProductsContent(List.of(UUID.randomUUID()));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
+        when(resourceInUserRepository.findByResourceId(pearl.getId())).thenReturn(resourceInUser);
+        assertThrows(ProductNotFoundException.class,
+                () -> productService.createProduct(productRequestDto));
+    }
+
+    @Test
+    void testCreateProductShouldThrowExceptionWhenResourceNotFound() {
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        assertThrows(ResourceNotFoundException.class,
+                () -> productService.createProduct(productRequestDto));
+    }
+
+    @Test
+    void testCreateProductGetUserShouldThrowExceptionIfUserNotExist() {
+        assertThrows(UserNotFoundException.class,
+                () -> productService.createProduct(productRequestDto));
     }
 
     @Test
