@@ -112,7 +112,6 @@ public class ProductService {
     }
 
     private List<ResourceInUser> destroyResourceInProductToResourceInUser(User owner, List<ResourceInProduct> resourcesInProduct) {
-        List<ResourceInUser> resourcesInUser = owner.getResourcesOwned();
         List<ResourceInUser> resultResourcesInUser = new ArrayList<>();
 
         for (ResourceInProduct resourceInProduct : resourcesInProduct) {

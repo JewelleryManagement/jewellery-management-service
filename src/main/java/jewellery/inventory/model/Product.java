@@ -7,7 +7,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
-import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.model.resource.ResourceInProduct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +30,6 @@ public class Product implements Serializable {
     @JsonIgnore
     @ManyToOne
     private User owner;
-
-//  @Lob private byte[] picture;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<ResourceInProduct> resourcesContent;

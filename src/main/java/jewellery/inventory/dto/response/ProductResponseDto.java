@@ -1,8 +1,6 @@
 package jewellery.inventory.dto.response;
 
 import jewellery.inventory.dto.response.resource.ResourceInProductResponseDto;
-import jewellery.inventory.model.Product;
-import jewellery.inventory.model.User;
 import lombok.*;
 
 import java.util.List;

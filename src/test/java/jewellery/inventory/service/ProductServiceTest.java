@@ -3,6 +3,7 @@ package jewellery.inventory.service;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.ProductNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
@@ -32,7 +33,7 @@ import static org.mockito.Mockito.*;
 import java.util.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ProductServiceTest {
+class ProductServiceTest {
 
     @InjectMocks
     private ProductService productService;
@@ -115,7 +116,7 @@ public class ProductServiceTest {
 
         productService.deleteProduct(testProduct.getId());
 
-        assertEquals(resourceInUser.getQuantity(), 25);
+        assertEquals(25, resourceInUser.getQuantity());
     }
 
     @Test
@@ -125,7 +126,7 @@ public class ProductServiceTest {
 
         productService.deleteProduct(testProduct.getId());
 
-        assertEquals(testProduct.getProductsContent().size(), 0);
+        assertEquals(0, testProduct.getProductsContent().size());
     }
 
     @Test
@@ -135,7 +136,7 @@ public class ProductServiceTest {
 
         productService.deleteProduct(testProduct.getId());
 
-        assertEquals(productRepository.count(), 0);
+        assertEquals(0, productRepository.count());
     }
 
 
@@ -174,6 +175,34 @@ public class ProductServiceTest {
 
         assertEquals(actual.getName(), productRequestDto.getName());
         assertEquals(actual.getSalePrice(), productRequestDto.getSalePrice());
+    }
+
+    @Test
+    void testCreateProductShouldThrowExceptionWhenResourceInUserNotFound() {
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
+        resourceInUser.setQuantity(5);
+        when(resourceInUserRepository.findByResourceId(pearl.getId())).thenReturn(resourceInUser);
+        resourceInProductRequestDto.setQuantity(50);
+
+        assertThrows(NegativeResourceQuantityException.class,
+                () -> productService.createProduct(productRequestDto));
+    }
+
+    @Test
+    void testCreateProductShouldSetContentProduct() {
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
+        when(resourceInUserRepository.findByResourceId(pearl.getId())).thenReturn(resourceInUser);
+
+        when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
+
+        productRequestDto.setProductsContent(List.of(testProduct.getId()));
+        ProductResponseDto actual = productService.createProduct(productRequestDto);
+
+        assertEquals(testProduct.getContent().getId(), actual.getId());
     }
 
     @Test

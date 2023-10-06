@@ -1,6 +1,5 @@
 package jewellery.inventory.dto.response.resource;
 
-import jewellery.inventory.model.resource.Resource;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
