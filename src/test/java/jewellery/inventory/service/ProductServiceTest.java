@@ -108,6 +108,36 @@ public class ProductServiceTest {
 
     }
 
+    @Test
+    void testDeleteProductShouldReturnResourcesInUser() {
+        when(resourceInUserRepository.findByResourceId(pearl.getId())).thenReturn(resourceInUser);
+        when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
+
+        productService.deleteProduct(testProduct.getId());
+
+        assertEquals(resourceInUser.getQuantity(), 25);
+    }
+
+    @Test
+    void testDeleteProductContainsProductBreakDown() {
+        testProduct.setProductsContent(List.of(new Product(), new Product(), new Product()));
+        when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
+
+        productService.deleteProduct(testProduct.getId());
+
+        assertEquals(testProduct.getProductsContent().size(), 0);
+    }
+
+    @Test
+    void testDeleteProductSuccessfully() {
+
+        when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
+
+        productService.deleteProduct(testProduct.getId());
+
+        assertEquals(productRepository.count(), 0);
+    }
+
 
     @Test
     void testDeleteProductShouldThrowExceptionWhenProductIsPartOfProduct() {
