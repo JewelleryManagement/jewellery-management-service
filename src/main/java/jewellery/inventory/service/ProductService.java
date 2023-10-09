@@ -66,7 +66,6 @@ public class ProductService {
         return mapToProductResponseDto(product);
     }
 
-
     public void deleteProduct(UUID id) {
 
         Product product = productRepository.findById(id).orElseThrow(
@@ -123,6 +122,9 @@ public class ProductService {
 
     private List<ResourceInProduct> getResourceInProducts(User user, List<ResourceInProductRequestDto> resourcesInProductRequestDto) {
         List<ResourceInUser> resourcesInUsers = user.getResourcesOwned();
+        if (resourcesInUsers == null) {
+            throw new ResourceInUserNotFoundException(user.getId());
+        }
 
         List<ResourceInProduct> resourcesInProducts = new ArrayList<>();
 
@@ -136,20 +138,21 @@ public class ProductService {
 
             ResourceInUser resourceInUser = resourceInUserRepository.findByResourceId(resource.getId());
 
-            if (!resourcesInUsers.contains(resourceInUser)) {
-                throw new ResourceInUserNotFoundException(resource.getId(), user.getId());
-
-            } else {
-                if (resourceInUser.getQuantity() - quantity < 0) {
-                    throw new NegativeResourceQuantityException(resourceInUser.getQuantity());
-                } else {
-                    resourceInProduct.setResource(resource);
-                    resourceInProduct.setQuantity(quantity);
-                    resourcesInProducts.add(resourceInProduct);
-                    resourceInUser.setQuantity(resourceInUser.getQuantity() - quantity);
-                    if (resourceInUser.getQuantity() == 0) {
-                        resourceInUserService.removeResourceFromUser(user.getId(), resource.getId());
+            for (ResourceInUser inUser : resourcesInUsers) {
+                if (inUser.getResource().getId() == resourceInUser.getResource().getId()) {
+                    if (resourceInUser.getQuantity() - quantity < 0) {
+                        throw new NegativeResourceQuantityException(resourceInUser.getQuantity());
+                    } else {
+                        resourceInProduct.setResource(resource);
+                        resourceInProduct.setQuantity(quantity);
+                        resourcesInProducts.add(resourceInProduct);
+                        resourceInUser.setQuantity(resourceInUser.getQuantity() - quantity);
+                        if (resourceInUser.getQuantity() == 0) {
+                            resourceInUserService.removeResourceFromUser(user.getId(), resource.getId());
+                        }
                     }
+                } else {
+                    throw new ResourceInUserNotFoundException(inUser.getResource().getId(), user.getId());
                 }
             }
         }

@@ -181,7 +181,16 @@ class ProductServiceTest {
     }
 
     @Test
-    void testCreateProductShouldThrowExceptionWhenResourceInUserNotFound() {
+    void  testCreateProductShouldThrowExceptionWhenResourceIsNotOwnedByUser() {
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        user.setResourcesOwned(null);
+
+        assertThrows(ResourceInUserNotFoundException.class,
+                () -> productService.createProduct(productRequestDto));
+    }
+
+    @Test
+    void testCreateProductShouldThrowExceptionWhenResourceInUserNotEnough() {
 
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
@@ -233,8 +242,9 @@ class ProductServiceTest {
 
     @Test
     void testGetProductShouldThrowWhenProductNotFound() {
+        UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
         assertThrows(ProductNotFoundException.class,
-                () -> productService.getProduct(UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71")));
+                () -> productService.getProduct(fakeId));
     }
 
     @Test
