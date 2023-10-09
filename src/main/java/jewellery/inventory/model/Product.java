@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import jewellery.inventory.model.resource.ResourceInProduct;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;

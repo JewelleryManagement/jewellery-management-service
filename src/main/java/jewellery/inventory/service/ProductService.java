@@ -36,31 +36,19 @@ public class ProductService {
     private final ResourceInUserService resourceInUserService;
     private final UserMapper userMapper;
 
-
     @Transactional
     public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
 
-        Product product = new Product();
         User user = getUser(productRequestDto);
         List<ResourceInProduct> resourcesInProducts = getResourceInProducts(user, productRequestDto.getResourcesContent());
 
-        product.setOwner(user);
-        product.setName(productRequestDto.getName());
-        product.setAuthors(productRequestDto.getAuthors());
-        product.setSold(false);
-        product.setDescription(productRequestDto.getDescription());
-        product.setSalePrice(productRequestDto.getSalePrice());
-        product.setResourcesContent(resourcesInProducts);
-
+        Product product = getProduct(productRequestDto, user, resourcesInProducts);
         productRepository.save(product);
 
         product.setProductsContent(getProductsInProduct(productRequestDto.getProductsContent(), product));
         productRepository.save(product);
 
-        for (ResourceInProduct resourceInProduct : resourcesInProducts) {
-            resourceInProduct.setProduct(product);
-        }
-
+        resourcesInProducts.forEach(resourceInProduct -> resourceInProduct.setProduct(product));
         resourceInProductRepository.saveAll(resourcesInProducts);
 
         return mapToProductResponseDto(product);
@@ -93,10 +81,10 @@ public class ProductService {
                 resourceInUserRepository.saveAll(resourcesInUser);
 
                 if (product.getProductsContent() != null) {
-                    for (Product contentProduct : product.getProductsContent()) {
-                        contentProduct.setContent(null);
-                        productRepository.save(contentProduct);
-                    }
+                    product.getProductsContent().forEach(content -> {
+                        content.setContent(null);
+                        productRepository.save(content);
+                    });
 
                     product.setProductsContent(new ArrayList<>());
                     productRepository.save(product);
@@ -117,16 +105,7 @@ public class ProductService {
         for (ResourceInProduct resourceInProduct : resourcesInProduct) {
             Resource resource = resourceInProduct.getResource();
 
-            ResourceInUser resourceInUser = resourceInUserRepository.findByResourceId(resource.getId());
-            if (resourceInUser == null) {
-                resourceInUser = new ResourceInUser();
-                resourceInUser.setResource(resource);
-                resourceInUser.setQuantity(resourceInProduct.getQuantity());
-                resourceInUser.setOwner(owner);
-
-            } else {
-                resourceInUser.setQuantity(resourceInUser.getQuantity() + resourceInProduct.getQuantity());
-            }
+            ResourceInUser resourceInUser = getResourceInUserbyDestroyingProduct(owner, resourceInProduct, resource);
 
             resultResourcesInUser.add(resourceInUser);
 
@@ -221,5 +200,32 @@ public class ProductService {
                 .stream().map(p -> getProduct(p.getId()))
                 .toList());
         return response;
+    }
+
+    private static Product getProduct(ProductRequestDto productRequestDto, User user, List<ResourceInProduct> resourcesInProducts) {
+        Product product = new Product();
+
+        product.setOwner(user);
+        product.setName(productRequestDto.getName());
+        product.setAuthors(productRequestDto.getAuthors());
+        product.setSold(false);
+        product.setDescription(productRequestDto.getDescription());
+        product.setSalePrice(productRequestDto.getSalePrice());
+        product.setResourcesContent(resourcesInProducts);
+        return product;
+    }
+
+    private ResourceInUser getResourceInUserbyDestroyingProduct(User owner, ResourceInProduct resourceInProduct, Resource resource) {
+        ResourceInUser resourceInUser = resourceInUserRepository.findByResourceId(resource.getId());
+        if (resourceInUser == null) {
+            resourceInUser = new ResourceInUser();
+            resourceInUser.setResource(resource);
+            resourceInUser.setQuantity(resourceInProduct.getQuantity());
+            resourceInUser.setOwner(owner);
+
+        } else {
+            resourceInUser.setQuantity(resourceInUser.getQuantity() + resourceInProduct.getQuantity());
+        }
+        return resourceInUser;
     }
 }
