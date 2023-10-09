@@ -28,6 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -177,10 +178,13 @@ class ProductCrudIntegrationTest {
     @NotNull
     private static ProductRequestDto getProductRequestDto(ResourcesInUserResponseDto resourcesInUser, User user) {
         ResourceInProductRequestDto resourceInProductRequestDto = new ResourceInProductRequestDto();
-        if (resourcesInUser.getResourcesAndQuantities() != null) {
-            resourceInProductRequestDto.setId(resourcesInUser.getResourcesAndQuantities().get(0).getResource().getId());
-            resourceInProductRequestDto.setQuantity(5);
-        }
+        List<ResourceInProductRequestDto> listOfResourcesInProduct = new ArrayList<>();
+        resourcesInUser.getResourcesAndQuantities().forEach(r ->
+        {
+            resourceInProductRequestDto.setId(r.getResource().getId());
+            resourceInProductRequestDto.setQuantity(r.getQuantity());
+            listOfResourcesInProduct.add(resourceInProductRequestDto);
+        });
 
         ProductRequestDto productRequestDto = new ProductRequestDto();
         productRequestDto.setName("TestProduct");
@@ -188,7 +192,7 @@ class ProductCrudIntegrationTest {
         productRequestDto.setDescription("Test");
         productRequestDto.setOwnerId(user.getId());
         productRequestDto.setSalePrice(50);
-        productRequestDto.setResourcesContent(List.of(resourceInProductRequestDto));
+        productRequestDto.setResourcesContent(listOfResourcesInProduct);
 
         return productRequestDto;
     }
