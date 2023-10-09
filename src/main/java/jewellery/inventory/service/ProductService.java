@@ -182,24 +182,49 @@ public class ProductService {
         response.setSalePrice(product.getSalePrice());
         response.setOwner(userMapper.toUserResponse(product.getOwner()));
         response.setName(product.getName());
-        response.setContentId(product.getContent() == null ? null : product.getContent().getId());
-        response.setResourcesContent(product.getResourcesContent() == null ? null : product.getResourcesContent()
-                .stream().map(res -> {
-                    ResourceInProductResponseDto resourceInProductResponseDto = new ResourceInProductResponseDto();
-                    ResourceResponseDto resourceResponseDto = new ResourceResponseDto();
-                    resourceResponseDto.setClazz(res.getResource() == null ? null : res.getResource().getClazz());
-                    resourceResponseDto.setQuantityType(res.getResource() == null ? null : res.getResource().getQuantityType());
-                    resourceResponseDto.setId(res.getResource() == null ? null : res.getResource().getId());
-                    resourceInProductResponseDto.setResource(resourceResponseDto);
-                    resourceInProductResponseDto.setQuantity(res.getQuantity());
-                    return resourceInProductResponseDto;
-                }).toList());
-        response.setProductsContent(product.getProductsContent() == null
-                ? null
-                : product.getProductsContent()
-                .stream().map(p -> getProduct(p.getId()))
-                .toList());
+
+        if (product.getContent() == null) {
+            response.setContentId(null);
+        } else {
+           response.setContentId(product.getContent().getId());
+        }
+
+        if (product.getResourcesContent() == null) {
+            response.setResourcesContent(null);
+        } else {
+            response.setResourcesContent(product.getResourcesContent()
+                    .stream().map(res -> {
+                        ResourceInProductResponseDto resourceInProductResponseDto = new ResourceInProductResponseDto();
+                        ResourceResponseDto resourceResponseDto = getResourceResponseDto(res);
+                        resourceInProductResponseDto.setResource(resourceResponseDto);
+                        resourceInProductResponseDto.setQuantity(res.getQuantity());
+                        return resourceInProductResponseDto;
+                    }).toList());
+        }
+
+        if (product.getProductsContent() == null) {
+            response.setProductsContent(null);
+        } else {
+            response.setProductsContent(product.getProductsContent()
+                    .stream().map(p -> getProduct(p.getId()))
+                    .toList());
+        }
+
         return response;
+    }
+
+    private static ResourceResponseDto getResourceResponseDto(ResourceInProduct res) {
+        ResourceResponseDto resourceResponseDto = new ResourceResponseDto();
+        if (res.getResource() == null) {
+            resourceResponseDto.setClazz(null);
+            resourceResponseDto.setQuantityType(null);
+            resourceResponseDto.setId(null);
+        } else {
+            resourceResponseDto.setClazz(res.getResource().getClazz());
+            resourceResponseDto.setClazz(res.getResource().getQuantityType());
+            res.getResource().getId();
+        }
+        return resourceResponseDto;
     }
 
     private static Product getProduct(ProductRequestDto productRequestDto, User user, List<ResourceInProduct> resourcesInProducts) {

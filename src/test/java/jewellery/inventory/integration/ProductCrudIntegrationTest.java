@@ -189,8 +189,6 @@ class ProductCrudIntegrationTest {
         List<ResourceInProductRequestDto> listOfResourcesInProduct = new ArrayList<>();
         resourcesInUser.getResourcesAndQuantities().forEach(r ->
         {
-            System.out.println(r.getResource().getId());
-            System.out.println(r.getQuantity());
             resourceInProductRequestDto.setId(r.getResource().getId());
             resourceInProductRequestDto.setQuantity(5);
             listOfResourcesInProduct.add(resourceInProductRequestDto);

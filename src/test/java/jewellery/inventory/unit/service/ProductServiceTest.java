@@ -154,11 +154,12 @@ class ProductServiceTest {
         when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
         assertThrows(ProductIsSoldException.class,
                 () -> productService.deleteProduct(testProduct.getId()));
+
     }
 
     @Test
     void testDeleteProductGetProductShouldThrowExceptionWhenProductNotExist() {
-        assertThrows(ProductNotFoundException.class,
+        assertThrowsExactly(ProductNotFoundException.class,
                 () -> productService.deleteProduct(UUID.randomUUID()));
     }
 
