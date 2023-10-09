@@ -29,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -95,9 +96,9 @@ class ProductCrudIntegrationTest {
     void setUp() {
         user = getUser();
         gemstone = getGemstone();
-        resourceInUserRequestDto = getResourceInUserRequestDto(user, gemstone);
+        resourceInUserRequestDto = getResourceInUserRequestDto(user, Objects.requireNonNull(gemstone));
         resourcesInUser = getResourcesInUserResponseDto(resourceInUserRequestDto);
-        productRequestDto = getProductRequestDto(resourcesInUser, user);
+        productRequestDto = getProductRequestDto(Objects.requireNonNull(resourcesInUser), user);
     }
 
     @AfterEach
@@ -118,7 +119,7 @@ class ProductCrudIntegrationTest {
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
-        assertEquals(productRequestDto.getName(), productResponseDto.getName());
+        assertEquals(productRequestDto.getName(), Objects.requireNonNull(productResponseDto).getName());
         assertEquals(productRequestDto.getResourcesContent().get(0).getId(), productResponseDto.getResourcesContent().get(0).getResource().getId());
     }
 
@@ -128,7 +129,7 @@ class ProductCrudIntegrationTest {
         productResponseDto = getProductResponseDto(productRequestDto);
 
         ResponseEntity<ProductResponseDto> response =
-                this.testRestTemplate.getForEntity(getProductUrl(productResponseDto.getId()), ProductResponseDto.class);
+                this.testRestTemplate.getForEntity(getProductUrl(Objects.requireNonNull(productResponseDto).getId()), ProductResponseDto.class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
@@ -151,7 +152,7 @@ class ProductCrudIntegrationTest {
 
         ResponseEntity<HttpStatus> response =
                 this.testRestTemplate.exchange(
-                        getProductUrl(productResponseDto.getId()),
+                        getProductUrl(Objects.requireNonNull(productResponseDto).getId()),
                         HttpMethod.DELETE,
                         null,
                         HttpStatus.class);
@@ -176,8 +177,10 @@ class ProductCrudIntegrationTest {
     @NotNull
     private static ProductRequestDto getProductRequestDto(ResourcesInUserResponseDto resourcesInUser, User user) {
         ResourceInProductRequestDto resourceInProductRequestDto = new ResourceInProductRequestDto();
-        resourceInProductRequestDto.setId(resourcesInUser.getResourcesAndQuantities().get(0).getResource().getId());
-        resourceInProductRequestDto.setQuantity(5);
+        if (resourcesInUser.getResourcesAndQuantities() != null) {
+            resourceInProductRequestDto.setId(resourcesInUser.getResourcesAndQuantities().get(0).getResource().getId());
+            resourceInProductRequestDto.setQuantity(5);
+        }
 
         ProductRequestDto productRequestDto = new ProductRequestDto();
         productRequestDto.setName("TestProduct");
