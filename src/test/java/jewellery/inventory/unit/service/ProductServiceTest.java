@@ -143,23 +143,26 @@ class ProductServiceTest {
     void testDeleteProductShouldThrowExceptionWhenProductIsPartOfProduct() {
         testProduct.setContent(new Product());
         when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
+        UUID productId = testProduct.getId();
         assertThrows(ProductContainsException.class,
-                () -> productService.deleteProduct(testProduct.getId()));
+                () -> productService.deleteProduct(productId));
     }
 
     @Test
     void testDeleteProductShouldThrowExceptionWhenProductIsSold() {
         testProduct.setSold(true);
         when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
+        UUID productId = testProduct.getId();
         assertThrows(ProductIsSoldException.class,
-                () -> productService.deleteProduct(testProduct.getId()));
+                () -> productService.deleteProduct(productId));
 
     }
 
     @Test
     void testDeleteProductGetProductShouldThrowExceptionWhenProductNotExist() {
-        assertThrowsExactly(ProductNotFoundException.class,
-                () -> productService.deleteProduct(UUID.randomUUID()));
+        UUID fakeId = UUID.randomUUID();
+        assertThrows(ProductNotFoundException.class,
+                () -> productService.deleteProduct(fakeId));
     }
 
     @Test
@@ -264,9 +267,9 @@ class ProductServiceTest {
         testProduct.setContent(new Product());
 
         when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
-
+        UUID productId = testProduct.getId();
         assertThrows(ProductContainsException.class,
-                () -> productService.deleteProduct(testProduct.getId()));
+                () -> productService.deleteProduct(productId));
     }
 
     @Test
@@ -274,14 +277,15 @@ class ProductServiceTest {
         testProduct.setSold(true);
 
         when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
-
+        UUID productId = testProduct.getId();
         assertThrows(ProductIsSoldException.class,
-                () -> productService.deleteProduct(testProduct.getId()));
+                () -> productService.deleteProduct(productId));
     }
 
     @Test
     void deleteProductShouldThrowExceptionWhenProductIdDoesNotExist() {
+        UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
         assertThrows(ProductNotFoundException.class,
-                () -> productService.deleteProduct(UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71")));
+                () -> productService.deleteProduct(fakeId));
     }
 }
