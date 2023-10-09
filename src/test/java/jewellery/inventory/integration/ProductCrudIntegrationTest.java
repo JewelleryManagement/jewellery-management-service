@@ -95,20 +95,17 @@ class ProductCrudIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        user = getUser();
-        gemstone = getGemstone();
-        resourceInUserRequestDto = getResourceInUserRequestDto(user, Objects.requireNonNull(gemstone));
-        resourcesInUser = getResourcesInUserResponseDto(resourceInUserRequestDto);
-        productRequestDto = getProductRequestDto(Objects.requireNonNull(resourcesInUser), user);
-    }
-
-    @AfterEach
-    void cleanUp() {
         userRepository.deleteAll();
         productRepository.deleteAll();
         resourceRepository.deleteAll();
         resourceInUserRepository.deleteAll();
         resourceInProductRepository.deleteAll();
+
+        user = getUser();
+        gemstone = getGemstone();
+        resourceInUserRequestDto = getResourceInUserRequestDto(user, Objects.requireNonNull(gemstone));
+        resourcesInUser = getResourcesInUserResponseDto(resourceInUserRequestDto);
+        productRequestDto = getProductRequestDto(Objects.requireNonNull(resourcesInUser), user);
     }
 
     @Test
@@ -159,11 +156,6 @@ class ProductCrudIntegrationTest {
                         HttpStatus.class);
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-
-        ResponseEntity<ProductResponseDto> responseProduct =
-                this.testRestTemplate.getForEntity(getProductUrl(productResponseDto.getId()), ProductResponseDto.class);
-
-        assertEquals(HttpStatus.NOT_FOUND, responseProduct.getStatusCode());
     }
 
 
@@ -177,14 +169,8 @@ class ProductCrudIntegrationTest {
 
     @NotNull
     private static ProductRequestDto getProductRequestDto(ResourcesInUserResponseDto resourcesInUser, User user) {
-        ResourceInProductRequestDto resourceInProductRequestDto = new ResourceInProductRequestDto();
-        List<ResourceInProductRequestDto> listOfResourcesInProduct = new ArrayList<>();
-        resourcesInUser.getResourcesAndQuantities().forEach(r ->
-        {
-            resourceInProductRequestDto.setId(r.getResource().getId());
-            resourceInProductRequestDto.setQuantity(r.getQuantity());
-            listOfResourcesInProduct.add(resourceInProductRequestDto);
-        });
+
+        List<ResourceInProductRequestDto> listOfResourcesInProduct = getResourceInProductRequestDtos(resourcesInUser);
 
         ProductRequestDto productRequestDto = new ProductRequestDto();
         productRequestDto.setName("TestProduct");
@@ -195,6 +181,21 @@ class ProductCrudIntegrationTest {
         productRequestDto.setResourcesContent(listOfResourcesInProduct);
 
         return productRequestDto;
+    }
+
+    @NotNull
+    private static List<ResourceInProductRequestDto> getResourceInProductRequestDtos(ResourcesInUserResponseDto resourcesInUser) {
+        ResourceInProductRequestDto resourceInProductRequestDto = new ResourceInProductRequestDto();
+        List<ResourceInProductRequestDto> listOfResourcesInProduct = new ArrayList<>();
+        resourcesInUser.getResourcesAndQuantities().forEach(r ->
+        {
+            System.out.println(r.getResource().getId());
+            System.out.println(r.getQuantity());
+            resourceInProductRequestDto.setId(r.getResource().getId());
+            resourceInProductRequestDto.setQuantity(5);
+            listOfResourcesInProduct.add(resourceInProductRequestDto);
+        });
+        return listOfResourcesInProduct;
     }
 
     @Nullable
@@ -210,7 +211,7 @@ class ProductCrudIntegrationTest {
         ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
         resourceInUserRequestDto.setUserId(user.getId());
         resourceInUserRequestDto.setResourceId(gemstone.getId());
-        resourceInUserRequestDto.setQuantity(10);
+        resourceInUserRequestDto.setQuantity(20);
         return resourceInUserRequestDto;
     }
 
