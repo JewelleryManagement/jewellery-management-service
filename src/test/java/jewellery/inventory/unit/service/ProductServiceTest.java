@@ -1,4 +1,4 @@
-package jewellery.inventory.service;
+package jewellery.inventory.unit.service;
 
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInProductRequestDto;

@@ -1,4 +1,4 @@
-package jewellery.inventory.controller;
+package jewellery.inventory.integration;
 
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInProductRequestDto;
@@ -36,7 +36,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-class ProductControllerTest {
+class ProductCrudIntegrationTest {
 
     @Value(value = "${local.server.port}")
     private int port;
