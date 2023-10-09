@@ -56,7 +56,6 @@ class ProductServiceTest {
     private User user;
     private Product testProduct;
     private Pearl pearl;
-    private ResourceInProduct resourceInProduct;
     private ResourceInUser resourceInUser;
     private ProductRequestDto productRequestDto;
     private ResourceInProductRequestDto resourceInProductRequestDto;
@@ -79,7 +78,7 @@ class ProductServiceTest {
         resourceInUser.setQuantity(20);
         user.setResourcesOwned(List.of(resourceInUser));
 
-        resourceInProduct = new ResourceInProduct();
+        ResourceInProduct resourceInProduct = new ResourceInProduct();
         resourceInProduct.setResource(pearl);
         resourceInProduct.setQuantity(5);
 

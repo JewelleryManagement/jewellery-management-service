@@ -221,8 +221,8 @@ public class ProductService {
             resourceResponseDto.setId(null);
         } else {
             resourceResponseDto.setClazz(res.getResource().getClazz());
-            resourceResponseDto.setClazz(res.getResource().getQuantityType());
-            res.getResource().getId();
+            resourceResponseDto.setQuantityType(res.getResource().getQuantityType());
+            resourceResponseDto.setId(res.getResource().getId());
         }
         return resourceResponseDto;
     }
