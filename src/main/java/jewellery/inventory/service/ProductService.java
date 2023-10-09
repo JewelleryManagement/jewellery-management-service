@@ -134,25 +134,20 @@ public class ProductService {
             Resource resource = resourceRepository.findById(resourceInProductRequestDto.getId())
                     .orElseThrow(() -> new ResourceNotFoundException(resourceInProductRequestDto.getId()));
 
-            double quantity = resourceInProductRequestDto.getQuantity();
-
             ResourceInUser resourceInUser = resourceInUserRepository.findByResourceId(resource.getId());
 
-            for (ResourceInUser inUser : resourcesInUsers) {
-                if (inUser.getResource().getId() == resourceInUser.getResource().getId()) {
-                    if (resourceInUser.getQuantity() - quantity < 0) {
-                        throw new NegativeResourceQuantityException(resourceInUser.getQuantity());
-                    } else {
-                        resourceInProduct.setResource(resource);
-                        resourceInProduct.setQuantity(quantity);
-                        resourcesInProducts.add(resourceInProduct);
-                        resourceInUser.setQuantity(resourceInUser.getQuantity() - quantity);
-                        if (resourceInUser.getQuantity() == 0) {
-                            resourceInUserService.removeResourceFromUser(user.getId(), resource.getId());
-                        }
-                    }
+            if (resourcesInUsers.contains(resourceInUser)) {
+                double quantity = resourceInProductRequestDto.getQuantity();
+
+                if (resourceInUser.getQuantity() - quantity < 0) {
+                    throw new NegativeResourceQuantityException(resourceInUser.getQuantity());
+                } else if (resourceInUser.getQuantity() == 0) {
+                    resourceInUserService.removeResourceFromUser(user.getId(), resource.getId());
                 } else {
-                    throw new ResourceInUserNotFoundException(inUser.getResource().getId(), user.getId());
+                    resourceInProduct.setResource(resource);
+                    resourceInProduct.setQuantity(quantity);
+                    resourcesInProducts.add(resourceInProduct);
+                    resourceInUser.setQuantity(resourceInUser.getQuantity() - quantity);
                 }
             }
         }
@@ -189,7 +184,7 @@ public class ProductService {
         if (product.getContent() == null) {
             response.setContentId(null);
         } else {
-           response.setContentId(product.getContent().getId());
+            response.setContentId(product.getContent().getId());
         }
 
         if (product.getResourcesContent() == null) {
