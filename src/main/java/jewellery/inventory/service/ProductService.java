@@ -104,7 +104,7 @@ public class ProductService {
         for (ResourceInProduct resourceInProduct : resourcesInProduct) {
             Resource resource = resourceInProduct.getResource();
 
-            ResourceInUser resourceInUser = getResourceInUserbyDestroyingProduct(owner, resourceInProduct, resource);
+            ResourceInUser resourceInUser = getResourceInUserByDestroyingProduct(owner, resourceInProduct, resource);
 
             resultResourcesInUser.add(resourceInUser);
 
@@ -121,6 +121,9 @@ public class ProductService {
     }
 
     private List<ResourceInProduct> getResourceInProducts(User user, List<ResourceInProductRequestDto> resourcesInProductRequestDto) {
+        if (resourcesInProductRequestDto == null) {
+            throw new ResourcesInProductNotFoundException();
+        }
         List<ResourceInUser> resourcesInUsers = user.getResourcesOwned();
         if (resourcesInUsers == null) {
             throw new ResourceInUserNotFoundException(user.getId());
@@ -135,21 +138,29 @@ public class ProductService {
                     .orElseThrow(() -> new ResourceNotFoundException(resourceInProductRequestDto.getId()));
 
             ResourceInUser resourceInUser = resourceInUserRepository.findByResourceId(resource.getId());
-
-            if (resourcesInUsers.contains(resourceInUser)) {
-                double quantity = resourceInProductRequestDto.getQuantity();
-
-                if (resourceInUser.getQuantity() - quantity < 0) {
-                    throw new NegativeResourceQuantityException(resourceInUser.getQuantity());
-                } else if (resourceInUser.getQuantity() == 0) {
-                    resourceInUserService.removeResourceFromUser(user.getId(), resource.getId());
-                } else {
-                    resourceInProduct.setResource(resource);
-                    resourceInProduct.setQuantity(quantity);
-                    resourcesInProducts.add(resourceInProduct);
-                    resourceInUser.setQuantity(resourceInUser.getQuantity() - quantity);
-                }
+            if (resourceInUser == null) {
+                throw new ResourceInUserNotFoundException(resource.getId(), user.getId());
             }
+
+            if (!resourcesInUsers.contains(resourceInUser)) {
+                throw new ResourceInUserNotFoundException(resourceInUser.getResource().getId(), user.getId());
+            }
+
+            double quantity = resourceInProductRequestDto.getQuantity();
+
+            if (resourceInUser.getQuantity() < quantity) {
+                throw new NegativeResourceQuantityException(resourceInUser.getQuantity());
+            } else {
+                resourceInProduct.setResource(resource);
+                resourceInProduct.setQuantity(quantity);
+                resourcesInProducts.add(resourceInProduct);
+                resourceInUser.setQuantity(resourceInUser.getQuantity() - quantity);
+            }
+
+            if (resourceInUser.getQuantity() == 0) {
+                resourceInUserService.removeResourceFromUser(user.getId(), resourceInUser.getResource().getId());
+            }
+
         }
 
         return resourcesInProducts;
@@ -157,13 +168,10 @@ public class ProductService {
 
     private List<Product> getProductsInProduct(List<UUID> productsIdInRequest, Product parentProduct) {
         List<Product> products = new ArrayList<>();
-
         if (productsIdInRequest != null) {
             productsIdInRequest.forEach(productId -> {
-
                 Product product = productRepository.findById(productId)
                         .orElseThrow(() -> new ProductNotFoundException(productId));
-
                 product.setContent(parentProduct);
                 products.add(product);
             });
@@ -186,7 +194,6 @@ public class ProductService {
         } else {
             response.setContentId(product.getContent().getId());
         }
-
         if (product.getResourcesContent() == null) {
             response.setResourcesContent(null);
         } else {
@@ -194,8 +201,10 @@ public class ProductService {
                     .stream().map(res -> {
                         ResourceInProductResponseDto resourceInProductResponseDto = new ResourceInProductResponseDto();
                         ResourceResponseDto resourceResponseDto = getResourceResponseDto(res);
-                        resourceInProductResponseDto.setResource(resourceResponseDto);
-                        resourceInProductResponseDto.setQuantity(res.getQuantity());
+                        if (resourceResponseDto != null) {
+                            resourceInProductResponseDto.setResource(resourceResponseDto);
+                            resourceInProductResponseDto.setQuantity(res.getQuantity());
+                        }
                         return resourceInProductResponseDto;
                     }).toList());
         }
@@ -213,10 +222,8 @@ public class ProductService {
 
     private static ResourceResponseDto getResourceResponseDto(ResourceInProduct res) {
         ResourceResponseDto resourceResponseDto = new ResourceResponseDto();
-        if (res.getResource() == null) {
-            resourceResponseDto.setClazz(null);
-            resourceResponseDto.setQuantityType(null);
-            resourceResponseDto.setId(null);
+        if (res == null) {
+            resourceResponseDto = null;
         } else {
             resourceResponseDto.setClazz(res.getResource().getClazz());
             resourceResponseDto.setQuantityType(res.getResource().getQuantityType());
@@ -238,14 +245,13 @@ public class ProductService {
         return product;
     }
 
-    private ResourceInUser getResourceInUserbyDestroyingProduct(User owner, ResourceInProduct resourceInProduct, Resource resource) {
+    private ResourceInUser getResourceInUserByDestroyingProduct(User owner, ResourceInProduct resourceInProduct, Resource resource) {
         ResourceInUser resourceInUser = resourceInUserRepository.findByResourceId(resource.getId());
         if (resourceInUser == null) {
             resourceInUser = new ResourceInUser();
             resourceInUser.setResource(resource);
             resourceInUser.setQuantity(resourceInProduct.getQuantity());
             resourceInUser.setOwner(owner);
-
         } else {
             resourceInUser.setQuantity(resourceInUser.getQuantity() + resourceInProduct.getQuantity());
         }

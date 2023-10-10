@@ -51,6 +51,8 @@ class ProductServiceTest {
     ResourceInUserRepository resourceInUserRepository;
     @Mock
     ResourceInProductRepository resourceInProductRepository;
+    @Mock
+    ResourceInUserService resourceInUserService;
 
 
     private User user;
@@ -181,10 +183,45 @@ class ProductServiceTest {
     }
 
     @Test
-    void  testCreateProductShouldThrowExceptionWhenResourceIsNotOwnedByUser() {
+    void testCreateProductShouldThrowExceptionWhenResourceIsNotOwnedByUser() {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         user.setResourcesOwned(null);
 
+        assertThrows(ResourceInUserNotFoundException.class,
+                () -> productService.createProduct(productRequestDto));
+    }
+
+    @Test
+    void testCreateProductShouldRemoveResourceFromUserWhenResourceInUserIsZero() {
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
+        when(resourceInUserRepository.findByResourceId(pearl.getId())).thenReturn(resourceInUser);
+        resourceInUser.setQuantity(5);
+        user.setResourcesOwned(List.of(resourceInUser));
+        resourceInProductRequestDto.setQuantity(5);
+
+        productService.createProduct(productRequestDto);
+
+        assertEquals(0, resourceInUserRepository.count());
+    }
+
+    @Test
+    void testCreateProductShouldThrowExceptionWhenResourceInUserNotFound() {
+        user.setResourcesOwned(new ArrayList<>());
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+
+        when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
+        when(resourceInUserRepository.findByResourceId(pearl.getId())).thenReturn(resourceInUser);
+
+        assertThrows(ResourceInUserNotFoundException.class,
+                () -> productService.createProduct(productRequestDto));
+
+    }
+
+    @Test
+    void testCreateProductShouldThrowWhenResourceNotExistInResourceInUserRepository() {
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
         assertThrows(ResourceInUserNotFoundException.class,
                 () -> productService.createProduct(productRequestDto));
     }
@@ -199,6 +236,18 @@ class ProductServiceTest {
         resourceInProductRequestDto.setQuantity(50);
 
         assertThrows(NegativeResourceQuantityException.class,
+                () -> productService.createProduct(productRequestDto));
+    }
+
+    @Test
+    void testCreateProductShouldThrowExceptionWhenProductToContainNotFound() {
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
+        when(resourceInUserRepository.findByResourceId(pearl.getId())).thenReturn(resourceInUser);
+
+        productRequestDto.setProductsContent(List.of(testProduct.getId()));
+
+        assertThrows(ProductNotFoundException.class,
                 () -> productService.createProduct(productRequestDto));
     }
 
