@@ -3,6 +3,7 @@ package jewellery.inventory.service;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.exception.product.ProductWithoutResourcesException;
 import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductIsContentException;
@@ -188,9 +189,8 @@ public class ProductService {
                 product.setContent(parentProduct);
                 products.add(product);
             });
-        } else {
-            return null;
         }
+
         return products;
     }
 

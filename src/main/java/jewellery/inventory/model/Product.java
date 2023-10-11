@@ -36,9 +36,9 @@ public class Product implements Serializable {
 
     @JsonIgnore
     @ManyToOne
-    @JoinColumn(name = "content_id")
-    private Product content;
-    @OneToMany(mappedBy = "content", cascade = CascadeType.ALL)
+    @JoinColumn(name = "content_of")
+    private Product contentOf;
+    @OneToMany(mappedBy = "contentOf", cascade = CascadeType.ALL)
     private List<Product> productsContent;
 
     private String description;

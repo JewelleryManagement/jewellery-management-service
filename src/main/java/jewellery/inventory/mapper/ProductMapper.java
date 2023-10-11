@@ -1,20 +1,12 @@
 package jewellery.inventory.mapper;
 
-import jewellery.inventory.dto.request.ProductRequestDto;
-import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
-import jewellery.inventory.exception.not_found.ProductWithoutResourcesException;
-import jewellery.inventory.exception.not_found.UserNotFoundException;
+import jewellery.inventory.exception.product.ProductWithoutResourcesException;
 import jewellery.inventory.model.Product;
-import jewellery.inventory.model.User;
-import jewellery.inventory.model.resource.ResourceInProduct;
-import jewellery.inventory.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor

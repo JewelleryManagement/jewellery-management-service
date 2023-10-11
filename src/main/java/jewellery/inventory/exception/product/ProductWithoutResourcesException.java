@@ -1,6 +1,6 @@
-package jewellery.inventory.exception.not_found;
+package jewellery.inventory.exception.product;
 
-public class ProductWithoutResourcesException extends NotFoundException {
+public class ProductWithoutResourcesException extends RuntimeException {
     public ProductWithoutResourcesException() {
         super("The product cannot be created without resources");
     }
