@@ -4,10 +4,7 @@ import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
-import jewellery.inventory.exception.not_found.ProductNotFoundException;
-import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
-import jewellery.inventory.exception.not_found.ResourceNotFoundException;
-import jewellery.inventory.exception.not_found.UserNotFoundException;
+import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.mapper.ProductMapper;
@@ -175,11 +172,13 @@ class ProductServiceTest {
         when(resourceInUserRepository.findByResourceId(pearl.getId()))
                 .thenReturn(resourceInUser);
 
+        ProductResponseDto response = new ProductResponseDto();
+        when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
 
         ProductResponseDto actual = productService.createProduct(productRequestDto);
 
-        assertEquals(actual.getName(), productRequestDto.getName());
-        assertEquals(actual.getSalePrice(), productRequestDto.getSalePrice());
+        assertEquals(actual, response);
+
     }
 
     @Test
@@ -261,9 +260,13 @@ class ProductServiceTest {
         when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
 
         productRequestDto.setProductsContent(List.of(testProduct.getId()));
+
+        ProductResponseDto response = new ProductResponseDto();
+        when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
+
         ProductResponseDto actual = productService.createProduct(productRequestDto);
 
-        assertEquals(testProduct.getContent().getId(), actual.getId());
+        assertEquals(response, actual);
     }
 
     @Test
@@ -280,6 +283,16 @@ class ProductServiceTest {
     void testCreateProductShouldThrowExceptionWhenResourceNotFound() {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         assertThrows(ResourceNotFoundException.class,
+                () -> productService.createProduct(productRequestDto));
+    }
+
+    @Test
+    void testCreateProductShouldThrowWhenMissingResourcesInRequest() {
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+
+        productRequestDto.setResourcesContent(null);
+
+        assertThrows(ProductWithoutResourcesException.class,
                 () -> productService.createProduct(productRequestDto));
     }
 
@@ -302,9 +315,12 @@ class ProductServiceTest {
         when(productRepository.findById(testProduct.getId()))
                 .thenReturn(Optional.of(testProduct));
 
+        ProductResponseDto response = new ProductResponseDto();
+        when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
+
         ProductResponseDto actual = productService.getProduct(testProduct.getId());
 
-        assertEquals(actual.getName(), testProduct.getName());
+        assertEquals(response, actual);
 
     }
 

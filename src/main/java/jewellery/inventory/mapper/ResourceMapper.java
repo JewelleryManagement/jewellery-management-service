@@ -43,4 +43,13 @@ public class ResourceMapper {
     }
     throw new MappingException(resourceRequestDto);
   }
+
+  public ResourceResponseDto toResourceResponseDto(ResourceInProduct resource) {
+    ResourceResponseDto resourceResponseDto = new ResourceResponseDto();
+    resourceResponseDto.setClazz(resource.getResource().getClazz());
+    resourceResponseDto.setQuantityType(resource.getResource().getQuantityType());
+    resourceResponseDto.setId(resource.getResource().getId());
+
+    return resourceResponseDto;
+  }
 }

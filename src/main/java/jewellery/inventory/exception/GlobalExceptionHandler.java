@@ -10,7 +10,7 @@ import jewellery.inventory.exception.duplicate.DuplicateException;
 import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
 import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
-import jewellery.inventory.exception.not_found.ResourcesInProductNotFoundException;
+import jewellery.inventory.exception.not_found.ProductWithoutResourcesException;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import org.springframework.http.HttpStatus;
@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
     return createErrorResponse(HttpStatus.BAD_REQUEST, fieldErrorsMap);
   }
 
-  @ExceptionHandler({NotFoundException.class, ResourceInUserNotFoundException.class, ResourcesInProductNotFoundException.class})
+  @ExceptionHandler({NotFoundException.class, ResourceInUserNotFoundException.class, ProductWithoutResourcesException.class})
   public ResponseEntity<Object> handleNotFoundException(NotFoundException ex) {
     return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
   }
