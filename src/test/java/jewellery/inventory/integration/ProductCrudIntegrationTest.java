@@ -200,6 +200,7 @@ class ProductCrudIntegrationTest {
         ResponseEntity<ResourcesInUserResponseDto> createResourceInUser =
                 this.testRestTemplate.postForEntity(getBaseResourceAvailabilityUrl(), resourceInUserRequestDto, ResourcesInUserResponseDto.class);
 
+        System.out.println(createResourceInUser.getBody().getOwner());
         return createResourceInUser.getBody();
     }
 

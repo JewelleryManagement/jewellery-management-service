@@ -14,4 +14,6 @@ public interface ResourceInUserRepository extends JpaRepository<ResourceInUser, 
   Double sumQuantityByResource(@Param("resourceId") UUID resourceId);
 
   ResourceInUser findByResourceId(UUID resourceId);
+
+  ResourceInUser findByResourceIdAndOwnerId(UUID resourceId, UUID ownerId);
 }

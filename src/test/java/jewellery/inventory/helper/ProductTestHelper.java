@@ -52,7 +52,7 @@ public class ProductTestHelper {
         testProduct.setSalePrice(1000);
         testProduct.setResourcesContent(List.of(createResourceInProduct(pearl)));
         testProduct.setProductsContent(null);
-        testProduct.setContent(null);
+        testProduct.setContentOf(null);
         return testProduct;
     }
 

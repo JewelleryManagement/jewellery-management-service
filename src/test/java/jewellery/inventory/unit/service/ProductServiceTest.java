@@ -5,8 +5,8 @@ import static jewellery.inventory.helper.ProductTestHelper.*;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.product.ProductWithoutResourcesException;
-import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
@@ -107,7 +107,7 @@ class ProductServiceTest {
 
     @Test
     void testDeleteProductShouldThrowExceptionWhenProductIsPartOfProduct() {
-        testProduct.setContent(new Product());
+        testProduct.setContentOf(new Product());
         when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
         UUID productId = testProduct.getId();
         assertThrows(ProductIsContentException.class,
@@ -136,7 +136,7 @@ class ProductServiceTest {
 
         when(userRepository.findById(productRequestDto.getOwnerId())).thenReturn(Optional.of(user));
         when(resourceRepository.findById(resourceQuantityRequestDto.getId())).thenReturn(Optional.of(pearl));
-        when(resourceInUserRepository.findByResourceId(pearl.getId()))
+        when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId()))
                 .thenReturn(resourceInUser);
         user.setResourcesOwned(List.of(resourceInUser));
 
@@ -162,7 +162,8 @@ class ProductServiceTest {
     void testCreateProductShouldRemoveResourceFromUserWhenResourceInUserIsZero() {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
-        when(resourceInUserRepository.findByResourceId(pearl.getId())).thenReturn(resourceInUser);
+        when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId()))
+                .thenReturn(resourceInUser);
         resourceInUser.setQuantity(5);
         user.setResourcesOwned(List.of(resourceInUser));
         resourceQuantityRequestDto.setQuantity(5);
@@ -178,7 +179,7 @@ class ProductServiceTest {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
 
         when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
-        when(resourceInUserRepository.findByResourceId(pearl.getId())).thenReturn(resourceInUser);
+        when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId())).thenReturn(resourceInUser);
 
         assertThrows(ResourceInUserNotFoundException.class,
                 () -> productService.createProduct(productRequestDto));
@@ -199,10 +200,10 @@ class ProductServiceTest {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
         resourceInUser.setQuantity(5);
-        when(resourceInUserRepository.findByResourceId(pearl.getId())).thenReturn(resourceInUser);
+        when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId())).thenReturn(resourceInUser);
         resourceQuantityRequestDto.setQuantity(50);
         user.setResourcesOwned(List.of(resourceInUser));
-        assertThrows(NegativeResourceQuantityException.class,
+        assertThrows(InsufficientResourceQuantityException.class,
                 () -> productService.createProduct(productRequestDto));
     }
 
@@ -210,7 +211,8 @@ class ProductServiceTest {
     void testCreateProductShouldThrowExceptionWhenProductToContainNotFound() {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
-        when(resourceInUserRepository.findByResourceId(pearl.getId())).thenReturn(resourceInUser);
+        when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId()))
+                .thenReturn(resourceInUser);
         user.setResourcesOwned(List.of(resourceInUser));
         productRequestDto.setProductsContent(List.of(testProduct.getId()));
 
@@ -223,7 +225,8 @@ class ProductServiceTest {
 
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
-        when(resourceInUserRepository.findByResourceId(pearl.getId())).thenReturn(resourceInUser);
+        when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId()))
+                .thenReturn(resourceInUser);
         user.setResourcesOwned(List.of(resourceInUser));
         when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
 
@@ -242,7 +245,8 @@ class ProductServiceTest {
         productRequestDto.setProductsContent(List.of(UUID.randomUUID()));
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
-        when(resourceInUserRepository.findByResourceId(pearl.getId())).thenReturn(resourceInUser);
+        when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId()))
+                .thenReturn(resourceInUser);
         user.setResourcesOwned(List.of(resourceInUser));
 
         assertThrows(ProductNotFoundException.class,
@@ -252,7 +256,8 @@ class ProductServiceTest {
     @Test
     void testCreateProductShouldThrowExceptionWhenResourceNotFound() {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        assertThrows(ResourceNotFoundException.class,
+        when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
+        assertThrows(ResourceInUserNotFoundException.class,
                 () -> productService.createProduct(productRequestDto));
     }
 
@@ -309,7 +314,7 @@ class ProductServiceTest {
     @Test
     void deleteProductShouldThrowExceptionWhenProductIsPartOfProduct() {
 
-        testProduct.setContent(new Product());
+        testProduct.setContentOf(new Product());
 
         when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
         UUID productId = testProduct.getId();

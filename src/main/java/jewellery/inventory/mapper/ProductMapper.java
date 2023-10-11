@@ -61,10 +61,10 @@ public class ProductMapper {
     }
 
     private void setContentProductToResponse(Product product, ProductResponseDto response) {
-        if (product.getContent() == null) {
+        if (product.getContentOf() == null) {
             response.setContentOf(null);
         } else {
-            response.setContentOf(product.getContent().getId());
+            response.setContentOf(product.getContentOf().getId());
         }
     }
 }

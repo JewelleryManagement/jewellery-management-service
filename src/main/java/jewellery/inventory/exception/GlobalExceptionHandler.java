@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
     return createErrorResponse(HttpStatus.BAD_REQUEST, error);
   }
 
-  @ExceptionHandler({InvalidResourceQuantityException.class, DuplicateException.class, ProductWithoutResourcesException.class})
+  @ExceptionHandler({InvalidResourceQuantityException.class, DuplicateException.class})
   public ResponseEntity<Object> handleBadDataExceptions(RuntimeException ex) {
     return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
   }

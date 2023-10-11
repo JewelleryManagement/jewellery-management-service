@@ -1,6 +1,5 @@
 package jewellery.inventory.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
@@ -27,14 +26,12 @@ public class Product implements Serializable {
     @ElementCollection
     private List<String> authors;
 
-    @JsonIgnore
     @ManyToOne
     private User owner;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<ResourceInProduct> resourcesContent;
 
-    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "content_of")
     private Product contentOf;

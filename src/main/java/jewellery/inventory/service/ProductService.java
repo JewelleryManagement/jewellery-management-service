@@ -3,8 +3,8 @@ package jewellery.inventory.service;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.product.ProductWithoutResourcesException;
-import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
@@ -77,7 +77,7 @@ public class ProductService {
     }
 
     private void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
-        if (product.getContent() != null) {
+        if (product.getContentOf() != null) {
             throw new ProductIsContentException(id);
         }
     }
@@ -91,7 +91,7 @@ public class ProductService {
     private void disassembleProductContent(Product product) {
         if (product.getProductsContent() != null) {
             product.getProductsContent().forEach(content -> {
-                content.setContent(null);
+                content.setContentOf(null);
                 productRepository.save(content);
             });
 
@@ -139,8 +139,8 @@ public class ProductService {
 
         resourcesInProductRequestDto.forEach(resourceQuantityRequestDto -> {
             Resource resource = resourceRepository.findById(resourceQuantityRequestDto.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException(resourceQuantityRequestDto.getId()));
-            ResourceInUser resourceInUser = resourceInUserRepository.findByResourceId(resource.getId());
+                    .orElseThrow(() -> new ResourceInUserNotFoundException(resourceQuantityRequestDto.getId()));
+            ResourceInUser resourceInUser = resourceInUserRepository.findByResourceIdAndOwnerId(resource.getId(), user.getId());
             throwExceptionWhenResourceInUserNotExist(user, resourceInUser, resource, resourcesInUsers);
 
             double quantity = resourceQuantityRequestDto.getQuantity();
@@ -155,17 +155,14 @@ public class ProductService {
 
     private void throwExceptionWhenResourceInUserNotExist(User user, ResourceInUser resourceInUser, Resource resource, List<ResourceInUser> resourcesInUsers) {
 
-        if (resourceInUser == null) {
+        if (resourceInUser == null || !resourcesInUsers.contains(resourceInUser)) {
             throw new ResourceInUserNotFoundException(resource.getId(), user.getId());
-        }
-        if (!resourcesInUsers.contains(resourceInUser)) {
-            throw new ResourceInUserNotFoundException(resourceInUser.getResource().getId(), user.getId());
         }
     }
 
     private void setResourcesToProduct(ResourceInUser resourceInUser, double quantity, ResourceInProduct resourceInProduct, Resource resource, List<ResourceInProduct> resourcesInProducts) {
         if (resourceInUser.getQuantity() < quantity) {
-            throw new NegativeResourceQuantityException(resourceInUser.getQuantity());
+            throw new InsufficientResourceQuantityException(quantity, resourceInUser.getQuantity());
         } else {
             resourceInProduct.setResource(resource);
             resourceInProduct.setQuantity(quantity);
@@ -186,7 +183,7 @@ public class ProductService {
             productsIdInRequest.forEach(productId -> {
                 Product product = productRepository.findById(productId)
                         .orElseThrow(() -> new ProductNotFoundException(productId));
-                product.setContent(parentProduct);
+                product.setContentOf(parentProduct);
                 products.add(product);
             });
         }
