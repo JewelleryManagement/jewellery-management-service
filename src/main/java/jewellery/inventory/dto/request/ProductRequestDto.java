@@ -1,5 +1,6 @@
 package jewellery.inventory.dto.request;
 
+import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import lombok.*;
 
 import java.util.List;
@@ -14,7 +15,7 @@ public class ProductRequestDto {
     private String name;
     private List<String> authors;
     private UUID ownerId;
-    List<ResourceInProductRequestDto> resourcesContent;
+    List<ResourceQuantityRequestDto> resourcesContent;
     private List<UUID> productsContent;
     private String description;
     private double salePrice;

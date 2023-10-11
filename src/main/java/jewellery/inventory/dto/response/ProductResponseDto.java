@@ -1,6 +1,6 @@
 package jewellery.inventory.dto.response;
 
-import jewellery.inventory.dto.response.resource.ResourceInProductResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import lombok.*;
 
 import java.util.List;
@@ -18,10 +18,10 @@ public class ProductResponseDto {
 
     private UserResponseDto owner;
 
-    private List<ResourceInProductResponseDto> resourcesContent;
+    private List<ResourceQuantityResponseDto> resourcesContent;
     private List<ProductResponseDto> productsContent;
 
-    private UUID contentId;
+    private UUID contentOf;
     private String description;
     private double salePrice;
     private boolean isSold;

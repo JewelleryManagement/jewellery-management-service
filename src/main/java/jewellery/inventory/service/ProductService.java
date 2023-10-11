@@ -1,13 +1,13 @@
 package jewellery.inventory.service;
 
 import jewellery.inventory.dto.request.ProductRequestDto;
-import jewellery.inventory.dto.request.ResourceInProductRequestDto;
+import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceInProductResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.*;
-import jewellery.inventory.exception.product.ProductContainsException;
+import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.Product;
@@ -91,7 +91,7 @@ public class ProductService {
 
                 productRepository.deleteById(id);
             } else {
-                throw new ProductContainsException(id);
+                throw new ProductIsContentException(id);
             }
         } else {
             throw new ProductIsSoldException(id);
@@ -120,7 +120,7 @@ public class ProductService {
                 .orElseThrow(() -> new UserNotFoundException(productRequestDto.getOwnerId()));
     }
 
-    private List<ResourceInProduct> getResourceInProducts(User user, List<ResourceInProductRequestDto> resourcesInProductRequestDto) {
+    private List<ResourceInProduct> getResourceInProducts(User user, List<ResourceQuantityRequestDto> resourcesInProductRequestDto) {
         if (resourcesInProductRequestDto == null) {
             throw new ResourcesInProductNotFoundException();
         }
@@ -133,9 +133,9 @@ public class ProductService {
 
         ResourceInProduct resourceInProduct = new ResourceInProduct();
 
-        for (ResourceInProductRequestDto resourceInProductRequestDto : resourcesInProductRequestDto) {
-            Resource resource = resourceRepository.findById(resourceInProductRequestDto.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException(resourceInProductRequestDto.getId()));
+        for (ResourceQuantityRequestDto resourceQuantityRequestDto : resourcesInProductRequestDto) {
+            Resource resource = resourceRepository.findById(resourceQuantityRequestDto.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException(resourceQuantityRequestDto.getId()));
 
             ResourceInUser resourceInUser = resourceInUserRepository.findByResourceId(resource.getId());
             if (resourceInUser == null) {
@@ -146,7 +146,7 @@ public class ProductService {
                 throw new ResourceInUserNotFoundException(resourceInUser.getResource().getId(), user.getId());
             }
 
-            double quantity = resourceInProductRequestDto.getQuantity();
+            double quantity = resourceQuantityRequestDto.getQuantity();
 
             if (resourceInUser.getQuantity() < quantity) {
                 throw new NegativeResourceQuantityException(resourceInUser.getQuantity());
@@ -190,22 +190,22 @@ public class ProductService {
         response.setName(product.getName());
 
         if (product.getContent() == null) {
-            response.setContentId(null);
+            response.setContentOf(null);
         } else {
-            response.setContentId(product.getContent().getId());
+            response.setContentOf(product.getContent().getId());
         }
         if (product.getResourcesContent() == null) {
             response.setResourcesContent(null);
         } else {
             response.setResourcesContent(product.getResourcesContent()
                     .stream().map(res -> {
-                        ResourceInProductResponseDto resourceInProductResponseDto = new ResourceInProductResponseDto();
+                        ResourceQuantityResponseDto resourceQuantityDto = new ResourceQuantityResponseDto();
                         ResourceResponseDto resourceResponseDto = getResourceResponseDto(res);
                         if (resourceResponseDto != null) {
-                            resourceInProductResponseDto.setResource(resourceResponseDto);
-                            resourceInProductResponseDto.setQuantity(res.getQuantity());
+                            resourceQuantityDto.setResource(resourceResponseDto);
+                            resourceQuantityDto.setQuantity(res.getQuantity());
                         }
-                        return resourceInProductResponseDto;
+                        return resourceQuantityDto;
                     }).toList());
         }
 

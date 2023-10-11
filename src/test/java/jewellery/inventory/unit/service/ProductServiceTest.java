@@ -1,14 +1,14 @@
 package jewellery.inventory.unit.service;
 
 import jewellery.inventory.dto.request.ProductRequestDto;
-import jewellery.inventory.dto.request.ResourceInProductRequestDto;
+import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.ProductNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
-import jewellery.inventory.exception.product.ProductContainsException;
+import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.mapper.UserMapper;
@@ -60,7 +60,7 @@ class ProductServiceTest {
     private Pearl pearl;
     private ResourceInUser resourceInUser;
     private ProductRequestDto productRequestDto;
-    private ResourceInProductRequestDto resourceInProductRequestDto;
+    private ResourceQuantityRequestDto resourceQuantityRequestDto;
 
     @BeforeEach
     void setUp() {
@@ -96,16 +96,16 @@ class ProductServiceTest {
         testProduct.setProductsContent(null);
         testProduct.setContent(null);
 
-        resourceInProductRequestDto = new ResourceInProductRequestDto();
-        resourceInProductRequestDto.setId(pearl.getId());
-        resourceInProductRequestDto.setQuantity(5);
+        resourceQuantityRequestDto = new ResourceQuantityRequestDto();
+        resourceQuantityRequestDto.setId(pearl.getId());
+        resourceQuantityRequestDto.setQuantity(5);
 
         productRequestDto = new ProductRequestDto();
         productRequestDto.setOwnerId(user.getId());
         productRequestDto.setName("TestProductDto");
         productRequestDto.setAuthors(List.of("Ivan", "Petar"));
         productRequestDto.setDescription("This is test product");
-        productRequestDto.setResourcesContent(List.of(resourceInProductRequestDto));
+        productRequestDto.setResourcesContent(List.of(resourceQuantityRequestDto));
         productRequestDto.setSalePrice(10000);
 
     }
@@ -146,7 +146,7 @@ class ProductServiceTest {
         testProduct.setContent(new Product());
         when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
         UUID productId = testProduct.getId();
-        assertThrows(ProductContainsException.class,
+        assertThrows(ProductIsContentException.class,
                 () -> productService.deleteProduct(productId));
     }
 
@@ -171,7 +171,7 @@ class ProductServiceTest {
     void createProductSuccessfully() {
 
         when(userRepository.findById(productRequestDto.getOwnerId())).thenReturn(Optional.of(user));
-        when(resourceRepository.findById(resourceInProductRequestDto.getId())).thenReturn(Optional.of(pearl));
+        when(resourceRepository.findById(resourceQuantityRequestDto.getId())).thenReturn(Optional.of(pearl));
         when(resourceInUserRepository.findByResourceId(pearl.getId()))
                 .thenReturn(resourceInUser);
 
@@ -198,7 +198,7 @@ class ProductServiceTest {
         when(resourceInUserRepository.findByResourceId(pearl.getId())).thenReturn(resourceInUser);
         resourceInUser.setQuantity(5);
         user.setResourcesOwned(List.of(resourceInUser));
-        resourceInProductRequestDto.setQuantity(5);
+        resourceQuantityRequestDto.setQuantity(5);
 
         productService.createProduct(productRequestDto);
 
@@ -233,7 +233,7 @@ class ProductServiceTest {
         when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
         resourceInUser.setQuantity(5);
         when(resourceInUserRepository.findByResourceId(pearl.getId())).thenReturn(resourceInUser);
-        resourceInProductRequestDto.setQuantity(50);
+        resourceQuantityRequestDto.setQuantity(50);
 
         assertThrows(NegativeResourceQuantityException.class,
                 () -> productService.createProduct(productRequestDto));
@@ -327,7 +327,7 @@ class ProductServiceTest {
 
         when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
         UUID productId = testProduct.getId();
-        assertThrows(ProductContainsException.class,
+        assertThrows(ProductIsContentException.class,
                 () -> productService.deleteProduct(productId));
     }
 

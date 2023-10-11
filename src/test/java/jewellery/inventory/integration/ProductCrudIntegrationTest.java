@@ -1,7 +1,7 @@
 package jewellery.inventory.integration;
 
 import jewellery.inventory.dto.request.ProductRequestDto;
-import jewellery.inventory.dto.request.ResourceInProductRequestDto;
+import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
@@ -169,7 +169,7 @@ class ProductCrudIntegrationTest {
     @NotNull
     private static ProductRequestDto getProductRequestDto(ResourcesInUserResponseDto resourcesInUser, User user) {
 
-        List<ResourceInProductRequestDto> listOfResourcesInProduct = getResourceInProductRequestDtos(resourcesInUser);
+        List<ResourceQuantityRequestDto> listOfResourcesInProduct = getResourceInProductRequestDtos(resourcesInUser);
 
         ProductRequestDto productRequestDto = new ProductRequestDto();
         productRequestDto.setName("TestProduct");
@@ -183,14 +183,14 @@ class ProductCrudIntegrationTest {
     }
 
     @NotNull
-    private static List<ResourceInProductRequestDto> getResourceInProductRequestDtos(ResourcesInUserResponseDto resourcesInUser) {
-        ResourceInProductRequestDto resourceInProductRequestDto = new ResourceInProductRequestDto();
-        List<ResourceInProductRequestDto> listOfResourcesInProduct = new ArrayList<>();
+    private static List<ResourceQuantityRequestDto> getResourceInProductRequestDtos(ResourcesInUserResponseDto resourcesInUser) {
+        ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
+        List<ResourceQuantityRequestDto> listOfResourcesInProduct = new ArrayList<>();
         resourcesInUser.getResourcesAndQuantities().forEach(r ->
         {
-            resourceInProductRequestDto.setId(r.getResource().getId());
-            resourceInProductRequestDto.setQuantity(5);
-            listOfResourcesInProduct.add(resourceInProductRequestDto);
+            resourceQuantityRequestDto.setId(r.getResource().getId());
+            resourceQuantityRequestDto.setQuantity(5);
+            listOfResourcesInProduct.add(resourceQuantityRequestDto);
         });
         return listOfResourcesInProduct;
     }

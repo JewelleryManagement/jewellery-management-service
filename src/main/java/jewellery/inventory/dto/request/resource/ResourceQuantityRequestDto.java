@@ -1,4 +1,4 @@
-package jewellery.inventory.dto.request;
+package jewellery.inventory.dto.request.resource;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +9,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class ResourceInProductRequestDto {
+public class ResourceQuantityRequestDto {
 
     private UUID id;
     private double quantity;

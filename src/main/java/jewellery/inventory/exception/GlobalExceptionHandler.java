@@ -11,7 +11,7 @@ import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQu
 import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.not_found.ResourcesInProductNotFoundException;
-import jewellery.inventory.exception.product.ProductContainsException;
+import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
     return createErrorResponse(HttpStatus.BAD_REQUEST, fieldErrorsMap);
   }
 
-  @ExceptionHandler({NotFoundException.class, ResourceInUserNotFoundException.class})
+  @ExceptionHandler({NotFoundException.class, ResourceInUserNotFoundException.class, ResourcesInProductNotFoundException.class})
   public ResponseEntity<Object> handleNotFoundException(NotFoundException ex) {
     return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
   }
@@ -49,18 +49,8 @@ public class GlobalExceptionHandler {
     return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
 
-  @ExceptionHandler({ResourcesInProductNotFoundException.class})
-  public ResponseEntity<Object> handleProductCantBeCreatedException(NotFoundException ex) {
-    return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
-  }
-
-  @ExceptionHandler({ProductContainsException.class})
-  public ResponseEntity<Object> handleProductContainsException(RuntimeException ex) {
-    return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage());
-  }
-
-  @ExceptionHandler({ProductIsSoldException.class})
-  public ResponseEntity<Object> handleProductIsSoldException(RuntimeException ex) {
+  @ExceptionHandler({ProductIsContentException.class, ProductIsSoldException.class})
+  public ResponseEntity<Object> handleEntityConstraintConflict (RuntimeException ex) {
     return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage());
   }
 
