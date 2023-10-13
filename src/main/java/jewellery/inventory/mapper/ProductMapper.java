@@ -41,10 +41,7 @@ public class ProductMapper {
   private List<UserResponseDto> getAuthorsResponse(Product product) {
     List<User> authors = product.getAuthors();
     List<UserResponseDto> response = new ArrayList<>();
-    authors.forEach(
-        author -> {
-          response.add(userMapper.toUserResponse(author));
-        });
+    authors.forEach(author -> response.add(userMapper.toUserResponse(author)));
     return response;
   }
 

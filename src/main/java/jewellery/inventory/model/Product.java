@@ -6,7 +6,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.validation.constraints.NotNull;
 import jewellery.inventory.model.resource.ResourceInProduct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
