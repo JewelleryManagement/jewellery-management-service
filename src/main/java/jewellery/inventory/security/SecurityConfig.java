@@ -29,6 +29,7 @@ public class SecurityConfig {
   private final ApplicationContext applicationContext;
 
   private static final String AUTH_ENDPOINT = "/login";
+  private static final String ERROR_ENDPOINT = "/error/**";
 
   @Value("${cors.allowedOrigins}")
   private String[] allowedOrigins;
@@ -61,7 +62,11 @@ public class SecurityConfig {
 
     http.authorizeHttpRequests(
         authorize ->
-            authorize.requestMatchers(AUTH_ENDPOINT).permitAll().anyRequest().hasRole(ADMIN.name()));
+            authorize
+                .requestMatchers(AUTH_ENDPOINT, ERROR_ENDPOINT)
+                .permitAll()
+                .anyRequest()
+                .hasRole(ADMIN.name()));
   }
 
   @Bean

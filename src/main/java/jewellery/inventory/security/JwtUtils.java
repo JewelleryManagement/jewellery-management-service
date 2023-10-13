@@ -2,10 +2,10 @@ package jewellery.inventory.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 import io.jsonwebtoken.security.WeakKeyException;
 import java.security.Key;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
@@ -38,7 +38,7 @@ public class JwtUtils {
           .getBody();
     } catch (ExpiredJwtException e) {
       throw new JwtExpiredException();
-    } catch (SignatureException e) {
+    } catch (JwtException e) {
       throw new JwtIsNotValidException(e);
     }
   }
