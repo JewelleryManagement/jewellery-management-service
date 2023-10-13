@@ -12,16 +12,18 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ProductResponseDto {
 
-    private UUID id;
-    private List<String> authors;
+  private UUID id;
+  private List<String> authors;
 
-    private UserResponseDto owner;
+  private UserResponseDto owner;
 
-    private List<ResourceQuantityResponseDto> resourcesContent;
-    private List<ProductResponseDto> productsContent;
+  private List<ResourceQuantityResponseDto> resourcesContent;
+  private List<ProductResponseDto> productsContent;
 
-    private UUID contentOf;
-    private String description;
-    private double salePrice;
-    private boolean isSold;
+  private UUID contentOf;
+  private String description;
+  private double salePrice;
+  private boolean isSold;
+  private String catalogNumber;
+  private String productionNumber;
 }

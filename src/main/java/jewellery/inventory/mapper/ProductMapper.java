@@ -11,56 +11,61 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ProductMapper {
 
-    private final UserMapper userMapper;
-    private final ResourceMapper resourceMapper;
+  private final UserMapper userMapper;
+  private final ResourceMapper resourceMapper;
 
-    public ProductResponseDto mapToProductResponseDto(Product product) {
+  public ProductResponseDto mapToProductResponseDto(Product product) {
 
-        ProductResponseDto productResponseDto = new ProductResponseDto();
-        productResponseDto.setId(product.getId());
-        productResponseDto.setSold(product.isSold());
-        productResponseDto.setAuthors(product.getAuthors());
-        productResponseDto.setDescription(product.getDescription());
-        productResponseDto.setSalePrice(product.getSalePrice());
-        productResponseDto.setOwner(userMapper.toUserResponse(product.getOwner()));
+    ProductResponseDto productResponseDto = new ProductResponseDto();
+    productResponseDto.setId(product.getId());
+    productResponseDto.setSold(product.isSold());
+    productResponseDto.setAuthors(product.getAuthors());
+    productResponseDto.setDescription(product.getDescription());
+    productResponseDto.setSalePrice(product.getSalePrice());
+    productResponseDto.setOwner(userMapper.toUserResponse(product.getOwner()));
+    productResponseDto.setProductionNumber(product.getProductionNumber());
+    productResponseDto.setCatalogNumber(product.getCatalogNumber());
 
-        setContentProductToResponse(product, productResponseDto);
-        setResourcesToResponse(product, productResponseDto);
-        setProductsToResponse(product, productResponseDto);
+    setContentProductToResponse(product, productResponseDto);
+    setResourcesToResponse(product, productResponseDto);
+    setProductsToResponse(product, productResponseDto);
 
-        return productResponseDto;
+    return productResponseDto;
+  }
+
+  private void setProductsToResponse(Product product, ProductResponseDto response) {
+    if (product.getProductsContent() == null) {
+      response.setProductsContent(null);
+    } else {
+      response.setProductsContent(
+          product.getProductsContent().stream().map(this::mapToProductResponseDto).toList());
     }
+  }
 
-    private void setProductsToResponse(Product product, ProductResponseDto response) {
-        if (product.getProductsContent() == null) {
-            response.setProductsContent(null);
-        } else {
-            response.setProductsContent(product.getProductsContent()
-                    .stream().map(this::mapToProductResponseDto)
-                    .toList());
-        }
+  private void setResourcesToResponse(Product product, ProductResponseDto response) {
+
+    response.setResourcesContent(
+        product.getResourcesContent().stream()
+            .map(
+                res -> {
+                  ResourceResponseDto resourceResponseDto =
+                      resourceMapper.toResourceResponseDto(res);
+
+                  ResourceQuantityResponseDto resourceQuantityResponseDto =
+                      new ResourceQuantityResponseDto();
+                  resourceQuantityResponseDto.setResource(resourceResponseDto);
+                  resourceQuantityResponseDto.setQuantity(res.getQuantity());
+
+                  return resourceQuantityResponseDto;
+                })
+            .toList());
+  }
+
+  private void setContentProductToResponse(Product product, ProductResponseDto response) {
+    if (product.getContentOf() == null) {
+      response.setContentOf(null);
+    } else {
+      response.setContentOf(product.getContentOf().getId());
     }
-
-    private void setResourcesToResponse(Product product, ProductResponseDto response) {
-
-        response.setResourcesContent(product.getResourcesContent()
-                .stream().map(res -> {
-                    ResourceResponseDto resourceResponseDto = resourceMapper.toResourceResponseDto(res);
-
-                    ResourceQuantityResponseDto resourceQuantityResponseDto = new ResourceQuantityResponseDto();
-                    resourceQuantityResponseDto.setResource(resourceResponseDto);
-                    resourceQuantityResponseDto.setQuantity(res.getQuantity());
-
-                    return resourceQuantityResponseDto;
-                }).toList());
-
-    }
-
-    private void setContentProductToResponse(Product product, ProductResponseDto response) {
-        if (product.getContentOf() == null) {
-            response.setContentOf(null);
-        } else {
-            response.setContentOf(product.getContentOf().getId());
-        }
-    }
+  }
 }

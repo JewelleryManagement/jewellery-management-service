@@ -16,26 +16,25 @@ import lombok.Setter;
 @Setter
 @RequiredArgsConstructor
 public class Product implements Serializable {
-    @Id
-    @GeneratedValue
-    private UUID id;
+  @Id @GeneratedValue private UUID id;
 
-    @ElementCollection
-    private List<String> authors;
+  @ElementCollection private List<String> authors;
 
-    @ManyToOne
-    private User owner;
+  @ManyToOne private User owner;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    private List<ResourceInProduct> resourcesContent;
+  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+  private List<ResourceInProduct> resourcesContent;
 
-    @ManyToOne
-    @JoinColumn(name = "content_of")
-    private Product contentOf;
-    @OneToMany(mappedBy = "contentOf", cascade = CascadeType.ALL)
-    private List<Product> productsContent;
+  @ManyToOne
+  @JoinColumn(name = "content_of")
+  private Product contentOf;
 
-    private String description;
-    private double salePrice;
-    private boolean isSold;
+  @OneToMany(mappedBy = "contentOf", cascade = CascadeType.ALL)
+  private List<Product> productsContent;
+
+  private String catalogNumber;
+  private String productionNumber;
+  private String description;
+  private double salePrice;
+  private boolean isSold;
 }

@@ -58,6 +58,8 @@ public class ProductService {
     product.setSold(false);
     product.setDescription(productRequestDto.getDescription());
     product.setSalePrice(productRequestDto.getSalePrice());
+    product.setProductionNumber(productRequestDto.getProductionNumber());
+    product.setCatalogNumber(productRequestDto.getCatalogNumber());
     return product;
   }
 
