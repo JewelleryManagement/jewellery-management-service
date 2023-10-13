@@ -51,16 +51,28 @@ public class ProductService {
     return product;
   }
 
-  private static Product getProduct(ProductRequestDto productRequestDto, User user) {
+  private Product getProduct(ProductRequestDto productRequestDto, User user) {
     Product product = new Product();
     product.setOwner(user);
-    product.setAuthors(productRequestDto.getAuthors());
+    product.setAuthors(getAuthors(productRequestDto));
     product.setSold(false);
     product.setDescription(productRequestDto.getDescription());
     product.setSalePrice(productRequestDto.getSalePrice());
     product.setProductionNumber(productRequestDto.getProductionNumber());
     product.setCatalogNumber(productRequestDto.getCatalogNumber());
     return product;
+  }
+
+  private List<User> getAuthors(ProductRequestDto productRequestDto) {
+    List<UUID> authorsIds = productRequestDto.getAuthors();
+    List<User> authors = new ArrayList<>();
+    authorsIds.forEach(
+        id -> {
+          User author =
+              userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+          authors.add(author);
+        });
+    return authors;
   }
 
   private void addProductsContentToProduct(ProductRequestDto productRequestDto, Product product) {

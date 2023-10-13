@@ -16,79 +16,85 @@ import java.util.UUID;
 
 public class ProductTestHelper {
 
-    public static ResourceInUser createResourceInUser(User user, Resource pearl) {
-        ResourceInUser resourceInUser = new ResourceInUser();
-        resourceInUser.setId(UUID.randomUUID());
-        resourceInUser.setOwner(user);
-        resourceInUser.setResource(pearl);
-        resourceInUser.setQuantity(20);
-        return resourceInUser;
-    }
+  public static ResourceInUser createResourceInUser(User user, Resource pearl) {
+    ResourceInUser resourceInUser = new ResourceInUser();
+    resourceInUser.setId(UUID.randomUUID());
+    resourceInUser.setOwner(user);
+    resourceInUser.setResource(pearl);
+    resourceInUser.setQuantity(20);
+    return resourceInUser;
+  }
 
-    public static ProductRequestDto createProductRequestDto(User user, ResourceQuantityRequestDto resourceQuantityRequestDto) {
-        ProductRequestDto productRequestDto = new ProductRequestDto();
-        productRequestDto.setOwnerId(user.getId());
-        productRequestDto.setAuthors(List.of("Ivan", "Petar"));
-        productRequestDto.setDescription("This is test product");
-        productRequestDto.setResourcesContent(List.of(resourceQuantityRequestDto));
-        productRequestDto.setSalePrice(10000);
-        return productRequestDto;
-    }
+  public static ProductRequestDto createProductRequestDto(
+      User user, ResourceQuantityRequestDto resourceQuantityRequestDto) {
+    ProductRequestDto productRequestDto = new ProductRequestDto();
+    productRequestDto.setAuthors(List.of(user.getId()));
+    productRequestDto.setOwnerId(user.getId());
+    productRequestDto.setDescription("This is test product");
+    productRequestDto.setResourcesContent(List.of(resourceQuantityRequestDto));
+    productRequestDto.setSalePrice(10000);
+    return productRequestDto;
+  }
 
-    @NotNull
-    public static ProductRequestDto getProductRequestDto(ResourcesInUserResponseDto resourcesInUser, User user) {
+  @NotNull
+  public static ProductRequestDto getProductRequestDto(
+      ResourcesInUserResponseDto resourcesInUser, User user) {
 
-        List<ResourceQuantityRequestDto> listOfResourcesInProduct = getResourceInProductRequestDtos(resourcesInUser);
+    List<ResourceQuantityRequestDto> listOfResourcesInProduct =
+        getResourceInProductRequestDtos(resourcesInUser);
 
-        ProductRequestDto productRequestDto = new ProductRequestDto();
-        productRequestDto.setAuthors(List.of("TestAuthors"));
-        productRequestDto.setDescription("Test");
-        productRequestDto.setOwnerId(user.getId());
-        productRequestDto.setSalePrice(50);
-        productRequestDto.setResourcesContent(listOfResourcesInProduct);
+    ProductRequestDto productRequestDto = new ProductRequestDto();
+    productRequestDto.setDescription("Test");
+    productRequestDto.setOwnerId(user.getId());
+    productRequestDto.setAuthors(List.of(user.getId()));
+    productRequestDto.setSalePrice(50);
+    productRequestDto.setResourcesContent(listOfResourcesInProduct);
 
-        return productRequestDto;
-    }
+    return productRequestDto;
+  }
 
-    @NotNull
-    private static List<ResourceQuantityRequestDto> getResourceInProductRequestDtos(ResourcesInUserResponseDto resourcesInUser) {
-        ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
-        List<ResourceQuantityRequestDto> listOfResourcesInProduct = new ArrayList<>();
-        resourcesInUser.getResourcesAndQuantities().forEach(r ->
-        {
-            resourceQuantityRequestDto.setId(r.getResource().getId());
-            resourceQuantityRequestDto.setQuantity(5);
-            listOfResourcesInProduct.add(resourceQuantityRequestDto);
-        });
-        return listOfResourcesInProduct;
-    }
+  @NotNull
+  private static List<ResourceQuantityRequestDto> getResourceInProductRequestDtos(
+      ResourcesInUserResponseDto resourcesInUser) {
+    ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
+    List<ResourceQuantityRequestDto> listOfResourcesInProduct = new ArrayList<>();
+    resourcesInUser
+        .getResourcesAndQuantities()
+        .forEach(
+            r -> {
+              resourceQuantityRequestDto.setId(r.getResource().getId());
+              resourceQuantityRequestDto.setQuantity(5);
+              listOfResourcesInProduct.add(resourceQuantityRequestDto);
+            });
+    return listOfResourcesInProduct;
+  }
 
-    public static ResourceQuantityRequestDto createResourceQuantityRequestDto(Resource pearl) {
-        ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
-        resourceQuantityRequestDto.setId(pearl.getId());
-        resourceQuantityRequestDto.setQuantity(5);
-        return resourceQuantityRequestDto;
-    }
+  public static ResourceQuantityRequestDto createResourceQuantityRequestDto(Resource pearl) {
+    ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
+    resourceQuantityRequestDto.setId(pearl.getId());
+    resourceQuantityRequestDto.setQuantity(5);
+    return resourceQuantityRequestDto;
+  }
 
-    public static Product createTestProduct(User user, Resource pearl) {
-        Product testProduct = new Product();
-        testProduct.setId(UUID.randomUUID());
-        testProduct.setOwner(user);
-        testProduct.setAuthors(List.of("Gosho"));
-        testProduct.setSold(false);
-        testProduct.setDescription("This is Test Product");
-        testProduct.setSalePrice(1000);
-        testProduct.setResourcesContent(List.of(createResourceInProduct(pearl)));
-        testProduct.setProductsContent(null);
-        testProduct.setContentOf(null);
-        return testProduct;
-    }
+  public static Product createTestProduct(User user, Resource pearl) {
+    Product testProduct = new Product();
+    testProduct.setAuthors(List.of(user));
+    testProduct.setId(UUID.randomUUID());
+    testProduct.setOwner(user);
+    testProduct.setSold(false);
+    testProduct.setDescription("This is Test Product");
+    testProduct.setSalePrice(1000);
+    testProduct.setResourcesContent(List.of(createResourceInProduct(pearl)));
+    testProduct.setProductsContent(null);
+    testProduct.setContentOf(null);
+    return testProduct;
+  }
 
-    @NotNull
-    private static ResourceInProduct createResourceInProduct(Resource pearl) {
-        ResourceInProduct resourceInProduct = new ResourceInProduct();
-        resourceInProduct.setResource(pearl);
-        resourceInProduct.setQuantity(5);
-        return resourceInProduct;
-    }
+  @NotNull
+  private static ResourceInProduct createResourceInProduct(Resource pearl) {
+    ResourceInProduct resourceInProduct = new ResourceInProduct();
+    resourceInProduct.setResource(pearl);
+    resourceInProduct.setQuantity(5);
+    return resourceInProduct;
+  }
 }

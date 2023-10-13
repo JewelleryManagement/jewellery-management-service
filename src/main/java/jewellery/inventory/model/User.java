@@ -14,6 +14,9 @@ import lombok.Setter;
 public class User {
   @Id @GeneratedValue private UUID id;
 
+  @ManyToMany(mappedBy = "authors")
+  private List<Product> createdProducts;
+
   @Column(unique = true)
   private String name;
 

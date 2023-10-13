@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.validation.constraints.NotNull;
 import jewellery.inventory.model.resource.ResourceInProduct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,12 @@ import lombok.Setter;
 public class Product implements Serializable {
   @Id @GeneratedValue private UUID id;
 
-  @ElementCollection private List<String> authors;
+  @ManyToMany
+  @JoinTable(
+      name = "product_author",
+      joinColumns = @JoinColumn(name = "product_id"),
+      inverseJoinColumns = @JoinColumn(name = "user_id"))
+  private List<User> authors;
 
   @ManyToOne private User owner;
 

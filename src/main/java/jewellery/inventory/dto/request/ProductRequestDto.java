@@ -13,7 +13,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ProductRequestDto {
 
-  private List<String> authors;
+  @NotNull
+  private List<UUID> authors;
   private UUID ownerId;
   @NotNull List<ResourceQuantityRequestDto> resourcesContent;
   private List<UUID> productsContent;

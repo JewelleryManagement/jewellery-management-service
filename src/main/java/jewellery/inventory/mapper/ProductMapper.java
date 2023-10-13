@@ -1,11 +1,16 @@
 package jewellery.inventory.mapper;
 
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.model.Product;
+import jewellery.inventory.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -19,7 +24,7 @@ public class ProductMapper {
     ProductResponseDto productResponseDto = new ProductResponseDto();
     productResponseDto.setId(product.getId());
     productResponseDto.setSold(product.isSold());
-    productResponseDto.setAuthors(product.getAuthors());
+    productResponseDto.setAuthors(getAuthorsResponse(product));
     productResponseDto.setDescription(product.getDescription());
     productResponseDto.setSalePrice(product.getSalePrice());
     productResponseDto.setOwner(userMapper.toUserResponse(product.getOwner()));
@@ -31,6 +36,16 @@ public class ProductMapper {
     setProductsToResponse(product, productResponseDto);
 
     return productResponseDto;
+  }
+
+  private List<UserResponseDto> getAuthorsResponse(Product product) {
+    List<User> authors = product.getAuthors();
+    List<UserResponseDto> response = new ArrayList<>();
+    authors.forEach(
+        author -> {
+          response.add(userMapper.toUserResponse(author));
+        });
+    return response;
   }
 
   private void setProductsToResponse(Product product, ProductResponseDto response) {
