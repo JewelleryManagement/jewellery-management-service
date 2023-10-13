@@ -33,15 +33,10 @@ public class ProductService {
 
   @Transactional
   public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
-
     User owner = getUser(productRequestDto.getOwnerId());
-
     Product product = createProductWithoutResourcesAndProducts(productRequestDto, owner);
-
     addProductsContentToProduct(productRequestDto, product);
-
     addResourcesToProduct(productRequestDto, owner, product);
-
     return productMapper.mapToProductResponseDto(product);
   }
 
@@ -67,9 +62,13 @@ public class ProductService {
   }
 
   private void addProductsContentToProduct(ProductRequestDto productRequestDto, Product product) {
-    product.setProductsContent(
-        getProductsInProduct(productRequestDto.getProductsContent(), product));
-    productRepository.save(product);
+    if (productRequestDto.getProductsContent() == null) {
+      product.setProductsContent(null);
+    } else {
+      product.setProductsContent(
+          getProductsInProduct(productRequestDto.getProductsContent(), product));
+      productRepository.save(product);
+    }
   }
 
   private void addResourcesToProduct(
@@ -103,9 +102,9 @@ public class ProductService {
   }
 
   private ResourceInUser getResourceInUser(User owner, UUID resourceId) {
-    return resourceInUserRepository.findByResourceIdAndOwnerId(resourceId, owner.getId());
-    // TODO: make findByResourceIdAndOwnerId return Optional
-    // .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, owner.getId()));
+    return resourceInUserRepository
+        .findByResourceIdAndOwnerId(resourceId, owner.getId())
+        .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, owner.getId()));
   }
 
   private ResourceInProduct createResourceInProduct(
@@ -177,10 +176,10 @@ public class ProductService {
     resourcesInProduct.forEach(
         resourceInProduct ->
             resourceInUserService.addResourceToUser(
-                getResourceInUserRequst(owner, resourceInProduct)));
+                getResourceInUserRequest(owner, resourceInProduct)));
   }
 
-  private ResourceInUserRequestDto getResourceInUserRequst(
+  private ResourceInUserRequestDto getResourceInUserRequest(
       User owner, ResourceInProduct resourceInProduct) {
 
     return ResourceInUserRequestDto.builder()

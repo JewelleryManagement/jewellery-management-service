@@ -1,5 +1,6 @@
 package jewellery.inventory.repository;
 
+import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.model.ResourceInUser;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,5 +16,5 @@ public interface ResourceInUserRepository extends JpaRepository<ResourceInUser, 
 
   ResourceInUser findByResourceId(UUID resourceId);
 
-  ResourceInUser findByResourceIdAndOwnerId(UUID resourceId, UUID ownerId);
+  Optional<ResourceInUser> findByResourceIdAndOwnerId(UUID resourceId, UUID ownerId);
 }
