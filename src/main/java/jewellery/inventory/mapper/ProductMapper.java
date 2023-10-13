@@ -23,7 +23,6 @@ public class ProductMapper {
         productResponseDto.setDescription(product.getDescription());
         productResponseDto.setSalePrice(product.getSalePrice());
         productResponseDto.setOwner(userMapper.toUserResponse(product.getOwner()));
-        productResponseDto.setName(product.getName());
 
         setContentProductToResponse(product, productResponseDto);
         setResourcesToResponse(product, productResponseDto);

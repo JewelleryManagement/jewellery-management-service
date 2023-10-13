@@ -114,8 +114,6 @@ class ProductCrudIntegrationTest {
         ProductResponseDto productResponseDto = response.getBody();
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-
-        assertEquals(productRequestDto.getName(), Objects.requireNonNull(productResponseDto).getName());
         assertEquals(productRequestDto.getResourcesContent().get(0).getId(), productResponseDto.getResourcesContent().get(0).getResource().getId());
     }
 

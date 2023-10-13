@@ -13,7 +13,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ProductRequestDto {
 
-    private String name;
     private List<String> authors;
     private UUID ownerId;
     @NotNull

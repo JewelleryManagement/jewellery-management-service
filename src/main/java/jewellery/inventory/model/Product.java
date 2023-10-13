@@ -20,9 +20,6 @@ public class Product implements Serializable {
     @GeneratedValue
     private UUID id;
 
-    @Column(name = "name")
-    private String name;
-
     @ElementCollection
     private List<String> authors;
 

@@ -28,7 +28,6 @@ public class ProductTestHelper {
     public static ProductRequestDto createProductRequestDto(User user, ResourceQuantityRequestDto resourceQuantityRequestDto) {
         ProductRequestDto productRequestDto = new ProductRequestDto();
         productRequestDto.setOwnerId(user.getId());
-        productRequestDto.setName("TestProductDto");
         productRequestDto.setAuthors(List.of("Ivan", "Petar"));
         productRequestDto.setDescription("This is test product");
         productRequestDto.setResourcesContent(List.of(resourceQuantityRequestDto));
@@ -42,7 +41,6 @@ public class ProductTestHelper {
         List<ResourceQuantityRequestDto> listOfResourcesInProduct = getResourceInProductRequestDtos(resourcesInUser);
 
         ProductRequestDto productRequestDto = new ProductRequestDto();
-        productRequestDto.setName("TestProduct");
         productRequestDto.setAuthors(List.of("TestAuthors"));
         productRequestDto.setDescription("Test");
         productRequestDto.setOwnerId(user.getId());
@@ -76,7 +74,6 @@ public class ProductTestHelper {
         Product testProduct = new Product();
         testProduct.setId(UUID.randomUUID());
         testProduct.setOwner(user);
-        testProduct.setName("TestProduct");
         testProduct.setAuthors(List.of("Gosho"));
         testProduct.setSold(false);
         testProduct.setDescription("This is Test Product");

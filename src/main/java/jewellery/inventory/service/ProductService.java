@@ -216,7 +216,6 @@ public class ProductService {
         Product product = new Product();
 
         product.setOwner(user);
-        product.setName(productRequestDto.getName());
         product.setAuthors(productRequestDto.getAuthors());
         product.setSold(false);
         product.setDescription(productRequestDto.getDescription());
