@@ -1,9 +1,9 @@
 package jewellery.inventory.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
-
 import jewellery.inventory.dto.ResourceQuantityDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
@@ -19,18 +19,21 @@ import org.springframework.web.bind.annotation.*;
 public class ResourceController {
   private final ResourceService resourceService;
 
+  @Operation(summary = "Get all resources")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping
   public List<ResourceResponseDto> getAllResources() {
     return resourceService.getAllResources();
   }
 
+  @Operation(summary = "Get resource by resource id")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")
   public ResourceResponseDto getResourceById(@PathVariable("id") UUID id) {
     return resourceService.getResourceById(id);
   }
 
+  @Operation(summary = "Create new resource")
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
   public ResourceResponseDto createResource(
@@ -39,6 +42,7 @@ public class ResourceController {
     return resourceService.createResource(resourceRequestDto);
   }
 
+  @Operation(summary = "Update resource by resource id")
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{id}")
   public ResourceResponseDto updateResource(
@@ -46,18 +50,21 @@ public class ResourceController {
     return resourceService.updateResource(id, resourceRequestDto);
   }
 
+  @Operation(summary = "Delete resource by resource id")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")
   public void deleteResourceById(@PathVariable("id") UUID id) {
     resourceService.deleteResourceById(id);
   }
 
+  @Operation(summary = "Get resource quantity by resource id")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/quantity/{id}")
   public ResourceQuantityDto getResourceQuantityById(@PathVariable("id") UUID id) {
     return resourceService.getResourceQuantity(id);
   }
 
+  @Operation(summary = "Get all resource quantities")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/quantity")
   public List<ResourceQuantityDto> getAllResourceQuantities() {

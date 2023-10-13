@@ -1,5 +1,8 @@
 package jewellery.inventory.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -26,24 +29,32 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
   private final UserService userService;
 
+  @Operation(summary = "Get all users")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping
   public List<UserResponseDto> getAllUsers() {
     return userService.getAllUsers();
   }
 
+  @Operation(summary = "Get user by id")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")
   public UserResponseDto getUser(@PathVariable UUID id) {
     return userService.getUser(id);
   }
 
+  @Operation(summary = "Create new user")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "201", description = "User created successfully"),
+      @ApiResponse(responseCode = "400", description = "Validation failed")
+  })
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
   public UserResponseDto createUser(@Valid @RequestBody UserRequestDto newUser) {
     return userService.createUser(newUser);
   }
 
+  @Operation(summary = "Update user by id")
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{id}")
   public UserResponseDto updateUser(
@@ -51,6 +62,7 @@ public class UserController {
     return userService.updateUser(userRequest, id);
   }
 
+  @Operation(summary = "Delete user by id")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")
   public void deleteUser(@PathVariable UUID id) {
