@@ -3,7 +3,6 @@ package jewellery.inventory.mapper;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
-import jewellery.inventory.exception.product.ProductWithoutResourcesException;
 import jewellery.inventory.model.Product;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -44,20 +43,18 @@ public class ProductMapper {
     }
 
     private void setResourcesToResponse(Product product, ProductResponseDto response) {
-        if (product.getResourcesContent() == null) {
-            throw new ProductWithoutResourcesException();
-        } else {
-            response.setResourcesContent(product.getResourcesContent()
-                    .stream().map(res -> {
-                        ResourceResponseDto resourceResponseDto = resourceMapper.toResourceResponseDto(res);
 
-                        ResourceQuantityResponseDto resourceQuantityResponseDto = new ResourceQuantityResponseDto();
-                        resourceQuantityResponseDto.setResource(resourceResponseDto);
-                        resourceQuantityResponseDto.setQuantity(res.getQuantity());
+        response.setResourcesContent(product.getResourcesContent()
+                .stream().map(res -> {
+                    ResourceResponseDto resourceResponseDto = resourceMapper.toResourceResponseDto(res);
 
-                        return resourceQuantityResponseDto;
-                    }).toList());
-        }
+                    ResourceQuantityResponseDto resourceQuantityResponseDto = new ResourceQuantityResponseDto();
+                    resourceQuantityResponseDto.setResource(resourceResponseDto);
+                    resourceQuantityResponseDto.setQuantity(res.getQuantity());
+
+                    return resourceQuantityResponseDto;
+                }).toList());
+
     }
 
     private void setContentProductToResponse(Product product, ProductResponseDto response) {

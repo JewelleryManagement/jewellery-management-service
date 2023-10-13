@@ -12,7 +12,6 @@ import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
-import jewellery.inventory.exception.product.ProductWithoutResourcesException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -33,7 +32,7 @@ public class GlobalExceptionHandler {
     return createErrorResponse(HttpStatus.BAD_REQUEST, fieldErrorsMap);
   }
 
-  @ExceptionHandler({NotFoundException.class, ResourceInUserNotFoundException.class, ProductWithoutResourcesException.class})
+  @ExceptionHandler({NotFoundException.class, ResourceInUserNotFoundException.class})
   public ResponseEntity<Object> handleNotFoundException(NotFoundException ex) {
     return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
   }

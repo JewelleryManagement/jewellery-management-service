@@ -4,7 +4,6 @@ import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
-import jewellery.inventory.exception.product.ProductWithoutResourcesException;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
@@ -126,9 +125,7 @@ public class ProductService {
     }
 
     private List<ResourceInProduct> getResourcesFromRequest(User user, List<ResourceQuantityRequestDto> resourcesInProductRequestDto) {
-        if (resourcesInProductRequestDto == null) {
-            throw new ProductWithoutResourcesException();
-        }
+
         List<ResourceInUser> resourcesInUsers = user.getResourcesOwned();
         if (resourcesInUsers == null) {
             throw new ResourceInUserNotFoundException(user.getId());

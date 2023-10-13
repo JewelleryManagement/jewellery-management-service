@@ -1,5 +1,6 @@
 package jewellery.inventory.dto.request;
 
+import jakarta.validation.constraints.NotNull;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import lombok.*;
 
@@ -15,6 +16,7 @@ public class ProductRequestDto {
     private String name;
     private List<String> authors;
     private UUID ownerId;
+    @NotNull
     List<ResourceQuantityRequestDto> resourcesContent;
     private List<UUID> productsContent;
     private String description;

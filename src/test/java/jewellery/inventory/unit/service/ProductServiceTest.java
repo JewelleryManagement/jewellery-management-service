@@ -6,7 +6,6 @@ import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
-import jewellery.inventory.exception.product.ProductWithoutResourcesException;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
@@ -258,16 +257,6 @@ class ProductServiceTest {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(resourceRepository.findById(pearl.getId())).thenReturn(Optional.of(pearl));
         assertThrows(ResourceInUserNotFoundException.class,
-                () -> productService.createProduct(productRequestDto));
-    }
-
-    @Test
-    void testCreateProductShouldThrowWhenMissingResourcesInRequest() {
-        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-
-        productRequestDto.setResourcesContent(null);
-
-        assertThrows(ProductWithoutResourcesException.class,
                 () -> productService.createProduct(productRequestDto));
     }
 
