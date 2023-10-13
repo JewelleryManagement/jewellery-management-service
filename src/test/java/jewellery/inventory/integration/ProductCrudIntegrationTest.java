@@ -1,7 +1,7 @@
 package jewellery.inventory.integration;
 
+import static jewellery.inventory.helper.ProductTestHelper.*;
 import jewellery.inventory.dto.request.ProductRequestDto;
-import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
@@ -27,7 +27,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -100,8 +99,8 @@ class ProductCrudIntegrationTest {
         resourceInUserRepository.deleteAll();
         resourceInProductRepository.deleteAll();
 
-        user = getUser();
-        gemstone = getGemstone();
+        user = createUserInDatabase();
+        gemstone = createGemstoneInDatabase();
         resourceInUserRequestDto = getResourceInUserRequestDto(user, Objects.requireNonNull(gemstone));
         resourcesInUser = getResourcesInUserResponseDto(resourceInUserRequestDto);
         productRequestDto = getProductRequestDto(Objects.requireNonNull(resourcesInUser), user);
@@ -166,41 +165,11 @@ class ProductCrudIntegrationTest {
         return response.getBody();
     }
 
-    @NotNull
-    private static ProductRequestDto getProductRequestDto(ResourcesInUserResponseDto resourcesInUser, User user) {
-
-        List<ResourceQuantityRequestDto> listOfResourcesInProduct = getResourceInProductRequestDtos(resourcesInUser);
-
-        ProductRequestDto productRequestDto = new ProductRequestDto();
-        productRequestDto.setName("TestProduct");
-        productRequestDto.setAuthors(List.of("TestAuthors"));
-        productRequestDto.setDescription("Test");
-        productRequestDto.setOwnerId(user.getId());
-        productRequestDto.setSalePrice(50);
-        productRequestDto.setResourcesContent(listOfResourcesInProduct);
-
-        return productRequestDto;
-    }
-
-    @NotNull
-    private static List<ResourceQuantityRequestDto> getResourceInProductRequestDtos(ResourcesInUserResponseDto resourcesInUser) {
-        ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
-        List<ResourceQuantityRequestDto> listOfResourcesInProduct = new ArrayList<>();
-        resourcesInUser.getResourcesAndQuantities().forEach(r ->
-        {
-            resourceQuantityRequestDto.setId(r.getResource().getId());
-            resourceQuantityRequestDto.setQuantity(5);
-            listOfResourcesInProduct.add(resourceQuantityRequestDto);
-        });
-        return listOfResourcesInProduct;
-    }
-
     @Nullable
     private ResourcesInUserResponseDto getResourcesInUserResponseDto(ResourceInUserRequestDto resourceInUserRequestDto) {
         ResponseEntity<ResourcesInUserResponseDto> createResourceInUser =
                 this.testRestTemplate.postForEntity(getBaseResourceAvailabilityUrl(), resourceInUserRequestDto, ResourcesInUserResponseDto.class);
 
-        System.out.println(createResourceInUser.getBody().getOwner());
         return createResourceInUser.getBody();
     }
 
@@ -214,7 +183,7 @@ class ProductCrudIntegrationTest {
     }
 
     @Nullable
-    private Gemstone getGemstone() {
+    private Gemstone createGemstoneInDatabase() {
         ResourceRequestDto resourceRequest = ResourceTestHelper.getGemstoneRequestDto();
         ResponseEntity<Gemstone> createResource =
                 this.testRestTemplate.postForEntity(getBaseResourceUrl(), resourceRequest, Gemstone.class);
@@ -223,7 +192,7 @@ class ProductCrudIntegrationTest {
     }
 
     @Nullable
-    private User getUser() {
+    private User createUserInDatabase() {
         UserRequestDto userRequest = UserTestHelper.createTestUserRequest();
         ResponseEntity<User> createUser = this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, User.class);
 
