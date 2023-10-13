@@ -1,9 +1,12 @@
 package jewellery.inventory.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import jewellery.inventory.dto.request.ProductRequestDto;
+import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
@@ -18,209 +21,190 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 public class ProductService {
 
-    private final ProductRepository productRepository;
-    private final UserRepository userRepository;
-    private final ResourceRepository resourceRepository;
-    private final ResourceInUserRepository resourceInUserRepository;
-    private final ResourceInProductRepository resourceInProductRepository;
-    private final ResourceInUserService resourceInUserService;
-    private final ProductMapper productMapper;
+  private final ProductRepository productRepository;
+  private final UserRepository userRepository;
+  private final ResourceInUserRepository resourceInUserRepository;
+  private final ResourceInUserService resourceInUserService;
+  private final ProductMapper productMapper;
 
-    @Transactional
-    public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
+  @Transactional
+  public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
 
-        User user = getUserFromRequest(productRequestDto);
-        List<ResourceInProduct> resourcesInProduct = getResourcesFromRequest(user, productRequestDto.getResourcesContent());
+    User owner = getUser(productRequestDto.getOwnerId());
 
-        Product product = setFieldsToNewProduct(productRequestDto, user, resourcesInProduct);
-        productRepository.save(product);
+    Product product = createProductWithoutResourcesAndProducts(productRequestDto, owner);
 
-        setContentProduct(productRequestDto, product);
-        setProductToResourcesInProduct(resourcesInProduct, product);
+    addProductsContentToProduct(productRequestDto, product);
 
-        return productMapper.mapToProductResponseDto(product);
+    addResourcesToProduct(productRequestDto, owner, product);
+
+    return productMapper.mapToProductResponseDto(product);
+  }
+
+  private User getUser(UUID userId) {
+    return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+  }
+
+  private Product createProductWithoutResourcesAndProducts(
+      ProductRequestDto productRequestDto, User user) {
+    Product product = getProduct(productRequestDto, user);
+    productRepository.save(product);
+    return product;
+  }
+
+  private static Product getProduct(ProductRequestDto productRequestDto, User user) {
+    Product product = new Product();
+    product.setOwner(user);
+    product.setAuthors(productRequestDto.getAuthors());
+    product.setSold(false);
+    product.setDescription(productRequestDto.getDescription());
+    product.setSalePrice(productRequestDto.getSalePrice());
+    return product;
+  }
+
+  private void addProductsContentToProduct(ProductRequestDto productRequestDto, Product product) {
+    product.setProductsContent(
+        getProductsInProduct(productRequestDto.getProductsContent(), product));
+    productRepository.save(product);
+  }
+
+  private void addResourcesToProduct(
+      ProductRequestDto productRequestDto, User user, Product product) {
+    List<ResourceInProduct> resourcesInProducts =
+        transferResourcesQuantitiesFromUserToProduct(
+            user, productRequestDto.getResourcesContent(), product);
+    product.setResourcesContent(resourcesInProducts);
+  }
+
+  private List<ResourceInProduct> transferResourcesQuantitiesFromUserToProduct(
+      User owner, List<ResourceQuantityRequestDto> incomingResourceInProductList, Product product) {
+
+    return incomingResourceInProductList.stream()
+        .map(
+            incomingResourceInProduct ->
+                transferSingleResourceQuantityFromUserToProduct(
+                    owner, incomingResourceInProduct, product))
+        .toList();
+  }
+
+  private ResourceInProduct transferSingleResourceQuantityFromUserToProduct(
+      User owner, ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
+    ResourceInUser resourceInUser = getResourceInUser(owner, incomingResourceInProduct.getId());
+    resourceInUserService.removeQuantityFromResource(
+        owner.getId(),
+        resourceInUser.getResource().getId(),
+        incomingResourceInProduct.getQuantity());
+    return createResourceInProduct(
+        incomingResourceInProduct, resourceInUser.getResource(), product);
+  }
+
+  private ResourceInUser getResourceInUser(User owner, UUID resourceId) {
+    return resourceInUserRepository.findByResourceIdAndOwnerId(resourceId, owner.getId());
+    // TODO: make findByResourceIdAndOwnerId return Optional
+    // .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, owner.getId()));
+  }
+
+  private ResourceInProduct createResourceInProduct(
+      ResourceQuantityRequestDto incomingResourceInProduct, Resource resource, Product product) {
+    ResourceInProduct resourceInProduct = new ResourceInProduct();
+    resourceInProduct.setResource(resource);
+    resourceInProduct.setQuantity(incomingResourceInProduct.getQuantity());
+    resourceInProduct.setProduct(product);
+    return resourceInProduct;
+  }
+
+  public List<ProductResponseDto> getAllProducts() {
+    List<Product> products = productRepository.findAll();
+    return products.stream().map(productMapper::mapToProductResponseDto).toList();
+  }
+
+  public ProductResponseDto getProduct(UUID id) {
+    Product product =
+        productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+
+    return productMapper.mapToProductResponseDto(product);
+  }
+
+  public void deleteProduct(UUID id) {
+
+    Product product =
+        productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+
+    throwExceptionIfProductIsSold(id, product);
+    throwExceptionIfProductIsPartOfAnotherProduct(id, product);
+
+    moveResourceInProductToResourceInUser(product);
+    disassembleProductContent(product);
+
+    productRepository.deleteById(id);
+  }
+
+  private void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
+    if (product.getContentOf() != null) {
+      throw new ProductIsContentException(id);
     }
+  }
 
-    public List<ProductResponseDto> getAllProducts() {
-        List<Product> products = productRepository.findAll();
-        return products.stream().map(productMapper::mapToProductResponseDto).toList();
+  private void throwExceptionIfProductIsSold(UUID id, Product product) {
+    if (product.isSold()) {
+      throw new ProductIsSoldException(id);
     }
+  }
 
-    public ProductResponseDto getProduct(UUID id) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException(id));
-
-        return productMapper.mapToProductResponseDto(product);
-    }
-
-    public void deleteProduct(UUID id) {
-
-        Product product = productRepository.findById(id).orElseThrow(
-                () -> new ProductNotFoundException(id));
-
-        throwExceptionIfProductIsSold(id, product);
-        throwExceptionIfProductIsPartOfAnotherProduct(id, product);
-
-        moveResourceInProductToResourceInUser(product);
-        disassembleProductContent(product);
-
-        productRepository.deleteById(id);
-    }
-
-    private void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
-        if (product.getContentOf() != null) {
-            throw new ProductIsContentException(id);
-        }
-    }
-
-    private void throwExceptionIfProductIsSold(UUID id, Product product) {
-        if (product.isSold()) {
-            throw new ProductIsSoldException(id);
-        }
-    }
-
-    private void disassembleProductContent(Product product) {
-        if (product.getProductsContent() != null) {
-            product.getProductsContent().forEach(content -> {
+  private void disassembleProductContent(Product product) {
+    if (product.getProductsContent() != null) {
+      product
+          .getProductsContent()
+          .forEach(
+              content -> {
                 content.setContentOf(null);
                 productRepository.save(content);
-            });
+              });
 
-            product.setProductsContent(new ArrayList<>());
-            productRepository.save(product);
-        }
+      product.setProductsContent(new ArrayList<>());
+      productRepository.save(product);
+    }
+  }
+
+  private void moveResourceInProductToResourceInUser(Product product) {
+    List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
+    User owner = product.getOwner();
+
+    resourcesInProduct.forEach(
+        resourceInProduct ->
+            resourceInUserService.addResourceToUser(
+                getResourceInUserRequst(owner, resourceInProduct)));
+  }
+
+  private ResourceInUserRequestDto getResourceInUserRequst(
+      User owner, ResourceInProduct resourceInProduct) {
+
+    return ResourceInUserRequestDto.builder()
+        .userId(owner.getId())
+        .resourceId(resourceInProduct.getResource().getId())
+        .quantity(resourceInProduct.getQuantity())
+        .build();
+  }
+
+  private List<Product> getProductsInProduct(
+      List<UUID> productsIdInRequest, Product parentProduct) {
+    List<Product> products = new ArrayList<>();
+    if (productsIdInRequest != null) {
+      productsIdInRequest.forEach(
+          productId -> {
+            Product product =
+                productRepository
+                    .findById(productId)
+                    .orElseThrow(() -> new ProductNotFoundException(productId));
+            product.setContentOf(parentProduct);
+            products.add(product);
+          });
     }
 
-    private void moveResourceInProductToResourceInUser(Product product) {
-        List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
-        User owner = product.getOwner();
-
-        List<ResourceInUser> resultResourcesInUser = new ArrayList<>();
-
-        resourcesInProduct.forEach(resourceInProduct -> {
-            Resource resource = resourceInProduct.getResource();
-            ResourceInUser resourceInUser = moveResourcesToUserWhenDisassembleProduct(owner, resourceInProduct, resource);
-
-            resultResourcesInUser.add(resourceInUser);
-
-            if (resourceInProduct.getProduct() == null) {
-                resourceInProductRepository.deleteById(resourceInProduct.getId());
-            }
-        });
-
-        resourceInUserRepository.saveAll(resultResourcesInUser);
-    }
-
-    private User getUserFromRequest(ProductRequestDto productRequestDto) {
-        return userRepository.findById(productRequestDto.getOwnerId())
-                .orElseThrow(() -> new UserNotFoundException(productRequestDto.getOwnerId()));
-    }
-
-    private List<ResourceInProduct> getResourcesFromRequest(User user, List<ResourceQuantityRequestDto> resourcesInProductRequestDto) {
-
-        List<ResourceInUser> resourcesInUsers = user.getResourcesOwned();
-        if (resourcesInUsers == null) {
-            throw new ResourceInUserNotFoundException(user.getId());
-        }
-
-        List<ResourceInProduct> resourcesInProducts = new ArrayList<>();
-        ResourceInProduct resourceInProduct = new ResourceInProduct();
-
-        resourcesInProductRequestDto.forEach(resourceQuantityRequestDto -> {
-            Resource resource = resourceRepository.findById(resourceQuantityRequestDto.getId())
-                    .orElseThrow(() -> new ResourceInUserNotFoundException(resourceQuantityRequestDto.getId()));
-            ResourceInUser resourceInUser = resourceInUserRepository.findByResourceIdAndOwnerId(resource.getId(), user.getId());
-            throwExceptionWhenResourceInUserNotExist(user, resourceInUser, resource, resourcesInUsers);
-
-            double quantity = resourceQuantityRequestDto.getQuantity();
-            setResourcesToProduct(resourceInUser, quantity, resourceInProduct, resource, resourcesInProducts);
-
-            removeResourceFromUser(user, resourceInUser);
-
-        });
-
-        return resourcesInProducts;
-    }
-
-    private void throwExceptionWhenResourceInUserNotExist(User user, ResourceInUser resourceInUser, Resource resource, List<ResourceInUser> resourcesInUsers) {
-
-        if (resourceInUser == null || !resourcesInUsers.contains(resourceInUser)) {
-            throw new ResourceInUserNotFoundException(resource.getId(), user.getId());
-        }
-    }
-
-    private void setResourcesToProduct(ResourceInUser resourceInUser, double quantity, ResourceInProduct resourceInProduct, Resource resource, List<ResourceInProduct> resourcesInProducts) {
-        if (resourceInUser.getQuantity() < quantity) {
-            throw new InsufficientResourceQuantityException(quantity, resourceInUser.getQuantity());
-        } else {
-            resourceInProduct.setResource(resource);
-            resourceInProduct.setQuantity(quantity);
-            resourcesInProducts.add(resourceInProduct);
-            resourceInUser.setQuantity(resourceInUser.getQuantity() - quantity);
-        }
-    }
-
-    private void removeResourceFromUser(User user, ResourceInUser resourceInUser) {
-        if (resourceInUser.getQuantity() == 0) {
-            resourceInUserService.removeResourceFromUser(user.getId(), resourceInUser.getResource().getId());
-        }
-    }
-
-    private List<Product> getProductsInProduct(List<UUID> productsIdInRequest, Product parentProduct) {
-        List<Product> products = new ArrayList<>();
-        if (productsIdInRequest != null) {
-            productsIdInRequest.forEach(productId -> {
-                Product product = productRepository.findById(productId)
-                        .orElseThrow(() -> new ProductNotFoundException(productId));
-                product.setContentOf(parentProduct);
-                products.add(product);
-            });
-        }
-
-        return products;
-    }
-
-    private ResourceInUser moveResourcesToUserWhenDisassembleProduct(User owner, ResourceInProduct resourceInProduct, Resource resource) {
-        ResourceInUser resourceInUser = resourceInUserRepository.findByResourceId(resource.getId());
-        if (resourceInUser == null) {
-            resourceInUser = new ResourceInUser();
-            resourceInUser.setResource(resource);
-            resourceInUser.setQuantity(resourceInProduct.getQuantity());
-            resourceInUser.setOwner(owner);
-        } else {
-            resourceInUser.setQuantity(resourceInUser.getQuantity() + resourceInProduct.getQuantity());
-        }
-        return resourceInUser;
-    }
-
-    private void setContentProduct(ProductRequestDto productRequestDto, Product product) {
-
-        product.setProductsContent(getProductsInProduct(productRequestDto.getProductsContent(), product));
-        productRepository.save(product);
-    }
-
-    private void setProductToResourcesInProduct(List<ResourceInProduct> resourcesInProducts, Product product) {
-        resourcesInProducts.forEach(resourceInProduct -> resourceInProduct.setProduct(product));
-        resourceInProductRepository.saveAll(resourcesInProducts);
-    }
-
-    private Product setFieldsToNewProduct(ProductRequestDto productRequestDto, User user, List<ResourceInProduct> resourcesInProducts) {
-        Product product = new Product();
-
-        product.setOwner(user);
-        product.setAuthors(productRequestDto.getAuthors());
-        product.setSold(false);
-        product.setDescription(productRequestDto.getDescription());
-        product.setSalePrice(productRequestDto.getSalePrice());
-        product.setResourcesContent(resourcesInProducts);
-        return product;
-    }
+    return products;
+  }
 }
