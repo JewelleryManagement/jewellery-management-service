@@ -16,6 +16,7 @@ public class Gemstone extends Resource {
   private double carat;
   private String cut;
   private String clarity;
+  private String size;
   private double dimensionX;
   private double dimensionY;
   private double dimensionZ;

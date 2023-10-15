@@ -17,5 +17,6 @@ public class GemstoneRequestDto extends ResourceRequestDto {
   private double dimensionX;
   private double dimensionY;
   private double dimensionZ;
+  private String size;
   private String shape;
 }

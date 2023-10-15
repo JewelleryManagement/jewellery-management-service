@@ -12,5 +12,19 @@ public interface GemstoneMapper {
 
   GemstoneResponseDto toResourceResponse(Gemstone entity);
 
-  Gemstone toResourceEntity(GemstoneRequestDto dto);
+    Gemstone toResourceEntity(GemstoneRequestDto dto);
+
+
+    default String getGemstoneSizeString(Gemstone gemstone) {
+        return String.format("%.0fx%.0fx%.0f", gemstone.getDimensionX(), gemstone.getDimensionY(), gemstone.getDimensionZ());
+    }
+
+    default void setDimensions(GemstoneRequestDto dto) {
+        String[] dimensions = dto.getSize().split("x");
+        if (dimensions.length == 3) {
+            dto.setDimensionX(Double.parseDouble(dimensions[0].trim()));
+            dto.setDimensionY(Double.parseDouble(dimensions[1].trim()));
+            dto.setDimensionZ(Double.parseDouble(dimensions[2].trim()));
+        }
+    }
 }

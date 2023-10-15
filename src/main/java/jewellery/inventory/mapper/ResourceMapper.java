@@ -19,6 +19,7 @@ public class ResourceMapper {
     if (resource instanceof Pearl pearl) {
       return pearlMapper.toResourceResponse(pearl);
     } else if (resource instanceof Gemstone gemstone) {
+      gemstone.setSize(gemstoneMapper.getGemstoneSizeString(gemstone));
       return gemstoneMapper.toResourceResponse(gemstone);
     } else if (resource instanceof LinkingPart linkingPart) {
       return linkingPartMapper.toResourceResponse(linkingPart);
@@ -33,6 +34,7 @@ public class ResourceMapper {
       return pearlMapper.toResourceEntity(pearlDto);
     }
     if (resourceRequestDto instanceof GemstoneRequestDto gemstoneDTO) {
+     gemstoneMapper.setDimensions(gemstoneDTO);
       return gemstoneMapper.toResourceEntity(gemstoneDTO);
     }
     if (resourceRequestDto instanceof PreciousMetalRequestDto preciousMetalDto) {
