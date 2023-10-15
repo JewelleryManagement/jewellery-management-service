@@ -17,11 +17,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.Locale;
+
 class ResourceMapperTest {
   private ResourceMapper resourceMapper;
 
   @BeforeEach
   void setUp() {
+    Locale.setDefault(Locale.US);
     PearlMapper pearlMapper = PearlMapper.INSTANCE;
     GemstoneMapper gemstoneMapper = GemstoneMapper.INSTANCE;
     LinkingPartMapper linkingPartMapper = LinkingPartMapper.INSTANCE;
