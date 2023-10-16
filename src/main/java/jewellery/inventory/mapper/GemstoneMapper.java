@@ -12,6 +12,5 @@ public interface GemstoneMapper {
 
   GemstoneResponseDto toResourceResponse(Gemstone entity);
 
-    Gemstone toResourceEntity(GemstoneRequestDto dto);
-
+  Gemstone toResourceEntity(GemstoneRequestDto dto);
 }
