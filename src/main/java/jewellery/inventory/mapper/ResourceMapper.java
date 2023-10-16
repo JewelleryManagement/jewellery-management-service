@@ -19,7 +19,7 @@ public class ResourceMapper {
     if (resource instanceof Pearl pearl) {
       return pearlMapper.toResourceResponse(pearl);
     } else if (resource instanceof Gemstone gemstone) {
-      gemstone.setSize(gemstoneMapper.getGemstoneSizeString(gemstone));
+      gemstone.setSize(getGemstoneSizeString(gemstone));
       return gemstoneMapper.toResourceResponse(gemstone);
     } else if (resource instanceof LinkingPart linkingPart) {
       return linkingPartMapper.toResourceResponse(linkingPart);
@@ -34,7 +34,7 @@ public class ResourceMapper {
       return pearlMapper.toResourceEntity(pearlDto);
     }
     if (resourceRequestDto instanceof GemstoneRequestDto gemstoneDTO) {
-     gemstoneMapper.setDimensions(gemstoneDTO);
+     setDimensions(gemstoneDTO);
       return gemstoneMapper.toResourceEntity(gemstoneDTO);
     }
     if (resourceRequestDto instanceof PreciousMetalRequestDto preciousMetalDto) {
@@ -44,5 +44,26 @@ public class ResourceMapper {
       return linkingPartMapper.toResourceEntity(linkingPartDTO);
     }
     throw new MappingException(resourceRequestDto);
+  }
+
+  public String getGemstoneSizeString(Gemstone gemstone) {
+    return String.format("%.1fx%.1fx%.1f", gemstone.getDimensionX(), gemstone.getDimensionY(), gemstone.getDimensionZ());
+  }
+  public void setDimensions(GemstoneRequestDto dto) {
+    String size = dto.getSize();
+    if (size == null) {
+      throw new IllegalArgumentException("Size cannot be null");
+    }
+    String[] dimensions = size.split("x");
+    if (dimensions.length != 3) {
+      throw new IllegalArgumentException("Invalid size format. Must be in the format '1.00x2.00x3.00'");
+    }
+    try {
+      dto.setDimensionX(Double.parseDouble(dimensions[0].trim()));
+      dto.setDimensionY(Double.parseDouble(dimensions[1].trim()));
+      dto.setDimensionZ(Double.parseDouble(dimensions[2].trim()));
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid size format. Must be in the format '1.00x2.00x3.00'");
+    }
   }
 }
