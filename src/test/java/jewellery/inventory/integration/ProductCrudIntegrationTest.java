@@ -56,15 +56,15 @@ class ProductCrudIntegrationTest {
     }
 
     private String getBaseResourceUrl() {
-        return "http://localhost:" + port + "/resources";
+        return getBaseUrl() + "/resources";
     }
 
     private String getBaseUserUrl() {
-        return "http://localhost:" + port + "/users";
+        return getBaseUrl() + "/users";
     }
 
     private String getBaseProductUrl() {
-        return "http://localhost:" + port + "/products";
+        return getBaseUrl() + "/products";
     }
 
     private String getProductUrl(UUID id) {
@@ -115,6 +115,7 @@ class ProductCrudIntegrationTest {
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(productRequestDto.getResourcesContent().get(0).getId(), productResponseDto.getResourcesContent().get(0).getResource().getId());
+        assertEquals(productRequestDto.getOwnerId(), productResponseDto.getOwner().getId());
     }
 
     @Test
@@ -124,8 +125,13 @@ class ProductCrudIntegrationTest {
 
         ResponseEntity<ProductResponseDto> response =
                 this.testRestTemplate.getForEntity(getProductUrl(Objects.requireNonNull(productResponseDto).getId()), ProductResponseDto.class);
+        ProductResponseDto responseBody = response.getBody();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        assertEquals(productRequestDto.getOwnerId(), responseBody.getOwner().getId());
+        assertEquals(productRequestDto.getSalePrice(), responseBody.getSalePrice());
+        assertEquals(productRequestDto.getResourcesContent().size(), responseBody.getResourcesContent().size());
     }
 
     @Test
@@ -136,8 +142,12 @@ class ProductCrudIntegrationTest {
                 this.testRestTemplate.exchange(
                         getBaseProductUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {
                         });
+        List<ProductResponseDto> responseBodies = response.getBody();
+        ProductResponseDto currentResponse = responseBodies.get(0);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(1, responseBodies.size());
+        assertEquals(productRequestDto.getOwnerId(), currentResponse.getOwner().getId());
     }
 
     @Test

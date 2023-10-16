@@ -61,7 +61,7 @@ public class ProductMapper {
             .map(
                 res -> {
                   ResourceResponseDto resourceResponseDto =
-                      resourceMapper.toResourceResponseDto(res);
+                      resourceMapper.toResourceResponse(res.getResource());
 
                   ResourceQuantityResponseDto resourceQuantityResponseDto =
                       new ResourceQuantityResponseDto();
