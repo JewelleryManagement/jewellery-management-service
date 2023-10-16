@@ -30,7 +30,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-public class UserCrudIntegrationTest {
+class UserCrudIntegrationTest {
     @Value(value = "${local.server.port}")
     private int port;
 
