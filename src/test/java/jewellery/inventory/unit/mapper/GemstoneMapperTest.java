@@ -55,9 +55,7 @@ class GemstoneMapperTest {
         GemstoneRequestDto dto = new GemstoneRequestDto();
         dto.setSize(null);
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            resourceMapper.setDimensions(dto);
-        });
+        assertThrows(IllegalArgumentException.class, () -> resourceMapper.setDimensions(dto));
     }
 
     @Test
@@ -65,8 +63,6 @@ class GemstoneMapperTest {
         GemstoneRequestDto dto = new GemstoneRequestDto();
         dto.setSize("1.0x2.0x");
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            resourceMapper.setDimensions(dto);
-        });
+        assertThrows(IllegalArgumentException.class, () -> resourceMapper.setDimensions(dto));
     }
 }
