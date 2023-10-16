@@ -10,6 +10,7 @@ import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
+import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInUser;
@@ -204,18 +205,22 @@ public class ProductService {
   }
 
   private List<Product> getProductsInProduct(
-      List<UUID> productsIdInRequest, Product parentProduct) {
+          List<UUID> productsIdInRequest, Product parentProduct) {
     List<Product> products = new ArrayList<>();
     if (productsIdInRequest != null) {
       productsIdInRequest.forEach(
-          productId -> {
-            Product product =
-                productRepository
-                    .findById(productId)
-                    .orElseThrow(() -> new ProductNotFoundException(productId));
-            product.setContentOf(parentProduct);
-            products.add(product);
-          });
+              productId -> {
+                Product product =
+                        productRepository
+                                .findById(productId)
+                                .orElseThrow(() -> new ProductNotFoundException(productId));
+                if (product.getOwner().getId().equals(parentProduct.getOwner().getId())) {
+                  product.setContentOf(parentProduct);
+                  products.add(product);
+                } else {
+                  throw new UserNotOwnerException(parentProduct.getOwner().getId(), product.getId());
+                }
+              });
     }
 
     return products;
