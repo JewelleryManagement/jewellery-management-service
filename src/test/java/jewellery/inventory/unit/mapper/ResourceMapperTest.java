@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.Locale;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -18,6 +20,7 @@ class ResourceMapperTest {
 
   @BeforeEach
   void setUp() {
+    Locale.setDefault(Locale.US);
     PearlMapper pearlMapper = PearlMapper.INSTANCE;
     GemstoneMapper gemstoneMapper = GemstoneMapper.INSTANCE;
     LinkingPartMapper linkingPartMapper = LinkingPartMapper.INSTANCE;
