@@ -7,7 +7,6 @@ import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.repository.SystemEventRepository;
 import jewellery.inventory.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
@@ -37,9 +36,10 @@ public class UserEventAspect {
   public void userDeletionMethods() {}
 
   @Around("userDeletionMethods()")
-  public void logUserDeletion(JoinPoint joinPoint) {
+  public void logUserDeletion(ProceedingJoinPoint  joinPoint) throws Throwable {
     UUID userId = (UUID) joinPoint.getArgs()[0];
     userEventService.logUserDeletion(joinPoint, userId);
+    joinPoint.proceed();
   }
 
   @Pointcut(

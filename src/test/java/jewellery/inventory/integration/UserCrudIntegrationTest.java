@@ -224,10 +224,12 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
     UserResponseDto createdUser = userResponseEntity.getBody();
+      assert createdUser != null;
+      UUID userId = createdUser.getId();
 
     ResponseEntity<HttpStatus> response =
         this.testRestTemplate.exchange(
-            getBaseUserUrl() + "/" + createdUser.getId(),
+            getBaseUserUrl() + "/" + userId,
             HttpMethod.DELETE,
             null,
             HttpStatus.class);
@@ -236,7 +238,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     ResponseEntity<String> getUserResponse =
         this.testRestTemplate.getForEntity(
-            getBaseUserUrl() + "/" + createdUser.getId(), String.class);
+            getBaseUserUrl() + "/" + userId, String.class);
     assertEquals(HttpStatus.NOT_FOUND, getUserResponse.getStatusCode());
   }
 

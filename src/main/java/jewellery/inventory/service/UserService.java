@@ -52,11 +52,10 @@ public class UserService {
   }
 
   public void deleteUser(UUID id) {
-    if (userRepository.existsById(id)) {
-      userRepository.deleteById(id);
-    } else {
+    if (!userRepository.existsById(id)) {
       throw new UserNotFoundException(id);
     }
+    userRepository.deleteById(id);
   }
 
   private void validateUserEmailAndName(User user) {
