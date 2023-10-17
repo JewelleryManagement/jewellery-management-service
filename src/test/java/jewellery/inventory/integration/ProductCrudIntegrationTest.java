@@ -31,178 +31,187 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
-    private String getBaseUrl() {
-        return BASE_URL_PATH + port;
-    }
+  private String getBaseUrl() {
+    return BASE_URL_PATH + port;
+  }
 
-    private String buildUrl(String... paths) {
-        return getBaseUrl() + "/" + String.join("/", paths);
-    }
+  private String buildUrl(String... paths) {
+    return getBaseUrl() + "/" + String.join("/", paths);
+  }
 
-    private String getBaseResourceAvailabilityUrl() {
-        return buildUrl("resources", "availability");
-    }
+  private String getBaseResourceAvailabilityUrl() {
+    return buildUrl("resources", "availability");
+  }
 
-    private String getBaseResourceUrl() {
-        return getBaseUrl() + "/resources";
-    }
+  private String getBaseResourceUrl() {
+    return getBaseUrl() + "/resources";
+  }
 
-    private String getBaseUserUrl() {
-        return getBaseUrl() + "/users";
-    }
+  private String getBaseUserUrl() {
+    return getBaseUrl() + "/users";
+  }
 
-    private String getBaseProductUrl() {
-        return getBaseUrl() + "/products";
-    }
+  private String getBaseProductUrl() {
+    return getBaseUrl() + "/products";
+  }
 
-    private String getProductUrl(UUID id) {
-        return getBaseUrl() + "/products/" + id;
-    }
+  private String getProductUrl(UUID id) {
+    return getBaseUrl() + "/products/" + id;
+  }
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private ProductRepository productRepository;
-    @Autowired
-    private ResourceRepository resourceRepository;
-    @Autowired
-    private ResourceInUserRepository resourceInUserRepository;
-    @Autowired
-    private ResourceInProductRepository resourceInProductRepository;
+  @Autowired private UserRepository userRepository;
+  @Autowired private ProductRepository productRepository;
+  @Autowired private ResourceRepository resourceRepository;
+  @Autowired private ResourceInUserRepository resourceInUserRepository;
+  @Autowired private ResourceInProductRepository resourceInProductRepository;
 
-    private User user;
-    private Gemstone gemstone;
-    private ResourceInUserRequestDto resourceInUserRequestDto;
-    private ResourcesInUserResponseDto resourcesInUserResponseDto;
-    private ProductRequestDto productRequestDto;
-    private ProductResponseDto productResponseDto;
+  private User user;
+  private Gemstone gemstone;
+  private ResourceInUserRequestDto resourceInUserRequestDto;
+  private ResourcesInUserResponseDto resourcesInUserResponseDto;
+  private ProductRequestDto productRequestDto;
+  private ProductResponseDto productResponseDto;
 
-    @BeforeEach
-    void setUp() {
-        cleanAllRepositories();
+  @BeforeEach
+  void setUp() {
+    cleanAllRepositories();
 
-        user = createUserInDatabase();
-        gemstone = createGemstoneInDatabase();
-        resourceInUserRequestDto = getResourceInUserRequestDto(user, Objects.requireNonNull(gemstone));
-        resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
-        productRequestDto = getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), user);
-    }
+    user = createUserInDatabase();
+    gemstone = createGemstoneInDatabase();
+    resourceInUserRequestDto = getResourceInUserRequestDto(user, Objects.requireNonNull(gemstone));
+    resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
+    productRequestDto =
+        getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), user);
+  }
 
-    @Test
-    void createProductSuccessfully() {
+  @Test
+  void createProductSuccessfully() {
 
-        ResponseEntity<ProductResponseDto> response =
-                this.testRestTemplate.postForEntity(getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
-        ProductResponseDto productResponseDto = response.getBody();
+    ResponseEntity<ProductResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+    ProductResponseDto productResponseDto = response.getBody();
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(productRequestDto.getResourcesContent().get(0).getId(), productResponseDto.getResourcesContent().get(0).getResource().getId());
-        assertEquals(productRequestDto.getOwnerId(), productResponseDto.getOwner().getId());
-        assertEquals(productRequestDto.getProductionNumber(), productResponseDto.getProductionNumber());
-        assertEquals(productRequestDto.getCatalogNumber(), productResponseDto.getCatalogNumber());
-    }
+    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    assertEquals(
+        productRequestDto.getResourcesContent().get(0).getId(),
+        productResponseDto.getResourcesContent().get(0).getResource().getId());
+    assertEquals(productRequestDto.getOwnerId(), productResponseDto.getOwner().getId());
+    assertEquals(productRequestDto.getProductionNumber(), productResponseDto.getProductionNumber());
+    assertEquals(productRequestDto.getCatalogNumber(), productResponseDto.getCatalogNumber());
+  }
 
-    @Test
-    void getProductSuccessfully() {
+  @Test
+  void getProductSuccessfully() {
 
-        productResponseDto = getProductResponseDto(productRequestDto);
+    productResponseDto = getProductResponseDto(productRequestDto);
 
-        ResponseEntity<ProductResponseDto> response =
-                this.testRestTemplate.getForEntity(getProductUrl(Objects.requireNonNull(productResponseDto).getId()), ProductResponseDto.class);
-        ProductResponseDto responseBody = response.getBody();
+    ResponseEntity<ProductResponseDto> response =
+        this.testRestTemplate.getForEntity(
+            getProductUrl(Objects.requireNonNull(productResponseDto).getId()),
+            ProductResponseDto.class);
+    ProductResponseDto responseBody = response.getBody();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        assertEquals(productRequestDto.getOwnerId(), responseBody.getOwner().getId());
-        assertEquals(productRequestDto.getSalePrice(), responseBody.getSalePrice());
-        assertEquals(productRequestDto.getResourcesContent().size(), responseBody.getResourcesContent().size());
-        assertEquals(productRequestDto.getCatalogNumber(), responseBody.getCatalogNumber());
-    }
+    assertEquals(productRequestDto.getOwnerId(), responseBody.getOwner().getId());
+    assertEquals(productRequestDto.getSalePrice(), responseBody.getSalePrice());
+    assertEquals(
+        productRequestDto.getResourcesContent().size(), responseBody.getResourcesContent().size());
+    assertEquals(productRequestDto.getCatalogNumber(), responseBody.getCatalogNumber());
+  }
 
-    @Test
-    void getAllProductsSuccessfully() {
-        productResponseDto = getProductResponseDto(productRequestDto);
+  @Test
+  void getAllProductsSuccessfully() {
+    productResponseDto = getProductResponseDto(productRequestDto);
 
-        ResponseEntity<List<ProductResponseDto>> response =
-                this.testRestTemplate.exchange(
-                        getBaseProductUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {
-                        });
-        List<ProductResponseDto> responseBodies = response.getBody();
-        ProductResponseDto currentResponse = responseBodies.get(0);
+    ResponseEntity<List<ProductResponseDto>> response =
+        this.testRestTemplate.exchange(
+            getBaseProductUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
+    List<ProductResponseDto> responseBodies = response.getBody();
+    ProductResponseDto currentResponse = responseBodies.get(0);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(1, responseBodies.size());
-        assertEquals(productRequestDto.getOwnerId(), currentResponse.getOwner().getId());
-        assertEquals(productRequestDto.getProductionNumber(), currentResponse.getProductionNumber());
-    }
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(1, responseBodies.size());
+    assertEquals(productRequestDto.getOwnerId(), currentResponse.getOwner().getId());
+    assertEquals(productRequestDto.getProductionNumber(), currentResponse.getProductionNumber());
+  }
 
-    @Test
-    void deleteProductSuccessfully() {
-        productResponseDto = getProductResponseDto(productRequestDto);
+  @Test
+  void deleteProductSuccessfully() {
+    productResponseDto = getProductResponseDto(productRequestDto);
 
-        ResponseEntity<HttpStatus> response =
-                this.testRestTemplate.exchange(
-                        getProductUrl(Objects.requireNonNull(productResponseDto).getId()),
-                        HttpMethod.DELETE,
-                        null,
-                        HttpStatus.class);
+    ResponseEntity<HttpStatus> response =
+        this.testRestTemplate.exchange(
+            getProductUrl(Objects.requireNonNull(productResponseDto).getId()),
+            HttpMethod.DELETE,
+            null,
+            HttpStatus.class);
 
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
 
-        ResponseEntity<ProductResponseDto> newResponse =
-                this.testRestTemplate.getForEntity(getProductUrl(Objects.requireNonNull(productResponseDto).getId()), ProductResponseDto.class);
+    ResponseEntity<ProductResponseDto> newResponse =
+        this.testRestTemplate.getForEntity(
+            getProductUrl(Objects.requireNonNull(productResponseDto).getId()),
+            ProductResponseDto.class);
 
-        assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
-    }
+    assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
+  }
 
+  @Nullable
+  private ProductResponseDto getProductResponseDto(ProductRequestDto productRequestDto) {
+    ResponseEntity<ProductResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
 
-    @Nullable
-    private ProductResponseDto getProductResponseDto(ProductRequestDto productRequestDto) {
-        ResponseEntity<ProductResponseDto> response =
-                this.testRestTemplate.postForEntity(getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+    return response.getBody();
+  }
 
-        return response.getBody();
-    }
+  @Nullable
+  private ResourcesInUserResponseDto getResourcesInUserResponseDto(
+      ResourceInUserRequestDto resourceInUserRequestDto) {
+    ResponseEntity<ResourcesInUserResponseDto> createResourceInUser =
+        this.testRestTemplate.postForEntity(
+            getBaseResourceAvailabilityUrl(),
+            resourceInUserRequestDto,
+            ResourcesInUserResponseDto.class);
 
-    @Nullable
-    private ResourcesInUserResponseDto getResourcesInUserResponseDto(ResourceInUserRequestDto resourceInUserRequestDto) {
-        ResponseEntity<ResourcesInUserResponseDto> createResourceInUser =
-                this.testRestTemplate.postForEntity(getBaseResourceAvailabilityUrl(), resourceInUserRequestDto, ResourcesInUserResponseDto.class);
+    return createResourceInUser.getBody();
+  }
 
-        return createResourceInUser.getBody();
-    }
+  @NotNull
+  private static ResourceInUserRequestDto getResourceInUserRequestDto(
+      User user, Gemstone gemstone) {
+    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
+    resourceInUserRequestDto.setUserId(user.getId());
+    resourceInUserRequestDto.setResourceId(gemstone.getId());
+    resourceInUserRequestDto.setQuantity(20);
+    return resourceInUserRequestDto;
+  }
 
-    @NotNull
-    private static ResourceInUserRequestDto getResourceInUserRequestDto(User user, Gemstone gemstone) {
-        ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
-        resourceInUserRequestDto.setUserId(user.getId());
-        resourceInUserRequestDto.setResourceId(gemstone.getId());
-        resourceInUserRequestDto.setQuantity(20);
-        return resourceInUserRequestDto;
-    }
+  @Nullable
+  private Gemstone createGemstoneInDatabase() {
+    ResourceRequestDto resourceRequest = ResourceTestHelper.getGemstoneRequestDto();
+    ResponseEntity<Gemstone> createResource =
+        this.testRestTemplate.postForEntity(getBaseResourceUrl(), resourceRequest, Gemstone.class);
 
-    @Nullable
-    private Gemstone createGemstoneInDatabase() {
-        ResourceRequestDto resourceRequest = ResourceTestHelper.getGemstoneRequestDto();
-        ResponseEntity<Gemstone> createResource =
-                this.testRestTemplate.postForEntity(getBaseResourceUrl(), resourceRequest, Gemstone.class);
+    return createResource.getBody();
+  }
 
-        return createResource.getBody();
-    }
+  @Nullable
+  private User createUserInDatabase() {
+    UserRequestDto userRequest = UserTestHelper.createTestUserRequest();
+    ResponseEntity<User> createUser =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, User.class);
 
-    @Nullable
-    private User createUserInDatabase() {
-        UserRequestDto userRequest = UserTestHelper.createTestUserRequest();
-        ResponseEntity<User> createUser = this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, User.class);
+    return createUser.getBody();
+  }
 
-        return createUser.getBody();
-    }
-
-    private void cleanAllRepositories() {
-        userRepository.deleteAll();
-        productRepository.deleteAll();
-        resourceRepository.deleteAll();
-        resourceInUserRepository.deleteAll();
-        resourceInProductRepository.deleteAll();
-    }
+  private void cleanAllRepositories() {
+    userRepository.deleteAll();
+    productRepository.deleteAll();
+    resourceRepository.deleteAll();
+    resourceInUserRepository.deleteAll();
+    resourceInProductRepository.deleteAll();
+  }
 }

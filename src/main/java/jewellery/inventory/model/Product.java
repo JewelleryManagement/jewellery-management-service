@@ -14,7 +14,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @RequiredArgsConstructor
-
 public class Product {
   @Id @GeneratedValue private UUID id;
 
