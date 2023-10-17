@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 
-import jewellery.inventory.dto.ResourceQuantityDto;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.service.ResourceService;
@@ -53,13 +53,13 @@ public class ResourceController {
 
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/quantity/{id}")
-  public ResourceQuantityDto getResourceQuantityById(@PathVariable("id") UUID id) {
+  public ResourceQuantityResponseDto getResourceQuantityById(@PathVariable("id") UUID id) {
     return resourceService.getResourceQuantity(id);
   }
 
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/quantity")
-  public List<ResourceQuantityDto> getAllResourceQuantities() {
+  public List<ResourceQuantityResponseDto> getAllResourceQuantities() {
     return resourceService.getAllResourceQuantities();
   }
 }

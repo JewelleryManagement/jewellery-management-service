@@ -1,29 +1,43 @@
 package jewellery.inventory.model;
 
 import jakarta.persistence.*;
+
 import java.util.List;
 import java.util.UUID;
+
 import jewellery.inventory.model.resource.ResourceInProduct;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Getter
 @Setter
+@RequiredArgsConstructor
 public class Product {
   @Id @GeneratedValue private UUID id;
 
-  @ElementCollection private List<String> authors;
+  @ManyToMany
+  @JoinTable(
+      name = "product_author",
+      joinColumns = @JoinColumn(name = "product_id"),
+      inverseJoinColumns = @JoinColumn(name = "user_id"))
+  private List<User> authors;
 
   @ManyToOne private User owner;
-
-  @Lob private byte[] picture;
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
   private List<ResourceInProduct> resourcesContent;
 
-  @ManyToMany private List<Product> productsContent;
+  @ManyToOne
+  @JoinColumn(name = "content_of")
+  private Product contentOf;
 
+  @OneToMany(mappedBy = "contentOf", cascade = CascadeType.ALL)
+  private List<Product> productsContent;
+
+  private String catalogNumber;
+  private String productionNumber;
   private String description;
   private double salePrice;
   private boolean isSold;

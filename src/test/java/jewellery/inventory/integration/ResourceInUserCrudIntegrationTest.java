@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.UUID;
-import jewellery.inventory.dto.ResourceQuantityDto;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
@@ -130,7 +130,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendGetResourcesInUserRequest(createdUser.getId());
     assertNotNull(response.getBody());
-    List<ResourceQuantityDto> resourceQuantities = response.getBody().getResourcesAndQuantities();
+    List<ResourceQuantityResponseDto> resourceQuantities = response.getBody().getResourcesAndQuantities();
     assertNotNull(resourceQuantities);
     assertEquals(1, resourceQuantities.size());
     assertEquals(RESOURCE_QUANTITY * 2, resourceQuantities.get(0).getQuantity(), 0.001);
@@ -236,7 +236,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     ResponseEntity<ResourcesInUserResponseDto> resourcesInUserResponse =
         sendGetResourcesInUserRequest(createdUser.getId());
-    ResourceQuantityDto resourceQuantity =
+    ResourceQuantityResponseDto resourceQuantity =
         findResourceQuantityIn(createdResource.getId(), resourcesInUserResponse);
     assertEquals(RESOURCE_QUANTITY - 1, resourceQuantity.getQuantity(), 0.01);
   }
@@ -371,7 +371,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
                     resourceQuantityDto.getResource().equals(firstCreatedResource)));
   }
 
-  private static ResourceQuantityDto findResourceQuantityIn(
+  private static ResourceQuantityResponseDto findResourceQuantityIn(
       UUID idToFind, ResponseEntity<ResourcesInUserResponseDto> resourcesInUserResponse) {
     assertNotNull(resourcesInUserResponse.getBody());
     return resourcesInUserResponse.getBody().getResourcesAndQuantities().stream()
