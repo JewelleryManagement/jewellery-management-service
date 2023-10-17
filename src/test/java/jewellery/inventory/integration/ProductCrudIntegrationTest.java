@@ -1,6 +1,7 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ProductTestHelper.*;
+
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
@@ -72,24 +73,24 @@ class ProductCrudIntegrationTest {
     }
 
     @Autowired
-    TestRestTemplate testRestTemplate;
+    private TestRestTemplate testRestTemplate;
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
     @Autowired
-    ProductRepository productRepository;
+    private ProductRepository productRepository;
     @Autowired
-    ResourceRepository resourceRepository;
+    private ResourceRepository resourceRepository;
     @Autowired
-    ResourceInUserRepository resourceInUserRepository;
+    private ResourceInUserRepository resourceInUserRepository;
     @Autowired
-    ResourceInProductRepository resourceInProductRepository;
+    private ResourceInProductRepository resourceInProductRepository;
 
-    User user;
-    Gemstone gemstone;
-    ResourceInUserRequestDto resourceInUserRequestDto;
-    ResourcesInUserResponseDto resourcesInUserResponseDto;
-    ProductRequestDto productRequestDto;
-    ProductResponseDto productResponseDto;
+    private User user;
+    private Gemstone gemstone;
+    private ResourceInUserRequestDto resourceInUserRequestDto;
+    private ResourcesInUserResponseDto resourcesInUserResponseDto;
+    private ProductRequestDto productRequestDto;
+    private ProductResponseDto productResponseDto;
 
     @BeforeEach
     void setUp() {

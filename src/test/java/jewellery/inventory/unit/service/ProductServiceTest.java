@@ -40,19 +40,19 @@ class ProductServiceTest {
     @Mock
     private ProductRepository productRepository;
     @Mock
-    UserMapper userMapper;
+    private UserMapper userMapper;
     @Mock
-    ProductMapper productMapper;
+    private ProductMapper productMapper;
     @Mock
-    UserRepository userRepository;
+    private UserRepository userRepository;
     @Mock
-    ResourceRepository resourceRepository;
+    private ResourceRepository resourceRepository;
     @Mock
-    ResourceInUserRepository resourceInUserRepository;
+    private ResourceInUserRepository resourceInUserRepository;
     @Mock
-    ResourceInProductRepository resourceInProductRepository;
+    private ResourceInProductRepository resourceInProductRepository;
     @Mock
-    ResourceInUserService resourceInUserService;
+    private ResourceInUserService resourceInUserService;
 
     private User user;
     private Product testContentProduct;
@@ -64,9 +64,9 @@ class ProductServiceTest {
     void setUp() {
         user = UserTestHelper.createTestUserWithRandomId();
         pearl = ResourceTestHelper.getPearl();
-        resourceInUser = createResourceInUser(user, pearl);
-        testContentProduct = createTestProduct(user, pearl);
-        productRequestDto = ProductTestHelper.getProductRequestDto(user, createResourceQuantityRequestDto(pearl));
+        resourceInUser = getResourceInUser(user, pearl);
+        testContentProduct = getTestProduct(user, pearl);
+        productRequestDto = ProductTestHelper.getProductRequestDto(user, getResourceQuantityRequestDto(pearl));
     }
 
     @Test
@@ -193,8 +193,8 @@ class ProductServiceTest {
 
     @Test
     void testDeleteProductDisassembleContentProduct() {
-        Product content1 = createTestProduct(user, pearl);
-        Product content2 = createTestProduct(user, pearl);
+        Product content1 = getTestProduct(user, pearl);
+        Product content2 = getTestProduct(user, pearl);
 
         testContentProduct.setProductsContent(List.of(content1, content2));
         when(productRepository.findById(testContentProduct.getId())).thenReturn(Optional.of(testContentProduct));

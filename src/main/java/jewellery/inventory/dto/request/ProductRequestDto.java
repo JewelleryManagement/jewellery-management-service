@@ -22,7 +22,10 @@ public class ProductRequestDto {
   List<ResourceQuantityRequestDto> resourcesContent;
   private List<UUID> productsContent;
   private String description;
+  @NotNull
   private double salePrice;
+  @NotNull
   private String catalogNumber;
+  @NotNull
   private String productionNumber;
 }
