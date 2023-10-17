@@ -15,7 +15,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class Product implements Serializable {
+
+public class Product {
   @Id @GeneratedValue private UUID id;
 
   @ManyToMany

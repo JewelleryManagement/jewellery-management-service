@@ -15,7 +15,7 @@ public class User {
   @Id @GeneratedValue private UUID id;
 
   @ManyToMany(mappedBy = "authors")
-  private List<Product> createdProducts;
+  private List<Product> authoredProducts;
 
   @Column(unique = true)
   private String name;

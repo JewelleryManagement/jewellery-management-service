@@ -3,11 +3,11 @@ package jewellery.inventory.unit.service;
 import static jewellery.inventory.helper.ProductTestHelper.*;
 
 import jewellery.inventory.dto.request.ProductRequestDto;
-import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
+import jewellery.inventory.helper.ProductTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.mapper.ProductMapper;
@@ -34,231 +34,208 @@ import java.util.*;
 @ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
 
-  @InjectMocks private ProductService productService;
-  @Mock private ProductRepository productRepository;
-  @Mock UserMapper userMapper;
-  @Mock ProductMapper productMapper;
-  @Mock UserRepository userRepository;
-  @Mock ResourceRepository resourceRepository;
-  @Mock ResourceInUserRepository resourceInUserRepository;
-  @Mock ResourceInProductRepository resourceInProductRepository;
-  @Mock ResourceInUserService resourceInUserService;
+    @InjectMocks
+    private ProductService productService;
+    @Mock
+    private ProductRepository productRepository;
+    @Mock
+    UserMapper userMapper;
+    @Mock
+    ProductMapper productMapper;
+    @Mock
+    UserRepository userRepository;
+    @Mock
+    ResourceRepository resourceRepository;
+    @Mock
+    ResourceInUserRepository resourceInUserRepository;
+    @Mock
+    ResourceInProductRepository resourceInProductRepository;
+    @Mock
+    ResourceInUserService resourceInUserService;
 
-  private User user;
-  private Product testProduct;
-  private Resource pearl;
-  private ResourceInUser resourceInUser;
-  private ProductRequestDto productRequestDto;
-  private ResourceQuantityRequestDto resourceQuantityRequestDto;
+    private User user;
+    private Product testContentProduct;
+    private Resource pearl;
+    private ResourceInUser resourceInUser;
+    private ProductRequestDto productRequestDto;
 
-  @BeforeEach
-  void setUp() {
+    @BeforeEach
+    void setUp() {
+        user = UserTestHelper.createTestUserWithRandomId();
+        pearl = ResourceTestHelper.getPearl();
+        resourceInUser = createResourceInUser(user, pearl);
+        testContentProduct = createTestProduct(user, pearl);
+        productRequestDto = ProductTestHelper.getProductRequestDto(user, createResourceQuantityRequestDto(pearl));
+    }
 
-    user = UserTestHelper.createTestUserWithRandomId();
-    pearl = ResourceTestHelper.getPearl();
-    resourceInUser = createResourceInUser(user, pearl);
-    testProduct = createTestProduct(user, pearl);
-    resourceQuantityRequestDto = createResourceQuantityRequestDto(pearl);
-    productRequestDto = createProductRequestDto(user, resourceQuantityRequestDto);
-  }
+    @Test
+    void createProductSuccessfully() {
 
-  @Test
-  void testDeleteProductContainsProductBreakDown() {
-    testProduct.setProductsContent(List.of(new Product(), new Product(), new Product()));
-    when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
+        when(userRepository.findById(productRequestDto.getOwnerId())).thenReturn(Optional.of(user));
+        when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId()))
+                .thenReturn(Optional.of(resourceInUser));
+        user.setResourcesOwned(List.of(resourceInUser));
 
-    productService.deleteProduct(testProduct.getId());
+        ProductResponseDto response = new ProductResponseDto();
+        when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
 
-    assertEquals(0, testProduct.getProductsContent().size());
-  }
+        ProductResponseDto actual = productService.createProduct(productRequestDto);
 
-  @Test
-  void testDeleteProductSuccessfully() {
+        assertEquals(actual, response);
+        assertEquals(actual.getProductionNumber(), response.getProductionNumber());
+        assertEquals(actual.getCatalogNumber(), response.getProductionNumber());
+    }
 
-    when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
+    @Test
+    void testCreateProductShouldThrowWhenProductNotFound() {
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        user.setResourcesOwned(List.of(resourceInUser));
+        productRequestDto.setProductsContent(List.of(UUID.randomUUID()));
 
-    productService.deleteProduct(testProduct.getId());
+        assertThrows(
+                ProductNotFoundException.class, () -> productService.createProduct(productRequestDto));
+    }
 
-    assertEquals(0, productRepository.count());
-  }
+    @Test
+    void testCreateProductShouldSetContentProduct() {
 
-  @Test
-  void testDeleteProductShouldThrowExceptionWhenProductIsPartOfProduct() {
-    testProduct.setContentOf(new Product());
-    when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
-    UUID productId = testProduct.getId();
-    assertThrows(ProductIsContentException.class, () -> productService.deleteProduct(productId));
-  }
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId()))
+                .thenReturn(Optional.of(resourceInUser));
+        user.setResourcesOwned(List.of(resourceInUser));
+        when(productRepository.findById(testContentProduct.getId())).thenReturn(Optional.of(testContentProduct));
 
-  @Test
-  void testDeleteProductShouldThrowExceptionWhenProductIsSold() {
-    testProduct.setSold(true);
-    when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
-    UUID productId = testProduct.getId();
-    assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
-  }
+        productRequestDto.setProductsContent(List.of(testContentProduct.getId()));
 
-  @Test
-  void testDeleteProductGetProductShouldThrowExceptionWhenProductNotExist() {
-    UUID fakeId = UUID.randomUUID();
-    assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(fakeId));
-  }
+        ProductResponseDto response = new ProductResponseDto();
+        when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
 
-  @Test
-  void createProductSuccessfully() {
+        ProductResponseDto actual = productService.createProduct(productRequestDto);
 
-    when(userRepository.findById(productRequestDto.getOwnerId())).thenReturn(Optional.of(user));
-    when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId()))
-        .thenReturn(Optional.of(resourceInUser));
-    user.setResourcesOwned(List.of(resourceInUser));
+        assertEquals(response, actual);
+        assertEquals(response.getContentOf(), actual.getContentOf());
+        assertEquals(response.getProductsContent(), actual.getProductsContent());
+    }
 
-    ProductResponseDto response = new ProductResponseDto();
-    when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
+    @Test
+    void testCreateProductShouldThrowExceptionWhenResourceNotFound() {
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
 
-    ProductResponseDto actual = productService.createProduct(productRequestDto);
+        assertThrows(
+                ResourceInUserNotFoundException.class,
+                () -> productService.createProduct(productRequestDto));
+    }
 
-    assertEquals(actual, response);
-  }
+    @Test
+    void testCreateProductGetUserShouldThrowExceptionIfUserNotExist() {
+        assertThrows(
+                UserNotFoundException.class, () -> productService.createProduct(productRequestDto));
+    }
 
-  @Test
-  void testCreateProductShouldRemoveResourceFromUserWhenResourceInUserIsZero() {
-    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-    when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId()))
-        .thenReturn(Optional.of(resourceInUser));
-    resourceInUser.setQuantity(5);
-    user.setResourcesOwned(List.of(resourceInUser));
-    resourceQuantityRequestDto.setQuantity(5);
+    @Test
+    void testGetProductShouldThrowWhenProductNotFound() {
+        UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
+        assertThrows(ProductNotFoundException.class, () -> productService.getProduct(fakeId));
+    }
 
-    productService.createProduct(productRequestDto);
+    @Test
+    void testGetProductWhenProductFound() {
 
-    assertEquals(0, resourceInUserRepository.count());
-  }
+        when(productRepository.findById(testContentProduct.getId())).thenReturn(Optional.of(testContentProduct));
 
-  @Test
-  void testCreateProductShouldThrowExceptionWhenResourceInUserNotFound() {
-    user.setResourcesOwned(new ArrayList<>());
-    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        ProductResponseDto response = new ProductResponseDto();
+        when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
 
-    assertThrows(
-        ResourceInUserNotFoundException.class,
-        () -> productService.createProduct(productRequestDto));
-  }
+        ProductResponseDto actual = productService.getProduct(testContentProduct.getId());
 
-  @Test
-  void testCreateProductShouldThrowWhenResourceNotExistInResourceInUserRepository() {
-    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-    assertThrows(
-        ResourceInUserNotFoundException.class,
-        () -> productService.createProduct(productRequestDto));
-  }
+        assertEquals(response, actual);
+        assertEquals(response.getId(), actual.getId());
+        assertEquals(response.getAuthors(), actual.getAuthors());
+        assertEquals(response.getCatalogNumber(), actual.getCatalogNumber());
+    }
 
-  @Test
-  void testCreateProductShouldThrowExceptionWhenProductToContainNotFound() {
-    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-    user.setResourcesOwned(List.of(resourceInUser));
-    productRequestDto.setProductsContent(List.of(testProduct.getId()));
+    @Test
+    void testGetAllProducts() {
 
-    assertThrows(
-        ProductNotFoundException.class, () -> productService.createProduct(productRequestDto));
-  }
+        List<Product> products = Arrays.asList(testContentProduct, new Product(), new Product());
 
-  @Test
-  void testCreateProductShouldSetContentProduct() {
+        when(productRepository.findAll()).thenReturn(products);
 
-    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-    when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId()))
-        .thenReturn(Optional.of(resourceInUser));
-    user.setResourcesOwned(List.of(resourceInUser));
-    when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
+        List<ProductResponseDto> responses = productService.getAllProducts();
 
-    productRequestDto.setProductsContent(List.of(testProduct.getId()));
+        assertEquals(products.size(), responses.size());
+    }
 
-    ProductResponseDto response = new ProductResponseDto();
-    when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
+    @Test
+    void testDeleteProductSuccessfully() {
 
-    ProductResponseDto actual = productService.createProduct(productRequestDto);
+        when(productRepository.findById(testContentProduct.getId())).thenReturn(Optional.of(testContentProduct));
 
-    assertEquals(response, actual);
-  }
+        productService.deleteProduct(testContentProduct.getId());
 
-  @Test
-  void testCreateProductShouldThrowWhenProductNotFound() {
-    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-    user.setResourcesOwned(List.of(resourceInUser));
-    productRequestDto.setProductsContent(List.of(UUID.randomUUID()));
+        assertEquals(0, productRepository.count());
+        verify(productRepository, times(1)).deleteById(testContentProduct.getId());
+    }
 
-    assertThrows(
-        ProductNotFoundException.class, () -> productService.createProduct(productRequestDto));
-  }
+    @Test
+    void testDeleteProductDisassembleContentProduct() {
+        Product content1 = createTestProduct(user, pearl);
+        Product content2 = createTestProduct(user, pearl);
 
-  @Test
-  void testCreateProductShouldThrowExceptionWhenResourceNotFound() {
-    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        testContentProduct.setProductsContent(List.of(content1, content2));
+        when(productRepository.findById(testContentProduct.getId())).thenReturn(Optional.of(testContentProduct));
 
-    assertThrows(
-        ResourceInUserNotFoundException.class,
-        () -> productService.createProduct(productRequestDto));
-  }
+        productService.deleteProduct(testContentProduct.getId());
 
-  @Test
-  void testCreateProductGetUserShouldThrowExceptionIfUserNotExist() {
-    assertThrows(
-        UserNotFoundException.class, () -> productService.createProduct(productRequestDto));
-  }
+        verify(productRepository, times(1)).deleteById(testContentProduct.getId());
+        verify(productRepository, times(1)).save(content1);
+        verify(productRepository, times(1)).save(content2);
+    }
 
-  @Test
-  void testGetProductShouldThrowWhenProductNotFound() {
-    UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
-    assertThrows(ProductNotFoundException.class, () -> productService.getProduct(fakeId));
-  }
+    @Test
+    void testDeleteProductShouldThrowExceptionWhenProductIsPartOfProduct() {
+        testContentProduct.setContentOf(new Product());
+        when(productRepository.findById(testContentProduct.getId())).thenReturn(Optional.of(testContentProduct));
+        UUID productId = testContentProduct.getId();
+        assertThrows(ProductIsContentException.class, () -> productService.deleteProduct(productId));
+    }
 
-  @Test
-  void testGetProductWhenProductFound() {
+    @Test
+    void testDeleteProductShouldThrowExceptionWhenProductIsSold() {
+        testContentProduct.setSold(true);
+        when(productRepository.findById(testContentProduct.getId())).thenReturn(Optional.of(testContentProduct));
+        UUID productId = testContentProduct.getId();
+        assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
+    }
 
-    when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
+    @Test
+    void testDeleteProductGetProductShouldThrowExceptionWhenProductNotExist() {
+        UUID fakeId = UUID.randomUUID();
+        assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(fakeId));
+    }
 
-    ProductResponseDto response = new ProductResponseDto();
-    when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
+    @Test
+    void deleteProductShouldThrowExceptionWhenProductIsPartOfProduct() {
 
-    ProductResponseDto actual = productService.getProduct(testProduct.getId());
+        testContentProduct.setContentOf(new Product());
 
-    assertEquals(response, actual);
-  }
+        when(productRepository.findById(testContentProduct.getId())).thenReturn(Optional.of(testContentProduct));
+        UUID productId = testContentProduct.getId();
+        assertThrows(ProductIsContentException.class, () -> productService.deleteProduct(productId));
+    }
 
-  @Test
-  void testGetAllProducts() {
+    @Test
+    void deleteProductShouldThrowExceptionWhenProductIsSold() {
+        testContentProduct.setSold(true);
 
-    List<Product> products = Arrays.asList(testProduct, new Product(), new Product());
+        when(productRepository.findById(testContentProduct.getId())).thenReturn(Optional.of(testContentProduct));
+        UUID productId = testContentProduct.getId();
+        assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
+    }
 
-    when(productRepository.findAll()).thenReturn(products);
-
-    List<ProductResponseDto> responses = productService.getAllProducts();
-
-    assertEquals(products.size(), responses.size());
-  }
-
-  @Test
-  void deleteProductShouldThrowExceptionWhenProductIsPartOfProduct() {
-
-    testProduct.setContentOf(new Product());
-
-    when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
-    UUID productId = testProduct.getId();
-    assertThrows(ProductIsContentException.class, () -> productService.deleteProduct(productId));
-  }
-
-  @Test
-  void deleteProductShouldThrowExceptionWhenProductIsSold() {
-    testProduct.setSold(true);
-
-    when(productRepository.findById(testProduct.getId())).thenReturn(Optional.of(testProduct));
-    UUID productId = testProduct.getId();
-    assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
-  }
-
-  @Test
-  void deleteProductShouldThrowExceptionWhenProductIdDoesNotExist() {
-    UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
-    assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(fakeId));
-  }
+    @Test
+    void deleteProductShouldThrowExceptionWhenProductIdDoesNotExist() {
+        UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
+        assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(fakeId));
+    }
 }

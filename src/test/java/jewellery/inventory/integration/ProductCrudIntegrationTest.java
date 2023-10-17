@@ -87,23 +87,19 @@ class ProductCrudIntegrationTest {
     User user;
     Gemstone gemstone;
     ResourceInUserRequestDto resourceInUserRequestDto;
-    ResourcesInUserResponseDto resourcesInUser;
+    ResourcesInUserResponseDto resourcesInUserResponseDto;
     ProductRequestDto productRequestDto;
     ProductResponseDto productResponseDto;
 
     @BeforeEach
     void setUp() {
-        userRepository.deleteAll();
-        productRepository.deleteAll();
-        resourceRepository.deleteAll();
-        resourceInUserRepository.deleteAll();
-        resourceInProductRepository.deleteAll();
+        cleanAllRepositories();
 
         user = createUserInDatabase();
         gemstone = createGemstoneInDatabase();
         resourceInUserRequestDto = getResourceInUserRequestDto(user, Objects.requireNonNull(gemstone));
-        resourcesInUser = getResourcesInUserResponseDto(resourceInUserRequestDto);
-        productRequestDto = getProductRequestDto(Objects.requireNonNull(resourcesInUser), user);
+        resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
+        productRequestDto = getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), user);
     }
 
     @Test
@@ -116,6 +112,8 @@ class ProductCrudIntegrationTest {
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(productRequestDto.getResourcesContent().get(0).getId(), productResponseDto.getResourcesContent().get(0).getResource().getId());
         assertEquals(productRequestDto.getOwnerId(), productResponseDto.getOwner().getId());
+        assertEquals(productRequestDto.getProductionNumber(), productResponseDto.getProductionNumber());
+        assertEquals(productRequestDto.getCatalogNumber(), productResponseDto.getCatalogNumber());
     }
 
     @Test
@@ -132,6 +130,7 @@ class ProductCrudIntegrationTest {
         assertEquals(productRequestDto.getOwnerId(), responseBody.getOwner().getId());
         assertEquals(productRequestDto.getSalePrice(), responseBody.getSalePrice());
         assertEquals(productRequestDto.getResourcesContent().size(), responseBody.getResourcesContent().size());
+        assertEquals(productRequestDto.getCatalogNumber(), responseBody.getCatalogNumber());
     }
 
     @Test
@@ -148,6 +147,7 @@ class ProductCrudIntegrationTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(1, responseBodies.size());
         assertEquals(productRequestDto.getOwnerId(), currentResponse.getOwner().getId());
+        assertEquals(productRequestDto.getProductionNumber(), currentResponse.getProductionNumber());
     }
 
     @Test
@@ -162,6 +162,11 @@ class ProductCrudIntegrationTest {
                         HttpStatus.class);
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+        ResponseEntity<ProductResponseDto> newResponse =
+                this.testRestTemplate.getForEntity(getProductUrl(Objects.requireNonNull(productResponseDto).getId()), ProductResponseDto.class);
+
+        assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
     }
 
 
@@ -205,5 +210,13 @@ class ProductCrudIntegrationTest {
         ResponseEntity<User> createUser = this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, User.class);
 
         return createUser.getBody();
+    }
+
+    private void cleanAllRepositories() {
+        userRepository.deleteAll();
+        productRepository.deleteAll();
+        resourceRepository.deleteAll();
+        resourceInUserRepository.deleteAll();
+        resourceInProductRepository.deleteAll();
     }
 }

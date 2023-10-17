@@ -25,9 +25,11 @@ public class ProductTestHelper {
     return resourceInUser;
   }
 
-  public static ProductRequestDto createProductRequestDto(
+  public static ProductRequestDto getProductRequestDto(
       User user, ResourceQuantityRequestDto resourceQuantityRequestDto) {
     ProductRequestDto productRequestDto = new ProductRequestDto();
+    productRequestDto.setProductionNumber("1234");
+    productRequestDto.setCatalogNumber("1");
     productRequestDto.setAuthors(List.of(user.getId()));
     productRequestDto.setOwnerId(user.getId());
     productRequestDto.setDescription("This is test product");
@@ -44,6 +46,8 @@ public class ProductTestHelper {
         getResourceInProductRequestDtos(resourcesInUser);
 
     ProductRequestDto productRequestDto = new ProductRequestDto();
+    productRequestDto.setCatalogNumber("1111");
+    productRequestDto.setProductionNumber("1234");
     productRequestDto.setDescription("Test");
     productRequestDto.setOwnerId(user.getId());
     productRequestDto.setAuthors(List.of(user.getId()));
@@ -51,22 +55,6 @@ public class ProductTestHelper {
     productRequestDto.setResourcesContent(listOfResourcesInProduct);
 
     return productRequestDto;
-  }
-
-  @NotNull
-  private static List<ResourceQuantityRequestDto> getResourceInProductRequestDtos(
-      ResourcesInUserResponseDto resourcesInUser) {
-    ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
-    List<ResourceQuantityRequestDto> listOfResourcesInProduct = new ArrayList<>();
-    resourcesInUser
-        .getResourcesAndQuantities()
-        .forEach(
-            r -> {
-              resourceQuantityRequestDto.setId(r.getResource().getId());
-              resourceQuantityRequestDto.setQuantity(5);
-              listOfResourcesInProduct.add(resourceQuantityRequestDto);
-            });
-    return listOfResourcesInProduct;
   }
 
   public static ResourceQuantityRequestDto createResourceQuantityRequestDto(Resource pearl) {
@@ -80,6 +68,8 @@ public class ProductTestHelper {
     Product testProduct = new Product();
     testProduct.setAuthors(List.of(user));
     testProduct.setId(UUID.randomUUID());
+    testProduct.setProductionNumber("11");
+    testProduct.setCatalogNumber("2");
     testProduct.setOwner(user);
     testProduct.setSold(false);
     testProduct.setDescription("This is Test Product");
@@ -96,5 +86,21 @@ public class ProductTestHelper {
     resourceInProduct.setResource(pearl);
     resourceInProduct.setQuantity(5);
     return resourceInProduct;
+  }
+
+  @NotNull
+  private static List<ResourceQuantityRequestDto> getResourceInProductRequestDtos(
+          ResourcesInUserResponseDto resourcesInUser) {
+    ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
+    List<ResourceQuantityRequestDto> listOfResourcesInProduct = new ArrayList<>();
+    resourcesInUser
+            .getResourcesAndQuantities()
+            .forEach(
+                    r -> {
+                      resourceQuantityRequestDto.setId(r.getResource().getId());
+                      resourceQuantityRequestDto.setQuantity(5);
+                      listOfResourcesInProduct.add(resourceQuantityRequestDto);
+                    });
+    return listOfResourcesInProduct;
   }
 }
