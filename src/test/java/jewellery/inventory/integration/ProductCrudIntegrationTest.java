@@ -17,32 +17,19 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = RANDOM_PORT)
-class ProductCrudIntegrationTest {
-
-    @Value(value = "${local.server.port}")
-    private int port;
-
-    private static final String BASE_URL_PATH = "http://localhost:";
+class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     private String getBaseUrl() {
         return BASE_URL_PATH + port;
@@ -72,8 +59,6 @@ class ProductCrudIntegrationTest {
         return getBaseUrl() + "/products/" + id;
     }
 
-    @Autowired
-    private TestRestTemplate testRestTemplate;
     @Autowired
     private UserRepository userRepository;
     @Autowired

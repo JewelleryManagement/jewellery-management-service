@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@CrossOrigin(origins = "${cors.origins}")
 @RequestMapping("/products")
 @RequiredArgsConstructor
 public class ProductController {

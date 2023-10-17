@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,33 +15,19 @@ import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = RANDOM_PORT)
-class UserCrudIntegrationTest {
-    @Value(value = "${local.server.port}")
-    private int port;
+class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
+  @Autowired UserRepository userRepository;
 
-    private String getBaseUserUrl() {
-        return "http://localhost:" + port + "/users";
-    }
-
-    @Autowired
-    private TestRestTemplate testRestTemplate;
-    @Autowired
-    private UserRepository userRepository;
-
+  private String getBaseUserUrl() {
+    return BASE_URL_PATH + port + "/users";
+  }
 
     @BeforeEach
     void cleanUp() {
