@@ -7,6 +7,7 @@ import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
+import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.helper.ProductTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.helper.UserTestHelper;
@@ -94,6 +95,19 @@ class ProductServiceTest {
 
         assertThrows(
                 ProductNotFoundException.class, () -> productService.createProduct(productRequestDto));
+    }
+
+    @Test
+    void testCreateProductShouldThrowWhenProductOwnerIsNotTheSameAsContentProductOwner() {
+        when(userRepository.findById(productRequestDto.getOwnerId())).thenReturn(Optional.of(user));
+        when(productRepository.findById(testContentProduct.getId())).thenReturn(Optional.of(testContentProduct));
+
+        User anotherUser = UserTestHelper.createTestUserWithRandomId();
+        testContentProduct.setOwner(anotherUser);
+        productRequestDto.setProductsContent(List.of(testContentProduct.getId()));
+
+        assertThrows(UserNotOwnerException.class,
+                () -> productService.createProduct(productRequestDto));
     }
 
     @Test
