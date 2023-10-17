@@ -31,6 +31,7 @@ public class ResourceTestHelper {
   private static final String PLATING = "silver";
   public static final String UPDATED_PLATING = PLATING + "ish";
   private static final String CUT = "diamond";
+  private static final String DIMENSION_SIZE="4.50 x 4.90 x 2.50";
   private static final Double DIMENSION_X = 4.5;
   private static final Double DIMENSION_Y = 4.9;
   private static final Double DIMENSION_Z = 2.5;
@@ -189,6 +190,7 @@ public class ResourceTestHelper {
         .color(COLOR_GEMSTONE)
         .cut(CUT)
         .clarity(CLARITY)
+            .size(DIMENSION_SIZE)
         .shape(SHAPE_GEMSTONEL)
         .build();
   }
