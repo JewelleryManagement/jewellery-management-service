@@ -42,6 +42,5 @@ public class ResourceMapper {
       return linkingPartMapper.toResourceEntity(linkingPartDTO);
     }
     throw new MappingException(resourceRequestDto);
-
   }
 }

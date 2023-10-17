@@ -15,11 +15,9 @@ import lombok.Setter;
 public class ResourceInProduct {
   @Id @GeneratedValue private UUID id;
 
-  @ManyToOne
-  private Resource resource;
+  @ManyToOne private Resource resource;
 
   private double quantity;
 
-  @ManyToOne
-  private Product product;
+  @ManyToOne private Product product;
 }
