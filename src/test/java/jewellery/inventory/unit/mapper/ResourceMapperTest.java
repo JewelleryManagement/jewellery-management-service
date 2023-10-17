@@ -20,7 +20,7 @@ class ResourceMapperTest {
 
   @BeforeEach
   void setUp() {
-    Locale.setDefault(Locale.US);
+  //  Locale.setDefault(Locale.US);
     PearlMapper pearlMapper = PearlMapper.INSTANCE;
     GemstoneMapper gemstoneMapper = GemstoneMapper.INSTANCE;
     LinkingPartMapper linkingPartMapper = LinkingPartMapper.INSTANCE;
