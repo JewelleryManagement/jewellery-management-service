@@ -1,18 +1,9 @@
 package jewellery.inventory.unit.mapper;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import jewellery.inventory.dto.request.resource.GemstoneRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.exception.MappingException;
-import jewellery.inventory.mapper.GemstoneMapper;
-import jewellery.inventory.mapper.LinkingPartMapper;
-import jewellery.inventory.mapper.PearlMapper;
-import jewellery.inventory.mapper.PreciousMetalMapper;
-import jewellery.inventory.mapper.ResourceMapper;
-import jewellery.inventory.model.resource.Gemstone;
+import jewellery.inventory.mapper.*;
 import jewellery.inventory.model.resource.Resource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +11,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Locale;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ResourceMapperTest {
   private ResourceMapper resourceMapper;

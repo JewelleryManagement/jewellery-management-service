@@ -19,7 +19,7 @@ public class ResourceMapper {
     if (resource instanceof Pearl pearl) {
       return pearlMapper.toResourceResponse(pearl);
     } else if (resource instanceof Gemstone gemstone) {
-      return gemstone.toResourceResponse();
+      return gemstoneMapper.toResourceResponse(gemstone);
     } else if (resource instanceof LinkingPart linkingPart) {
       return linkingPartMapper.toResourceResponse(linkingPart);
     } else if (resource instanceof PreciousMetal preciousMetal) {

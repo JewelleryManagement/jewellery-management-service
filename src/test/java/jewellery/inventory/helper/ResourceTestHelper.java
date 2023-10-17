@@ -83,7 +83,6 @@ public class ResourceTestHelper {
         .color(COLOR_GEMSTONE)
         .cut(CUT)
         .clarity(CLARITY)
-            .size(DIMENSIONS_SIZE)
         .dimensionX(DIMENSION_X)
         .dimensionY(DIMENSION_Y)
         .dimensionZ(DIMENSION_Z)
@@ -208,7 +207,6 @@ public class ResourceTestHelper {
         .dimensionX(DIMENSION_X)
         .dimensionY(DIMENSION_Y)
         .dimensionZ(DIMENSION_Z)
-            .size(DIMENSIONS_SIZE)
         .shape(SHAPE_GEMSTONEL)
         .build();
   }
