@@ -7,7 +7,6 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 import java.util.Collections;
 import jewellery.inventory.model.User;
-import jewellery.inventory.security.SecurityConfig;
 import jewellery.inventory.service.security.JwtTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +16,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
