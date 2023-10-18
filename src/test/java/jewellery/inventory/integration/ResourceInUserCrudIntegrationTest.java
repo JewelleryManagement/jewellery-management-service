@@ -5,11 +5,10 @@ import static jewellery.inventory.helper.UserTestHelper.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import java.util.List;
 import java.util.UUID;
-import jewellery.inventory.dto.ResourceQuantityDto;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
@@ -22,26 +21,15 @@ import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = RANDOM_PORT)
-class ResourceInUserCrudIntegrationTest {
-  @Autowired TestRestTemplate testRestTemplate;
+class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
+
+  private static final double RESOURCE_QUANTITY = 5.00;
   @Autowired UserRepository userRepository;
   @Autowired ResourceRepository resourceRepository;
   @Autowired ResourceInUserRepository resourceInUserRepository;
-
-  @Value(value = "${local.server.port}")
-  private int port;
-
-  private static final String BASE_URL_PATH = "http://localhost:";
 
   private String getBaseUrl() {
     return BASE_URL_PATH + port;
@@ -66,8 +54,6 @@ class ResourceInUserCrudIntegrationTest {
   private String getBaseResourceUrl() {
     return buildUrl("resources");
   }
-
-  private static final double RESOURCE_QUANTITY = 5.00;
 
   @BeforeEach
   void cleanup() {
@@ -144,7 +130,7 @@ class ResourceInUserCrudIntegrationTest {
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendGetResourcesInUserRequest(createdUser.getId());
     assertNotNull(response.getBody());
-    List<ResourceQuantityDto> resourceQuantities = response.getBody().getResourcesAndQuantities();
+    List<ResourceQuantityResponseDto> resourceQuantities = response.getBody().getResourcesAndQuantities();
     assertNotNull(resourceQuantities);
     assertEquals(1, resourceQuantities.size());
     assertEquals(RESOURCE_QUANTITY * 2, resourceQuantities.get(0).getQuantity(), 0.001);
@@ -250,7 +236,7 @@ class ResourceInUserCrudIntegrationTest {
 
     ResponseEntity<ResourcesInUserResponseDto> resourcesInUserResponse =
         sendGetResourcesInUserRequest(createdUser.getId());
-    ResourceQuantityDto resourceQuantity =
+    ResourceQuantityResponseDto resourceQuantity =
         findResourceQuantityIn(createdResource.getId(), resourcesInUserResponse);
     assertEquals(RESOURCE_QUANTITY - 1, resourceQuantity.getQuantity(), 0.01);
   }
@@ -385,7 +371,7 @@ class ResourceInUserCrudIntegrationTest {
                     resourceQuantityDto.getResource().equals(firstCreatedResource)));
   }
 
-  private static ResourceQuantityDto findResourceQuantityIn(
+  private static ResourceQuantityResponseDto findResourceQuantityIn(
       UUID idToFind, ResponseEntity<ResourcesInUserResponseDto> resourcesInUserResponse) {
     assertNotNull(resourcesInUserResponse.getBody());
     return resourcesInUserResponse.getBody().getResourcesAndQuantities().stream()

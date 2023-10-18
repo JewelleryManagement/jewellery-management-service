@@ -12,6 +12,7 @@ import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
   private final UserRepository userRepository;
   private final UserMapper userMapper;
+  private final PasswordEncoder passwordEncoder;
 
   public List<UserResponseDto> getAllUsers() {
     return userMapper.toUserResponseList(userRepository.findAll());
@@ -32,6 +34,7 @@ public class UserService {
   public UserResponseDto createUser(UserRequestDto user) {
     User userToCreate = userMapper.toUserEntity(user);
     validateUserEmailAndName(userToCreate);
+    userToCreate.setPassword(passwordEncoder.encode(userToCreate.getPassword()));
     return userMapper.toUserResponse(userRepository.save(userToCreate));
   }
 
