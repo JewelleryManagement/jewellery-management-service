@@ -39,21 +39,20 @@ public class ResourceInUserService {
   private static final double EPSILON = 1e-10;
 
   @Transactional
-  public TransferResourceResponseDto transferResources(TransferResourceRequestDto transferResourceRequestDto) {
+  public TransferResourceResponseDto transferResources(
+      TransferResourceRequestDto transferResourceRequestDto) {
 
-    User owner = getOwner(transferResourceRequestDto);
-    User recipient = getRecipient(transferResourceRequestDto);
-    Resource resourceToTransfer = getResourceToTransfer(transferResourceRequestDto);
-
-    changeOwnersResourceQuantity(transferResourceRequestDto, owner, resourceToTransfer);
-    ResourceInUser resourceInReceiver =
-        changeReceiversResourceQuantity(transferResourceRequestDto, recipient, resourceToTransfer);
+    ResourceInUser resourceInSender = changeSendersResourceQuantity(transferResourceRequestDto);
+    ResourceInUser resourceInReceiver = changeReceiversResourceQuantity(transferResourceRequestDto);
 
     return TransferResourceResponseDto.builder()
-        .previousOwner(userMapper.toUserResponse(owner))
-        .newOwner(userMapper.toUserResponse(recipient))
-        .transferredResource(ResourceQuantityResponseDto.builder()
-                .resource(resourceMapper.toResourceResponse(resourceToTransfer))
+        .previousOwner(userMapper.toUserResponse(resourceInSender.getOwner()))
+        .newOwner(userMapper.toUserResponse(resourceInReceiver.getOwner()))
+        .transferredResource(
+            ResourceQuantityResponseDto.builder()
+                .resource(
+                    resourceMapper.toResourceResponse(
+                        getResourceToTransfer(transferResourceRequestDto)))
                 .quantity(resourceInReceiver.getQuantity())
                 .build())
         .build();
@@ -148,9 +147,9 @@ public class ResourceInUserService {
   }
 
   private ResourceInUser changeReceiversResourceQuantity(
-      TransferResourceRequestDto transferResourceRequestDto,
-      User recipient,
-      Resource resourceToTransfer) {
+      TransferResourceRequestDto transferResourceRequestDto) {
+    User recipient = getRecipient(transferResourceRequestDto);
+    Resource resourceToTransfer = getResourceToTransfer(transferResourceRequestDto);
     ResourceInUser resourceInUserToReceive =
         resourceInUserRepository
             .findByResourceIdAndOwnerId(resourceToTransfer.getId(), recipient.getId())
@@ -161,10 +160,7 @@ public class ResourceInUserService {
     }
 
     if (resourceInUserToReceive == null) {
-      ResourceInUser resourceInUser = new ResourceInUser();
-      resourceInUser.setResource(resourceToTransfer);
-      resourceInUser.setOwner(recipient);
-      resourceInUser.setQuantity(transferResourceRequestDto.getQuantity());
+      ResourceInUser resourceInUser = createAndAddNewResourceInUser(transferResourceRequestDto, recipient, resourceToTransfer);
       return resourceInUserRepository.save(resourceInUser);
     } else {
       resourceInUserToReceive.setQuantity(
@@ -173,16 +169,25 @@ public class ResourceInUserService {
     }
   }
 
-  private void changeOwnersResourceQuantity(
-      TransferResourceRequestDto transferResourceRequestDto,
-      User owner,
-      Resource resourceToTransfer) {
+  private static ResourceInUser createAndAddNewResourceInUser(TransferResourceRequestDto transferResourceRequestDto, User recipient, Resource resourceToTransfer) {
+    ResourceInUser resourceInUser = new ResourceInUser();
+    resourceInUser.setResource(resourceToTransfer);
+    resourceInUser.setOwner(recipient);
+    resourceInUser.setQuantity(transferResourceRequestDto.getQuantity());
+    recipient.getResourcesOwned().add(resourceInUser);
+    return resourceInUser;
+  }
+
+  private ResourceInUser changeSendersResourceQuantity(
+      TransferResourceRequestDto transferResourceRequestDto) {
+    User sender = getSender(transferResourceRequestDto);
+    Resource resourceToTransfer = getResourceToTransfer(transferResourceRequestDto);
     ResourceInUser resourceInUserToTransfer =
         resourceInUserRepository
-            .findByResourceIdAndOwnerId(resourceToTransfer.getId(), owner.getId())
+            .findByResourceIdAndOwnerId(resourceToTransfer.getId(), sender.getId())
             .orElseThrow(
                 () ->
-                    new ResourceInUserNotFoundException(resourceToTransfer.getId(), owner.getId()));
+                    new ResourceInUserNotFoundException(resourceToTransfer.getId(), sender.getId()));
 
     if (resourceInUserToTransfer.getQuantity() < transferResourceRequestDto.getQuantity()) {
       throw new InsufficientResourceQuantityException(
@@ -196,6 +201,8 @@ public class ResourceInUserService {
     if (resourceInUserToTransfer.getQuantity() == 0) {
       resourceInUserRepository.delete(resourceInUserToTransfer);
     }
+
+    return resourceInUserToTransfer;
   }
 
   private Resource getResourceToTransfer(TransferResourceRequestDto transferResourceRequestDto) {
@@ -211,7 +218,7 @@ public class ResourceInUserService {
         .orElseThrow(() -> new UserNotFoundException(transferResourceRequestDto.getRecipientId()));
   }
 
-  private User getOwner(TransferResourceRequestDto transferResourceRequestDto) {
+  private User getSender(TransferResourceRequestDto transferResourceRequestDto) {
     return userRepository
         .findById(transferResourceRequestDto.getOwnerId())
         .orElseThrow(() -> new UserNotFoundException(transferResourceRequestDto.getOwnerId()));

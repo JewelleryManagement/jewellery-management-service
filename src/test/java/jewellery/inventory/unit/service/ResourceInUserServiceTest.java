@@ -11,20 +11,26 @@ import static org.mockito.Mockito.when;
 
 import java.util.*;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
+import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
+import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ResourcesInUserMapper;
+import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
+import jewellery.inventory.model.resource.Gemstone;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
 import jewellery.inventory.service.ResourceInUserService;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -232,5 +238,35 @@ class ResourceInUserServiceTest {
 
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, never()).save(any(User.class));
+  }
+
+  @Test
+  void willThrowResourceInUserNotFoundExceptionWhenSenderHaveNotThisResource() {
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(resourceRepository.findById(resource.getId())).thenReturn(Optional.of(resource));
+
+    assertThrows(ResourceInUserNotFoundException.class,
+            () -> resourceInUserService.transferResources(getTransferResourceRequestDto()));
+  }
+
+  @Test
+  void willThrowExceptionWhenResourceInUserQuantityIsLessThanQuantityInRequest() {
+    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+    when(resourceRepository.findById(resource.getId())).thenReturn(Optional.of(resource));
+    when(resourceInUserRepository.findByResourceIdAndOwnerId(resource.getId(), user.getId()))
+            .thenReturn(Optional.of(resourceInUser));
+
+    assertThrows(InsufficientResourceQuantityException.class,
+            () -> resourceInUserService.transferResources(getTransferResourceRequestDto()));
+  }
+
+  @NotNull
+  private TransferResourceRequestDto getTransferResourceRequestDto() {
+    TransferResourceRequestDto transferResourceRequestDto = new TransferResourceRequestDto();
+    transferResourceRequestDto.setOwnerId(user.getId());
+    transferResourceRequestDto.setRecipientId(createTestUserWithId().getId());
+    transferResourceRequestDto.setResourceId(resource.getId());
+    transferResourceRequestDto.setQuantity(6);
+    return transferResourceRequestDto;
   }
 }

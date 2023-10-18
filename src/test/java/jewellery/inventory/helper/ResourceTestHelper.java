@@ -2,6 +2,8 @@ package jewellery.inventory.helper;
 
 import java.util.UUID;
 import java.util.stream.Stream;
+
+import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.request.resource.*;
 import jewellery.inventory.dto.response.resource.*;
 import jewellery.inventory.model.resource.*;
