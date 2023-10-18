@@ -1,5 +1,6 @@
 package jewellery.inventory.repository;
 
+import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.model.ResourceInUser;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,4 +13,5 @@ public interface ResourceInUserRepository extends JpaRepository<ResourceInUser, 
   @Query(
       "SELECT COALESCE(SUM(riu.quantity), 0.0) FROM ResourceInUser riu WHERE riu.resource.id = :resourceId")
   Double sumQuantityByResource(@Param("resourceId") UUID resourceId);
+  Optional<ResourceInUser> findByResourceIdAndOwnerId(UUID resourceId, UUID ownerId);
 }
