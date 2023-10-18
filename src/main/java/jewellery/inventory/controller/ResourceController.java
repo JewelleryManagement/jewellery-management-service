@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/resources")
-@CrossOrigin(origins = "${cors.origins}")
 @RequiredArgsConstructor
 public class ResourceController {
   private final ResourceService resourceService;

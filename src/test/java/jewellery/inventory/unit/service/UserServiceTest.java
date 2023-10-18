@@ -27,12 +27,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
   @Mock private UserRepository userRepository;
   @InjectMocks private UserService userService;
   @Mock private UserMapper userMapper;
+  @Mock  private PasswordEncoder passwordEncoder;
 
   private User user;
   private UserResponseDto userResponse;
@@ -58,8 +60,7 @@ class UserServiceTest {
             Arrays.asList(
                 new UserResponseDto(),
                 new UserResponseDto(),
-                new UserResponseDto())); // This mock ensures that the mapper returns a list of 3
-    // UserResponseDto objects.
+                new UserResponseDto()));
 
     List<UserResponseDto> returnedUsers = userService.getAllUsers();
 
@@ -124,6 +125,7 @@ class UserServiceTest {
     when(userRepository.save(any(User.class))).thenReturn(user);
     when(userMapper.toUserEntity(userRequest)).thenReturn(user);
     when(userMapper.toUserResponse(user)).thenReturn(userResponse);
+    when(passwordEncoder.encode(any())).thenReturn("$2a$10$WIgDfys.uGK53Q3V13l8AOYCH7M1cVHulX8klIq0PLB/KweY/Onhi");
 
     UserResponseDto createdUser = userService.createUser(userMapper.toUserRequest(user));
 
