@@ -8,6 +8,8 @@ import jewellery.inventory.model.resource.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Locale;
+
 
 @Component
 @RequiredArgsConstructor
@@ -47,8 +49,8 @@ public class ResourceMapper {
   }
 
   public ResourceResponseDto toGemstoneResponseWithSize(Gemstone gemstone, GemstoneResponseDto gemstoneResponseDto){
-    String size = String.format("%.2fx%.2fx%.2f", gemstone.getDimensionX(), gemstone.getDimensionY(), gemstone.getDimensionZ());
-    gemstoneResponseDto.setSize(size);
+    String size = String.format(Locale.US, "%.2fx%.2fx%.2f", gemstone.getDimensionX(), gemstone.getDimensionY(), gemstone.getDimensionZ());    gemstoneResponseDto.setSize(size);
     return gemstoneResponseDto;
   }
 }
+
