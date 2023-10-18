@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/resources")
-@CrossOrigin(origins = "${cors.origins}")
 @RequiredArgsConstructor
 public class ResourceController {
   private final ResourceService resourceService;
@@ -60,14 +59,14 @@ public class ResourceController {
   @Operation(summary = "Get resource quantity by resource id")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/quantity/{id}")
-  public ResourceQuantityDto getResourceQuantityById(@PathVariable("id") UUID id) {
+  public ResourceQuantityResponseDto getResourceQuantityById(@PathVariable("id") UUID id) {
     return resourceService.getResourceQuantity(id);
   }
 
   @Operation(summary = "Get all resource quantities")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/quantity")
-  public List<ResourceQuantityDto> getAllResourceQuantities() {
+  public List<ResourceQuantityResponseDto> getAllResourceQuantities() {
     return resourceService.getAllResourceQuantities();
   }
 }

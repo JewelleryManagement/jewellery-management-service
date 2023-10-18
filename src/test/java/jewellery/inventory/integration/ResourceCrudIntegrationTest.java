@@ -3,7 +3,6 @@ package jewellery.inventory.integration;
 import static jewellery.inventory.helper.ResourceTestHelper.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -11,40 +10,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import jewellery.inventory.dto.ResourceQuantityDto;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.mapper.ResourceMapper;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.data.util.Pair;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = RANDOM_PORT)
-class ResourceCrudIntegrationTest {
-
-  private String getBaseResourceUrl() {
-    return "http://localhost:" + port + "/resources";
-  }
-
-  @Value(value = "${local.server.port}")
-  private int port;
-
+class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private final ObjectMapper objectMapper = new ObjectMapper();
   @Autowired private ResourceMapper resourceMapper;
-  @Autowired TestRestTemplate testRestTemplate;
+
+  private String getBaseResourceUrl() {
+    return BASE_URL_PATH + port + "/resources";
+  }
 
   @AfterEach
   void deleteResources() throws JsonProcessingException {
@@ -67,15 +54,15 @@ class ResourceCrudIntegrationTest {
     List<ResourceResponseDto> createdResources =
         sendCreateRequestsFor(provideResourceRequestDtos().toList());
 
-    List<ResourceQuantityDto> resourceQuantityDtos = getResourceQuantitiesWithRequest();
+    List<ResourceQuantityResponseDto> resourceQuantityResponseDtos = getResourceQuantitiesWithRequest();
 
-    resourceQuantityDtos.forEach(
+    resourceQuantityResponseDtos.forEach(
         resourceQuantityDto -> {
           assertEquals(0.0, resourceQuantityDto.getQuantity());
         });
     assertEquals(
         createdResources,
-        resourceQuantityDtos.stream().map(ResourceQuantityDto::getResource).toList());
+        resourceQuantityResponseDtos.stream().map(ResourceQuantityResponseDto::getResource).toList());
   }
 
   @Test
@@ -83,7 +70,7 @@ class ResourceCrudIntegrationTest {
     List<ResourceResponseDto> createdResources =
         sendCreateRequestsFor(List.of(getGemstoneRequestDto()));
 
-    ResourceQuantityDto fetchedResourceQuantity =
+    ResourceQuantityResponseDto fetchedResourceQuantity =
         getResourceQuantityWithRequest(createdResources.get(0).getId());
 
     assertEquals(0.0, fetchedResourceQuantity.getQuantity());
@@ -115,7 +102,7 @@ class ResourceCrudIntegrationTest {
   @Test
   void willFailToGetResourceFromDatabaseWithWrongId() {
     ResponseEntity<String> response =
-        testRestTemplate.getForEntity(getBaseResourceUrl() + UUID.randomUUID(), String.class);
+        testRestTemplate.getForEntity(getBaseResourceUrl() + "/" + UUID.randomUUID(), String.class);
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
@@ -124,7 +111,7 @@ class ResourceCrudIntegrationTest {
   void willFailToUpdateResourceFromDatabaseWithWrongId() {
     ResponseEntity<String> response =
         testRestTemplate.exchange(
-            getBaseResourceUrl() + UUID.randomUUID(),
+            getBaseResourceUrl() + "/" + UUID.randomUUID(),
             HttpMethod.PUT,
             new HttpEntity<>(getGemstoneResponseDto()),
             String.class);
@@ -135,7 +122,7 @@ class ResourceCrudIntegrationTest {
   void willFailToDeleteResourceFromDatabaseWithWrongId() {
     ResponseEntity<String> response =
         testRestTemplate.exchange(
-            getBaseResourceUrl() + UUID.randomUUID(),
+            getBaseResourceUrl() + "/" + UUID.randomUUID(),
             HttpMethod.DELETE,
             HttpEntity.EMPTY,
             String.class);
@@ -154,7 +141,7 @@ class ResourceCrudIntegrationTest {
   }
 
   @NotNull
-  private List<ResourceQuantityDto> getResourceQuantitiesWithRequest()
+  private List<ResourceQuantityResponseDto> getResourceQuantitiesWithRequest()
       throws JsonProcessingException {
     String response =
         this.testRestTemplate.getForObject(getBaseResourceUrl() + "/quantity", String.class);
@@ -162,7 +149,7 @@ class ResourceCrudIntegrationTest {
   }
 
   @NotNull
-  private ResourceQuantityDto getResourceQuantityWithRequest(UUID resourceId)
+  private ResourceQuantityResponseDto getResourceQuantityWithRequest(UUID resourceId)
       throws JsonProcessingException {
     String response =
         this.testRestTemplate.getForObject(
