@@ -229,5 +229,4 @@ public class ProductService {
     resourceInProduct.setProduct(product);
     return resourceInProduct;
   }
-
 }

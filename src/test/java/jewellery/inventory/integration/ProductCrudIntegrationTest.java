@@ -125,7 +125,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         this.testRestTemplate.exchange(
             getBaseProductUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
 
-    assertFetchedProductMatchesCreated(response);
+    assertResponseMatchesCreatedRequest(response);
   }
 
   @Test
@@ -139,7 +139,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             null,
             new ParameterizedTypeReference<>() {});
 
-    assertFetchedProductMatchesCreated(response);
+    assertResponseMatchesCreatedRequest(response);
   }
 
   @Test
@@ -163,7 +163,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
   }
 
-  private void assertFetchedProductMatchesCreated(ResponseEntity<List<ProductResponseDto>> response) {
+  private void assertResponseMatchesCreatedRequest(ResponseEntity<List<ProductResponseDto>> response) {
     List<ProductResponseDto> productResponseDtos = response.getBody();
     ProductResponseDto currentResponse = productResponseDtos.get(0);
     assertEquals(HttpStatus.OK, response.getStatusCode());
