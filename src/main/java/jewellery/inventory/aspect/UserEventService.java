@@ -10,13 +10,11 @@ import java.util.Map;
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.exception.not_found.UserNotFoundException;
-import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.SystemEvent;
-import jewellery.inventory.model.User;
 import jewellery.inventory.repository.SystemEventRepository;
-import jewellery.inventory.repository.UserRepository;
+import jewellery.inventory.security.JwtUtils;
+import jewellery.inventory.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -27,21 +25,23 @@ import org.springframework.stereotype.Component;
 public class UserEventService {
 
   private final SystemEventRepository systemEventRepository;
-  private final UserRepository userRepository;
-  private final UserMapper userMapper;
+  private final UserService userService;
+  private final JwtUtils jwtUtils;
 
   public void logUserCreation(UserResponseDto createdUser) {
-    logEvent(EventType.USER_CREATION, buildPayloadForCreatedUser(createdUser), createdUser.getId());
+    UUID executorId = jwtUtils.getCurrentUserId();
+    logEvent(EventType.USER_CREATION, buildPayloadForCreatedUser(createdUser), executorId);
   }
 
   public void logUserDeletion(JoinPoint joinPoint, UUID userId) {
-    UserResponseDto user = fetchUserByIdAsDto(userId);
-    logEvent(EventType.USER_DELETION, buildPayloadForDeletedUser(user), userId);
+    UUID executorId = jwtUtils.getCurrentUserId();
+    UserResponseDto user = userService.fetchUserByIdAsDto(userId);
+    logEvent(EventType.USER_DELETION, buildPayloadForDeletedUser(user), executorId);
   }
 
   public UserResponseDto logUserUpdate(
       ProceedingJoinPoint joinPoint, UserRequestDto userRequest, UUID id) throws Throwable {
-    UserResponseDto previousUserDto = fetchUserByIdAsDto(id);
+    UserResponseDto previousUserDto = userService.fetchUserByIdAsDto(id);
 
     UserResponseDto updatedUserResponse = (UserResponseDto) joinPoint.proceed();
 
@@ -52,12 +52,8 @@ public class UserEventService {
     return updatedUserResponse;
   }
 
-  protected UserResponseDto fetchUserByIdAsDto(UUID id) {
-    User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
-    return userMapper.toUserResponse(user);
-  }
-
   protected void logEvent(EventType type, Map<String, Object> payload, UUID executorId) {
+
     SystemEvent event = new SystemEvent();
     event.setTimestamp(Instant.now());
     event.setType(type);
