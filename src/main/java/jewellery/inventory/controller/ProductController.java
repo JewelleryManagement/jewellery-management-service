@@ -32,6 +32,14 @@ public class ProductController {
     return productService.getAllProducts();
   }
 
+
+  @Operation(summary = "Get products owned by user")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/by-owner/{ownerId}")
+  public List<ProductResponseDto> getProductsByOwner(@PathVariable("ownerId") UUID ownerId) {
+    return productService.getByOwner(ownerId);
+  }
+
   @Operation(summary = "Get a single product")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")

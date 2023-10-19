@@ -1,7 +1,11 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ProductTestHelper.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
@@ -22,12 +26,6 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
@@ -103,17 +101,15 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getProductSuccessfully() {
-
-    productResponseDto = getProductResponseDto(productRequestDto);
+    productResponseDto = createProductWithRequest(productRequestDto);
 
     ResponseEntity<ProductResponseDto> response =
         this.testRestTemplate.getForEntity(
             getProductUrl(Objects.requireNonNull(productResponseDto).getId()),
             ProductResponseDto.class);
+
     ProductResponseDto responseBody = response.getBody();
-
     assertEquals(HttpStatus.OK, response.getStatusCode());
-
     assertEquals(productRequestDto.getOwnerId(), responseBody.getOwner().getId());
     assertEquals(productRequestDto.getSalePrice(), responseBody.getSalePrice());
     assertEquals(
@@ -123,23 +119,32 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getAllProductsSuccessfully() {
-    productResponseDto = getProductResponseDto(productRequestDto);
+    productResponseDto = createProductWithRequest(productRequestDto);
 
     ResponseEntity<List<ProductResponseDto>> response =
         this.testRestTemplate.exchange(
             getBaseProductUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
-    List<ProductResponseDto> responseBodies = response.getBody();
-    ProductResponseDto currentResponse = responseBodies.get(0);
 
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertEquals(1, responseBodies.size());
-    assertEquals(productRequestDto.getOwnerId(), currentResponse.getOwner().getId());
-    assertEquals(productRequestDto.getProductionNumber(), currentResponse.getProductionNumber());
+    assertFetchedProductMatchesCreated(response);
+  }
+
+  @Test
+  void getProductsByOwnerSuccessfully() {
+    createProductWithRequest(productRequestDto);
+
+    ResponseEntity<List<ProductResponseDto>> response =
+        this.testRestTemplate.exchange(
+            getBaseProductUrl() + "/by-owner/" + user.getId(),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<>() {});
+
+    assertFetchedProductMatchesCreated(response);
   }
 
   @Test
   void deleteProductSuccessfully() {
-    productResponseDto = getProductResponseDto(productRequestDto);
+    productResponseDto = createProductWithRequest(productRequestDto);
 
     ResponseEntity<HttpStatus> response =
         this.testRestTemplate.exchange(
@@ -158,8 +163,17 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
   }
 
+  private void assertFetchedProductMatchesCreated(ResponseEntity<List<ProductResponseDto>> response) {
+    List<ProductResponseDto> productResponseDtos = response.getBody();
+    ProductResponseDto currentResponse = productResponseDtos.get(0);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(1, productResponseDtos.size());
+    assertEquals(productRequestDto.getOwnerId(), currentResponse.getOwner().getId());
+    assertEquals(productRequestDto.getProductionNumber(), currentResponse.getProductionNumber());
+  }
+
   @Nullable
-  private ProductResponseDto getProductResponseDto(ProductRequestDto productRequestDto) {
+  private ProductResponseDto createProductWithRequest(ProductRequestDto productRequestDto) {
     ResponseEntity<ProductResponseDto> response =
         this.testRestTemplate.postForEntity(
             getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
