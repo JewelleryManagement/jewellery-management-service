@@ -1,15 +1,15 @@
 package jewellery.inventory.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/products")
@@ -21,7 +21,7 @@ public class ProductController {
   @Operation(summary = "Create a new product")
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
-  public ProductResponseDto createProduct(@RequestBody ProductRequestDto productRequestDto) {
+  public ProductResponseDto createProduct(@RequestBody @Valid ProductRequestDto productRequestDto) {
     return productService.createProduct(productRequestDto);
   }
 
@@ -30,6 +30,14 @@ public class ProductController {
   @GetMapping
   public List<ProductResponseDto> getAllProducts() {
     return productService.getAllProducts();
+  }
+
+
+  @Operation(summary = "Get products owned by user")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/by-owner/{ownerId}")
+  public List<ProductResponseDto> getProductsByOwner(@PathVariable("ownerId") UUID ownerId) {
+    return productService.getByOwner(ownerId);
   }
 
   @Operation(summary = "Get a single product")
