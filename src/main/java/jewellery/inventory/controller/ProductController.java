@@ -1,15 +1,15 @@
 package jewellery.inventory.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/products")
@@ -21,7 +21,7 @@ public class ProductController {
   @Operation(summary = "Create a new product")
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
-  public ProductResponseDto createProduct(@RequestBody ProductRequestDto productRequestDto) {
+  public ProductResponseDto createProduct(@RequestBody @Valid ProductRequestDto productRequestDto) {
     return productService.createProduct(productRequestDto);
   }
 
