@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import jewellery.inventory.dto.ResourceQuantityDto;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.mapper.ResourceMapper;
@@ -54,15 +54,15 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     List<ResourceResponseDto> createdResources =
         sendCreateRequestsFor(provideResourceRequestDtos().toList());
 
-    List<ResourceQuantityDto> resourceQuantityDtos = getResourceQuantitiesWithRequest();
+    List<ResourceQuantityResponseDto> resourceQuantityResponseDtos = getResourceQuantitiesWithRequest();
 
-    resourceQuantityDtos.forEach(
+    resourceQuantityResponseDtos.forEach(
         resourceQuantityDto -> {
           assertEquals(0.0, resourceQuantityDto.getQuantity());
         });
     assertEquals(
         createdResources,
-        resourceQuantityDtos.stream().map(ResourceQuantityDto::getResource).toList());
+        resourceQuantityResponseDtos.stream().map(ResourceQuantityResponseDto::getResource).toList());
   }
 
   @Test
@@ -70,7 +70,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     List<ResourceResponseDto> createdResources =
         sendCreateRequestsFor(List.of(getGemstoneRequestDto()));
 
-    ResourceQuantityDto fetchedResourceQuantity =
+    ResourceQuantityResponseDto fetchedResourceQuantity =
         getResourceQuantityWithRequest(createdResources.get(0).getId());
 
     assertEquals(0.0, fetchedResourceQuantity.getQuantity());
@@ -141,7 +141,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @NotNull
-  private List<ResourceQuantityDto> getResourceQuantitiesWithRequest()
+  private List<ResourceQuantityResponseDto> getResourceQuantitiesWithRequest()
       throws JsonProcessingException {
     String response =
         this.testRestTemplate.getForObject(getBaseResourceUrl() + "/quantity", String.class);
@@ -149,7 +149,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @NotNull
-  private ResourceQuantityDto getResourceQuantityWithRequest(UUID resourceId)
+  private ResourceQuantityResponseDto getResourceQuantityWithRequest(UUID resourceId)
       throws JsonProcessingException {
     String response =
         this.testRestTemplate.getForObject(

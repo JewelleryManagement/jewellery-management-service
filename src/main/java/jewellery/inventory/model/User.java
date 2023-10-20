@@ -24,6 +24,9 @@ public class User implements UserDetails {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
+  @ManyToMany(mappedBy = "authors")
+  private List<Product> authoredProducts;
+
   @Column(unique = true)
   private String name;
 
