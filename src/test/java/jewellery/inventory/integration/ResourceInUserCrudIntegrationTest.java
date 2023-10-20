@@ -325,11 +325,11 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertEquals(HttpStatus.OK, transferResourceResponseDtoResponseEntity.getStatusCode());
 
     assertEquals(
-        Objects.requireNonNull(response).getPreviousOwner().getId(), requestDto.getOwnerId());
+        Objects.requireNonNull(response).getPreviousOwner().getId(), requestDto.getPreviousOwnerId());
     assertEquals(
-        Objects.requireNonNull(response).getNewOwner().getId(), requestDto.getRecipientId());
+        Objects.requireNonNull(response).getNewOwner().getId(), requestDto.getNewOwnerId());
     assertEquals(
-        response.getTransferredResource().getResource().getId(), requestDto.getResourceId());
+        response.getTransferredResource().getResource().getId(), requestDto.getTransferredResourceId());
     assertEquals(response.getTransferredResource().getQuantity(), 1);
   }
 
@@ -337,9 +337,9 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   private static TransferResourceRequestDto getTransferResourceRequestDto(
       UserResponseDto sender, GemstoneResponseDto createdResource, UserResponseDto receiver) {
     TransferResourceRequestDto requestDto = new TransferResourceRequestDto();
-    requestDto.setOwnerId(sender.getId());
-    requestDto.setRecipientId(receiver.getId());
-    requestDto.setResourceId(createdResource.getId());
+    requestDto.setPreviousOwnerId(sender.getId());
+    requestDto.setNewOwnerId(receiver.getId());
+    requestDto.setTransferredResourceId(createdResource.getId());
     requestDto.setQuantity(1);
     return requestDto;
   }

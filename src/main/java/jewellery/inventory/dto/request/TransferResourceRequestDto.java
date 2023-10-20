@@ -16,16 +16,16 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TransferResourceRequestDto {
 
-    private static final String QUANTITY_MIN_VALUE_MSG = "Quantity should not be less than 1.";
+    private static final String QUANTITY_MIN_VALUE_MSG = "Quantity should not be less than 0.";
     private static final String QUANTITY_DECIMAL_PLACES_MSG =
             "Quantity should not have more than 2 decimal places.";
 
     @NotNull
-    private UUID ownerId;
+    private UUID previousOwnerId;
     @NotNull
-    private UUID recipientId;
+    private UUID newOwnerId;
     @NotNull
-    private UUID resourceId;
+    private UUID transferredResourceId;
 
     @Min(value = 0, message = QUANTITY_MIN_VALUE_MSG)
     @Digits(integer = 10, fraction = 2, message = QUANTITY_DECIMAL_PLACES_MSG)

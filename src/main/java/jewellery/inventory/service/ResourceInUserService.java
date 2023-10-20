@@ -1,6 +1,5 @@
 package jewellery.inventory.service;
 
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
@@ -42,18 +41,20 @@ public class ResourceInUserService {
   public TransferResourceResponseDto transferResources(
       TransferResourceRequestDto transferResourceRequestDto) {
 
-    ResourceInUser resourceInSender = changeSendersResourceQuantity(transferResourceRequestDto);
-    ResourceInUser resourceInReceiver = changeReceiversResourceQuantity(transferResourceRequestDto);
+    removeQuantityFromResource(
+        transferResourceRequestDto.getPreviousOwnerId(),
+        transferResourceRequestDto.getTransferredResourceId(),
+        transferResourceRequestDto.getQuantity());
 
     return TransferResourceResponseDto.builder()
-        .previousOwner(userMapper.toUserResponse(resourceInSender.getOwner()))
-        .newOwner(userMapper.toUserResponse(resourceInReceiver.getOwner()))
+        .previousOwner(userMapper.toUserResponse(findUserById(transferResourceRequestDto.getPreviousOwnerId())))
+        .newOwner(addResourceToUser(getResourceInUserRequestDto(transferResourceRequestDto)).getOwner())
         .transferredResource(
             ResourceQuantityResponseDto.builder()
                 .resource(
                     resourceMapper.toResourceResponse(
                         getResourceToTransfer(transferResourceRequestDto)))
-                .quantity(resourceInReceiver.getQuantity())
+                .quantity(transferResourceRequestDto.getQuantity())
                 .build())
         .build();
   }
@@ -146,81 +147,18 @@ public class ResourceInUserService {
     return resourceInUser;
   }
 
-  private ResourceInUser changeReceiversResourceQuantity(
-      TransferResourceRequestDto transferResourceRequestDto) {
-    User recipient = getRecipient(transferResourceRequestDto);
-    Resource resourceToTransfer = getResourceToTransfer(transferResourceRequestDto);
-    ResourceInUser resourceInUserToReceive =
-        resourceInUserRepository
-            .findByResourceIdAndOwnerId(resourceToTransfer.getId(), recipient.getId())
-            .orElse(null);
-
-    if (recipient.getResourcesOwned() == null) {
-      recipient.setResourcesOwned(new ArrayList<>());
-    }
-
-    if (resourceInUserToReceive == null) {
-      ResourceInUser resourceInUser = createAndAddNewResourceInUser(transferResourceRequestDto, recipient, resourceToTransfer);
-      return resourceInUserRepository.save(resourceInUser);
-    } else {
-      resourceInUserToReceive.setQuantity(
-          resourceInUserToReceive.getQuantity() + transferResourceRequestDto.getQuantity());
-      return resourceInUserRepository.save(resourceInUserToReceive);
-    }
-  }
-
-  private static ResourceInUser createAndAddNewResourceInUser(TransferResourceRequestDto transferResourceRequestDto, User recipient, Resource resourceToTransfer) {
-    ResourceInUser resourceInUser = new ResourceInUser();
-    resourceInUser.setResource(resourceToTransfer);
-    resourceInUser.setOwner(recipient);
-    resourceInUser.setQuantity(transferResourceRequestDto.getQuantity());
-    recipient.getResourcesOwned().add(resourceInUser);
-    return resourceInUser;
-  }
-
-  private ResourceInUser changeSendersResourceQuantity(
-      TransferResourceRequestDto transferResourceRequestDto) {
-    User sender = getSender(transferResourceRequestDto);
-    Resource resourceToTransfer = getResourceToTransfer(transferResourceRequestDto);
-    ResourceInUser resourceInUserToTransfer =
-        resourceInUserRepository
-            .findByResourceIdAndOwnerId(resourceToTransfer.getId(), sender.getId())
-            .orElseThrow(
-                () ->
-                    new ResourceInUserNotFoundException(resourceToTransfer.getId(), sender.getId()));
-
-    if (resourceInUserToTransfer.getQuantity() < transferResourceRequestDto.getQuantity()) {
-      throw new InsufficientResourceQuantityException(
-          transferResourceRequestDto.getQuantity(), resourceInUserToTransfer.getQuantity());
-    }
-
-    resourceInUserToTransfer.setQuantity(
-        resourceInUserToTransfer.getQuantity() - transferResourceRequestDto.getQuantity());
-    resourceInUserRepository.save(resourceInUserToTransfer);
-
-    if (resourceInUserToTransfer.getQuantity() == 0) {
-      resourceInUserRepository.delete(resourceInUserToTransfer);
-    }
-
-    return resourceInUserToTransfer;
-  }
-
   private Resource getResourceToTransfer(TransferResourceRequestDto transferResourceRequestDto) {
     return resourceRepository
-        .findById(transferResourceRequestDto.getResourceId())
+        .findById(transferResourceRequestDto.getTransferredResourceId())
         .orElseThrow(
-            () -> new ResourceNotFoundException(transferResourceRequestDto.getResourceId()));
+            () -> new ResourceNotFoundException(transferResourceRequestDto.getTransferredResourceId()));
   }
 
-  private User getRecipient(TransferResourceRequestDto transferResourceRequestDto) {
-    return userRepository
-        .findById(transferResourceRequestDto.getRecipientId())
-        .orElseThrow(() -> new UserNotFoundException(transferResourceRequestDto.getRecipientId()));
-  }
-
-  private User getSender(TransferResourceRequestDto transferResourceRequestDto) {
-    return userRepository
-        .findById(transferResourceRequestDto.getOwnerId())
-        .orElseThrow(() -> new UserNotFoundException(transferResourceRequestDto.getOwnerId()));
+  private static ResourceInUserRequestDto getResourceInUserRequestDto(TransferResourceRequestDto transferResourceRequestDto) {
+    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
+    resourceInUserRequestDto.setUserId(transferResourceRequestDto.getNewOwnerId());
+    resourceInUserRequestDto.setResourceId(transferResourceRequestDto.getTransferredResourceId());
+    resourceInUserRequestDto.setQuantity(transferResourceRequestDto.getQuantity());
+    return resourceInUserRequestDto;
   }
 }
