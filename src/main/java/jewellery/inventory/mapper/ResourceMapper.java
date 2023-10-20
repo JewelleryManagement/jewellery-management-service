@@ -48,7 +48,7 @@ public class ResourceMapper {
     throw new MappingException(resourceRequestDto);
   }
 
-  public ResourceResponseDto toGemstoneResponseWithSize(Gemstone gemstone, GemstoneResponseDto gemstoneResponseDto){
+  private ResourceResponseDto toGemstoneResponseWithSize(Gemstone gemstone, GemstoneResponseDto gemstoneResponseDto){
     String size = String.format(Locale.US, "%.2fx%.2fx%.2f", gemstone.getDimensionX(), gemstone.getDimensionY(), gemstone.getDimensionZ());    gemstoneResponseDto.setSize(size);
     return gemstoneResponseDto;
   }
