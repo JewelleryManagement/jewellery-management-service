@@ -154,6 +154,7 @@ public class ResourceInUserService {
             () -> new ResourceNotFoundException(transferResourceRequestDto.getTransferredResourceId()));
   }
 
+
   private static ResourceInUserRequestDto getResourceInUserRequestDto(TransferResourceRequestDto transferResourceRequestDto) {
     ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
     resourceInUserRequestDto.setUserId(transferResourceRequestDto.getNewOwnerId());

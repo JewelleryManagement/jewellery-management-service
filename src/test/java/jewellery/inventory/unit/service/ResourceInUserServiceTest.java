@@ -237,23 +237,42 @@ class ResourceInUserServiceTest {
   }
 
   @Test
-  void willThrowResourceInUserNotFoundExceptionWhenSenderHaveNotThisResource() {
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(resourceRepository.findById(resource.getId())).thenReturn(Optional.of(resource));
+  void willThrowUserNotFoundExceptionWhenTransferFromNonexistentUser() {
+    when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-    assertThrows(ResourceInUserNotFoundException.class,
+    assertThrows(
+            UserNotFoundException.class,
             () -> resourceInUserService.transferResources(getTransferResourceRequestDto()));
+
+    verify(userRepository, times(1)).findById(userId);
+    verify(userRepository, never()).save(any(User.class));
   }
 
   @Test
-  void willThrowExceptionWhenResourceInUserQuantityIsLessThanQuantityInRequest() {
-    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-    when(resourceRepository.findById(resource.getId())).thenReturn(Optional.of(resource));
-    when(resourceInUserRepository.findByResourceIdAndOwnerId(resource.getId(), user.getId()))
-            .thenReturn(Optional.of(resourceInUser));
+  void willThrowInsufficientResourceQuantityExceptionWhenTransferResourceIsLessThanResourceInUser() {
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-    assertThrows(InsufficientResourceQuantityException.class,
+    assertThrows(
+            InsufficientResourceQuantityException.class,
             () -> resourceInUserService.transferResources(getTransferResourceRequestDto()));
+
+    verify(userRepository, times(1)).findById(userId);
+    verify(userRepository, never()).save(any(User.class));
+  }
+
+  @Test
+  void willThrowResourceInUserNotFoundExceptionWhenTransferResourceNotOwnedByUser() {
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+    TransferResourceRequestDto transferResourceRequestDto = getTransferResourceRequestDto();
+    transferResourceRequestDto.setTransferredResourceId(UUID.randomUUID());
+
+    assertThrows(
+            ResourceInUserNotFoundException.class,
+            () -> resourceInUserService.transferResources(transferResourceRequestDto));
+
+    verify(userRepository, times(1)).findById(userId);
+    verify(userRepository, never()).save(any(User.class));
   }
 
   @NotNull
