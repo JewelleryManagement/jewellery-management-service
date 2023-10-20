@@ -46,6 +46,11 @@ public class ProductService {
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
+  public List<ProductResponseDto> getByOwner(UUID ownerId) {
+    List<Product> products = productRepository.findAllByOwnerId(ownerId);
+    return products.stream().map(productMapper::mapToProductResponseDto).toList();
+  }
+
   public ProductResponseDto getProduct(UUID id) {
     Product product =
         productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
