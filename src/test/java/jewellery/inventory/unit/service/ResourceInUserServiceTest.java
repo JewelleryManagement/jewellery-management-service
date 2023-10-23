@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.*;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
@@ -25,6 +26,7 @@ import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
 import jewellery.inventory.service.ResourceInUserService;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,9 +42,11 @@ class ResourceInUserServiceTest {
   @Mock private ResourceInUserRepository resourceInUserRepository;
   @Mock private ResourcesInUserMapper resourcesInUserMapper;
   private User user;
+  private User secondUser;
   private Resource resource;
 
   private UUID userId;
+  private UUID secondUserId;
   private UUID resourceId;
   private ResourceInUser resourceInUser;
   private static final double INITIAL_QUANTITY = 5;
@@ -50,12 +54,14 @@ class ResourceInUserServiceTest {
   @BeforeEach
   void setUp() {
     user = createTestUserWithRandomId();
+    secondUser = createTestUserWithRandomId();
     resource = getPearl();
     resourceInUser = getResourceInUser();
     user.setResourcesOwned(new ArrayList<>(Collections.singletonList(resourceInUser)));
 
     resourceId = resource.getId();
     userId = user.getId();
+    secondUserId = secondUser.getId();
   }
 
   private ResourceInUser getResourceInUser() {
@@ -159,6 +165,7 @@ class ResourceInUserServiceTest {
 
   @Test
   void willThrowNegativeResourceQuantityExceptionWhenRemoveWithNegativeQuantity() {
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     assertThrows(
         NegativeResourceQuantityException.class,
         () -> resourceInUserService.removeQuantityFromResource(userId, resourceId, -10));
@@ -232,5 +239,56 @@ class ResourceInUserServiceTest {
 
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, never()).save(any(User.class));
+  }
+
+  @Test
+  void willThrowUserNotFoundExceptionWhenTransferFromNonexistentUser() {
+    when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+    assertThrows(
+            UserNotFoundException.class,
+            () -> resourceInUserService.transferResources(getTransferResourceRequestDto()));
+
+    verify(userRepository, times(1)).findById(userId);
+    verify(userRepository, never()).save(any(User.class));
+  }
+
+  @Test
+  void willThrowInsufficientResourceQuantityExceptionWhenTransferResourceIsLessThanResourceInUser() {
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(userRepository.findById(secondUserId)).thenReturn(Optional.of(secondUser));
+
+    assertThrows(
+        InsufficientResourceQuantityException.class,
+        () -> resourceInUserService.transferResources(getTransferResourceRequestDto()));
+
+    verify(userRepository, times(1)).findById(userId);
+    verify(userRepository, never()).save(any(User.class));
+  }
+
+  @Test
+  void willThrowResourceInUserNotFoundExceptionWhenTransferResourceNotOwnedByUser() {
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(userRepository.findById(secondUserId)).thenReturn(Optional.of(secondUser));
+
+    TransferResourceRequestDto transferResourceRequestDto = getTransferResourceRequestDto();
+    transferResourceRequestDto.setTransferredResourceId(UUID.randomUUID());
+
+    assertThrows(
+            ResourceInUserNotFoundException.class,
+            () -> resourceInUserService.transferResources(transferResourceRequestDto));
+
+    verify(userRepository, times(1)).findById(userId);
+    verify(userRepository, never()).save(any(User.class));
+  }
+
+  @NotNull
+  private TransferResourceRequestDto getTransferResourceRequestDto() {
+    TransferResourceRequestDto transferResourceRequestDto = new TransferResourceRequestDto();
+    transferResourceRequestDto.setPreviousOwnerId(userId);
+    transferResourceRequestDto.setNewOwnerId(secondUserId);
+    transferResourceRequestDto.setTransferredResourceId(resourceId);
+    transferResourceRequestDto.setQuantity(6);
+    return transferResourceRequestDto;
   }
 }
