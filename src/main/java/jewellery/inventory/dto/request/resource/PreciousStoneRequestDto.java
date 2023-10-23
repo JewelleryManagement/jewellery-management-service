@@ -1,17 +1,15 @@
-package jewellery.inventory.model.resource;
+package jewellery.inventory.dto.request.resource;
 
-import jakarta.persistence.Entity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-@EqualsAndHashCode(callSuper = true)
-@Entity
 @Getter
 @Setter
 @ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class Gemstone extends Resource {
+public class PreciousStoneRequestDto extends ResourceRequestDto {
   private String color;
   private double carat;
   private String cut;

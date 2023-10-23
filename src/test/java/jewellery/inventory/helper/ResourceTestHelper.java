@@ -10,9 +10,9 @@ import org.junit.jupiter.params.provider.Arguments;
 public class ResourceTestHelper {
   private static final UUID RESOURCE_ID = UUID.randomUUID();
   private static final String CLAZZ_PEARL = "Pearl";
-  private static final String CLAZZ_GEMSTONE = "Gemstone";
-  private static final String CLAZZ_PRECIOUS_METAL = "PreciousMetal";
-  private static final String CLAZZ_LINKING_PART = "LinkingPart";
+  private static final String CLAZZ_PRECIOUS_STONE = "PreciousStone";
+  private static final String CLAZZ_METAL = "Metal";
+  private static final String CLAZZ_ELEMENT = "Element";
   private static final String QUANTITY_TYPE_UNIT = "unit";
   private static final String QUANTITY_TYPE_WEIGHT = "weight";
   private static final String QUANTITY_TYPE_LENGTH = "length";
@@ -20,13 +20,13 @@ public class ResourceTestHelper {
   public static final String UPDATED_QUALITY = QUALITY + "A";
   private static final String SHAPE_PEARL = "oval";
   public static final String UPDATED_SHAPE_PEARL = SHAPE_PEARL + "ish";
-  private static final String SHAPE_GEMSTONEL = "octagon";
+  private static final String SHAPE_PRECIOUS_STONE = "octagon";
   private static final String COLOR_PEARL = "black";
   public static final String UPDATED_COLOR_PEARL = COLOR_PEARL + "ish";
   private static final String COLOR_METAL = "white";
   public static final String UPDATED_COLOR_METAL = COLOR_METAL + "ish";
-  private static final String COLOR_GEMSTONE = "ruby";
-  public static final String UPDATED_COLOR_GEMSTONE = COLOR_GEMSTONE + "ish";
+  private static final String COLOR_PRECIOUS_STONE = "ruby";
+  public static final String UPDATED_COLOR_PRECIOUS_STONE = COLOR_PRECIOUS_STONE + "ish";
   private static final String TYPE_PEARL = "Akoya";
   private static final String TYPE_METAL = "gold";
   private static final String PLATING = "silver";
@@ -38,12 +38,14 @@ public class ResourceTestHelper {
   private static final Double SIZE = 0.55;
   private static final Integer PURITY = 925;
   public static final int UPDATED_PURITY = PURITY + 1;
-  private static final Double CARAT_GEMSTONE = 5.0;
-  public static final double UPDATED_CARAT_GEMSTONE = CARAT_GEMSTONE + 2;
+  private static final Double CARAT_PRECIOUS_STONE = 5.0;
+  public static final double UPDATED_CARAT_PRECIOUS_STONE = CARAT_PRECIOUS_STONE + 2;
   private static final String CLARITY = "opaque";
   public static final String UPDATED_CLARITY = CLARITY + "ish";
   private static final String DESCRIPTION = "A linking part made of gold";
   public static final String UPDATED_DESCRIPTION = DESCRIPTION + " and \"real\" silver";
+  public static final double PRICE_PER_QUANTITY = 50.5;
+  public static final String NOTE = "Note";
 
   private ResourceTestHelper() {}
 
@@ -57,44 +59,52 @@ public class ResourceTestHelper {
         .quality(QUALITY)
         .color(COLOR_PEARL)
         .shape(SHAPE_PEARL)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
         .build();
   }
 
-  public static Resource getPreciousMetal() {
-    return PreciousMetal.builder()
+  public static Resource getMetal() {
+    return Metal.builder()
         .id(RESOURCE_ID)
-        .clazz(CLAZZ_PRECIOUS_METAL)
+        .clazz(CLAZZ_METAL)
         .quantityType(QUANTITY_TYPE_WEIGHT)
         .type(TYPE_METAL)
         .plating(PLATING)
         .color(COLOR_METAL)
         .type(TYPE_METAL)
         .purity(PURITY)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
         .build();
   }
 
-  public static Resource getGemstone() {
-    return Gemstone.builder()
+  public static Resource getPreciousStone() {
+    return PreciousStone.builder()
         .id(RESOURCE_ID)
-        .clazz(CLAZZ_GEMSTONE)
+        .clazz(CLAZZ_PRECIOUS_STONE)
         .quantityType(QUANTITY_TYPE_UNIT)
-        .carat(CARAT_GEMSTONE)
-        .color(COLOR_GEMSTONE)
+        .carat(CARAT_PRECIOUS_STONE)
+        .color(COLOR_PRECIOUS_STONE)
         .cut(CUT)
         .clarity(CLARITY)
         .dimensionX(DIMENSION_X)
         .dimensionY(DIMENSION_Y)
         .dimensionZ(DIMENSION_Z)
-        .shape(SHAPE_GEMSTONEL)
+        .shape(SHAPE_PRECIOUS_STONE)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
         .build();
   }
 
-  public static Resource getLinkingPart() {
-    return LinkingPart.builder()
+  public static Resource getElement() {
+    return Element.builder()
         .id(RESOURCE_ID)
-        .clazz(CLAZZ_LINKING_PART)
+        .clazz(CLAZZ_ELEMENT)
         .quantityType(QUANTITY_TYPE_UNIT)
         .description(DESCRIPTION)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
         .build();
   }
 
@@ -108,6 +118,8 @@ public class ResourceTestHelper {
         .quality(QUALITY)
         .color(COLOR_PEARL)
         .shape(SHAPE_PEARL)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
         .build();
   }
 
@@ -120,6 +132,8 @@ public class ResourceTestHelper {
         .quality(QUALITY)
         .color(COLOR_PEARL)
         .shape(SHAPE_PEARL)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
         .build();
   }
 
@@ -139,165 +153,177 @@ public class ResourceTestHelper {
     return pearl;
   }
 
-  public static ResourceResponseDto getPreciousMetalResponseDto() {
-    return PreciousMetalResponseDto.builder()
+  public static ResourceResponseDto getMetalResponseDto() {
+    return MetalResponseDto.builder()
         .id(RESOURCE_ID)
-        .clazz(CLAZZ_PRECIOUS_METAL)
+        .clazz(CLAZZ_METAL)
         .quantityType(QUANTITY_TYPE_WEIGHT)
         .type(TYPE_METAL)
         .plating(PLATING)
         .color(COLOR_METAL)
         .type(TYPE_METAL)
         .purity(PURITY)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
         .build();
   }
 
-  private static ResourceRequestDto getPreciousMetalRequestDto() {
-    return PreciousMetalRequestDto.builder()
-        .clazz(CLAZZ_PRECIOUS_METAL)
+  private static ResourceRequestDto getMetalRequestDto() {
+    return MetalRequestDto.builder()
+        .clazz(CLAZZ_METAL)
         .quantityType(QUANTITY_TYPE_WEIGHT)
         .type(TYPE_METAL)
         .plating(PLATING)
         .color(COLOR_METAL)
         .type(TYPE_METAL)
         .purity(PURITY)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
         .build();
   }
 
-  public static PreciousMetalRequestDto getUpdatedPreciousMetalRequestDto() {
-    PreciousMetalRequestDto preciousMetalDTO =
-        (PreciousMetalRequestDto) getPreciousMetalRequestDto();
-    preciousMetalDTO.setColor(UPDATED_COLOR_METAL);
-    preciousMetalDTO.setPlating(UPDATED_PLATING);
-    preciousMetalDTO.setPurity(UPDATED_PURITY);
-    return preciousMetalDTO;
+  public static MetalRequestDto getUpdatedMetalRequestDto() {
+    MetalRequestDto metalDTO = (MetalRequestDto) getMetalRequestDto();
+    metalDTO.setColor(UPDATED_COLOR_METAL);
+    metalDTO.setPlating(UPDATED_PLATING);
+    metalDTO.setPurity(UPDATED_PURITY);
+    return metalDTO;
   }
 
-  public static PreciousMetal getUpdatedPreciousMetal() {
-    PreciousMetal preciousMetal = (PreciousMetal) getPreciousMetal();
-    preciousMetal.setColor(UPDATED_COLOR_METAL);
-    preciousMetal.setPlating(UPDATED_PLATING);
-    preciousMetal.setPurity(UPDATED_PURITY);
-    return preciousMetal;
+  public static Metal getUpdatedMetal() {
+    Metal metal = (Metal) getMetal();
+    metal.setColor(UPDATED_COLOR_METAL);
+    metal.setPlating(UPDATED_PLATING);
+    metal.setPurity(UPDATED_PURITY);
+    return metal;
   }
 
-  public static ResourceResponseDto getGemstoneResponseDto() {
-    return GemstoneResponseDto.builder()
+  public static ResourceResponseDto getPreciousStoneResponseDto() {
+    return PreciousStoneResponseDto.builder()
         .id(RESOURCE_ID)
-        .clazz(CLAZZ_GEMSTONE)
+        .clazz(CLAZZ_PRECIOUS_STONE)
         .quantityType(QUANTITY_TYPE_UNIT)
-        .carat(CARAT_GEMSTONE)
-        .color(COLOR_GEMSTONE)
+        .carat(CARAT_PRECIOUS_STONE)
+        .color(COLOR_PRECIOUS_STONE)
         .cut(CUT)
         .clarity(CLARITY)
         .dimensionX(DIMENSION_X)
         .dimensionY(DIMENSION_Y)
         .dimensionZ(DIMENSION_Z)
-        .shape(SHAPE_GEMSTONEL)
+        .shape(SHAPE_PRECIOUS_STONE)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
         .build();
   }
 
-  public static ResourceRequestDto getGemstoneRequestDto() {
-    return GemstoneRequestDto.builder()
-        .clazz(CLAZZ_GEMSTONE)
+  public static ResourceRequestDto getPreciousStoneRequestDto() {
+    return PreciousStoneRequestDto.builder()
+        .clazz(CLAZZ_PRECIOUS_STONE)
         .quantityType(QUANTITY_TYPE_UNIT)
-        .carat(CARAT_GEMSTONE)
-        .color(COLOR_GEMSTONE)
+        .carat(CARAT_PRECIOUS_STONE)
+        .color(COLOR_PRECIOUS_STONE)
         .cut(CUT)
         .clarity(CLARITY)
         .dimensionX(DIMENSION_X)
         .dimensionY(DIMENSION_Y)
         .dimensionZ(DIMENSION_Z)
-        .shape(SHAPE_GEMSTONEL)
+        .shape(SHAPE_PRECIOUS_STONE)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
         .build();
   }
 
-  public static GemstoneRequestDto getUdpatedGemstoneRequestDto() {
-    GemstoneRequestDto gemstoneDTO = (GemstoneRequestDto) getGemstoneRequestDto();
-    gemstoneDTO.setCarat(UPDATED_CARAT_GEMSTONE);
-    gemstoneDTO.setClarity(UPDATED_CLARITY);
-    gemstoneDTO.setColor(UPDATED_COLOR_GEMSTONE);
-    return gemstoneDTO;
+  public static PreciousStoneRequestDto getUpdatedPreciousStoneRequestDto() {
+    PreciousStoneRequestDto preciousStoneRequestDto =
+        (PreciousStoneRequestDto) getPreciousStoneRequestDto();
+    preciousStoneRequestDto.setCarat(UPDATED_CARAT_PRECIOUS_STONE);
+    preciousStoneRequestDto.setClarity(UPDATED_CLARITY);
+    preciousStoneRequestDto.setColor(UPDATED_COLOR_PRECIOUS_STONE);
+    return preciousStoneRequestDto;
   }
 
-  private static Resource getUpdatedGemstone() {
-    Gemstone gemstone = (Gemstone) getGemstone();
-    gemstone.setCarat(UPDATED_CARAT_GEMSTONE);
-    gemstone.setClarity(UPDATED_CLARITY);
-    gemstone.setColor(UPDATED_COLOR_GEMSTONE);
-    return gemstone;
+  private static Resource getUpdatedPreciousStone() {
+    PreciousStone preciousStone = (PreciousStone) getPreciousStone();
+    preciousStone.setCarat(UPDATED_CARAT_PRECIOUS_STONE);
+    preciousStone.setClarity(UPDATED_CLARITY);
+    preciousStone.setColor(UPDATED_COLOR_PRECIOUS_STONE);
+    return preciousStone;
   }
 
-  public static ResourceResponseDto getLinkingPartResponseDto() {
-    return LinkingPartResponseDto.builder()
+  public static ResourceResponseDto getElementResponseDto() {
+    return ElementResponseDto.builder()
         .id(RESOURCE_ID)
-        .clazz(CLAZZ_LINKING_PART)
+        .clazz(CLAZZ_ELEMENT)
         .quantityType(QUANTITY_TYPE_UNIT)
         .description(DESCRIPTION)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
         .build();
   }
 
-  private static ResourceRequestDto getLinkingPartRequestDto() {
-    return LinkingPartRequestDto.builder()
-        .clazz(CLAZZ_LINKING_PART)
+  private static ResourceRequestDto getElementRequestDto() {
+    return ElementRequestDto.builder()
+        .clazz(CLAZZ_ELEMENT)
         .quantityType(QUANTITY_TYPE_UNIT)
         .description(DESCRIPTION)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
         .build();
   }
 
-  public static LinkingPartRequestDto getUpdatedLinkingPartRequestDto() {
-    LinkingPartRequestDto linkingPartDTO = (LinkingPartRequestDto) getLinkingPartRequestDto();
+  public static ElementRequestDto getUpdatedElementRequestDto() {
+    ElementRequestDto linkingPartDTO = (ElementRequestDto) getElementRequestDto();
     linkingPartDTO.setDescription(UPDATED_DESCRIPTION);
     return linkingPartDTO;
   }
 
-  public static LinkingPart getUpdatedLinkingPart() {
-    LinkingPart linkingPart = (LinkingPart) getLinkingPart();
-    linkingPart.setDescription(UPDATED_DESCRIPTION);
-    return linkingPart;
+  public static Element getUpdatedElement() {
+    Element element = (Element) getElement();
+    element.setDescription(UPDATED_DESCRIPTION);
+    return element;
   }
 
   public static Stream<Arguments> provideResourcesAndRequestDtos() {
     return Stream.of(
-        Arguments.of(getGemstone(), getGemstoneRequestDto()),
-        Arguments.of(getLinkingPart(), getLinkingPartRequestDto()),
+        Arguments.of(getPreciousStone(), getPreciousStoneRequestDto()),
+        Arguments.of(getElement(), getElementRequestDto()),
         Arguments.of(getPearl(), getPearlRequestDto()),
-        Arguments.of(getPreciousMetal(), getPreciousMetalRequestDto()));
+        Arguments.of(getMetal(), getMetalRequestDto()));
   }
 
   public static Stream<Arguments> provideResourcesAndResponseDtos() {
     return Stream.of(
-        Arguments.of(getGemstone(), getGemstoneResponseDto()),
-        Arguments.of(getLinkingPart(), getLinkingPartResponseDto()),
+        Arguments.of(getPreciousStone(), getPreciousStoneResponseDto()),
+        Arguments.of(getElement(), getElementResponseDto()),
         Arguments.of(getPearl(), getPearlResponseDto()),
-        Arguments.of(getPreciousMetal(), getPreciousMetalResponseDto()));
+        Arguments.of(getMetal(), getMetalResponseDto()));
   }
 
   public static Stream<Arguments> provideUpdatedResourcesAndUpdatedRequestDtos() {
     return Stream.of(
-        Arguments.of(getUpdatedGemstone(), getUdpatedGemstoneRequestDto()),
-        Arguments.of(getUpdatedLinkingPart(), getUpdatedLinkingPartRequestDto()),
+        Arguments.of(getUpdatedPreciousStone(), getUpdatedPreciousStoneRequestDto()),
+        Arguments.of(getUpdatedElement(), getUpdatedElementRequestDto()),
         Arguments.of(getUpdatedPearl(), getUpdatedPearlRequestDto()),
-        Arguments.of(getUpdatedPreciousMetal(), getUpdatedPreciousMetalRequestDto()));
+        Arguments.of(getUpdatedMetal(), getUpdatedMetalRequestDto()));
   }
 
   public static Stream<ResourceRequestDto> provideUpdatedResourceRequestDtos() {
     return Stream.of(
-        getUdpatedGemstoneRequestDto(),
-        getUpdatedLinkingPartRequestDto(),
+        getUpdatedPreciousStoneRequestDto(),
+        getUpdatedElementRequestDto(),
         getUpdatedPearlRequestDto(),
-        getUpdatedPreciousMetalRequestDto());
+        getUpdatedMetalRequestDto());
   }
 
   public static Stream<ResourceRequestDto> provideResourceRequestDtos() {
     return Stream.of(
-        getGemstoneRequestDto(),
-        getLinkingPartRequestDto(),
+        getPreciousStoneRequestDto(),
+        getElementRequestDto(),
         getPearlRequestDto(),
-        getPreciousMetalRequestDto());
+        getMetalRequestDto());
   }
 
   public static Stream<Resource> provideResources() {
-    return Stream.of(getGemstone(), getLinkingPart(), getPearl(), getPreciousMetal());
+    return Stream.of(getPreciousStone(), getElement(), getPearl(), getMetal());
   }
 }

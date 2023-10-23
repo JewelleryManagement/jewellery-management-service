@@ -1,19 +1,19 @@
 package jewellery.inventory.model.resource;
 
-
-import lombok.*;
-
 import jakarta.persistence.Entity;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-@EqualsAndHashCode(callSuper = true)
 @Entity
 @Getter
 @Setter
+@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class LinkingPart extends Resource {
-    private String description;
-
+public class SemiPreciousStone extends Resource {
+    private String color;
+    private String cut;
+    private String clarity;
+    private String shape;
 }

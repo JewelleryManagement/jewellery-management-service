@@ -15,7 +15,7 @@ import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.User;
-import jewellery.inventory.model.resource.Gemstone;
+import jewellery.inventory.model.resource.PreciousStone;
 import jewellery.inventory.repository.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -64,7 +64,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Autowired private ResourceInProductRepository resourceInProductRepository;
 
   private User user;
-  private Gemstone gemstone;
+  private PreciousStone preciousStone;
   private ResourceInUserRequestDto resourceInUserRequestDto;
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
   private ProductRequestDto productRequestDto;
@@ -75,8 +75,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     cleanAllRepositories();
 
     user = createUserInDatabase();
-    gemstone = createGemstoneInDatabase();
-    resourceInUserRequestDto = getResourceInUserRequestDto(user, Objects.requireNonNull(gemstone));
+    preciousStone = createPreciousStoneInDatabase();
+    resourceInUserRequestDto = getResourceInUserRequestDto(user, Objects.requireNonNull(preciousStone));
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
     productRequestDto =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), user);
@@ -195,19 +195,19 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @NotNull
   private static ResourceInUserRequestDto getResourceInUserRequestDto(
-      User user, Gemstone gemstone) {
+      User user, PreciousStone preciousStone) {
     ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
     resourceInUserRequestDto.setUserId(user.getId());
-    resourceInUserRequestDto.setResourceId(gemstone.getId());
+    resourceInUserRequestDto.setResourceId(preciousStone.getId());
     resourceInUserRequestDto.setQuantity(20);
     return resourceInUserRequestDto;
   }
 
   @Nullable
-  private Gemstone createGemstoneInDatabase() {
-    ResourceRequestDto resourceRequest = ResourceTestHelper.getGemstoneRequestDto();
-    ResponseEntity<Gemstone> createResource =
-        this.testRestTemplate.postForEntity(getBaseResourceUrl(), resourceRequest, Gemstone.class);
+  private PreciousStone createPreciousStoneInDatabase() {
+    ResourceRequestDto resourceRequest = ResourceTestHelper.getPreciousStoneRequestDto();
+    ResponseEntity<PreciousStone> createResource =
+        this.testRestTemplate.postForEntity(getBaseResourceUrl(), resourceRequest, PreciousStone.class);
 
     return createResource.getBody();
   }

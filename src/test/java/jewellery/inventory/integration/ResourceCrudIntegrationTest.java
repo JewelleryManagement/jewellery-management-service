@@ -13,6 +13,7 @@ import java.util.UUID;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
+import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ResourceMapper;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -68,7 +69,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
   void willGetSingleResourceQuantity() throws JsonProcessingException {
     List<ResourceResponseDto> createdResources =
-        sendCreateRequestsFor(List.of(getGemstoneRequestDto()));
+        sendCreateRequestsFor(List.of(ResourceTestHelper.getPreciousStoneRequestDto()));
 
     ResourceQuantityResponseDto fetchedResourceQuantity =
         getResourceQuantityWithRequest(createdResources.get(0).getId());
@@ -90,7 +91,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void willDeleteAResourceFromDatabase() throws JsonProcessingException {
-    sendCreateRequestsFor(List.of(getGemstoneRequestDto()));
+    sendCreateRequestsFor(List.of(ResourceTestHelper.getPreciousStoneRequestDto()));
     List<ResourceResponseDto> createdDtos = getResourcesWithRequest();
 
     testRestTemplate.delete(getBaseResourceUrl() + "/" + createdDtos.get(0).getId());
@@ -113,7 +114,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         testRestTemplate.exchange(
             getBaseResourceUrl() + "/" + UUID.randomUUID(),
             HttpMethod.PUT,
-            new HttpEntity<>(getGemstoneResponseDto()),
+            new HttpEntity<>(getPreciousStoneResponseDto()),
             String.class);
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }

@@ -10,7 +10,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class GemstoneResponseDto extends ResourceResponseDto {
+public class PreciousStoneResponseDto extends ResourceResponseDto {
   private String color;
   private double carat;
   private String cut;
