@@ -1,14 +1,12 @@
 package jewellery.inventory.mapper;
 
+import java.util.Locale;
 import jewellery.inventory.dto.request.resource.*;
 import jewellery.inventory.dto.response.resource.*;
 import jewellery.inventory.exception.MappingException;
 import jewellery.inventory.model.resource.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import java.util.Locale;
-
 
 @Component
 @RequiredArgsConstructor
@@ -22,7 +20,7 @@ public class ResourceMapper {
     if (resource instanceof Pearl pearl) {
       return pearlMapper.toResourceResponse(pearl);
     } else if (resource instanceof Gemstone gemstone) {
-      return toGemstoneResponseWithSize(gemstone,gemstoneMapper.toResourceResponse(gemstone));
+      return toGemstoneResponseWithSize(gemstone, gemstoneMapper.toResourceResponse(gemstone));
     } else if (resource instanceof LinkingPart linkingPart) {
       return linkingPartMapper.toResourceResponse(linkingPart);
     } else if (resource instanceof PreciousMetal preciousMetal) {
@@ -47,9 +45,16 @@ public class ResourceMapper {
     throw new MappingException(resourceRequestDto);
   }
 
-  private ResourceResponseDto toGemstoneResponseWithSize(Gemstone gemstone, GemstoneResponseDto gemstoneResponseDto){
-    String size = String.format(Locale.US, "%.2fx%.2fx%.2f", gemstone.getDimensionX(), gemstone.getDimensionY(), gemstone.getDimensionZ());    gemstoneResponseDto.setSize(size);
+  private ResourceResponseDto toGemstoneResponseWithSize(
+      Gemstone gemstone, GemstoneResponseDto gemstoneResponseDto) {
+    String size =
+        String.format(
+            Locale.US,
+            "%.2fx%.2fx%.2f",
+            gemstone.getDimensionX(),
+            gemstone.getDimensionY(),
+            gemstone.getDimensionZ());
+    gemstoneResponseDto.setSize(size);
     return gemstoneResponseDto;
   }
 }
-
