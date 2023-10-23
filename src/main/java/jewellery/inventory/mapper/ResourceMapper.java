@@ -1,8 +1,7 @@
 package jewellery.inventory.mapper;
 
 import jewellery.inventory.dto.request.resource.*;
-import jewellery.inventory.dto.response.resource.GemstoneResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceResponseDto;
+import jewellery.inventory.dto.response.resource.*;
 import jewellery.inventory.exception.MappingException;
 import jewellery.inventory.model.resource.*;
 import lombok.RequiredArgsConstructor;
