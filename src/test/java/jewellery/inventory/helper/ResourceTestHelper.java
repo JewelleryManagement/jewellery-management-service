@@ -183,16 +183,16 @@ public class ResourceTestHelper {
 
   public static ResourceResponseDto getGemstoneResponseDto() {
     return GemstoneResponseDto.builder()
-        .id(RESOURCE_ID)
-        .clazz(CLAZZ_GEMSTONE)
-        .quantityType(QUANTITY_TYPE_UNIT)
-        .carat(CARAT_GEMSTONE)
-        .color(COLOR_GEMSTONE)
-        .cut(CUT)
-        .clarity(CLARITY)
+            .id(RESOURCE_ID)
+            .clazz(CLAZZ_GEMSTONE)
+            .quantityType(QUANTITY_TYPE_UNIT)
+            .carat(CARAT_GEMSTONE)
+            .color(COLOR_GEMSTONE)
+            .cut(CUT)
+            .clarity(CLARITY)
             .size(DIMENSION_SIZE)
-        .shape(SHAPE_GEMSTONEL)
-        .build();
+            .shape(SHAPE_GEMSTONEL)
+            .build();
   }
 
   public static ResourceRequestDto getGemstoneRequestDto() {
