@@ -11,6 +11,7 @@ public class ResourceTestHelper {
   private static final UUID RESOURCE_ID = UUID.randomUUID();
   private static final String CLAZZ_PEARL = "Pearl";
   private static final String CLAZZ_PRECIOUS_STONE = "PreciousStone";
+  private static final String CLAZZ_SEMI_PRECIOUS_STONE = "SemiPreciousStone";
   private static final String CLAZZ_METAL = "Metal";
   private static final String CLAZZ_ELEMENT = "Element";
   private static final String QUANTITY_TYPE_UNIT = "unit";
@@ -91,6 +92,20 @@ public class ResourceTestHelper {
         .dimensionX(DIMENSION_X)
         .dimensionY(DIMENSION_Y)
         .dimensionZ(DIMENSION_Z)
+        .shape(SHAPE_PRECIOUS_STONE)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
+        .build();
+  }
+
+  public static Resource getSemiPreciousStone() {
+    return SemiPreciousStone.builder()
+        .id(RESOURCE_ID)
+        .clazz(CLAZZ_SEMI_PRECIOUS_STONE)
+        .quantityType(QUANTITY_TYPE_UNIT)
+        .color(COLOR_PRECIOUS_STONE)
+        .cut(CUT)
+        .clarity(CLARITY)
         .shape(SHAPE_PRECIOUS_STONE)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
@@ -250,6 +265,48 @@ public class ResourceTestHelper {
     return preciousStone;
   }
 
+  public static ResourceResponseDto getSemiPreciousStoneResponseDto() {
+    return SemiPreciousStoneResponseDto.builder()
+        .id(RESOURCE_ID)
+        .clazz(CLAZZ_SEMI_PRECIOUS_STONE)
+        .quantityType(QUANTITY_TYPE_UNIT)
+        .color(COLOR_PRECIOUS_STONE)
+        .cut(CUT)
+        .clarity(CLARITY)
+        .shape(SHAPE_PRECIOUS_STONE)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
+        .build();
+  }
+
+  public static ResourceRequestDto getSemiPreciousStoneRequestDto() {
+    return SemiPreciousStoneRequestDto.builder()
+        .clazz(CLAZZ_SEMI_PRECIOUS_STONE)
+        .quantityType(QUANTITY_TYPE_UNIT)
+        .color(COLOR_PRECIOUS_STONE)
+        .cut(CUT)
+        .clarity(CLARITY)
+        .shape(SHAPE_PRECIOUS_STONE)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
+        .build();
+  }
+
+  public static SemiPreciousStoneRequestDto getUpdatedSemiPreciousStoneRequestDto() {
+    SemiPreciousStoneRequestDto semiPreciousStoneRequestDto =
+        (SemiPreciousStoneRequestDto) getSemiPreciousStoneRequestDto();
+    semiPreciousStoneRequestDto.setClarity(UPDATED_CLARITY);
+    semiPreciousStoneRequestDto.setColor(UPDATED_COLOR_PRECIOUS_STONE);
+    return semiPreciousStoneRequestDto;
+  }
+
+  private static Resource getUpdatedSemiPreciousStone() {
+    SemiPreciousStone semiPreciousStone = (SemiPreciousStone) getSemiPreciousStone();
+    semiPreciousStone.setClarity(UPDATED_CLARITY);
+    semiPreciousStone.setColor(UPDATED_COLOR_PRECIOUS_STONE);
+    return semiPreciousStone;
+  }
+
   public static ResourceResponseDto getElementResponseDto() {
     return ElementResponseDto.builder()
         .id(RESOURCE_ID)
@@ -286,6 +343,7 @@ public class ResourceTestHelper {
   public static Stream<Arguments> provideResourcesAndRequestDtos() {
     return Stream.of(
         Arguments.of(getPreciousStone(), getPreciousStoneRequestDto()),
+        Arguments.of(getSemiPreciousStone(), getSemiPreciousStoneRequestDto()),
         Arguments.of(getElement(), getElementRequestDto()),
         Arguments.of(getPearl(), getPearlRequestDto()),
         Arguments.of(getMetal(), getMetalRequestDto()));
@@ -294,6 +352,7 @@ public class ResourceTestHelper {
   public static Stream<Arguments> provideResourcesAndResponseDtos() {
     return Stream.of(
         Arguments.of(getPreciousStone(), getPreciousStoneResponseDto()),
+        Arguments.of(getSemiPreciousStone(), getSemiPreciousStoneResponseDto()),
         Arguments.of(getElement(), getElementResponseDto()),
         Arguments.of(getPearl(), getPearlResponseDto()),
         Arguments.of(getMetal(), getMetalResponseDto()));
@@ -302,6 +361,7 @@ public class ResourceTestHelper {
   public static Stream<Arguments> provideUpdatedResourcesAndUpdatedRequestDtos() {
     return Stream.of(
         Arguments.of(getUpdatedPreciousStone(), getUpdatedPreciousStoneRequestDto()),
+        Arguments.of(getUpdatedSemiPreciousStone(), getUpdatedSemiPreciousStoneRequestDto()),
         Arguments.of(getUpdatedElement(), getUpdatedElementRequestDto()),
         Arguments.of(getUpdatedPearl(), getUpdatedPearlRequestDto()),
         Arguments.of(getUpdatedMetal(), getUpdatedMetalRequestDto()));
@@ -310,6 +370,7 @@ public class ResourceTestHelper {
   public static Stream<ResourceRequestDto> provideUpdatedResourceRequestDtos() {
     return Stream.of(
         getUpdatedPreciousStoneRequestDto(),
+        getUpdatedSemiPreciousStoneRequestDto(),
         getUpdatedElementRequestDto(),
         getUpdatedPearlRequestDto(),
         getUpdatedMetalRequestDto());
@@ -318,12 +379,13 @@ public class ResourceTestHelper {
   public static Stream<ResourceRequestDto> provideResourceRequestDtos() {
     return Stream.of(
         getPreciousStoneRequestDto(),
+        getSemiPreciousStoneRequestDto(),
         getElementRequestDto(),
         getPearlRequestDto(),
         getMetalRequestDto());
   }
 
   public static Stream<Resource> provideResources() {
-    return Stream.of(getPreciousStone(), getElement(), getPearl(), getMetal());
+    return Stream.of(getPreciousStone(), getSemiPreciousStone(), getElement(), getPearl(), getMetal());
   }
 }
