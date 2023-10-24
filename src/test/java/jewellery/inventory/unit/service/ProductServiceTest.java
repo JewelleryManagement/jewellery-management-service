@@ -7,6 +7,7 @@ import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
+import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.helper.ProductTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -59,6 +61,25 @@ class ProductServiceTest {
     testContentProduct = getTestProduct(user, pearl);
     productRequestDto =
         ProductTestHelper.getProductRequestDto(user, getResourceQuantityRequestDto(pearl));
+  }
+
+  @Test
+  public void testThrowExceptionIfProductOwnerEqualsRecipientWhenEqual2(){
+    UUID recipientId = UUID.randomUUID();
+    User owner = new User();
+    owner.setId(recipientId);
+    Product product = new Product();
+    product.setOwner(owner);
+    product.setId(UUID.randomUUID());
+    when(productRepository.findProductById(product.getId())).thenReturn(product);
+    ProductOwnerEqualsRecipientException exception =
+        assertThrows(
+            ProductOwnerEqualsRecipientException.class,
+            () -> {
+              productService.transferProduct(owner.getId(), product.getId());
+            });
+
+    assertEquals(product.getOwner().getId(), recipientId);
   }
 
   @Test
