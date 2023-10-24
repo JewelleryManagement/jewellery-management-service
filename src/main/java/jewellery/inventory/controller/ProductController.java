@@ -32,7 +32,6 @@ public class ProductController {
     return productService.getAllProducts();
   }
 
-
   @Operation(summary = "Get products owned by user")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/by-owner/{ownerId}")
@@ -45,6 +44,14 @@ public class ProductController {
   @GetMapping("/{id}")
   public ProductResponseDto getProduct(@PathVariable("id") UUID id) {
     return productService.getProduct(id);
+  }
+
+  @Operation(summary = "Transfer a product")
+  @ResponseStatus(HttpStatus.CREATED)
+  @PutMapping("/{productId}/transfer/{recipientId}")
+  public ProductResponseDto transferProduct(
+      @PathVariable("productId") UUID productId, @PathVariable("recipientId") UUID recipientId) {
+    return productService.transferProduct(recipientId, productId);
   }
 
   @Operation(summary = "Delete a product by Id")
