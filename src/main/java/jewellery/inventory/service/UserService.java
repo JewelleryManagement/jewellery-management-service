@@ -3,6 +3,9 @@ package jewellery.inventory.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import jewellery.inventory.aspect.annotation.LogCreateEvent;
+import jewellery.inventory.aspect.annotation.LogDeleteEvent;
+import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.duplicate.DuplicateEmailException;
@@ -31,6 +34,7 @@ public class UserService {
         userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id)));
   }
 
+  @LogCreateEvent
   public UserResponseDto createUser(UserRequestDto user) {
     User userToCreate = userMapper.toUserEntity(user);
     validateUserEmailAndName(userToCreate);
@@ -38,6 +42,7 @@ public class UserService {
     return userMapper.toUserResponse(userRepository.save(userToCreate));
   }
 
+  @LogUpdateEvent
   public UserResponseDto updateUser(UserRequestDto userRequest, UUID id) {
     if (!userRepository.existsById(id)) {
       throw new UserNotFoundException(id);
@@ -51,6 +56,7 @@ public class UserService {
     return userMapper.toUserResponse(userRepository.save(userToUpdate));
   }
 
+  @LogDeleteEvent
   public void deleteUser(UUID id) {
     if (!userRepository.existsById(id)) {
       throw new UserNotFoundException(id);
@@ -62,7 +68,6 @@ public class UserService {
     User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
     return userMapper.toUserResponse(user);
   }
-
 
   private void validateUserEmailAndName(User user) {
     if (isNameUsedByOtherUser(user.getName(), user.getId())) {

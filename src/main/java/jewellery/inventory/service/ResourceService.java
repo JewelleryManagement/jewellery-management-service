@@ -2,6 +2,9 @@ package jewellery.inventory.service;
 
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.aspect.annotation.LogCreateEvent;
+import jewellery.inventory.aspect.annotation.LogDeleteEvent;
+import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.ResourceQuantityDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
@@ -25,6 +28,7 @@ public class ResourceService {
     return resources.stream().map(resourceMapper::toResourceResponse).toList();
   }
 
+  @LogCreateEvent
   public ResourceResponseDto createResource(ResourceRequestDto resourceRequestDto) {
     Resource savedResource =
         resourceRepository.save(resourceMapper.toResourceEntity(resourceRequestDto));
@@ -37,12 +41,14 @@ public class ResourceService {
     return resourceMapper.toResourceResponse(resource);
   }
 
+  @LogDeleteEvent
   public void deleteResourceById(UUID id) {
     Resource resource =
         resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
     resourceRepository.delete(resource);
   }
 
+  @LogUpdateEvent
   public ResourceResponseDto updateResource(UUID id, ResourceRequestDto resourceRequestDto) {
     resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
     Resource toUpdate = resourceMapper.toResourceEntity(resourceRequestDto);
