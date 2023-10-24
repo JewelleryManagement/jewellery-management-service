@@ -4,8 +4,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
+import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.service.ResourceInUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ResourceInUserController {
   private final ResourceInUserService resourceAvailabilityService;
+
+  @Operation(summary = "Transfer resource from user to another user")
+  @ResponseStatus(HttpStatus.OK)
+  @PostMapping("/transfer")
+  public TransferResourceResponseDto transferResources(
+      @RequestBody @Valid TransferResourceRequestDto transferResourceRequestDto) {
+    return resourceAvailabilityService.transferResources(transferResourceRequestDto);
+  }
+
 
   @Operation(summary = "Add resource to user")
   @ResponseStatus(HttpStatus.CREATED)

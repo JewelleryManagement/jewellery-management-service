@@ -7,18 +7,22 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
+import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.dto.response.resource.GemstoneResponseDto;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +45,10 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   private String getBaseResourceAvailabilityUrl() {
     return buildUrl("resources", "availability");
+  }
+
+  private String getBaseResourceAvailabilityTransferUrl() {
+    return buildUrl("resources", "availability", "transfer");
   }
 
   private String getResourceAvailabilityUrl(UUID userId, UUID resourceId) {
@@ -293,6 +301,47 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
             createdUser.getId(), createdResource.getId(), -1.0);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
+
+  @Test
+  void transferResourceFromUserToAnotherUserSuccessfully() {
+    UserResponseDto sender = sendCreateUserRequest();
+    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    sendAddResourceInUserRequest(
+        createResourceInUserRequestDto(sender.getId(), createdResource.getId(), RESOURCE_QUANTITY));
+
+    UserResponseDto receiver = sendCreateUserRequest(createDifferentUserRequest());
+
+    TransferResourceRequestDto requestDto =
+        getTransferResourceRequestDto(sender, createdResource, receiver);
+
+    ResponseEntity<TransferResourceResponseDto> transferResourceResponseDtoResponseEntity =
+        this.testRestTemplate.postForEntity(
+            getBaseResourceAvailabilityTransferUrl(),
+            requestDto,
+            TransferResourceResponseDto.class);
+    TransferResourceResponseDto response = transferResourceResponseDtoResponseEntity.getBody();
+
+    assertEquals(HttpStatus.OK, transferResourceResponseDtoResponseEntity.getStatusCode());
+
+    assertEquals(
+        Objects.requireNonNull(response).getPreviousOwner().getId(), requestDto.getPreviousOwnerId());
+    assertEquals(
+        Objects.requireNonNull(response).getNewOwner().getId(), requestDto.getNewOwnerId());
+    assertEquals(
+        response.getTransferredResource().getResource().getId(), requestDto.getTransferredResourceId());
+    assertEquals(response.getTransferredResource().getQuantity(), 1);
+  }
+
+  @NotNull
+  private static TransferResourceRequestDto getTransferResourceRequestDto(
+      UserResponseDto sender, GemstoneResponseDto createdResource, UserResponseDto receiver) {
+    TransferResourceRequestDto requestDto = new TransferResourceRequestDto();
+    requestDto.setPreviousOwnerId(sender.getId());
+    requestDto.setNewOwnerId(receiver.getId());
+    requestDto.setTransferredResourceId(createdResource.getId());
+    requestDto.setQuantity(1);
+    return requestDto;
   }
 
   private GemstoneResponseDto sendCreateGemstoneRequest() {
