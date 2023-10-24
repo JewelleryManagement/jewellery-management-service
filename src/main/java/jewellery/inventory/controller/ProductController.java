@@ -47,7 +47,7 @@ public class ProductController {
   }
 
   @Operation(summary = "Transfer a product")
-  @ResponseStatus(HttpStatus.CREATED)
+  @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{productId}/transfer/{recipientId}")
   public ProductResponseDto transferProduct(
       @PathVariable("productId") UUID productId, @PathVariable("recipientId") UUID recipientId) {
