@@ -61,6 +61,24 @@ class ProductServiceTest {
   }
 
   @Test
+  void testThrowExceptionIfProductOwnerEqualsRecipientWhenProductIsSold() {
+    UUID recipientId = UUID.randomUUID();
+    UUID productId = UUID.randomUUID();
+    User owner = new User();
+    owner.setId(recipientId);
+    Product product = new Product();
+    product.setOwner(owner);
+    product.setId(productId);
+    product.setSold(true);
+    when(productRepository.findProductById(product.getId())).thenReturn(product);
+
+    assertThrows(
+        ProductIsSoldException.class, () -> productService.transferProduct(recipientId, productId));
+
+    assertEquals(product.getOwner().getId(), recipientId);
+  }
+
+  @Test
   void testThrowExceptionIfProductOwnerEqualsRecipientWhenEqual() {
     UUID recipientId = UUID.randomUUID();
     UUID productId = UUID.randomUUID();
