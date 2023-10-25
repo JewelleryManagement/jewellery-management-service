@@ -76,7 +76,7 @@ class ProductServiceTest {
         ProductIsContentException.class,
         () -> productService.transferProduct(recipientId, productId));
 
-    assertEquals(product.getOwner().getId(), recipientId);
+    assertNotNull(product.getContentOf());
   }
 
   @Test
