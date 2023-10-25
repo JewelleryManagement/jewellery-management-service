@@ -61,6 +61,25 @@ class ProductServiceTest {
   }
 
   @Test
+  void testThrowExceptionIfProductOwnerEqualsRecipientWhenProductIsPartOfAnotherProduct() {
+    UUID recipientId = UUID.randomUUID();
+    UUID productId = UUID.randomUUID();
+    User owner = new User();
+    owner.setId(recipientId);
+    Product product = new Product();
+    product.setOwner(owner);
+    product.setId(productId);
+    product.setContentOf(product);
+    when(productRepository.findProductById(product.getId())).thenReturn(product);
+
+    assertThrows(
+        ProductIsContentException.class,
+        () -> productService.transferProduct(recipientId, productId));
+
+    assertEquals(product.getOwner().getId(), recipientId);
+  }
+
+  @Test
   void testThrowExceptionIfProductOwnerEqualsRecipientWhenProductIsSold() {
     UUID recipientId = UUID.randomUUID();
     UUID productId = UUID.randomUUID();
