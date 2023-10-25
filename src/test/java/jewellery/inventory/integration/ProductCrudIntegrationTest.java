@@ -12,6 +12,8 @@ import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
+import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.helper.ProductTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.User;
@@ -62,6 +64,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Autowired private ResourceInProductRepository resourceInProductRepository;
 
   private User user;
+  private UserRequestDto userRequestDto;
   private Gemstone gemstone;
   private ResourceInUserRequestDto resourceInUserRequestDto;
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
@@ -71,7 +74,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @BeforeEach
   void setUp() {
     cleanAllRepositories();
-
+    userRequestDto = ProductTestHelper.getUserRequestDto();
     user = createUserInDatabase();
     gemstone = createGemstoneInDatabase();
     resourceInUserRequestDto = getResourceInUserRequestDto(user, Objects.requireNonNull(gemstone));
@@ -94,6 +97,28 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
   }
 
+  @Test
+  void transferProductCorrectData() {
+    ResponseEntity<ProductResponseDto> ProductResponse =
+        this.testRestTemplate.postForEntity(
+            getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+
+    ResponseEntity<UserResponseDto> userResponse =
+        this.testRestTemplate.postForEntity(
+            getBaseUserUrl(), userRequestDto, UserResponseDto.class);
+
+    UserResponseDto createdUser = userResponse.getBody();
+    ProductResponseDto createdProduct = ProductResponse.getBody();
+
+    ResponseEntity<ProductResponseDto> response =
+        this.testRestTemplate.exchange(
+            getBaseProductUrl() + "/" + createdProduct.getId() + "/transfer/" + createdUser.getId(),
+            HttpMethod.PUT,
+            null,
+            ProductResponseDto.class);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+  }
   @Test
   void createProductSuccessfully() {
 
