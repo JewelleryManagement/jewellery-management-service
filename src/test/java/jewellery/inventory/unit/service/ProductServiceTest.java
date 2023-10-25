@@ -128,11 +128,13 @@ class ProductServiceTest {
     product.setId(productId);
     when(productRepository.findProductById(product.getId())).thenReturn(product);
     when(userRepository.findById(recipientId)).thenReturn(Optional.of(owner));
-    product.setOwner(owner);
+    assertEquals(product.getOwner().getId(), ownerId);
 
     productService.transferProduct(recipientId, productId);
 
     assertNotEquals(ownerId, recipientId);
+    assertFalse(product.isSold());
+    assertNull(product.getContentOf());
   }
 
   @Test
