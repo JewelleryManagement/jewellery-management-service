@@ -23,9 +23,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 
 class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
@@ -80,6 +78,20 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
     productRequestDto =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), user);
+  }
+
+  @Test
+  void transferProductWithFakeId() {
+    UUID fakeId = UUID.randomUUID();
+
+    ResponseEntity<ProductResponseDto> response =
+        this.testRestTemplate.exchange(
+            getBaseProductUrl() + "/" + fakeId + "/transfer/" + fakeId,
+            HttpMethod.PUT,
+            null,
+            ProductResponseDto.class);
+
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
   }
 
   @Test
@@ -163,7 +175,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
   }
 
-  private void assertResponseMatchesCreatedRequest(ResponseEntity<List<ProductResponseDto>> response) {
+  private void assertResponseMatchesCreatedRequest(
+      ResponseEntity<List<ProductResponseDto>> response) {
     List<ProductResponseDto> productResponseDtos = response.getBody();
     ProductResponseDto currentResponse = productResponseDtos.get(0);
     assertEquals(HttpStatus.OK, response.getStatusCode());
