@@ -1,7 +1,10 @@
 package jewellery.inventory.unit.service;
 
 import static jewellery.inventory.helper.ProductTestHelper.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+import java.util.*;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.not_found.*;
@@ -26,13 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.util.*;
 
 @ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
@@ -64,22 +61,40 @@ class ProductServiceTest {
   }
 
   @Test
-  public void testThrowExceptionIfProductOwnerEqualsRecipientWhenEqual2(){
+  void testThrowExceptionIfProductOwnerEqualsRecipientWhenEqual() {
     UUID recipientId = UUID.randomUUID();
+    UUID productId = UUID.randomUUID();
     User owner = new User();
     owner.setId(recipientId);
     Product product = new Product();
     product.setOwner(owner);
-    product.setId(UUID.randomUUID());
+    product.setId(productId);
     when(productRepository.findProductById(product.getId())).thenReturn(product);
-    ProductOwnerEqualsRecipientException exception =
-        assertThrows(
-            ProductOwnerEqualsRecipientException.class,
-            () -> {
-              productService.transferProduct(owner.getId(), product.getId());
-            });
+
+    assertThrows(
+        ProductOwnerEqualsRecipientException.class,
+        () -> productService.transferProduct(recipientId, productId));
 
     assertEquals(product.getOwner().getId(), recipientId);
+  }
+
+  @Test
+  void testTransferProductWhenDataIsCorrect() {
+    UUID recipientId = UUID.randomUUID();
+    UUID productId = UUID.randomUUID();
+    UUID ownerId = UUID.randomUUID();
+    User owner = new User();
+    owner.setId(ownerId);
+    Product product = new Product();
+    product.setOwner(owner);
+    product.setId(productId);
+    when(productRepository.findProductById(product.getId())).thenReturn(product);
+    when(userRepository.findById(recipientId)).thenReturn(Optional.of(owner));
+    product.setOwner(owner);
+
+    productService.transferProduct(recipientId, productId);
+
+    assertNotEquals(product.getOwner().getId(), recipientId);
   }
 
   @Test
