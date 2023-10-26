@@ -1,13 +1,9 @@
 package jewellery.inventory.aspect;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.UUID;
-import jewellery.inventory.dto.request.UserRequestDto;
-import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.EventType;
-import jewellery.inventory.repository.UserRepository;
-import jewellery.inventory.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -22,41 +18,47 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class EventAspect {
   private final EventService eventService;
-  private final UserService userService;
-  private final UserRepository userRepository;
 
   @AfterReturning(
       pointcut = "@annotation(jewellery.inventory.aspect.annotation.LogCreateEvent)",
       returning = "result")
-  public void logCreation(JoinPoint joinPoint, Object result) {
-    eventService.logEvent(EventType.ENTITY_CREATION, result);
+  public void logCreation(JoinPoint joinPoint, Object result) throws Exception {
+    eventService.logEvent(EventType.ENTITY_CREATION, result, null);
   }
 
   @Around(
-      "@annotation(jewellery.inventory.aspect.annotation.LogUpdateEvent) && args(userRequest, id)")
-  public Object logUpdate(
-      ProceedingJoinPoint proceedingJoinPoint, UserRequestDto userRequest, UUID id)
+      "@annotation(jewellery.inventory.aspect.annotation.LogUpdateEvent) && args(entityRequest, id)")
+  public Object logUpdate(ProceedingJoinPoint proceedingJoinPoint, Object entityRequest, UUID id)
       throws Throwable {
-    UserResponseDto previousUserData = userService.fetchUserByIdAsDto(id);
 
+    Object oldEntity = eventService.fetchEntityByIdAsDto(id, entityRequest.getClass());
     Object result = proceedingJoinPoint.proceed();
 
-    UserResponseDto updatedUserData = (UserResponseDto) result;
-
-    Map<String, Object> payload = new HashMap<>();
-    payload.put("previousUserData", previousUserData);
-    payload.put("updatedUserData", updatedUserData);
-
-    eventService.logEvent(EventType.ENTITY_UPDATE, previousUserData);
+    eventService.logEvent(EventType.ENTITY_UPDATE, result, oldEntity);
 
     return result;
   }
 
   @Before("@annotation(jewellery.inventory.aspect.annotation.LogDeleteEvent)")
-  public void logDeletion(JoinPoint joinPoint) {
+  public void logDeletion(JoinPoint joinPoint) throws Exception {
     Object[] args = joinPoint.getArgs();
-    UUID userId = (UUID) args[0];
-    UserResponseDto user = userService.fetchUserByIdAsDto(userId);
-    eventService.logEvent(EventType.ENTITY_DELETION, user);
+    UUID entityId = (UUID) args[0];
+
+    Object entity = fetchEntity(joinPoint, entityId);
+    if (entity != null) {
+      eventService.logEvent(EventType.ENTITY_DELETION, entity, null);
+    }
+  }
+
+  private Object fetchEntity(JoinPoint joinPoint, UUID entityId) {
+    Object service = joinPoint.getTarget();
+    try {
+      Method method = service.getClass().getMethod("fetchByIdAsDto", UUID.class);
+      return method.invoke(service, entityId);
+    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+      // Handle exceptions as necessary
+      e.printStackTrace();
+    }
+    return null;
   }
 }

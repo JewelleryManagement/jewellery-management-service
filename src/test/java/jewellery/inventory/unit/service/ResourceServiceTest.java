@@ -97,7 +97,7 @@ class ResourceServiceTest {
     when(resourceMapper.toResourceResponse(resourceFromDatabase)).thenReturn(expectedResponseDto);
 
     ResourceResponseDto actualResourceResponseDto =
-        resourceService.updateResource(resourceFromDatabase.getId(), expectedDto);
+        resourceService.updateResource(expectedDto, resourceFromDatabase.getId());
 
     verify(resourceRepository, times(1)).findById(any());
     verify(resourceRepository, times(1)).save(any());
@@ -132,7 +132,7 @@ class ResourceServiceTest {
         ResourceNotFoundException.class,
         () ->
             resourceService.updateResource(
-                UUID.randomUUID(), ResourceRequestDto.builder().build()));
+                ResourceRequestDto.builder().build(), UUID.randomUUID()));
   }
 
   @Test

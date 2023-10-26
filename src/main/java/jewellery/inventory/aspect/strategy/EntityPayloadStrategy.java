@@ -1,14 +1,14 @@
 package jewellery.inventory.aspect.strategy;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import jewellery.inventory.dto.EntityLogDto;
-import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
-import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.dto.response.resource.GemstoneResponseDto;
-import jewellery.inventory.dto.response.resource.LinkingPartResponseDto;
-import jewellery.inventory.dto.response.resource.PearlResponseDto;
-import jewellery.inventory.dto.response.resource.PreciousMetalResponseDto;
 import jewellery.inventory.mapper.EntityLogMapper;
 import jewellery.inventory.model.EventType;
 import lombok.RequiredArgsConstructor;
@@ -21,46 +21,77 @@ public class EntityPayloadStrategy extends PayloadStrategy<Object, Object> {
   private final EntityLogMapper entityLogMapper;
 
   @Override
-  public Map<String, Object> createPayload(
-      Object entity, Object updatedEntity, EventType eventType) {
+  public Map<String, Object> createPayload(Object entity, EventType eventType) {
 
-    String action = (eventType == EventType.ENTITY_CREATION) ? " created" : " deleted";
+    String action = determineAction(eventType);
     String entityName = getEntityNameFromClass(entity.getClass());
 
-    EntityLogDto entityLogDto = mapEntityToDto(entity);
+    EntityLogDto entityLogDto = entityLogMapper.mapEntityToDto(entity);
     entityLogDto.setMessage(entityName + " with ID: " + entityLogDto.getId() + action);
     entityLogDto.setTimestamp(formatCurrentTimestamp());
 
-    return objectMapper.convertValue(entityLogDto, Map.class);
+    return objectMapper.convertValue(entityLogDto, new TypeReference<>() {});
   }
 
-  private EntityLogDto mapEntityToDto(Object entity) {
-    return switch (entity.getClass().getSimpleName()) {
-      case "UserResponseDto" -> entityLogMapper.toEntityLogDto((UserResponseDto) entity);
-      case "ResourcesInUserResponseDto" -> entityLogMapper.toEntityLogDto(
-          (ResourcesInUserResponseDto) entity);
-      case "PearlResponseDto" -> entityLogMapper.toEntityLogDto((PearlResponseDto) entity);
-      case "GemstoneResponseDto" -> entityLogMapper.toEntityLogDto((GemstoneResponseDto) entity);
-      case "LinkingPartResponseDto" -> entityLogMapper.toEntityLogDto(
-          (LinkingPartResponseDto) entity);
-      case "PreciousMetalResponseDto" -> entityLogMapper.toEntityLogDto(
-          (PreciousMetalResponseDto) entity);
-      default -> throw new IllegalArgumentException(
-          "Unsupported entity type: " + entity.getClass());
-    };
+  @Override
+  public Map<String, Object> createUpdatePayload(
+      Object updatedEntity, Object oldEntity, EventType type) throws Exception {
+    String entityName = getEntityNameFromClass(updatedEntity.getClass());
+
+    EntityLogDto entityLogDto = entityLogMapper.mapEntityToDto(updatedEntity);
+    entityLogDto.setMessage(entityName + " with ID: " + entityLogDto.getId() + " updated");
+    entityLogDto.setTimestamp(formatCurrentTimestamp());
+
+    if (oldEntity != null) {
+      logEntityUpdate(entityLogDto, oldEntity);
+    }
+    return objectMapper.convertValue(entityLogDto, new TypeReference<>() {});
   }
 
-  public String getEntityNameFromClass(Class<?> clazz) {
-    String className = clazz.getSimpleName();
-    return switch (className) {
-      case "UserResponseDto" -> "User";
-      case "ResourcesInUserResponseDto" -> "ResourcesInUser";
-      case "ProductResponseDto" -> "Product";
-      case "GemstoneResponseDto" -> "Gemstone";
-      case "LinkingPartResponseDto" -> "LinkingPart";
-      case "PearlResponseDto" -> "Pearl";
-      case "PreciousMetalResponseDto" -> "PreciousMetal";
-      default -> throw new IllegalArgumentException("Unknown class: " + className);
+  public void logEntityUpdate(EntityLogDto entityLogDto, Object oldEntity) throws Exception {
+    Class<?> entityClass = oldEntity.getClass();
+    Class<?> logDtoClass = entityLogDto.getClass();
+    List<Field> allFields = getAllFields(entityClass);
+
+    for (Field entityField : allFields) {
+      String fieldName = entityField.getName();
+      if (fieldName.equalsIgnoreCase("id")) {
+        continue;
+      }
+      String methodNameSuffix = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+
+      String getterMethodName = "get" + methodNameSuffix;
+      String setterMethodName = "set" + methodNameSuffix + "BeforeUpdate";
+
+      try {
+        Method getterMethod = entityClass.getMethod(getterMethodName);
+        Method setterMethod = logDtoClass.getMethod(setterMethodName, entityField.getType());
+
+        Object oldValue = getterMethod.invoke(oldEntity);
+        setterMethod.invoke(entityLogDto, oldValue);
+      } catch (NoSuchMethodException e) {
+        System.err.println("Method not found: " + e.getMessage());
+      }
+    }
+  }
+
+  public List<Field> getAllFields(Class<?> clazz) {
+    List<Field> fields = new ArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
+    Class<?> parentClass = clazz.getSuperclass();
+
+    if (parentClass != null && !parentClass.equals(Object.class)) {
+      fields.addAll(Arrays.asList(parentClass.getDeclaredFields()));
+    }
+
+    return fields;
+  }
+
+  private String determineAction(EventType type) {
+    return switch (type.name()) {
+      case "ENTITY_CREATION" -> " created";
+      case "ENTITY_DELETION" -> " deleted";
+      case "ENTITY_UPDATE" -> " updated";
+      default -> throw new IllegalArgumentException("Unknown type: " + type.name());
     };
   }
 }

@@ -42,7 +42,7 @@ public class ResourceController {
   @PutMapping("/{id}")
   public ResourceResponseDto updateResource(
       @PathVariable("id") UUID id, @Valid @RequestBody ResourceRequestDto resourceRequestDto) {
-    return resourceService.updateResource(id, resourceRequestDto);
+    return resourceService.updateResource(resourceRequestDto, id);
   }
 
   @ResponseStatus(HttpStatus.NO_CONTENT)

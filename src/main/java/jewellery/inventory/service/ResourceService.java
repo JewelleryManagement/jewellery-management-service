@@ -49,7 +49,7 @@ public class ResourceService {
   }
 
   @LogUpdateEvent
-  public ResourceResponseDto updateResource(UUID id, ResourceRequestDto resourceRequestDto) {
+  public ResourceResponseDto updateResource(ResourceRequestDto resourceRequestDto, UUID id) {
     resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
     Resource toUpdate = resourceMapper.toResourceEntity(resourceRequestDto);
     toUpdate.setId(id);
@@ -77,5 +77,11 @@ public class ResourceService {
                     .quantity(resourceInUserRepository.sumQuantityByResource(resource.getId()))
                     .build())
         .toList();
+  }
+
+  public ResourceResponseDto fetchByIdAsDto(UUID id) {
+    Resource resource =
+        resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
+    return resourceMapper.toResourceResponse(resource);
   }
 }

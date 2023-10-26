@@ -13,8 +13,6 @@ public class EntityLogDto {
   private String name;
   private String email;
   private String description;
-  private String nameBeforeUpdate;
-  private String emailBeforeUpdate;
   private String clazz;
   private String quantityType;
   private String color;
@@ -30,4 +28,22 @@ public class EntityLogDto {
   private String quality;
   private Integer purity;
   private String plating;
+  private String nameBeforeUpdate;
+  private String emailBeforeUpdate;
+  private String descriptionBeforeUpdate;
+  private String clazzBeforeUpdate;
+  private String quantityTypeBeforeUpdate;
+  private String colorBeforeUpdate;
+  private Double caratBeforeUpdate;
+  private String cutBeforeUpdate;
+  private String clarityBeforeUpdate;
+  private Double dimensionXBeforeUpdate;
+  private Double dimensionYBeforeUpdate;
+  private Double dimensionZBeforeUpdate;
+  private String shapeBeforeUpdate;
+  private String typeBeforeUpdate;
+  private Double sizeBeforeUpdate;
+  private String qualityBeforeUpdate;
+  private Integer purityBeforeUpdate;
+  private String platingBeforeUpdate;
 }

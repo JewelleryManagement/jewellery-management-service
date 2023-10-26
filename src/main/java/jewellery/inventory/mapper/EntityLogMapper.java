@@ -25,4 +25,17 @@ public interface EntityLogMapper {
   EntityLogDto toEntityLogDto(LinkingPartResponseDto linkingPart);
 
   EntityLogDto toEntityLogDto(PreciousMetalResponseDto preciousMetal);
+
+  default EntityLogDto mapEntityToDto(Object entity) {
+    return switch (entity.getClass().getSimpleName()) {
+      case "UserResponseDto" -> toEntityLogDto((UserResponseDto) entity);
+      case "ResourcesInUserResponseDto" -> toEntityLogDto((ResourcesInUserResponseDto) entity);
+      case "PearlResponseDto" -> toEntityLogDto((PearlResponseDto) entity);
+      case "GemstoneResponseDto" -> toEntityLogDto((GemstoneResponseDto) entity);
+      case "LinkingPartResponseDto" -> toEntityLogDto((LinkingPartResponseDto) entity);
+      case "PreciousMetalResponseDto" -> toEntityLogDto((PreciousMetalResponseDto) entity);
+      default -> throw new IllegalArgumentException(
+          "Unsupported entity type: " + entity.getClass());
+    };
+  }
 }
