@@ -94,7 +94,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             null,
             ProductResponseDto.class);
 
-    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
 
   @Test
