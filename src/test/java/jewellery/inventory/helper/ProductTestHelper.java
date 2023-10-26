@@ -1,7 +1,6 @@
 package jewellery.inventory.helper;
 
 import jewellery.inventory.dto.request.ProductRequestDto;
-import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.model.Product;
@@ -37,15 +36,6 @@ public class ProductTestHelper {
     productRequestDto.setResourcesContent(List.of(resourceQuantityRequestDto));
     productRequestDto.setSalePrice(10000);
     return productRequestDto;
-  }
-
-  @NotNull
-  public static UserRequestDto getUserRequestDto() {
-    UserRequestDto userRequestDto = new UserRequestDto();
-    userRequestDto.setName("username");
-    userRequestDto.setEmail("name@mail.com");
-    userRequestDto.setPassword("Password@123");
-    return userRequestDto;
   }
 
   @NotNull

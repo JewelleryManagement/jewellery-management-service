@@ -13,7 +13,6 @@ import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.helper.ProductTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.User;
@@ -74,7 +73,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @BeforeEach
   void setUp() {
     cleanAllRepositories();
-    userRequestDto = ProductTestHelper.getUserRequestDto();
+    userRequestDto = UserTestHelper.createDifferentUserRequest();
     user = createUserInDatabase();
     gemstone = createGemstoneInDatabase();
     resourceInUserRequestDto = getResourceInUserRequestDto(user, Objects.requireNonNull(gemstone));
@@ -99,7 +98,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void transferProductCorrectData() {
-    ResponseEntity<ProductResponseDto> ProductResponse =
+    ResponseEntity<ProductResponseDto> productResponse =
         this.testRestTemplate.postForEntity(
             getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
 
@@ -107,16 +106,21 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         this.testRestTemplate.postForEntity(
             getBaseUserUrl(), userRequestDto, UserResponseDto.class);
 
-    UserResponseDto createdUser = userResponse.getBody();
-    ProductResponseDto createdProduct = ProductResponse.getBody();
+    assertNotEquals(userResponse.getBody().getId(), productResponse.getBody().getOwner().getId());
 
     ResponseEntity<ProductResponseDto> response =
         this.testRestTemplate.exchange(
-            getBaseProductUrl() + "/" + createdProduct.getId() + "/transfer/" + createdUser.getId(),
+            getBaseProductUrl()
+                + "/"
+                + productResponse.getBody().getId()
+                + "/transfer/"
+                + userResponse.getBody().getId(),
             HttpMethod.PUT,
             null,
             ProductResponseDto.class);
 
+    assertNotNull(response.getBody());
+    assertEquals(userResponse.getBody().getId(), response.getBody().getOwner().getId());
     assertEquals(HttpStatus.OK, response.getStatusCode());
   }
   @Test
