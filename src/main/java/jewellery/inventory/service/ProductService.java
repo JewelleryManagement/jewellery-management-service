@@ -141,7 +141,10 @@ public class ProductService {
   }
 
   private Product getProductForTransfer(UUID recipientId, UUID productId) {
-    Product product = productRepository.findProductById(productId);
+    Product product =
+        productRepository
+            .findById(productId)
+            .orElseThrow(() -> new ProductNotFoundException(productId));
     validateProductForChangeOwner(recipientId, product);
     return product;
   }

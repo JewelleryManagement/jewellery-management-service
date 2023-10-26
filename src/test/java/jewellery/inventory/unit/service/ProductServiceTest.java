@@ -70,7 +70,7 @@ class ProductServiceTest {
     product.setOwner(owner);
     product.setId(productId);
     product.setContentOf(product);
-    when(productRepository.findProductById(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
     assertThrows(
         ProductIsContentException.class,
@@ -90,7 +90,7 @@ class ProductServiceTest {
     product.setOwner(owner);
     product.setId(productId);
     product.setSold(true);
-    when(productRepository.findProductById(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
     assertThrows(
         ProductIsSoldException.class, () -> productService.transferProduct(recipientId, productId));
@@ -107,7 +107,7 @@ class ProductServiceTest {
     Product product = new Product();
     product.setOwner(owner);
     product.setId(productId);
-    when(productRepository.findProductById(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
     assertThrows(
         ProductOwnerEqualsRecipientException.class,
@@ -126,7 +126,7 @@ class ProductServiceTest {
     Product product = new Product();
     product.setOwner(owner);
     product.setId(productId);
-    when(productRepository.findProductById(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     when(userRepository.findById(recipientId)).thenReturn(Optional.of(owner));
     assertEquals(product.getOwner().getId(), ownerId);
 
