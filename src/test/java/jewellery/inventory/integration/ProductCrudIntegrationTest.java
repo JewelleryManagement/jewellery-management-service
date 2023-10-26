@@ -108,7 +108,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertNotEquals(userResponse.getBody().getId(), productResponse.getBody().getOwner().getId());
 
-    ResponseEntity<ProductResponseDto> response =
+    ResponseEntity<ProductResponseDto> resultResponse =
         this.testRestTemplate.exchange(
             getBaseProductUrl()
                 + "/"
@@ -119,10 +119,11 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             null,
             ProductResponseDto.class);
 
-    assertNotNull(response.getBody());
-    assertEquals(userResponse.getBody().getId(), response.getBody().getOwner().getId());
-    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(resultResponse.getBody());
+    assertEquals(userResponse.getBody().getId(), resultResponse.getBody().getOwner().getId());
+    assertEquals(HttpStatus.OK, resultResponse.getStatusCode());
   }
+
   @Test
   void createProductSuccessfully() {
 
