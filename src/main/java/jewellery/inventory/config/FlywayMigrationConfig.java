@@ -8,8 +8,13 @@ import javax.sql.DataSource;
 
 @Configuration
 public class FlywayMigrationConfig {
-    @Autowired
-    public FlywayMigrationConfig(DataSource dataSource) {
-        Flyway.configure().baselineOnMigrate(true).dataSource(dataSource).load().migrate();
-    }
+  @Autowired
+  public FlywayMigrationConfig(DataSource dataSource) {
+    Flyway.configure()
+        .baselineOnMigrate(true)
+        .validateMigrationNaming(true)
+        .dataSource(dataSource)
+        .load()
+        .migrate();
+  }
 }
