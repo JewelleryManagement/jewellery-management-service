@@ -74,6 +74,13 @@ public class ProductService {
     productRepository.deleteById(id);
   }
 
+  public ProductResponseDto transferProduct(UUID recipientId, UUID productId) {
+    Product productForChangeOwner = getProductForTransfer(recipientId, productId);
+    productForChangeOwner.setOwner(getUser(recipientId));
+    productRepository.save(productForChangeOwner);
+    return productMapper.mapToProductResponseDto(productForChangeOwner);
+  }
+
   private void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
     if (product.getContentOf() != null) {
       throw new ProductIsContentException(id);
@@ -131,13 +138,6 @@ public class ProductService {
     return resourceInUserRepository
         .findByResourceIdAndOwnerId(resourceId, owner.getId())
         .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, owner.getId()));
-  }
-
-  public ProductResponseDto transferProduct(UUID recipientId, UUID productId) {
-    Product productForChangeOwner = getProductForTransfer(recipientId, productId);
-    productForChangeOwner.setOwner(getUser(recipientId));
-    productRepository.save(productForChangeOwner);
-    return productMapper.mapToProductResponseDto(productForChangeOwner);
   }
 
   private Product getProductForTransfer(UUID recipientId, UUID productId) {

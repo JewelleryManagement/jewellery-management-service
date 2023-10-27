@@ -83,7 +83,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void transferProductWithFakeId() {
+  void transferProductFailsWithNotFoundWhenIdsIncorrect() {
     UUID fakeId = UUID.randomUUID();
 
     ResponseEntity<ProductResponseDto> response =
@@ -97,7 +97,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void transferProductCorrectData() {
+  void transferProductSuccessfully() {
     ResponseEntity<ProductResponseDto> productResponse =
         this.testRestTemplate.postForEntity(
             getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
