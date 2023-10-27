@@ -1,6 +1,8 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ProductTestHelper.*;
+import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
+import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
@@ -12,9 +14,7 @@ import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
-import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
-import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Gemstone;
 import jewellery.inventory.repository.*;
@@ -63,7 +63,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Autowired private ResourceInProductRepository resourceInProductRepository;
 
   private User user;
-  private UserRequestDto userRequestDto;
+  private User differentUser;
   private Gemstone gemstone;
   private ResourceInUserRequestDto resourceInUserRequestDto;
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
@@ -73,8 +73,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @BeforeEach
   void setUp() {
     cleanAllRepositories();
-    userRequestDto = UserTestHelper.createDifferentUserRequest();
-    user = createUserInDatabase();
+    user = createUserInDatabase(createTestUserRequest());
+    differentUser = createUserInDatabase(createDifferentUserRequest());
     gemstone = createGemstoneInDatabase();
     resourceInUserRequestDto = getResourceInUserRequestDto(user, Objects.requireNonNull(gemstone));
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
@@ -102,11 +102,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         this.testRestTemplate.postForEntity(
             getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
 
-    ResponseEntity<UserResponseDto> userResponse =
-        this.testRestTemplate.postForEntity(
-            getBaseUserUrl(), userRequestDto, UserResponseDto.class);
-
-    assertNotEquals(userResponse.getBody().getId(), productResponse.getBody().getOwner().getId());
+    assertNotEquals(differentUser.getId(), productResponse.getBody().getOwner().getId());
 
     ResponseEntity<ProductResponseDto> resultResponse =
         this.testRestTemplate.exchange(
@@ -114,13 +110,13 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
                 + "/"
                 + productResponse.getBody().getId()
                 + "/transfer/"
-                + userResponse.getBody().getId(),
+                + differentUser.getId(),
             HttpMethod.PUT,
             null,
             ProductResponseDto.class);
 
     assertNotNull(resultResponse.getBody());
-    assertEquals(userResponse.getBody().getId(), resultResponse.getBody().getOwner().getId());
+    assertEquals(differentUser.getId(), resultResponse.getBody().getOwner().getId());
     assertEquals(HttpStatus.OK, resultResponse.getStatusCode());
   }
 
@@ -256,8 +252,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Nullable
-  private User createUserInDatabase() {
-    UserRequestDto userRequest = UserTestHelper.createTestUserRequest();
+  private User createUserInDatabase(UserRequestDto userRequest) {
     ResponseEntity<User> createUser =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, User.class);
 
