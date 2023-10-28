@@ -13,6 +13,7 @@ import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
+import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import org.springframework.http.HttpStatus;
@@ -52,9 +53,13 @@ public class GlobalExceptionHandler {
     return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
 
-
-  @ExceptionHandler({ProductIsContentException.class, ProductIsSoldException.class, UserNotOwnerException.class})
-  public ResponseEntity<Object> handleEntityConstraintConflict (RuntimeException ex) {
+  @ExceptionHandler({
+    ProductIsContentException.class,
+    ProductIsSoldException.class,
+    UserNotOwnerException.class,
+    ProductOwnerEqualsRecipientException.class
+  })
+  public ResponseEntity<Object> handleEntityConstraintConflict(RuntimeException ex) {
     return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage());
   }
 
@@ -63,7 +68,7 @@ public class GlobalExceptionHandler {
     return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
   }
 
-  @ExceptionHandler({ InvalidSecretKeyException.class })
+  @ExceptionHandler({InvalidSecretKeyException.class})
   public ResponseEntity<Object> handleBadSecretKey(RuntimeException ex) {
     return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
