@@ -23,4 +23,5 @@ public class ProductResponseDto {
   private boolean isSold;
   private String catalogNumber;
   private String productionNumber;
+  private double discount;
 }

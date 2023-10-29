@@ -19,6 +19,7 @@ import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInUser;
+import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.*;
@@ -76,14 +77,14 @@ class ProductServiceTest {
 
   @Test
   void testTransferProductThrowsExceptionWhenProductIsSold() {
-    product.setSold(true);
+    product.setPartOfSale(new Sale()); //TODO
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
     assertThrows(
         ProductIsSoldException.class,
         () -> productService.transferProduct(user.getId(), product.getId()));
 
-    assertTrue(product.isSold());
+    assertNull(product.getPartOfSale()); //TODO
   }
 
   @Test
@@ -107,7 +108,7 @@ class ProductServiceTest {
     productService.transferProduct(recipient.getId(), product.getId());
 
     assertNotEquals(recipient.getId(), user.getId());
-    assertFalse(product.isSold());
+    //assertFalse(product.isSold());
     assertNull(product.getContentOf());
   }
 
@@ -258,7 +259,7 @@ class ProductServiceTest {
 
   @Test
   void testDeleteProductShouldThrowExceptionWhenProductIsSold() {
-    product.setSold(true);
+    product.setPartOfSale(new Sale()); //TODO
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
     assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
@@ -282,7 +283,7 @@ class ProductServiceTest {
 
   @Test
   void deleteProductShouldThrowExceptionWhenProductIsSold() {
-    product.setSold(true);
+    product.setPartOfSale(new Sale()); //TODO
 
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
