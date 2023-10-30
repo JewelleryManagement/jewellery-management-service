@@ -10,6 +10,7 @@ import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
+import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.Product;
@@ -73,9 +74,22 @@ public class ProductService {
     productRepository.deleteById(id);
   }
 
+  public ProductResponseDto transferProduct(UUID recipientId, UUID productId) {
+    Product productForChangeOwner = getProductForTransfer(recipientId, productId);
+    productForChangeOwner.setOwner(getUser(recipientId));
+    productRepository.save(productForChangeOwner);
+    return productMapper.mapToProductResponseDto(productForChangeOwner);
+  }
+
   private void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
     if (product.getContentOf() != null) {
       throw new ProductIsContentException(id);
+    }
+  }
+
+  private void throwExceptionIfProductOwnerEqualsRecipient(Product product, UUID recipientId) {
+    if (product.getOwner().getId().equals(recipientId)) {
+      throw new ProductOwnerEqualsRecipientException(recipientId);
     }
   }
 
@@ -124,6 +138,22 @@ public class ProductService {
     return resourceInUserRepository
         .findByResourceIdAndOwnerId(resourceId, owner.getId())
         .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, owner.getId()));
+  }
+
+  private Product getProductForTransfer(UUID recipientId, UUID productId) {
+    Product product =
+        productRepository
+            .findById(productId)
+            .orElseThrow(() -> new ProductNotFoundException(productId));
+    validateProductForChangeOwner(recipientId, product);
+    return product;
+  }
+
+  private void validateProductForChangeOwner(UUID recipientId, Product productForChangeOwner) {
+    throwExceptionIfProductIsPartOfAnotherProduct(
+        productForChangeOwner.getId(), productForChangeOwner);
+    throwExceptionIfProductIsSold(productForChangeOwner.getId(), productForChangeOwner);
+    throwExceptionIfProductOwnerEqualsRecipient(productForChangeOwner, recipientId);
   }
 
   private List<Product> getProductsInProduct(
