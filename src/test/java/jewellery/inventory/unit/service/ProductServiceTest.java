@@ -77,14 +77,14 @@ class ProductServiceTest {
 
   @Test
   void testTransferProductThrowsExceptionWhenProductIsSold() {
-    product.setPartOfSale(new Sale()); //TODO
+    product.setPartOfSale(new Sale());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
     assertThrows(
         ProductIsSoldException.class,
         () -> productService.transferProduct(user.getId(), product.getId()));
 
-    assertNull(product.getPartOfSale()); //TODO
+    assertNotNull(product.getPartOfSale());
   }
 
   @Test

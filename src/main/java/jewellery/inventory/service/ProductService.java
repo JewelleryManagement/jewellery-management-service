@@ -94,7 +94,7 @@ public class ProductService {
   }
 
   private void throwExceptionIfProductIsSold(UUID id, Product product) {
-    if (product.getPartOfSale().equals(null)) { //TODO
+    if (product.getPartOfSale()!=null) {
       throw new ProductIsSoldException(id);
     }
   }
@@ -193,7 +193,7 @@ public class ProductService {
     Product product = new Product();
     product.setOwner(user);
     product.setAuthors(getAuthors(productRequestDto));
-   // product.setSold(false);
+   // product.setSold(false);//TODO
     product.setDescription(productRequestDto.getDescription());
     product.setSalePrice(productRequestDto.getSalePrice());
     product.setProductionNumber(productRequestDto.getProductionNumber());
