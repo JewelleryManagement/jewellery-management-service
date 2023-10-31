@@ -92,7 +92,12 @@ public class SaleMapper {
       totalDiscountAmount += discountAmount;
       totalPrice += product.getSalePrice();
     }
-    return (products.isEmpty() ? 0 : (totalDiscountAmount / totalPrice) * 100);
+
+    if (totalPrice != 0) {
+      return (totalDiscountAmount / totalPrice) * 100;
+    } else {
+      return 0;
+    }
   }
 
   private double getTotalDiscountFromEntity(List<Product> products) {
