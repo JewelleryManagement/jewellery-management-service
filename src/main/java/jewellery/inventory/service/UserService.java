@@ -12,6 +12,7 @@ import jewellery.inventory.exception.duplicate.DuplicateEmailException;
 import jewellery.inventory.exception.duplicate.DuplicateNameException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.mapper.UserMapper;
+import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,7 @@ public class UserService {
         userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id)));
   }
 
-  @LogCreateEvent
+  @LogCreateEvent(eventType = EventType.USER_CREATE)
   public UserResponseDto createUser(UserRequestDto user) {
     User userToCreate = userMapper.toUserEntity(user);
     validateUserEmailAndName(userToCreate);
@@ -42,7 +43,7 @@ public class UserService {
     return userMapper.toUserResponse(userRepository.save(userToCreate));
   }
 
-  @LogUpdateEvent
+  @LogUpdateEvent(eventType = EventType.USER_UPDATE)
   public UserResponseDto updateUser(UserRequestDto userRequest, UUID id) {
     if (!userRepository.existsById(id)) {
       throw new UserNotFoundException(id);
@@ -56,7 +57,7 @@ public class UserService {
     return userMapper.toUserResponse(userRepository.save(userToUpdate));
   }
 
-  @LogDeleteEvent
+  @LogDeleteEvent(eventType = EventType.USER_DELETE)
   public void deleteUser(UUID id) {
     if (!userRepository.existsById(id)) {
       throw new UserNotFoundException(id);

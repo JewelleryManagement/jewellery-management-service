@@ -7,7 +7,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -22,12 +21,14 @@ public class SystemEvent {
 
   @Id @GeneratedValue private UUID id;
 
-  private Instant timestamp;
+  private String timestamp;
 
   @Enumerated(EnumType.STRING)
   private EventType type;
 
-  private UUID executorId;
+  @Column(columnDefinition = "jsonb")
+  @Type(JsonBinaryType.class)
+  private Map<String, Object> executor = new HashMap<>();
 
   @Column(columnDefinition = "jsonb")
   @Type(JsonBinaryType.class)

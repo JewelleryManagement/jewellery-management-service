@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.exception.MappingException;
-import jewellery.inventory.mapper.EntityLogMapper;
 import jewellery.inventory.mapper.GemstoneMapper;
 import jewellery.inventory.mapper.LinkingPartMapper;
 import jewellery.inventory.mapper.PearlMapper;
@@ -27,10 +26,8 @@ class ResourceMapperTest {
     GemstoneMapper gemstoneMapper = GemstoneMapper.INSTANCE;
     LinkingPartMapper linkingPartMapper = LinkingPartMapper.INSTANCE;
     PreciousMetalMapper preciousMetalMapper = PreciousMetalMapper.INSTANCE;
-    EntityLogMapper entityLogMapper = EntityLogMapper.INSTANCE;
     resourceMapper =
-        new ResourceMapper(
-            pearlMapper, gemstoneMapper, linkingPartMapper, preciousMetalMapper, entityLogMapper);
+        new ResourceMapper(pearlMapper, gemstoneMapper, linkingPartMapper, preciousMetalMapper);
   }
 
   @ParameterizedTest

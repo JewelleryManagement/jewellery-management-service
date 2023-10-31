@@ -10,6 +10,7 @@ import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.mapper.ResourceMapper;
+import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
@@ -28,7 +29,7 @@ public class ResourceService {
     return resources.stream().map(resourceMapper::toResourceResponse).toList();
   }
 
-  @LogCreateEvent
+  @LogCreateEvent(eventType = EventType.RESOURCE_CREATE)
   public ResourceResponseDto createResource(ResourceRequestDto resourceRequestDto) {
     Resource savedResource =
         resourceRepository.save(resourceMapper.toResourceEntity(resourceRequestDto));
@@ -41,14 +42,14 @@ public class ResourceService {
     return resourceMapper.toResourceResponse(resource);
   }
 
-  @LogDeleteEvent
+  @LogDeleteEvent(eventType = EventType.RESOURCE_DELETE)
   public void deleteResourceById(UUID id) {
     Resource resource =
         resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
     resourceRepository.delete(resource);
   }
 
-  @LogUpdateEvent
+  @LogUpdateEvent(eventType = EventType.RESOURCE_UPDATE)
   public ResourceResponseDto updateResource(ResourceRequestDto resourceRequestDto, UUID id) {
     resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
     Resource toUpdate = resourceMapper.toResourceEntity(resourceRequestDto);
