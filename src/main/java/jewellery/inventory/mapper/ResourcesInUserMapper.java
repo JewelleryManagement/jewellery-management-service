@@ -1,7 +1,7 @@
 package jewellery.inventory.mapper;
 
 import java.util.List;
-import jewellery.inventory.dto.ResourceQuantityDto;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.UserQuantityDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
@@ -18,11 +18,11 @@ public class ResourcesInUserMapper {
   private final ResourceMapper resourceMapper;
 
   public ResourcesInUserResponseDto toResourcesInUserResponseDto(User user) {
-    List<ResourceQuantityDto> resourcesWithQuantities =
+    List<ResourceQuantityResponseDto> resourcesWithQuantities =
         user.getResourcesOwned().stream()
             .map(
                 resourceInUser ->
-                    ResourceQuantityDto.builder()
+                    ResourceQuantityResponseDto.builder()
                         .resource(resourceMapper.toResourceResponse(resourceInUser.getResource()))
                         .quantity(resourceInUser.getQuantity())
                         .build())
