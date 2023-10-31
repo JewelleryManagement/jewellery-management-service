@@ -7,6 +7,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -21,7 +22,7 @@ public class SystemEvent {
 
   @Id @GeneratedValue private UUID id;
 
-  private String timestamp;
+  private Instant timestamp;
 
   @Enumerated(EnumType.STRING)
   private EventType type;

@@ -50,7 +50,7 @@ public class EventService {
     }
 
     event.setType(type);
-    event.setTimestamp(formatCurrentTimestamp());
+    event.setTimestamp(Instant.now());
     event.setPayload(payload);
 
     systemEventRepository.save(event);

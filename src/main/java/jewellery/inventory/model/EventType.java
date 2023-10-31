@@ -1,7 +1,6 @@
 package jewellery.inventory.model;
 
 public enum EventType {
-  RESOURCE_CHANGE,
   RESOURCEINUSER_TOPUP,
   RESOURCEINUSER_DELETION,
   RESOURCEINUSER_PRODUCT_TRANSFER,

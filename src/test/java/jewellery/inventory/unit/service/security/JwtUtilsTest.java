@@ -39,7 +39,7 @@ public class JwtUtilsTest {
   }
 
   @Test
-  public void willGetUserIdWhenAuthenticatedUser() {
+  void willGetUserIdWhenAuthenticatedUser() {
     UUID userId = UUID.randomUUID();
     when(user.getId()).thenReturn(userId);
 
@@ -51,14 +51,14 @@ public class JwtUtilsTest {
   }
 
   @Test
-  public void willThrowWhenNoAuthenticatedUser() {
+  void willThrowWhenNoAuthenticatedUser() {
     SecurityContextHolder.getContext().setAuthentication(null);
 
     assertThrows(RuntimeException.class, () -> jwtUtils.getCurrentUserId());
   }
 
   @Test
-  public void willThrowWhenInvalidPrincipalType() {
+  void willThrowWhenInvalidPrincipalType() {
     Authentication auth = new UsernamePasswordAuthenticationToken("invalid", null);
     SecurityContextHolder.getContext().setAuthentication(auth);
 
@@ -91,7 +91,7 @@ public class JwtUtilsTest {
   }
 
   @Test
-  public void willThrowWhenWeakKey() {
+  void willThrowWhenWeakKey() {
     String weakKey = "weakKey";
     ReflectionTestUtils.setField(jwtUtils, "secretKey", weakKey);
 

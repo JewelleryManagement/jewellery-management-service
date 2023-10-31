@@ -3,6 +3,8 @@ package jewellery.inventory.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.aspect.annotation.LogCreateEvent;
+import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
@@ -13,6 +15,7 @@ import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.ProductMapper;
+import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
@@ -34,6 +37,7 @@ public class ProductService {
   private final ProductMapper productMapper;
 
   @Transactional
+  @LogCreateEvent(eventType = EventType.PRODUCT_CREATE)
   public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
     User owner = getUser(productRequestDto.getOwnerId());
     Product product = createProductWithoutResourcesAndProducts(productRequestDto, owner);
@@ -60,6 +64,7 @@ public class ProductService {
   }
 
   @Transactional
+  @LogDeleteEvent(eventType = EventType.PRODUCT_DELETE)
   public void deleteProduct(UUID id) {
 
     Product product =
