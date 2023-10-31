@@ -84,19 +84,27 @@ public class SaleMapper {
   }
 
   private double getTotalDiscountPercentageFromEntity(List<Product> products) {
-    double totalDiscountPercentage = 0;
+    double totalDiscountAmount = 0;
+    double totalPrice = 0;
+
     for (Product product : products) {
-      totalDiscountPercentage += product.getDiscount();
+      double discountAmount = product.getSalePrice() * (product.getDiscount() / 100);
+      totalDiscountAmount += discountAmount;
+      totalPrice += product.getSalePrice();
     }
-    return totalDiscountPercentage / products.size();
+    return (products.isEmpty() ? 0 : (totalDiscountAmount / totalPrice) * 100);
   }
 
   private double getTotalDiscountFromEntity(List<Product> products) {
-    double totalDiscount = 0;
+    double totalDiscountAmount = 0;
+    double totalPrice = 0;
+
     for (Product product : products) {
-      totalDiscount += product.getDiscount();
+      double discountAmount = product.getSalePrice() * (product.getDiscount() / 100);
+      totalDiscountAmount += discountAmount;
+      totalPrice += product.getSalePrice();
     }
-    return totalDiscount;
+    return (products.isEmpty() ? 0 : totalPrice - totalDiscountAmount);
   }
 
   private User getUserFromSaleRequestDto(UUID userId) {

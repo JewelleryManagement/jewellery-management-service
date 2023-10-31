@@ -11,10 +11,7 @@ import jewellery.inventory.exception.duplicate.DuplicateException;
 import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
 import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
-import jewellery.inventory.exception.product.ProductIsContentException;
-import jewellery.inventory.exception.product.ProductIsSoldException;
-import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
-import jewellery.inventory.exception.product.UserNotOwnerException;
+import jewellery.inventory.exception.product.*;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -57,7 +54,8 @@ public class GlobalExceptionHandler {
     ProductIsContentException.class,
     ProductIsSoldException.class,
     UserNotOwnerException.class,
-    ProductOwnerEqualsRecipientException.class
+    ProductOwnerEqualsRecipientException.class,
+    ProductOwnerNotSeller.class
   })
   public ResponseEntity<Object> handleEntityConstraintConflict(RuntimeException ex) {
     return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage());

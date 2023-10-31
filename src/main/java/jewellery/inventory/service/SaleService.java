@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
 import jewellery.inventory.exception.product.ProductOwnerNotSeller;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.Product;
@@ -29,16 +30,27 @@ public class SaleService {
 
   public SaleResponseDto createSale(SaleRequestDto saleRequestDto) {
     Sale sale = saleMapper.mapRequestToEntity(saleRequestDto);
+    throwExceptionIfProductOwnerNotSeller(sale.getProducts(), saleRequestDto.getSellerId());
+    throwExceptionProductOwnerEqualsRecipientException(
+        sale.getProducts(), saleRequestDto.getBuyerId());
     Sale createdSale = saleRepository.save(sale);
-    throwExceptionIfProductOwnerNotSeller(createdSale.getProducts(), saleRequestDto.getSellerId());
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
 
   private void throwExceptionIfProductOwnerNotSeller(List<Product> products, UUID sellerId) {
     for (Product product : products) {
-      if (product.getOwner().getId() != sellerId) {
+      if (!product.getOwner().getId().equals(sellerId)) {
         throw new ProductOwnerNotSeller(product.getOwner().getId(), sellerId);
+      }
+    }
+  }
+
+  private void throwExceptionProductOwnerEqualsRecipientException(
+      List<Product> products, UUID buyerId) {
+    for (Product product : products) {
+      if (product.getOwner().getId().equals(buyerId)) {
+        throw new ProductOwnerEqualsRecipientException(buyerId);
       }
     }
   }
