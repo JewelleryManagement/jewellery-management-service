@@ -66,7 +66,7 @@ public class SaleMapper {
                                 new ProductNotFoundException(
                                     productPriceDiscountRequestDto.getProductId())))
             .toList();
-    return setProductPriceDiscount(saleRequestDto, productList);
+    return setProductPriceAndDiscount(saleRequestDto, productList);
   }
 
   private double getDiscountInPercentage(List<ProductPriceDiscountRequestDto> discountList) {
@@ -95,8 +95,7 @@ public class SaleMapper {
       totalPrice += product.getSalePrice();
     }
     if (totalPrice != 0) {
-      double percentage = (totalDiscountAmount / totalPrice) * 100;
-      return Double.parseDouble(String.format("%.2f", percentage));
+      return (totalDiscountAmount / totalPrice) * 100;
     } else {
       return 0;
     }
@@ -114,7 +113,7 @@ public class SaleMapper {
     return (products.isEmpty() ? 0 : totalPrice - totalDiscountAmount);
   }
 
-  private List<Product> setProductPriceDiscount(
+  private List<Product> setProductPriceAndDiscount(
       SaleRequestDto saleRequestDto, List<Product> products) {
     for (int i = 0; i < products.size(); i++) {
       products.get(i).setSalePrice(saleRequestDto.getProducts().get(i).getSalePrice());
