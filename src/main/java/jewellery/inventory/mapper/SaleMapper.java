@@ -55,16 +55,18 @@ public class SaleMapper {
   }
 
   private List<Product> getProductsFromSaleRequestDto(SaleRequestDto saleRequestDto) {
-    return saleRequestDto.getProducts().stream()
-        .map(
-            productPriceDiscountRequestDto ->
-                productRepository
-                    .findById(productPriceDiscountRequestDto.getProductId())
-                    .orElseThrow(
-                        () ->
-                            new ProductNotFoundException(
-                                productPriceDiscountRequestDto.getProductId())))
-        .toList();
+    List<Product> productList =
+        saleRequestDto.getProducts().stream()
+            .map(
+                productPriceDiscountRequestDto ->
+                    productRepository
+                        .findById(productPriceDiscountRequestDto.getProductId())
+                        .orElseThrow(
+                            () ->
+                                new ProductNotFoundException(
+                                    productPriceDiscountRequestDto.getProductId())))
+            .toList();
+    return setProductPriceDiscount(saleRequestDto, productList);
   }
 
   private double getDiscountInPercentage(List<ProductPriceDiscountRequestDto> discountList) {
@@ -92,7 +94,6 @@ public class SaleMapper {
       totalDiscountAmount += discountAmount;
       totalPrice += product.getSalePrice();
     }
-
     if (totalPrice != 0) {
       return (totalDiscountAmount / totalPrice) * 100;
     } else {
@@ -110,6 +111,15 @@ public class SaleMapper {
       totalPrice += product.getSalePrice();
     }
     return (products.isEmpty() ? 0 : totalPrice - totalDiscountAmount);
+  }
+
+  private List<Product> setProductPriceDiscount(
+      SaleRequestDto saleRequestDto, List<Product> products) {
+    for (int i = 0; i < products.size(); i++) {
+      products.get(i).setSalePrice(saleRequestDto.getProducts().get(i).getSalePrice());
+      products.get(i).setDiscount(saleRequestDto.getProducts().get(i).getDiscount());
+    }
+    return products;
   }
 
   private User getUserFromSaleRequestDto(UUID userId) {
