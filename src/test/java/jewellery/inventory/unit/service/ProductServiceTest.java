@@ -108,7 +108,7 @@ class ProductServiceTest {
     productService.transferProduct(recipient.getId(), product.getId());
 
     assertNotEquals(recipient.getId(), user.getId());
-    //assertFalse(product.isSold());
+    assertNull(product.getPartOfSale());
     assertNull(product.getContentOf());
   }
 

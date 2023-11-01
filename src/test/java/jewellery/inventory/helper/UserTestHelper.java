@@ -27,9 +27,19 @@ public class UserTestHelper {
     user.setRole(Role.ADMIN);
     return user;
   }
+  public static User createTestUserForSale() {
+    User user = new User();
+    user.setId(UUID.randomUUID());
+    user.setName(USER_NAME);
+    user.setEmail(USER_EMAIL);
+    user.setPassword(USER_PASSWORD);
+    user.setRole(Role.ADMIN);
+    return user;
+  }
 
   public static User createSecondTestUser() {
     User user = new User();
+    user.setId(UUID.randomUUID());
     user.setName(USER_NAME + 2);
     user.setEmail(USER_EMAIL + 2);
     user.setPassword(USER_PASSWORD + 2);
