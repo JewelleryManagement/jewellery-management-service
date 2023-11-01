@@ -95,7 +95,8 @@ public class SaleMapper {
       totalPrice += product.getSalePrice();
     }
     if (totalPrice != 0) {
-      return (totalDiscountAmount / totalPrice) * 100;
+      double percentage = (totalDiscountAmount / totalPrice) * 100;
+      return Double.parseDouble(String.format("%.2f", percentage));
     } else {
       return 0;
     }
