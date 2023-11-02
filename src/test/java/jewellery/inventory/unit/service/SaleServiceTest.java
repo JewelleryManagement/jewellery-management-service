@@ -2,14 +2,12 @@ package jewellery.inventory.unit.service;
 
 import static jewellery.inventory.helper.ProductTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
@@ -23,6 +21,7 @@ import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.SaleService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -74,7 +73,7 @@ class SaleServiceTest {
 
     List<SaleResponseDto> responses = saleService.getAllSales();
 
-    assertEquals(sales.size(), responses.size());
+    Assertions.assertEquals(sales.size(), responses.size());
   }
 
   @Test
@@ -87,7 +86,7 @@ class SaleServiceTest {
 
     SaleResponseDto actual = saleService.createSale(saleRequestDto);
     assertNotEquals(actual.getBuyer(), actual.getSeller());
-    assertEquals(saleRequestDto.getSellerId(), actual.getSeller().getId());
+    Assertions.assertEquals(saleRequestDto.getSellerId(), actual.getSeller().getId());
     assertNotNull(actual);
   }
 
@@ -105,7 +104,7 @@ class SaleServiceTest {
               + " cannot sell a product that is not owned by them. Owner ID: "
               + ownerId;
       String actualMessage = ex.getMessage();
-      assertEquals(expectedMessage, actualMessage);
+      Assertions.assertEquals(expectedMessage, actualMessage);
     }
   }
 }
