@@ -1,5 +1,6 @@
 package jewellery.inventory.mapper;
 
+import java.util.Locale;
 import jewellery.inventory.dto.request.resource.*;
 import jewellery.inventory.dto.response.resource.*;
 import jewellery.inventory.exception.MappingException;
@@ -20,7 +21,7 @@ public class ResourceMapper {
     if (resource instanceof Pearl pearl) {
       return pearlMapper.toResourceResponse(pearl);
     } else if (resource instanceof PreciousStone preciousStone) {
-      return preciousStoneMapper.toResourceResponse(preciousStone);
+      return toPreciousStoneResponseWithSize (preciousStone, preciousStoneMapper.toResourceResponse(preciousStone));
     } else if (resource instanceof Element element) {
       return elementMapper.toResourceResponse(element);
     } else if (resource instanceof Metal metal) {
@@ -48,5 +49,18 @@ public class ResourceMapper {
       return semiPreciousStoneMapper.toResourceEntity(semiPreciousStoneRequestDto);
     }
     throw new MappingException(resourceRequestDto);
+  }
+
+  private ResourceResponseDto toPreciousStoneResponseWithSize(
+      PreciousStone preciousStone, PreciousStoneResponseDto preciousStoneResponseDto) {
+    String size =
+        String.format(
+            Locale.US,
+            "%.2fx%.2fx%.2f",
+                preciousStone.getDimensionX(),
+                preciousStone.getDimensionY(),
+                preciousStone.getDimensionZ());
+    preciousStoneResponseDto.setSize(size);
+    return preciousStoneResponseDto;
   }
 }
