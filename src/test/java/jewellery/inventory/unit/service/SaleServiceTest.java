@@ -2,13 +2,11 @@ package jewellery.inventory.unit.service;
 
 import static jewellery.inventory.helper.ProductTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
-import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 import java.util.*;
-
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;

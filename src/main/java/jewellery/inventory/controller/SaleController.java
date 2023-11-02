@@ -25,7 +25,7 @@ public class SaleController {
 
   @Operation(summary = "Create a sale")
   @ResponseStatus(HttpStatus.CREATED)
-  @PostMapping()
+  @PostMapping
   public SaleResponseDto createSale(@RequestBody @Valid SaleRequestDto saleRequestDto) {
     return saleService.createSale(saleRequestDto);
   }
