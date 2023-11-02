@@ -65,11 +65,6 @@ public class UserService {
     userRepository.deleteById(id);
   }
 
-  public UserResponseDto fetchByIdAsDto(UUID id) {
-    User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
-    return userMapper.toUserResponse(user);
-  }
-
   private void validateUserEmailAndName(User user) {
     if (isNameUsedByOtherUser(user.getName(), user.getId())) {
       throw new DuplicateNameException(user.getName());

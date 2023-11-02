@@ -29,7 +29,7 @@ public class ResourceController {
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")
   public ResourceResponseDto getResourceById(@PathVariable("id") UUID id) {
-    return resourceService.getResourceById(id);
+    return resourceService.getResource(id);
   }
 
   @Operation(summary = "Create new resource")

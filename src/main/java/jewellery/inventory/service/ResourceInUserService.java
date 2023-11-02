@@ -2,6 +2,9 @@ package jewellery.inventory.service;
 
 import java.util.Optional;
 import java.util.UUID;
+import jewellery.inventory.aspect.annotation.LogDeleteEvent;
+import jewellery.inventory.aspect.annotation.LogTopUpEvent;
+import jewellery.inventory.aspect.annotation.LogTransferEvent;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
@@ -16,6 +19,7 @@ import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.mapper.ResourcesInUserMapper;
 import jewellery.inventory.mapper.UserMapper;
+import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
@@ -38,6 +42,7 @@ public class ResourceInUserService {
   private static final double EPSILON = 1e-10;
 
   @Transactional
+  @LogTransferEvent(eventType = EventType.RESOURCE_TRANSFER)
   public TransferResourceResponseDto transferResources(
       TransferResourceRequestDto transferResourceRequestDto) {
 
@@ -59,6 +64,7 @@ public class ResourceInUserService {
   }
 
   @Transactional
+  @LogTopUpEvent
   public ResourcesInUserResponseDto addResourceToUser(ResourceInUserRequestDto resourceUserDto) {
     User user = findUserById(resourceUserDto.getUserId());
     Resource resource = findResourceById(resourceUserDto.getResourceId());
@@ -82,6 +88,7 @@ public class ResourceInUserService {
   }
 
   @Transactional
+  @LogDeleteEvent(eventType = EventType.RESOURCE_IN_USER_DELETION)
   public void removeResourceFromUser(UUID userId, UUID resourceId) {
     User user = findUserById(userId);
     ResourceInUser resourceToRemove = findResourceInUserOrThrow(user, resourceId);

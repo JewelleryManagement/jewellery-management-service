@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
+import jewellery.inventory.aspect.annotation.LogTransferEvent;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
@@ -64,7 +65,7 @@ public class ProductService {
   }
 
   @Transactional
-  @LogDeleteEvent(eventType = EventType.PRODUCT_DELETE)
+  @LogDeleteEvent(eventType = EventType.PRODUCT_DISASSEMBLY)
   public void deleteProduct(UUID id) {
 
     Product product =
@@ -79,6 +80,7 @@ public class ProductService {
     productRepository.deleteById(id);
   }
 
+  @LogTransferEvent(eventType = EventType.PRODUCT_TRANSFER)
   public ProductResponseDto transferProduct(UUID recipientId, UUID productId) {
     Product productForChangeOwner = getProductForTransfer(recipientId, productId);
     productForChangeOwner.setOwner(getUser(recipientId));

@@ -36,7 +36,7 @@ public class ResourceService {
     return resourceMapper.toResourceResponse(savedResource);
   }
 
-  public ResourceResponseDto getResourceById(UUID id) {
+  public ResourceResponseDto getResource(UUID id) {
     Resource resource =
         resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
     return resourceMapper.toResourceResponse(resource);
@@ -78,11 +78,5 @@ public class ResourceService {
                     .quantity(resourceInUserRepository.sumQuantityByResource(resource.getId()))
                     .build())
         .toList();
-  }
-
-  public ResourceResponseDto fetchByIdAsDto(UUID id) {
-    Resource resource =
-        resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
-    return resourceMapper.toResourceResponse(resource);
   }
 }
