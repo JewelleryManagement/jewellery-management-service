@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
+import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
@@ -23,7 +25,8 @@ public class SaleTestHelper {
     return sale;
   }
 
-  public static SaleRequestDto createSaleRequest(UUID sellerId, UUID buyerId, List<ProductPriceDiscountRequestDto> products) {
+  public static SaleRequestDto createSaleRequest(
+      UUID sellerId, UUID buyerId, List<ProductPriceDiscountRequestDto> products) {
     SaleRequestDto saleRequest = new SaleRequestDto();
     saleRequest.setSellerId(sellerId);
     saleRequest.setBuyerId(buyerId);
@@ -31,28 +34,42 @@ public class SaleTestHelper {
     return saleRequest;
   }
 
-  public static ProductPriceDiscountRequestDto createProductPriceDiscountRequest(UUID productId, double salePrice, double discount) {
+  public static ProductPriceDiscountRequestDto createProductPriceDiscountRequest(
+      UUID productId, double salePrice, double discount) {
     ProductPriceDiscountRequestDto productRequest = new ProductPriceDiscountRequestDto();
     productRequest.setProductId(productId);
     productRequest.setSalePrice(salePrice);
     productRequest.setDiscount(discount);
     return productRequest;
   }
-  public static List<SaleResponseDto> getSaleResponseList(SaleResponseDto saleResponseDto){
-    List<SaleResponseDto> saleResponseDtoList=new ArrayList<>();
+  public static List<SaleResponseDto> getSaleResponseList(SaleResponseDto saleResponseDto) {
+    List<SaleResponseDto> saleResponseDtoList = new ArrayList<>();
     saleResponseDtoList.add(saleResponseDto);
     return saleResponseDtoList;
   }
 
-  public static List<Product> getProList(Product product){
-    List<Product> products=new ArrayList<>();
+  public static List<Product> getProList(Product product) {
+    List<Product> products = new ArrayList<>();
     products.add(product);
     return products;
   }
-  public static SaleResponseDto getSaleResponseDto(Sale sale){
-    SaleResponseDto dto=new SaleResponseDto();
+  public static SaleResponseDto getSaleResponseDto(Sale sale) {
+    SaleResponseDto dto = new SaleResponseDto();
+    UserResponseDto userRequestDtoSeller = new UserResponseDto();
+    UserResponseDto userRequestDtoBuyer = new UserResponseDto();
+    userRequestDtoSeller.setId(sale.getSeller().getId());
+    dto.setSeller(userRequestDtoSeller);
+    userRequestDtoBuyer.setId(sale.getBuyer().getId());
+    dto.setBuyer(userRequestDtoBuyer);
     dto.setTotalDiscountedPrice(sale.getProducts().get(0).getSalePrice());
     dto.setTotalDiscount(sale.getProducts().get(0).getDiscount());
-      return dto;
+    List<ProductResponseDto> list = new ArrayList<>();
+    for (int i = 0; i < sale.getProducts().size(); i++) {
+      ProductResponseDto productResponseDto = new ProductResponseDto();
+      productResponseDto.setOwner(dto.getBuyer());
+      list.add(productResponseDto);
+    }
+    dto.setProducts(list);
+    return dto;
   }
 }

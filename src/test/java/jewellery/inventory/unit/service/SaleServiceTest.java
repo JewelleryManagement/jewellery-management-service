@@ -2,6 +2,8 @@ package jewellery.inventory.unit.service;
 
 import static jewellery.inventory.helper.ProductTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -18,7 +20,6 @@ import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.SaleService;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,9 +30,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SaleServiceTest {
   @InjectMocks private SaleService saleService;
-  @Mock private ProductRepository productRepository;
-  @Mock private UserRepository userRepository;
   @Mock private SaleRepository saleRepository;
+  @Mock private UserRepository userRepository;
+  @Mock private ProductRepository productRepository;
   @Mock private SaleMapper saleMapper;
   private User seller;
   private User buyer;
@@ -70,20 +71,20 @@ class SaleServiceTest {
 
     List<SaleResponseDto> responses = saleService.getAllSales();
 
-    Assertions.assertEquals(sales.size(), responses.size());
+    assertEquals(sales.size(), responses.size());
   }
 
   @Test
-  void testCreateProductShouldSetContentProduct() {
+  void testCreateSaleProductWhenDateIsCorrect() {
     when(saleMapper.mapRequestToEntity(saleRequestDto)).thenReturn(sale);
 
     when(saleRepository.save(sale)).thenReturn(sale);
 
-    SaleResponseDto responseDto = new SaleResponseDto();
-    when(saleMapper.mapEntityToResponseDto(sale)).thenReturn(responseDto);
+    when(saleMapper.mapEntityToResponseDto(sale)).thenReturn(saleResponseDto);
 
     SaleResponseDto actual = saleService.createSale(saleRequestDto);
-
-    Assertions.assertNotNull(actual);
+    assertNotEquals(actual.getBuyer(), actual.getSeller());
+    assertEquals(saleRequestDto.getSellerId(), actual.getSeller().getId());
+    assertNotNull(actual);
   }
 }
