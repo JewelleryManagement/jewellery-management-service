@@ -17,7 +17,6 @@ import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
-import jewellery.inventory.exception.EntityFetchException;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.ResourceInUserService;
@@ -30,7 +29,8 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Aspect
@@ -38,6 +38,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class EventAspect {
   private final EventService eventService;
+  private static final Logger logger = LoggerFactory.getLogger(EventAspect.class);
 
   @AfterReturning(pointcut = "@annotation(logCreateEvent)", returning = "result")
   public void logCreation(JoinPoint joinPoint, LogCreateEvent logCreateEvent, Object result) {
@@ -56,9 +57,9 @@ public class EventAspect {
     Object service = proceedingJoinPoint.getTarget();
     Object oldEntity = fetchEntity(service, id, entityRequest.getClass());
     Object result = proceedingJoinPoint.proceed();
-
-    eventService.logEvent(eventType, result, oldEntity);
-
+    if (oldEntity != null) {
+      eventService.logEvent(eventType, result, oldEntity);
+    }
     return result;
   }
 
@@ -81,9 +82,9 @@ public class EventAspect {
     EventType eventType = logDeleteEvent.eventType();
 
     Object service = joinPoint.getTarget();
-    Class<?> entityType = determineEntityType(service);
 
     Object entity = fetchEntity(service, userId);
+
     if (entity != null) {
       eventService.logEvent(eventType, entity, null);
     }
@@ -93,8 +94,6 @@ public class EventAspect {
   public void logTopUp(JoinPoint joinPoint, LogTopUpEvent logTopUpEvent, Object result) {
     EventType eventType = logTopUpEvent.eventType();
 
-    MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-    Method method = signature.getMethod();
     ResourceInUserRequestDto resourceUserDto = (ResourceInUserRequestDto) joinPoint.getArgs()[0];
 
     ResourcesInUserResponseDto updatedResources = (ResourcesInUserResponseDto) result;
@@ -141,7 +140,9 @@ public class EventAspect {
       Method method = service.getClass().getMethod(methodName, UUID.class);
       return method.invoke(service, entityId);
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      throw new EntityFetchException(methodName, entityId, e);
+      logger.error(
+          "Failed to fetch entity for logging: method={}, entityId={}", methodName, entityId, e);
+      return null;
     }
   }
 
@@ -150,35 +151,44 @@ public class EventAspect {
       Method method = service.getClass().getMethod("getAllResourcesFromUser", UUID.class);
       return method.invoke(service, userId);
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      throw new EntityFetchException("Unable to fetch entity for logging", userId, e);
+      logger.error("Unable to fetch entity for logging", e);
+      return null;
     }
   }
 
   private String determineFetchMethod(Object service, Class<?> entityType) {
-    if (entityType.equals(UserRequestDto.class) || service instanceof UserService) {
-      return "getUser";
-    } else if (ResourceRequestDto.class.isAssignableFrom(entityType)
-        || service instanceof ResourceService) {
-      return "getResource";
-    } else if (entityType.equals(ProductRequestDto.class) || service instanceof ProductService) {
-      return "getProduct";
-    } else if (entityType.equals(ResourceInUserRequestDto.class)
-        || service instanceof ResourceInUserService) {
-      return "getAllResourcesFromUser";
+    try {
+      if (entityType.equals(UserRequestDto.class) || service instanceof UserService) {
+        return "getUser";
+      } else if (ResourceRequestDto.class.isAssignableFrom(entityType)
+          || service instanceof ResourceService) {
+        return "getResource";
+      } else if (entityType.equals(ProductRequestDto.class) || service instanceof ProductService) {
+        return "getProduct";
+      } else if (entityType.equals(ResourceInUserRequestDto.class)
+          || service instanceof ResourceInUserService) {
+        return "getAllResourcesFromUser";
+      }
+    } catch (IllegalArgumentException e) {
+      logger.error("Unsupported entity type: {}", entityType, e);
     }
-    throw new IllegalArgumentException("Unsupported entity type: " + entityType);
+    return null;
   }
 
   private Class<?> determineEntityType(Object service) {
-    if (service instanceof UserService) {
-      return UserRequestDto.class;
-    } else if (service instanceof ResourceService) {
-      return ResourceRequestDto.class;
-    } else if (service instanceof ProductService) {
-      return ProductRequestDto.class;
-    } else if (service instanceof ResourceInUserService) {
-      return ResourceInUserRequestDto.class;
+    try {
+      if (service instanceof UserService) {
+        return UserRequestDto.class;
+      } else if (service instanceof ResourceService) {
+        return ResourceRequestDto.class;
+      } else if (service instanceof ProductService) {
+        return ProductRequestDto.class;
+      } else if (service instanceof ResourceInUserService) {
+        return ResourceInUserRequestDto.class;
+      }
+    } catch (IllegalArgumentException e) {
+      logger.error("Unsupported service type: {}", service.getClass(), e);
     }
-    throw new IllegalArgumentException("Unsupported service type: " + service.getClass());
+    return null;
   }
 }
