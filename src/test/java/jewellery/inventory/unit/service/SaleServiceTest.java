@@ -9,9 +9,12 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
+
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.exception.product.ProductOwnerNotSeller;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.Product;
@@ -86,5 +89,23 @@ class SaleServiceTest {
     assertNotEquals(actual.getBuyer(), actual.getSeller());
     assertEquals(saleRequestDto.getSellerId(), actual.getSeller().getId());
     assertNotNull(actual);
+  }
+
+  @Test
+  void testProductOwnerNotSeller() {
+    UUID ownerId = UUID.randomUUID();
+    UUID sellerId = UUID.randomUUID();
+
+    try {
+      throw new ProductOwnerNotSeller(ownerId, sellerId);
+    } catch (ProductOwnerNotSeller ex) {
+      String expectedMessage =
+          "The seller with ID "
+              + sellerId
+              + " cannot sell a product that is not owned by them. Owner ID: "
+              + ownerId;
+      String actualMessage = ex.getMessage();
+      assertEquals(expectedMessage, actualMessage);
+    }
   }
 }
