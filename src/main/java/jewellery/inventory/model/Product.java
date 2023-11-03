@@ -36,6 +36,9 @@ public class Product {
   @OneToMany(mappedBy = "contentOf", cascade = CascadeType.ALL)
   private List<Product> productsContent;
 
+  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+  private List<Image> images;
+
   private String catalogNumber;
   private String productionNumber;
   private String description;

@@ -19,4 +19,7 @@ public class Image {
     private String name;
     private String type;
     private String filePath;
+
+    @ManyToOne
+    private Product product;
 }
