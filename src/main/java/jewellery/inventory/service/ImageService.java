@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -49,8 +50,11 @@ public class ImageService {
   }
 
   @Transactional
-  public void deleteImage(String name) throws IOException {
+  public void deleteImage(String name, UUID productId) throws IOException {
+
     Image fileData = getImage(name);
+    removeImageFromProduct(productId, fileData);
+
     Path path = Paths.get(fileData.getFilePath());
     Files.delete(path);
     imageRepository.delete(fileData);
@@ -88,5 +92,12 @@ public class ImageService {
   private Product getProduct(UUID productId) {
     return productRepository.findById(productId).orElseThrow(
             () -> new ProductNotFoundException(productId));
+  }
+
+  private void removeImageFromProduct(UUID productId, Image fileData) {
+    Product product = getProduct(productId);
+    List<Image> images = product.getImages();
+    images.remove(fileData);
+    product.setImages(images);
   }
 }

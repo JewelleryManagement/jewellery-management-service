@@ -38,8 +38,9 @@ public class ImageController {
 
   @Operation(summary = "Delete image from file system")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @DeleteMapping("/{fileName}")
-  public void deleteImage(@PathVariable @Valid String fileName) throws IOException {
-    imageService.deleteImage(fileName);
+  @DeleteMapping("/{productId}/picture/{fileName}")
+  public void deleteImage(@PathVariable @Valid String fileName,
+                          @PathVariable @Valid UUID productId) throws IOException {
+    imageService.deleteImage(fileName, productId);
   }
 }

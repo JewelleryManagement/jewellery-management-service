@@ -14,6 +14,7 @@ public class ImageDataMapper {
         .name(image.getName())
         .type(image.getType())
         .filePath(image.getFilePath())
+        .productId(image.getProduct().getId())
         .build();
   }
 }
