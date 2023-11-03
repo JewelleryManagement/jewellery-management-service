@@ -16,19 +16,27 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class ImageController {
 
-    private final ImageService imageService;
+  private final ImageService imageService;
 
-    @Operation(summary = "Upload new image")
-    @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping
-    ImageResponseDto uploadImage(@RequestParam("image") @Valid MultipartFile file) throws IOException {
-        return imageService.uploadImageToFileSystem(file);
-    }
+  @Operation(summary = "Upload new image in file system")
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping
+  public ImageResponseDto uploadImage(@RequestParam("image") @Valid MultipartFile file)
+      throws IOException {
+    return imageService.uploadImage(file);
+  }
 
-    @Operation(summary = "Get image")
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping
-    byte[] getImage(@PathVariable @Valid String fileName) throws IOException {
-        return imageService.downloadImageFormFileSystem(fileName);
-    }
+  @Operation(summary = "Get image")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping(value = "/{fileName}", produces = "image/png")
+  public byte[] getImage(@PathVariable @Valid String fileName) throws IOException {
+    return imageService.downloadImage(fileName);
+  }
+
+  @Operation(summary = "Delete image from file system")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @DeleteMapping("/{fileName}")
+  public void deleteImage(@PathVariable @Valid String fileName) throws IOException {
+    imageService.deleteImage(fileName);
+  }
 }

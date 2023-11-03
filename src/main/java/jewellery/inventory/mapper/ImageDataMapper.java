@@ -2,11 +2,18 @@ package jewellery.inventory.mapper;
 
 import jewellery.inventory.dto.response.ImageResponseDto;
 import jewellery.inventory.model.Image;
-import org.mapstruct.Mapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
-@Mapper(
-        componentModel = "spring")
-public interface ImageDataMapper {
+@Component
+@RequiredArgsConstructor
+public class ImageDataMapper {
 
-    ImageResponseDto toImageResponse(Image image);
+  public ImageResponseDto toImageResponse(Image image) {
+    return ImageResponseDto.builder()
+        .name(image.getName())
+        .type(image.getType())
+        .filePath(image.getFilePath())
+        .build();
+  }
 }

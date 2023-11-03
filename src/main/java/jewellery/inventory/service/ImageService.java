@@ -8,55 +8,71 @@ import jewellery.inventory.model.Image;
 import jewellery.inventory.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Service
 @RequiredArgsConstructor
 public class ImageService {
 
-  private static final String FOLDER_PATH = "C:/images/";
+  private static final String FOLDER_PATH = "C:/Windows/Temp/Jms/Images/";
 
   private final ImageRepository imageRepository;
   private final ImageDataMapper imageDataMapper;
 
-
-  public ImageResponseDto uploadImageToFileSystem(MultipartFile file) throws IOException {
-
+  @Transactional
+  public ImageResponseDto uploadImage(MultipartFile file) throws IOException {
     String filePath = FOLDER_PATH + file.getOriginalFilename();
-
+    createDirectoryIfNotExists();
     checkForExistedImage(file);
-    Image imageData = getImage(file, filePath);
     file.transferTo(new File(filePath));
-
-    return imageDataMapper.toImageResponse(imageData);
+    return imageDataMapper.toImageResponse(createImageData(file, filePath));
   }
 
-  public byte[] downloadImageFormFileSystem(String name) throws IOException {
-    Image fileData =
-        imageRepository.findByName(name).orElseThrow(() -> new ImageNotFoundException(name));
-
-    return Files.readAllBytes(new File(fileData.getPath()).toPath());
+  @Transactional
+  public byte[] downloadImage(String name) throws IOException {
+    Image fileData = getImage(name);
+    return Files.readAllBytes(new File(fileData.getFilePath()).toPath());
   }
 
-  private Image getImage(MultipartFile file, String filePath) {
-    Image imageData = imageRepository.save(
+  @Transactional
+  public void deleteImage(String name) throws IOException {
+    Image fileData = getImage(name);
+    Path path = Paths.get(fileData.getFilePath());
+    Files.delete(path);
+    imageRepository.delete(fileData);
+  }
+
+  private Image createImageData(MultipartFile file, String filePath) {
+    return imageRepository.save(
             Image.builder()
                     .name(file.getOriginalFilename())
                     .type(file.getContentType())
-                    .path(filePath)
+                    .filePath(filePath)
                     .build());
-    return imageData;
   }
 
   private void checkForExistedImage(MultipartFile file) {
     Image image = imageRepository.findByName(file.getOriginalFilename()).orElse(null);
-
     if (image != null) {
       throw new DuplicateFileException(file.getOriginalFilename());
     }
+  }
+
+  private void createDirectoryIfNotExists() {
+    File path = new File(FOLDER_PATH);
+    if (imageRepository.count() == 0) {
+      path.mkdirs();
+    }
+  }
+
+  private Image getImage(String name) {
+    return imageRepository.findByName(name).orElseThrow(() -> new ImageNotFoundException(name));
   }
 }
