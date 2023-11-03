@@ -73,11 +73,6 @@ public class GlobalExceptionHandler {
     return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
 
-  @ExceptionHandler({EntityFetchException.class})
-  public ResponseEntity<Object> handleEntityFetchException(EntityFetchException ex) {
-    return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
-  }
-
   private ResponseEntity<Object> createErrorResponse(HttpStatus status, Object error) {
     Map<String, Object> body = new HashMap<>();
     String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT_PATTERN));

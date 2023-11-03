@@ -10,6 +10,8 @@ import io.jsonwebtoken.security.WeakKeyException;
 import java.security.Key;
 import java.util.UUID;
 import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.exception.not_found.NoAuthenticatedUserException;
+import jewellery.inventory.exception.security.InvalidPrincipalTypeException;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import jewellery.inventory.exception.security.jwt.JwtExpiredException;
 import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
@@ -35,7 +37,7 @@ public class JwtUtils {
     if (auth != null && auth.getPrincipal() instanceof User user) {
       return user.getId();
     }
-    throw new RuntimeException("No authenticated user found or invalid principal type!");
+    throw new NoAuthenticatedUserException();
   }
 
   public UserResponseDto getCurrentUser() {
@@ -43,7 +45,7 @@ public class JwtUtils {
     if (auth != null && auth.getPrincipal() instanceof User user) {
       return userMapper.toUserResponse(user);
     }
-    throw new RuntimeException("No authenticated user found or invalid principal type!");
+    throw new InvalidPrincipalTypeException();
   }
 
   public Key getSigningKey() {

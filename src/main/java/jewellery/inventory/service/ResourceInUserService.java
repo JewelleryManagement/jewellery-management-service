@@ -3,6 +3,7 @@ package jewellery.inventory.service;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
+import jewellery.inventory.aspect.annotation.LogResourceQuantityRemovalEvent;
 import jewellery.inventory.aspect.annotation.LogTopUpEvent;
 import jewellery.inventory.aspect.annotation.LogTransferEvent;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
@@ -80,6 +81,7 @@ public class ResourceInUserService {
   }
 
   @Transactional
+  @LogResourceQuantityRemovalEvent
   public void removeQuantityFromResource(UUID userId, UUID resourceId, double quantity) {
     User user = findUserById(userId);
     ResourceInUser resourceInUser = findResourceInUserOrThrow(user, resourceId);
@@ -88,7 +90,7 @@ public class ResourceInUserService {
   }
 
   @Transactional
-  @LogDeleteEvent(eventType = EventType.RESOURCE_IN_USER_DELETION)
+  @LogDeleteEvent(eventType = EventType.RESOURCE_IN_USER_DELETE)
   public void removeResourceFromUser(UUID userId, UUID resourceId) {
     User user = findUserById(userId);
     ResourceInUser resourceToRemove = findResourceInUserOrThrow(user, resourceId);
@@ -100,6 +102,11 @@ public class ResourceInUserService {
   public ResourceOwnedByUsersResponseDto getUsersAndQuantities(UUID resourceId) {
     Resource resource = findResourceById(resourceId);
     return resourcesInUserMapper.toResourcesOwnedByUsersResponseDto(resource);
+  }
+
+  public ResourceInUser getResourceInUser(UUID userId, UUID resourceId) {
+    User user = findUserById(userId);
+    return findResourceInUser(user, resourceId).orElse(null);
   }
 
   private User addResourceToUser(User user, Resource resource, Double quantity) {
