@@ -26,7 +26,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ImageService {
 
-  private static final String FOLDER_PATH = "C:\\Windows\\Temp\\Jms\\Images\\";
+  private static final String FOLDER_PATH = "C:/Windows/Temp/Jms/Images/";
 
   private final ImageRepository imageRepository;
   private final ImageDataMapper imageDataMapper;
