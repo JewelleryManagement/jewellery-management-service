@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -35,17 +34,31 @@ public class ImageService {
   @Transactional
   public ImageResponseDto uploadImage(MultipartFile file, UUID productId) throws IOException {
 
+    if (file.isEmpty()) {
+      throw new ImageNotFoundException();
+    }
+
     String filePath = FOLDER_PATH + file.getOriginalFilename();
     createDirectoryIfNotExists();
     checkForExistedImage(file);
     file.transferTo(new File(filePath));
-    Image imageData = createImageData(file, filePath, productId);
-    return imageDataMapper.toImageResponse(imageData);
+
+    Product product = getProduct(productId);
+    Image image = createImageData(file, filePath, product);
+    setProductImage(product, image);
+
+    return imageDataMapper.toImageResponse(image);
   }
 
   @Transactional
-  public byte[] downloadImage(String name) throws IOException {
+  public byte[] downloadImage(String name, UUID productId) throws IOException {
     Image fileData = getImage(name);
+    //TODO: <<<
+//    Product product = getProduct(productId);
+//    if (!product.getImages().contains(fileData)) {
+//      throw new ImageNotFoundException(fileData.getName());
+//    }
+    // >>>
     return Files.readAllBytes(new File(fileData.getFilePath()).toPath());
   }
 
@@ -53,15 +66,14 @@ public class ImageService {
   public void deleteImage(String name, UUID productId) throws IOException {
 
     Image fileData = getImage(name);
-    removeImageFromProduct(productId, fileData);
+    removeImageFromProduct(productId);
 
     Path path = Paths.get(fileData.getFilePath());
     Files.delete(path);
     imageRepository.delete(fileData);
   }
 
-  private Image createImageData(MultipartFile file, String filePath, UUID productId) {
-    Product product = getProduct(productId);
+  private Image createImageData(MultipartFile file, String filePath, Product product) {
     return imageRepository.save(
             Image.builder()
                     .name(file.getOriginalFilename())
@@ -94,10 +106,15 @@ public class ImageService {
             () -> new ProductNotFoundException(productId));
   }
 
-  private void removeImageFromProduct(UUID productId, Image fileData) {
+  private void removeImageFromProduct(UUID productId) {
     Product product = getProduct(productId);
-    List<Image> images = product.getImages();
-    images.remove(fileData);
-    product.setImages(images);
+    product.setImage(null);
+  }
+
+  private void setProductImage(Product product, Image image) {
+    if (product.getImage() != null) {
+      imageRepository.delete(product.getImage());
+    }
+    product.setImage(image);
   }
 }

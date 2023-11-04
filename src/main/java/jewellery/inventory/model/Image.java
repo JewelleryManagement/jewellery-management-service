@@ -20,6 +20,6 @@ public class Image {
     private String type;
     private String filePath;
 
-    @ManyToOne
+    @OneToOne(mappedBy = "image")
     private Product product;
 }

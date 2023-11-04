@@ -31,16 +31,17 @@ public class ImageController {
 
   @Operation(summary = "Get image")
   @ResponseStatus(HttpStatus.OK)
-  @GetMapping(value = "/{fileName}", produces = "image/png")
-  public byte[] getImage(@PathVariable @Valid String fileName) throws IOException {
-    return imageService.downloadImage(fileName);
+  @GetMapping(value = "products/{productId}/picture/{fileName}", produces = "image/png")
+  public byte[] getImage(@PathVariable @Valid String fileName, @PathVariable @Valid UUID pictureId)
+      throws IOException {
+    return imageService.downloadImage(fileName, pictureId);
   }
 
   @Operation(summary = "Delete image from file system")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{productId}/picture/{fileName}")
-  public void deleteImage(@PathVariable @Valid String fileName,
-                          @PathVariable @Valid UUID productId) throws IOException {
+  public void deleteImage(@PathVariable @Valid String fileName, @PathVariable @Valid UUID productId)
+      throws IOException {
     imageService.deleteImage(fileName, productId);
   }
 }
