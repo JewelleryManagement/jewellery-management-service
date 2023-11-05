@@ -10,6 +10,7 @@ import java.util.*;
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
 import jewellery.inventory.exception.product.ProductOwnerNotSeller;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.mapper.SaleMapper;
@@ -39,6 +40,7 @@ class SaleServiceTest {
   private Product product;
   private Sale sale;
   private SaleRequestDto saleRequestDto;
+  private SaleRequestDto saleRequestDtoOwnerEqualsRecipient;
   private SaleResponseDto saleResponseDto;
   private ProductPriceDiscountRequestDto productPriceDiscountRequestDto;
   private List<SaleResponseDto> saleResponseDtoList;
@@ -59,6 +61,9 @@ class SaleServiceTest {
     saleRequestDto =
         SaleTestHelper.createSaleRequest(
             seller.getId(), buyer.getId(), productPriceDiscountRequestDtoList);
+    saleRequestDtoOwnerEqualsRecipient =
+            SaleTestHelper.createSaleRequest(
+                    seller.getId(), seller.getId(), productPriceDiscountRequestDtoList);
     saleResponseDtoList = SaleTestHelper.getSaleResponseList(saleResponseDto);
   }
 
@@ -86,6 +91,15 @@ class SaleServiceTest {
     assertNotEquals(actual.getBuyer(), actual.getSeller());
     Assertions.assertEquals(saleRequestDto.getSellerId(), actual.getSeller().getId());
     assertNotNull(actual);
+  }
+
+  @Test
+  void testCreateSaleProductWhenProductOwnerEqualsRecipientException() {
+    when(saleMapper.mapRequestToEntity(saleRequestDtoOwnerEqualsRecipient)).thenReturn(sale);
+
+    assertThrows(
+            ProductOwnerEqualsRecipientException.class,
+            () -> saleService.createSale(saleRequestDtoOwnerEqualsRecipient));
   }
 
   @Test
