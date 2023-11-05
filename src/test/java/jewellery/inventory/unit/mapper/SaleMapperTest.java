@@ -25,9 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-
- class SaleMapperTest {
-
+class SaleMapperTest {
   @Mock private SaleMapper saleMapper;
   private User seller;
   private User buyer;
@@ -37,6 +35,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
   private SaleResponseDto saleResponseDto;
   private ProductPriceDiscountRequestDto productPriceDiscountRequestDto;
   private List<Product> productsForSale;
+
   @BeforeEach
   void setUp() {
     seller = createTestUserForSale();
@@ -46,14 +45,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSale);
     saleResponseDto = SaleTestHelper.getSaleResponseDto(sale);
     productPriceDiscountRequestDto =
-            SaleTestHelper.createProductPriceDiscountRequest(product.getId(), 1000, 10);
+        SaleTestHelper.createProductPriceDiscountRequest(product.getId(), 1000, 10);
     List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
     productPriceDiscountRequestDtoList.add(productPriceDiscountRequestDto);
     saleRequestDto =
-            SaleTestHelper.createSaleRequest(
-                    seller.getId(), buyer.getId(), productPriceDiscountRequestDtoList);
+        SaleTestHelper.createSaleRequest(
+            seller.getId(), buyer.getId(), productPriceDiscountRequestDtoList);
   }
-  @org.junit.jupiter.api.Test
+
+  @Test
   void testMapRequestToEntity() {
     when(saleMapper.mapRequestToEntity(saleRequestDto)).thenReturn(sale);
 
