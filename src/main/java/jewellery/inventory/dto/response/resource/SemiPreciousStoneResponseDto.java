@@ -14,4 +14,5 @@ public class SemiPreciousStoneResponseDto extends ResourceResponseDto{
     private String cut;
     private String clarity;
     private String shape;
+    private Double size;
 }

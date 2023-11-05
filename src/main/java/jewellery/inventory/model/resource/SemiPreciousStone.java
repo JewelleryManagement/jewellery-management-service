@@ -16,4 +16,5 @@ public class SemiPreciousStone extends Resource {
     private String cut;
     private String clarity;
     private String shape;
+    private Double size;
 }

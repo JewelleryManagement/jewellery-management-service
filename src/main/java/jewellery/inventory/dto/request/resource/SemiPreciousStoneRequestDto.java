@@ -14,4 +14,5 @@ public class SemiPreciousStoneRequestDto extends ResourceRequestDto{
     private String cut;
     private String clarity;
     private String shape;
+    private Double size;
 }

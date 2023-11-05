@@ -109,6 +109,7 @@ public class ResourceTestHelper {
         .shape(SHAPE_PRECIOUS_STONE)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
+        .size(SIZE)
         .build();
   }
 
@@ -274,6 +275,7 @@ public class ResourceTestHelper {
         .shape(SHAPE_PRECIOUS_STONE)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
+        .size(SIZE)
         .build();
   }
 
@@ -287,6 +289,7 @@ public class ResourceTestHelper {
         .shape(SHAPE_PRECIOUS_STONE)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
+        .size(SIZE)
         .build();
   }
 
@@ -384,6 +387,7 @@ public class ResourceTestHelper {
   }
 
   public static Stream<Resource> provideResources() {
-    return Stream.of(getPreciousStone(), getSemiPreciousStone(), getElement(), getPearl(), getMetal());
+    return Stream.of(
+        getPreciousStone(), getSemiPreciousStone(), getElement(), getPearl(), getMetal());
   }
 }
