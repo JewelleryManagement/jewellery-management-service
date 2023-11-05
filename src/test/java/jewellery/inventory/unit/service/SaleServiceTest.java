@@ -105,4 +105,28 @@ class SaleServiceTest {
       Assertions.assertEquals(expectedMessage, actualMessage);
     }
   }
+  @Test
+  void testMapRequestToEntity() {
+    when(saleMapper.mapRequestToEntity(saleRequestDto)).thenReturn(sale);
+
+    Sale sale = saleMapper.mapRequestToEntity(saleRequestDto);
+
+    assertNotNull(sale);
+    Assertions.assertEquals(saleRequestDto.getSellerId(), sale.getSeller().getId());
+    Assertions.assertEquals(saleRequestDto.getBuyerId(), sale.getBuyer().getId());
+    Assertions.assertEquals(saleRequestDto.getProducts().size(), sale.getProducts().size());
+  }
+
+  @Test
+  void testMapEntityToResponseDto() {
+
+    when(saleMapper.mapEntityToResponseDto(sale)).thenReturn(saleResponseDto);
+
+    SaleResponseDto saleResponseDto = saleMapper.mapEntityToResponseDto(sale);
+
+    assertNotNull(sale);
+    Assertions.assertEquals(saleResponseDto.getSeller().getId(), sale.getSeller().getId());
+    Assertions.assertEquals(saleResponseDto.getBuyer().getId(), sale.getBuyer().getId());
+    Assertions.assertEquals(saleResponseDto.getProducts().size(), sale.getProducts().size());
+  }
 }
