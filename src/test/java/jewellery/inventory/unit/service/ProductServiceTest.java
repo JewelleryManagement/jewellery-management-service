@@ -5,6 +5,7 @@ import static jewellery.inventory.helper.UserTestHelper.createTestUserWithRandom
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.io.IOException;
 import java.util.*;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -223,7 +224,7 @@ class ProductServiceTest {
   }
 
   @Test
-  void testDeleteProductSuccessfully() {
+  void testDeleteProductSuccessfully() throws IOException {
 
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
@@ -234,7 +235,7 @@ class ProductServiceTest {
   }
 
   @Test
-  void testDeleteProductDisassembleContentProduct() {
+  void testDeleteProductDisassembleContentProduct() throws IOException {
     Product content1 = getTestProduct(user, pearl);
     Product content2 = getTestProduct(user, pearl);
 
