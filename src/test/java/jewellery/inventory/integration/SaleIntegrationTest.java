@@ -10,8 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
+import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.helper.SaleTestHelper;
+import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
@@ -61,14 +63,17 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
     saleResponseDtoList = SaleTestHelper.getSaleResponseList(saleResponseDto);
   }
 
-//  @Test
-//  void createSaleSuccessfully() {
-//    ResponseEntity<SaleResponseDto> response =
-//        this.testRestTemplate.postForEntity(
-//            getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
-//
-//    assertEquals(HttpStatus.CREATED, response.getStatusCode());
-//  }
+  @Test
+  void createSaleSuccessfully() {
+    UserRequestDto seller= UserTestHelper.createTestUserRequest();
+    UserRequestDto buyer= UserTestHelper.createDifferentUserRequest();
+
+    ResponseEntity<SaleResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
+
+    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+  }
 
   @Test
   void getAllSalesSuccessfully() {
