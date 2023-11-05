@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import jewellery.inventory.exception.duplicate.DuplicateException;
 import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
+import jewellery.inventory.exception.not_found.ImageNotFoundException;
 import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;

@@ -17,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
@@ -51,36 +50,25 @@ public class ImageService {
   }
 
   @Transactional
-  public byte[] downloadImage(String name, UUID productId) throws IOException {
-    Image fileData = getImage(name);
-    //TODO: <<<
-//    Product product = getProduct(productId);
-//    if (!product.getImages().contains(fileData)) {
-//      throw new ImageNotFoundException(fileData.getName());
-//    }
-    // >>>
+  public byte[] downloadImage(UUID productId) throws IOException {
+    Product product = getProduct(productId);
+    Image fileData = getImage(product.getImage().getName());
     return Files.readAllBytes(new File(fileData.getFilePath()).toPath());
   }
 
   @Transactional
-  public void deleteImage(String name, UUID productId) throws IOException {
-
-    Image fileData = getImage(name);
-    removeImageFromProduct(productId);
-
-    Path path = Paths.get(fileData.getFilePath());
-    Files.delete(path);
-    imageRepository.delete(fileData);
+  public void deleteImage(UUID productId) throws IOException {
+    removeImage(getProduct(productId));
   }
 
   private Image createImageData(MultipartFile file, String filePath, Product product) {
     return imageRepository.save(
-            Image.builder()
-                    .name(file.getOriginalFilename())
-                    .type(file.getContentType())
-                    .filePath(filePath)
-                    .product(product)
-                    .build());
+        Image.builder()
+            .name(file.getOriginalFilename())
+            .type(file.getContentType())
+            .filePath(filePath)
+            .product(product)
+            .build());
   }
 
   private void checkForExistedImage(MultipartFile file) {
@@ -102,19 +90,22 @@ public class ImageService {
   }
 
   private Product getProduct(UUID productId) {
-    return productRepository.findById(productId).orElseThrow(
-            () -> new ProductNotFoundException(productId));
+    return productRepository
+        .findById(productId)
+        .orElseThrow(() -> new ProductNotFoundException(productId));
   }
 
-  private void removeImageFromProduct(UUID productId) {
-    Product product = getProduct(productId);
-    product.setImage(null);
-  }
-
-  private void setProductImage(Product product, Image image) {
+  private void setProductImage(Product product, Image image) throws IOException {
     if (product.getImage() != null) {
-      imageRepository.delete(product.getImage());
+      removeImage(product);
     }
     product.setImage(image);
+  }
+
+  private void removeImage(Product product) throws IOException {
+    Image fileData = getImage(product.getImage().getName());
+    Files.deleteIfExists(Paths.get(fileData.getFilePath()));
+    product.setImage(null);
+    imageRepository.delete(fileData);
   }
 }

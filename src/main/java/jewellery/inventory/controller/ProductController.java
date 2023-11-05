@@ -2,6 +2,8 @@ package jewellery.inventory.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ProductRequestDto;
@@ -57,7 +59,7 @@ public class ProductController {
   @Operation(summary = "Delete a product by Id")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")
-  public void deleteProduct(@PathVariable("id") UUID id) {
+  public void deleteProduct(@PathVariable("id") UUID id) throws IOException {
     productService.deleteProduct(id);
   }
 }
