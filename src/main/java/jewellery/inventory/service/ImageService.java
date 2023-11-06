@@ -1,7 +1,10 @@
 package jewellery.inventory.service;
 
+import jewellery.inventory.dto.request.ImageRequestDto;
 import jewellery.inventory.dto.response.ImageResponseDto;
+import jewellery.inventory.exception.image.MultipartFileContentTypeException;
 import jewellery.inventory.exception.duplicate.DuplicateFileException;
+import jewellery.inventory.exception.image.MultipartFileNotSelectedException;
 import jewellery.inventory.exception.not_found.ImageNotFoundException;
 import jewellery.inventory.exception.not_found.ProductNotFoundException;
 import jewellery.inventory.mapper.ImageDataMapper;
@@ -18,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -31,19 +35,18 @@ public class ImageService {
   private final ProductRepository productRepository;
 
   @Transactional
-  public ImageResponseDto uploadImage(MultipartFile file, UUID productId) throws IOException {
+  public ImageResponseDto uploadImage(ImageRequestDto imageRequestDto, UUID productId) throws IOException {
 
-    if (file.isEmpty()) {
-      throw new ImageNotFoundException();
-    }
+    checkFileIsSelected(imageRequestDto.getImage());
+    checkContentType(imageRequestDto.getImage());
 
-    String filePath = FOLDER_PATH + file.getOriginalFilename();
+    String filePath = FOLDER_PATH + imageRequestDto.getImage().getOriginalFilename();
     createDirectoryIfNotExists();
-    checkForExistedImage(file);
-    file.transferTo(new File(filePath));
+    checkForExistedImage(imageRequestDto.getImage());
+    imageRequestDto.getImage().transferTo(new File(filePath));
 
     Product product = getProduct(productId);
-    Image image = createImageData(file, filePath, product);
+    Image image = createImageData(imageRequestDto.getImage(), filePath, product);
     setProductImage(product, image);
 
     return imageDataMapper.toImageResponse(image);
@@ -52,6 +55,7 @@ public class ImageService {
   @Transactional
   public byte[] downloadImage(UUID productId) throws IOException {
     Product product = getProduct(productId);
+    checkForAttachedPicture(product);
     Image fileData = getImage(product.getImage().getName());
     return Files.readAllBytes(new File(fileData.getFilePath()).toPath());
   }
@@ -103,9 +107,34 @@ public class ImageService {
   }
 
   private void removeImage(Product product) throws IOException {
+    checkForAttachedPicture(product);
     Image fileData = getImage(product.getImage().getName());
     Files.deleteIfExists(Paths.get(fileData.getFilePath()));
     product.setImage(null);
     imageRepository.delete(fileData);
+  }
+
+  private static void checkForAttachedPicture(Product product) {
+    if (product.getImage() == null) {
+      throw new ImageNotFoundException();
+    }
+  }
+
+  private boolean isSupportedContentType(String contentType) {
+    return contentType.equals("image/png")
+            || contentType.equals("image/jpg")
+            || contentType.equals("image/jpeg");
+  }
+
+  private void checkContentType(MultipartFile file) {
+    if (!isSupportedContentType(Objects.requireNonNull(file.getContentType()))) {
+      throw new MultipartFileContentTypeException();
+    }
+  }
+
+  private static void checkFileIsSelected(MultipartFile file) {
+    if (file.isEmpty()) {
+      throw new MultipartFileNotSelectedException();
+    }
   }
 }

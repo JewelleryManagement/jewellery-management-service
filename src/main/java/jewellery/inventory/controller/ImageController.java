@@ -2,12 +2,12 @@ package jewellery.inventory.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import jewellery.inventory.dto.request.ImageRequestDto;
 import jewellery.inventory.dto.response.ImageResponseDto;
 import jewellery.inventory.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -23,8 +23,8 @@ public class ImageController {
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
   public ImageResponseDto uploadImage(
-      @PathVariable("productId") @Valid UUID productId,
-      @RequestParam("image") @Valid MultipartFile file)
+      @Valid ImageRequestDto file,
+      @PathVariable("productId") @Valid UUID productId)
       throws IOException {
     return imageService.uploadImage(file, productId);
   }

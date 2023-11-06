@@ -6,6 +6,6 @@ public class ImageNotFoundException extends NotFoundException{
     }
 
     public ImageNotFoundException() {
-        super("You have not selected an image!");
+        super("There is no picture!");
     }
 }

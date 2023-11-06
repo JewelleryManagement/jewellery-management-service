@@ -8,8 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import jewellery.inventory.exception.duplicate.DuplicateException;
+import jewellery.inventory.exception.image.MultipartFileContentTypeException;
+import jewellery.inventory.exception.image.MultipartFileNotSelectedException;
 import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
-import jewellery.inventory.exception.not_found.ImageNotFoundException;
 import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
@@ -32,7 +33,7 @@ public class GlobalExceptionHandler {
   private static final String TIMESTAMP_KEY = "timestamp";
   private static final String ERROR_KEY = "error";
 
-  @ExceptionHandler(MethodArgumentNotValidException.class)
+  @ExceptionHandler({MethodArgumentNotValidException.class})
   public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
     Map<String, List<String>> fieldErrorsMap = getFieldErrors(ex);
     return createErrorResponse(HttpStatus.BAD_REQUEST, fieldErrorsMap);
@@ -49,7 +50,12 @@ public class GlobalExceptionHandler {
     return createErrorResponse(HttpStatus.BAD_REQUEST, error);
   }
 
-  @ExceptionHandler({InvalidResourceQuantityException.class, DuplicateException.class})
+  @ExceptionHandler({
+    InvalidResourceQuantityException.class,
+    DuplicateException.class,
+    MultipartFileContentTypeException.class,
+    MultipartFileNotSelectedException.class
+  })
   public ResponseEntity<Object> handleBadDataExceptions(RuntimeException ex) {
     return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
