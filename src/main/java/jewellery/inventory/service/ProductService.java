@@ -94,7 +94,7 @@ public class ProductService {
   }
 
   private void throwExceptionIfProductIsSold(UUID id, Product product) {
-    if (product.getPartOfSale()!=null) {
+    if (product.getPartOfSale() != null) {
       throw new ProductIsSoldException(id);
     }
   }

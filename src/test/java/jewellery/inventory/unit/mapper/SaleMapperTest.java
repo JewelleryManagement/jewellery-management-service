@@ -55,9 +55,9 @@ class SaleMapperTest {
 
   @Test
   void testMapRequestToEntity() {
-    when(saleMapper.mapRequestToEntity(saleRequestDto)).thenReturn(sale);
+    when(saleMapper.mapRequestToEntity(saleRequestDto,seller,buyer,List.of(product))).thenReturn(sale);
 
-    Sale sale = saleMapper.mapRequestToEntity(saleRequestDto);
+    Sale sale = saleMapper.mapRequestToEntity(saleRequestDto,seller,buyer,List.of(product));
 
     assertNotNull(sale);
     Assertions.assertEquals(saleRequestDto.getSellerId(), sale.getSeller().getId());

@@ -21,7 +21,6 @@ public class SaleTestHelper {
     sale.setBuyer(buyer);
     sale.setProducts(products);
     sale.setDate(new Date());
-    sale.setDiscount(10.0);
     return sale;
   }
 
