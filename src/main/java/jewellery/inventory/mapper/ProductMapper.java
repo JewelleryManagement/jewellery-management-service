@@ -21,7 +21,9 @@ public class ProductMapper {
 
     ProductResponseDto productResponseDto = new ProductResponseDto();
     productResponseDto.setId(product.getId());
- productResponseDto.setPartOfSale(product.getPartOfSale().getId());
+    if (product.getPartOfSale()!=null){
+        productResponseDto.setPartOfSale(product.getPartOfSale().getId());
+    }
     productResponseDto.setAuthors(getAuthorsResponse(product));
     productResponseDto.setDescription(product.getDescription());
     productResponseDto.setSalePrice(product.getSalePrice());
