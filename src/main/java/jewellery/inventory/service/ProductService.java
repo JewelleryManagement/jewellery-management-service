@@ -193,7 +193,7 @@ public class ProductService {
     Product product = new Product();
     product.setOwner(user);
     product.setAuthors(getAuthors(productRequestDto));
-   // product.setSold(false);//TODO
+    product.setPartOfSale(null);
     product.setDescription(productRequestDto.getDescription());
     product.setSalePrice(productRequestDto.getSalePrice());
     product.setProductionNumber(productRequestDto.getProductionNumber());
