@@ -73,7 +73,7 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
   private Gemstone gemstone;
   private ResourceInUserRequestDto resourceInUserRequestDto;
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
-  private ProductRequestDto productRequestDto2;
+  private ProductRequestDto productRequestDto;
 
   @BeforeEach
   void setUp() {
@@ -86,7 +86,7 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
     resourceInUserRequestDto =
         getResourceInUserRequestDto(seller, Objects.requireNonNull(gemstone));
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
-    productRequestDto2 =
+    productRequestDto =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), seller);
   }
 
@@ -106,7 +106,7 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     ResponseEntity<ProductResponseDto> productResponse =
         this.testRestTemplate.postForEntity(
-            getBaseProductUrl(), productRequestDto2, ProductResponseDto.class);
+            getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
 
     SaleRequestDto saleRequestDto = getSaleRequestDto2(seller, buyer, productResponse);
 

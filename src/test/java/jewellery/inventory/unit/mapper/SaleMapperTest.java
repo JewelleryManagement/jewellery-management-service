@@ -67,12 +67,11 @@ class SaleMapperTest {
 
   @Test
   void testMapEntityToResponseDto() {
-
     when(saleMapper.mapEntityToResponseDto(sale)).thenReturn(saleResponseDto);
 
     SaleResponseDto saleResponseDto = saleMapper.mapEntityToResponseDto(sale);
 
-    assertNotNull(sale);
+    assertNotNull(saleResponseDto);
     Assertions.assertEquals(saleResponseDto.getSeller().getId(), sale.getSeller().getId());
     Assertions.assertEquals(saleResponseDto.getBuyer().getId(), sale.getBuyer().getId());
     Assertions.assertEquals(saleResponseDto.getProducts().size(), sale.getProducts().size());
