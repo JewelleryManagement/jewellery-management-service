@@ -65,6 +65,7 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Autowired private UserRepository userRepository;
+  @Autowired private SaleRepository saleRepository;
   @Autowired private ProductRepository productRepository;
   @Autowired private ResourceRepository resourceRepository;
   @Autowired private ResourceInUserRepository resourceInUserRepository;
@@ -102,7 +103,7 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  @Transactional
+  //@Transactional
   void createSaleSuccessfully() {
 
     ResponseEntity<ProductResponseDto> productResponse =
@@ -175,6 +176,8 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   private void cleanAllRepositories() {
+    productRepository.deleteAll();
+    saleRepository.deleteAll();
     userRepository.deleteAll();
     productRepository.deleteAll();
     resourceRepository.deleteAll();

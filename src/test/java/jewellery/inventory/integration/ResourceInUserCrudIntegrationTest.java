@@ -19,9 +19,7 @@ import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.dto.response.resource.GemstoneResponseDto;
-import jewellery.inventory.repository.ResourceInUserRepository;
-import jewellery.inventory.repository.ResourceRepository;
-import jewellery.inventory.repository.UserRepository;
+import jewellery.inventory.repository.*;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +30,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   private static final double RESOURCE_QUANTITY = 5.00;
   @Autowired UserRepository userRepository;
+  @Autowired SaleRepository saleRepository;
+  @Autowired ProductRepository productRepository;
   @Autowired ResourceRepository resourceRepository;
   @Autowired ResourceInUserRepository resourceInUserRepository;
 
@@ -65,6 +65,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   @BeforeEach
   void cleanup() {
+    productRepository.deleteAll();
+    saleRepository.deleteAll();
     userRepository.deleteAll();
     resourceRepository.deleteAll();
     resourceInUserRepository.deleteAll();
@@ -138,7 +140,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendGetResourcesInUserRequest(createdUser.getId());
     assertNotNull(response.getBody());
-    List<ResourceQuantityResponseDto> resourceQuantities = response.getBody().getResourcesAndQuantities();
+    List<ResourceQuantityResponseDto> resourceQuantities =
+        response.getBody().getResourcesAndQuantities();
     assertNotNull(resourceQuantities);
     assertEquals(1, resourceQuantities.size());
     assertEquals(RESOURCE_QUANTITY * 2, resourceQuantities.get(0).getQuantity(), 0.001);
@@ -325,11 +328,13 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertEquals(HttpStatus.OK, transferResourceResponseDtoResponseEntity.getStatusCode());
 
     assertEquals(
-        Objects.requireNonNull(response).getPreviousOwner().getId(), requestDto.getPreviousOwnerId());
+        Objects.requireNonNull(response).getPreviousOwner().getId(),
+        requestDto.getPreviousOwnerId());
     assertEquals(
         Objects.requireNonNull(response).getNewOwner().getId(), requestDto.getNewOwnerId());
     assertEquals(
-        response.getTransferredResource().getResource().getId(), requestDto.getTransferredResourceId());
+        response.getTransferredResource().getResource().getId(),
+        requestDto.getTransferredResourceId());
     assertEquals(response.getTransferredResource().getQuantity(), 1);
   }
 
