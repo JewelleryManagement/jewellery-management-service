@@ -24,8 +24,8 @@ public class SaleMapper {
     saleResponseDto.setBuyer(userMapper.toUserResponse(sale.getBuyer()));
     saleResponseDto.setProducts(mapAllProductsToResponse(sale));
     saleResponseDto.setTotalPrice(getTotalPriceFromEntity(sale.getProducts()));
-    saleResponseDto.setTotalDiscount(getTotalDiscountPercentageFromEntity(sale.getProducts()));
-    saleResponseDto.setTotalDiscountedPrice(getTotalDiscountFromEntity(sale.getProducts()));
+    saleResponseDto.setTotalDiscount(calculateDiscount(sale.getProducts(), "amount"));
+    saleResponseDto.setTotalDiscountedPrice(calculateDiscount(sale.getProducts(), "percentage"));
     return saleResponseDto;
   }
 
@@ -65,7 +65,7 @@ public class SaleMapper {
     return totalPrice;
   }
 
-  private double getTotalDiscountPercentageFromEntity(List<Product> products) {
+  private double calculateDiscount(List<Product> products, String calculationType) {
     double totalDiscountAmount = 0;
     double totalPrice = 0;
 
@@ -75,24 +75,17 @@ public class SaleMapper {
       totalPrice += product.getSalePrice();
     }
 
-    if (totalPrice != 0) {
-      return (totalDiscountAmount / totalPrice) * 100;
-    } else {
+    if (totalPrice == 0) {
       return 0;
     }
-  }
 
-
-  private double getTotalDiscountFromEntity(List<Product> products) {
-    double totalDiscountAmount = 0;
-    double totalPrice = 0;
-
-    for (Product product : products) {
-      double discountAmount = product.getSalePrice() * (product.getDiscount() / 100);
-      totalDiscountAmount += discountAmount;
-      totalPrice += product.getSalePrice();
+    if ("percentage".equals(calculationType)) {
+      return (totalDiscountAmount / totalPrice) * 100;
+    } else if ("amount".equals(calculationType)) {
+      return totalPrice - totalDiscountAmount;
     }
-    return (products.isEmpty() ? 0 : totalPrice - totalDiscountAmount);
+
+    throw new IllegalArgumentException("Invalid calculation type");
   }
 
   private List<Product> setProductPriceAndDiscount(
