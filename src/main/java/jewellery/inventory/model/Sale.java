@@ -21,5 +21,4 @@ public class Sale {
   private List<Product> products;
 
   private Date date;
-  private double discount;
 }

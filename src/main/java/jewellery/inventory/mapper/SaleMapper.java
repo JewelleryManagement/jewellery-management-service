@@ -2,7 +2,6 @@ package jewellery.inventory.mapper;
 
 import java.time.Instant;
 import java.util.*;
-import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
@@ -36,7 +35,6 @@ public class SaleMapper {
     sale.setSeller(seller);
     sale.setProducts(setProductPriceAndDiscount(saleRequestDto, products));
     sale.setDate(Date.from(Instant.now()));
-    sale.setDiscount(getDiscountInPercentage(saleRequestDto.getProducts()));
     return sale;
   }
 
@@ -47,14 +45,6 @@ public class SaleMapper {
       productResponseDtos.add(productResponseDto);
     }
     return productResponseDtos;
-  }
-
-  private double getDiscountInPercentage(List<ProductPriceDiscountRequestDto> discountList) {
-    double discountPercentage = 0;
-    for (ProductPriceDiscountRequestDto productPriceDiscountRequestDto : discountList) {
-      discountPercentage += productPriceDiscountRequestDto.getDiscount();
-    }
-    return discountPercentage / discountList.size();
   }
 
   private double getTotalPriceFromEntity(List<Product> products) {
