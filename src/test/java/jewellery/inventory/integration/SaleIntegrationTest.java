@@ -1,25 +1,28 @@
 package jewellery.inventory.integration;
 
-import static jewellery.inventory.helper.ProductTestHelper.getTestProduct;
+import static jewellery.inventory.helper.ProductTestHelper.getProductRequestDto;
 import static jewellery.inventory.helper.UserTestHelper.*;
-import static jewellery.inventory.helper.UserTestHelper.createSecondTestUser;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
-import jewellery.inventory.dto.request.SaleRequestDto;
-import jewellery.inventory.dto.request.UserRequestDto;
+import java.util.Objects;
+import java.util.UUID;
+import jewellery.inventory.dto.request.*;
+import jewellery.inventory.dto.request.resource.ResourceRequestDto;
+import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
-import jewellery.inventory.helper.SaleTestHelper;
-import jewellery.inventory.helper.UserTestHelper;
-import jewellery.inventory.model.Product;
-import jewellery.inventory.model.Sale;
+import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.model.User;
-import jewellery.inventory.model.resource.Resource;
+import jewellery.inventory.model.resource.Gemstone;
+import jewellery.inventory.repository.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -31,48 +34,60 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
     return BASE_URL_PATH + port;
   }
 
+  private String buildUrl(String... paths) {
+    return getBaseUrl() + "/" + String.join("/", paths);
+  }
+
+  private String getBaseResourceAvailabilityUrl() {
+    return buildUrl("resources", "availability");
+  }
+
+  private String getBaseResourceUrl() {
+    return getBaseUrl() + "/resources";
+  }
+
+  private String getBaseUserUrl() {
+    return getBaseUrl() + "/users";
+  }
+
+  private String getBaseProductUrl() {
+    return getBaseUrl() + "/products";
+  }
+
+  private String getProductUrl(UUID id) {
+    return getBaseUrl() + "/products/" + id;
+  }
+
   private String getBaseSaleUrl() {
     return getBaseUrl() + "/sales";
   }
 
+  @Autowired private UserRepository userRepository;
+  @Autowired private ProductRepository productRepository;
+  @Autowired private ResourceRepository resourceRepository;
+  @Autowired private ResourceInUserRepository resourceInUserRepository;
+  @Autowired private ResourceInProductRepository resourceInProductRepository;
+
   private User seller;
   private User buyer;
-  private Product product;
-  private Sale sale;
-  private SaleRequestDto saleRequestDto;
-  private SaleResponseDto saleResponseDto;
-  private ProductPriceDiscountRequestDto productPriceDiscountRequestDto;
-  private List<SaleResponseDto> saleResponseDtoList;
-  private List<Product> productsForSale;
+  private Gemstone gemstone;
+  private ResourceInUserRequestDto resourceInUserRequestDto;
+  private ResourcesInUserResponseDto resourcesInUserResponseDto;
+  private ProductRequestDto productRequestDto2;
 
   @BeforeEach
   void setUp() {
-    seller = createTestUserForSale();
-    buyer = createSecondTestUser();
-    product = getTestProduct(seller, new Resource());
-    productsForSale = SaleTestHelper.getProList(product);
-    sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSale);
-    saleResponseDto = SaleTestHelper.getSaleResponseDto(sale);
-    productPriceDiscountRequestDto =
-        SaleTestHelper.createProductPriceDiscountRequest(product.getId(), 1000, 10);
-    List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
-    productPriceDiscountRequestDtoList.add(productPriceDiscountRequestDto);
-    saleRequestDto =
-        SaleTestHelper.createSaleRequest(
-            seller.getId(), buyer.getId(), productPriceDiscountRequestDtoList);
-    saleResponseDtoList = SaleTestHelper.getSaleResponseList(saleResponseDto);
-  }
+    cleanAllRepositories();
+    seller = createUserInDatabase(createSellerUserRequest());
+    buyer = createUserInDatabase(createBuyerUserRequest());
 
-  @Test
-  void createSaleSuccessfully() {
-    UserRequestDto seller= UserTestHelper.createTestUserRequest();
-    UserRequestDto buyer= UserTestHelper.createDifferentUserRequest();
+    gemstone = createGemstoneInDatabase();
 
-    ResponseEntity<SaleResponseDto> response =
-        this.testRestTemplate.postForEntity(
-            getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
-
-    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    resourceInUserRequestDto =
+        getResourceInUserRequestDto(seller, Objects.requireNonNull(gemstone));
+    resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
+    productRequestDto2 =
+        getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), seller);
   }
 
   @Test
@@ -84,5 +99,85 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(200));
     assertNotNull(response.getBody());
+  }
+
+  @Test
+  void createSaleSuccessfully2() {
+
+    ResponseEntity<ProductResponseDto> productResponse =
+        this.testRestTemplate.postForEntity(
+            getBaseProductUrl(), productRequestDto2, ProductResponseDto.class);
+
+    SaleRequestDto saleRequestDto = getSaleRequestDto2(seller, buyer, productResponse);
+
+    ResponseEntity<SaleResponseDto> saleResponse =
+        this.testRestTemplate.postForEntity(
+            getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
+
+    assertEquals(HttpStatus.CREATED, saleResponse.getStatusCode());
+  }
+
+  @NotNull
+  private static SaleRequestDto getSaleRequestDto2(
+      User seller, User buyer, ResponseEntity<ProductResponseDto> productResponse) {
+    SaleRequestDto saleRequestDto = new SaleRequestDto();
+    saleRequestDto.setBuyerId(buyer.getId());
+    saleRequestDto.setSellerId(seller.getId());
+    ProductPriceDiscountRequestDto productPriceDiscountRequestDto =
+        new ProductPriceDiscountRequestDto();
+    productPriceDiscountRequestDto.setProductId(productResponse.getBody().getId());
+    productPriceDiscountRequestDto.setSalePrice(10000);
+    productPriceDiscountRequestDto.setDiscount(10);
+    List<ProductPriceDiscountRequestDto> list = new ArrayList<>();
+    list.add(productPriceDiscountRequestDto);
+    saleRequestDto.setProducts(list);
+    return saleRequestDto;
+  }
+
+  @Nullable
+  private Gemstone createGemstoneInDatabase() {
+    ResourceRequestDto resourceRequest = ResourceTestHelper.getGemstoneRequestDto();
+    ResponseEntity<Gemstone> createResource =
+        this.testRestTemplate.postForEntity(getBaseResourceUrl(), resourceRequest, Gemstone.class);
+
+    return createResource.getBody();
+  }
+
+  @Nullable
+  private ResourcesInUserResponseDto getResourcesInUserResponseDto(
+      ResourceInUserRequestDto resourceInUserRequestDto) {
+    ResponseEntity<ResourcesInUserResponseDto> createResourceInUser =
+        this.testRestTemplate.postForEntity(
+            getBaseResourceAvailabilityUrl(),
+            resourceInUserRequestDto,
+            ResourcesInUserResponseDto.class);
+
+    return createResourceInUser.getBody();
+  }
+
+  @NotNull
+  private static ResourceInUserRequestDto getResourceInUserRequestDto(
+      User user, Gemstone gemstone) {
+    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
+    resourceInUserRequestDto.setUserId(user.getId());
+    resourceInUserRequestDto.setResourceId(gemstone.getId());
+    resourceInUserRequestDto.setQuantity(20);
+    return resourceInUserRequestDto;
+  }
+
+  @Nullable
+  private User createUserInDatabase(UserRequestDto userRequest) {
+    ResponseEntity<User> createUser =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, User.class);
+
+    return createUser.getBody();
+  }
+
+  private void cleanAllRepositories() {
+    userRepository.deleteAll();
+    productRepository.deleteAll();
+    resourceRepository.deleteAll();
+    resourceInUserRepository.deleteAll();
+    resourceInProductRepository.deleteAll();
   }
 }
