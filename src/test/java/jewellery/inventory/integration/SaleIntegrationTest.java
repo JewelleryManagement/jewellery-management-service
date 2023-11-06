@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
+import jakarta.transaction.Transactional;
 import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -100,7 +102,8 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void createSaleSuccessfully2() {
+  @Transactional
+  void createSaleSuccessfully() {
 
     ResponseEntity<ProductResponseDto> productResponse =
         this.testRestTemplate.postForEntity(
