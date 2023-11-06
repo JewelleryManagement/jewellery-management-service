@@ -80,9 +80,7 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
     cleanAllRepositories();
     seller = createUserInDatabase(createSellerUserRequest());
     buyer = createUserInDatabase(createBuyerUserRequest());
-
     gemstone = createGemstoneInDatabase();
-
     resourceInUserRequestDto =
         getResourceInUserRequestDto(seller, Objects.requireNonNull(gemstone));
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
