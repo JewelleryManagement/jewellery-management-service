@@ -103,7 +103,6 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  //@Transactional
   void createSaleSuccessfully() {
 
     ResponseEntity<ProductResponseDto> productResponse =
