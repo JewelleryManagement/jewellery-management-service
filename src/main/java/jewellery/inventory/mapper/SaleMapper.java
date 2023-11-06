@@ -6,13 +6,9 @@ import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
-import jewellery.inventory.exception.not_found.ProductNotFoundException;
-import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
-import jewellery.inventory.repository.ProductRepository;
-import jewellery.inventory.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,8 +17,6 @@ import org.springframework.stereotype.Component;
 public class SaleMapper {
   private final UserMapper userMapper;
   private final ProductMapper productMapper;
-  private final UserRepository userRepository;
-  private final ProductRepository productRepository;
 
   public SaleResponseDto mapEntityToResponseDto(Sale sale) {
     SaleResponseDto saleResponseDto = new SaleResponseDto();
@@ -35,11 +29,12 @@ public class SaleMapper {
     return saleResponseDto;
   }
 
-  public Sale mapRequestToEntity(SaleRequestDto saleRequestDto) {
+  public Sale mapRequestToEntity(
+      SaleRequestDto saleRequestDto, User seller, User buyer, List<Product> products) {
     Sale sale = new Sale();
-    sale.setBuyer(getUserFromSaleRequestDto(saleRequestDto.getBuyerId()));
-    sale.setSeller(getUserFromSaleRequestDto(saleRequestDto.getSellerId()));
-    sale.setProducts(getProductsFromSaleRequestDto(saleRequestDto));
+    sale.setBuyer(buyer);
+    sale.setSeller(seller);
+    sale.setProducts(setProductPriceAndDiscount(saleRequestDto, products));
     sale.setDate(Date.from(Instant.now()));
     sale.setDiscount(getDiscountInPercentage(saleRequestDto.getProducts()));
     return sale;
@@ -52,21 +47,6 @@ public class SaleMapper {
       productResponseDtos.add(productResponseDto);
     }
     return productResponseDtos;
-  }
-
-  private List<Product> getProductsFromSaleRequestDto(SaleRequestDto saleRequestDto) {
-    List<Product> productList =
-        saleRequestDto.getProducts().stream()
-            .map(
-                productPriceDiscountRequestDto ->
-                    productRepository
-                        .findById(productPriceDiscountRequestDto.getProductId())
-                        .orElseThrow(
-                            () ->
-                                new ProductNotFoundException(
-                                    productPriceDiscountRequestDto.getProductId())))
-            .toList();
-    return setProductPriceAndDiscount(saleRequestDto, productList);
   }
 
   private double getDiscountInPercentage(List<ProductPriceDiscountRequestDto> discountList) {
@@ -120,9 +100,5 @@ public class SaleMapper {
       products.get(i).setDiscount(saleRequestDto.getProducts().get(i).getDiscount());
     }
     return products;
-  }
-
-  private User getUserFromSaleRequestDto(UUID userId) {
-    return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
   }
 }

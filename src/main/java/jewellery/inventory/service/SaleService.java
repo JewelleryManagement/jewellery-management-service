@@ -4,11 +4,14 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.exception.not_found.ProductNotFoundException;
+import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
 import jewellery.inventory.exception.product.ProductOwnerNotSeller;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
+import jewellery.inventory.model.User;
 import jewellery.inventory.repository.ProductRepository;
 import jewellery.inventory.repository.SaleRepository;
 import jewellery.inventory.repository.UserRepository;
@@ -29,10 +32,17 @@ public class SaleService {
   }
 
   public SaleResponseDto createSale(SaleRequestDto saleRequestDto) {
-    Sale sale = saleMapper.mapRequestToEntity(saleRequestDto);
+    Sale sale =
+        saleMapper.mapRequestToEntity(
+            saleRequestDto,
+            getUserById(saleRequestDto.getSellerId()),
+            getUserById(saleRequestDto.getBuyerId()),
+            getProductsFromSaleRequestDto(saleRequestDto));
+
     throwExceptionIfProductOwnerNotSeller(sale.getProducts(), saleRequestDto.getSellerId());
     throwExceptionProductOwnerEqualsRecipientException(
         sale.getProducts(), saleRequestDto.getBuyerId());
+
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
     return saleMapper.mapEntityToResponseDto(createdSale);
@@ -61,5 +71,22 @@ public class SaleService {
       product.setPartOfSale(sale);
       productRepository.save(product);
     }
+  }
+
+  private List<Product> getProductsFromSaleRequestDto(SaleRequestDto saleRequestDto) {
+    return saleRequestDto.getProducts().stream()
+        .map(
+            productPriceDiscountRequestDto ->
+                productRepository
+                    .findById(productPriceDiscountRequestDto.getProductId())
+                    .orElseThrow(
+                        () ->
+                            new ProductNotFoundException(
+                                productPriceDiscountRequestDto.getProductId())))
+        .toList();
+  }
+
+  private User getUserById(UUID userId) {
+    return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
   }
 }
