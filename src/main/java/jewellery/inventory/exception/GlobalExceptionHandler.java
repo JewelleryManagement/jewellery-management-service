@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler({
     ProductIsContentException.class,
     ProductIsSoldException.class,
-    UserNotOwnerException.class,
+    SellerNotOwnerException.class,
     ProductOwnerEqualsRecipientException.class,
     ProductOwnerNotSeller.class
   })

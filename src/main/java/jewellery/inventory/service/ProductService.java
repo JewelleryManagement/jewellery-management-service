@@ -11,7 +11,7 @@ import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
-import jewellery.inventory.exception.product.UserNotOwnerException;
+import jewellery.inventory.exception.product.SellerNotOwnerException;
 import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInUser;
@@ -170,7 +170,7 @@ public class ProductService {
               product.setContentOf(parentProduct);
               products.add(product);
             } else {
-              throw new UserNotOwnerException(parentProduct.getOwner().getId(), product.getId());
+              throw new SellerNotOwnerException(parentProduct.getOwner().getId(), product.getId());
             }
           });
     }

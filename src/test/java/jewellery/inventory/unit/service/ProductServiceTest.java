@@ -12,7 +12,7 @@ import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
-import jewellery.inventory.exception.product.UserNotOwnerException;
+import jewellery.inventory.exception.product.SellerNotOwnerException;
 import jewellery.inventory.helper.ProductTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ProductMapper;
@@ -150,7 +150,7 @@ class ProductServiceTest {
     productRequestDto.setProductsContent(List.of(product.getId()));
 
     assertThrows(
-        UserNotOwnerException.class, () -> productService.createProduct(productRequestDto));
+        SellerNotOwnerException.class, () -> productService.createProduct(productRequestDto));
   }
 
   @Test
@@ -283,7 +283,7 @@ class ProductServiceTest {
 
   @Test
   void deleteProductShouldThrowExceptionWhenProductIsSold() {
-    product.setPartOfSale(new Sale()); //TODO
+    product.setPartOfSale(new Sale());
 
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
