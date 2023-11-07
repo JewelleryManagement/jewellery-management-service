@@ -17,7 +17,7 @@ public class ResourceInProduct {
 
   @ManyToOne private Resource resource;
 
-  private double quantity;
+  private Double quantity;
 
   @ManyToOne private Product product;
 }

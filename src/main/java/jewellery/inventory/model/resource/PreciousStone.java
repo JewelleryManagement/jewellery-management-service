@@ -13,11 +13,11 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public class PreciousStone extends Resource {
   private String color;
-  private double carat;
+  private Double carat;
   private String cut;
   private String clarity;
-  private double dimensionX;
-  private double dimensionY;
-  private double dimensionZ;
+  private Double dimensionX;
+  private Double dimensionY;
+  private Double dimensionZ;
   private String shape;
 }
