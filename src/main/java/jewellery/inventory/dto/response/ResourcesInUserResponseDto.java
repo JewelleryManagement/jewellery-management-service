@@ -1,7 +1,8 @@
 package jewellery.inventory.dto.response;
 
 import java.util.List;
-import jewellery.inventory.dto.ResourceQuantityDto;
+
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -13,5 +14,5 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public class ResourcesInUserResponseDto {
   private UserResponseDto owner;
-  private List<ResourceQuantityDto> resourcesAndQuantities;
+  private List<ResourceQuantityResponseDto> resourcesAndQuantities;
 }

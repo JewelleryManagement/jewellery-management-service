@@ -1,47 +1,39 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ResourceTestHelper.getGemstoneRequestDto;
-import static jewellery.inventory.helper.UserTestHelper.createResourceInUserRequestDto;
-import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
+import static jewellery.inventory.helper.UserTestHelper.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
-import jewellery.inventory.dto.ResourceQuantityDto;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
+import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
+import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.dto.response.resource.GemstoneResponseDto;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
-import org.junit.jupiter.api.AfterEach;
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = RANDOM_PORT)
-class ResourceInUserCrudIntegrationTest {
-  @Autowired TestRestTemplate testRestTemplate;
+class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
+
+  private static final double RESOURCE_QUANTITY = 5.00;
   @Autowired UserRepository userRepository;
   @Autowired ResourceRepository resourceRepository;
   @Autowired ResourceInUserRepository resourceInUserRepository;
-
-  @Value(value = "${local.server.port}")
-  private int port;
-
-  private static final String BASE_URL_PATH = "http://localhost:";
 
   private String getBaseUrl() {
     return BASE_URL_PATH + port;
@@ -53,6 +45,10 @@ class ResourceInUserCrudIntegrationTest {
 
   private String getBaseResourceAvailabilityUrl() {
     return buildUrl("resources", "availability");
+  }
+
+  private String getBaseResourceAvailabilityTransferUrl() {
+    return buildUrl("resources", "availability", "transfer");
   }
 
   private String getResourceAvailabilityUrl(UUID userId, UUID resourceId) {
@@ -67,9 +63,7 @@ class ResourceInUserCrudIntegrationTest {
     return buildUrl("resources");
   }
 
-  private static final double RESOURCE_QUANTITY = 5.00;
-
-  @AfterEach
+  @BeforeEach
   void cleanup() {
     userRepository.deleteAll();
     resourceRepository.deleteAll();
@@ -144,7 +138,7 @@ class ResourceInUserCrudIntegrationTest {
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendGetResourcesInUserRequest(createdUser.getId());
     assertNotNull(response.getBody());
-    List<ResourceQuantityDto> resourceQuantities = response.getBody().getResourcesAndQuantities();
+    List<ResourceQuantityResponseDto> resourceQuantities = response.getBody().getResourcesAndQuantities();
     assertNotNull(resourceQuantities);
     assertEquals(1, resourceQuantities.size());
     assertEquals(RESOURCE_QUANTITY * 2, resourceQuantities.get(0).getQuantity(), 0.001);
@@ -168,6 +162,24 @@ class ResourceInUserCrudIntegrationTest {
     assertEquals(2, response.getBody().getResourcesAndQuantities().size());
     assertCreatedResourceIsInResourcesInUser(firstCreatedResource, response);
     assertCreatedResourceIsInResourcesInUser(secondCreatedResource, response);
+  }
+
+  @Test
+  void getAllUsersOwningResourceSuccessfully() {
+    UserResponseDto firstCreatedUser = sendCreateUserRequest(createTestUserRequest());
+    UserResponseDto secondCreatedUser = sendCreateUserRequest(createDifferentUserRequest());
+    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    sendAddResourceInUserRequest(
+        createResourceInUserRequestDto(firstCreatedUser.getId(), createdResource.getId(), 5.00));
+    sendAddResourceInUserRequest(
+        createResourceInUserRequestDto(secondCreatedUser.getId(), createdResource.getId(), 3.00));
+
+    ResponseEntity<ResourceOwnedByUsersResponseDto> response =
+        sendGetUsersAndQuantitiesForResourceRequest(createdResource.getId());
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(2, response.getBody().getUsersAndQuantities().size());
   }
 
   @Test
@@ -232,7 +244,7 @@ class ResourceInUserCrudIntegrationTest {
 
     ResponseEntity<ResourcesInUserResponseDto> resourcesInUserResponse =
         sendGetResourcesInUserRequest(createdUser.getId());
-    ResourceQuantityDto resourceQuantity =
+    ResourceQuantityResponseDto resourceQuantity =
         findResourceQuantityIn(createdResource.getId(), resourcesInUserResponse);
     assertEquals(RESOURCE_QUANTITY - 1, resourceQuantity.getQuantity(), 0.01);
   }
@@ -291,6 +303,47 @@ class ResourceInUserCrudIntegrationTest {
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
 
+  @Test
+  void transferResourceFromUserToAnotherUserSuccessfully() {
+    UserResponseDto sender = sendCreateUserRequest();
+    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    sendAddResourceInUserRequest(
+        createResourceInUserRequestDto(sender.getId(), createdResource.getId(), RESOURCE_QUANTITY));
+
+    UserResponseDto receiver = sendCreateUserRequest(createDifferentUserRequest());
+
+    TransferResourceRequestDto requestDto =
+        getTransferResourceRequestDto(sender, createdResource, receiver);
+
+    ResponseEntity<TransferResourceResponseDto> transferResourceResponseDtoResponseEntity =
+        this.testRestTemplate.postForEntity(
+            getBaseResourceAvailabilityTransferUrl(),
+            requestDto,
+            TransferResourceResponseDto.class);
+    TransferResourceResponseDto response = transferResourceResponseDtoResponseEntity.getBody();
+
+    assertEquals(HttpStatus.OK, transferResourceResponseDtoResponseEntity.getStatusCode());
+
+    assertEquals(
+        Objects.requireNonNull(response).getPreviousOwner().getId(), requestDto.getPreviousOwnerId());
+    assertEquals(
+        Objects.requireNonNull(response).getNewOwner().getId(), requestDto.getNewOwnerId());
+    assertEquals(
+        response.getTransferredResource().getResource().getId(), requestDto.getTransferredResourceId());
+    assertEquals(response.getTransferredResource().getQuantity(), 1);
+  }
+
+  @NotNull
+  private static TransferResourceRequestDto getTransferResourceRequestDto(
+      UserResponseDto sender, GemstoneResponseDto createdResource, UserResponseDto receiver) {
+    TransferResourceRequestDto requestDto = new TransferResourceRequestDto();
+    requestDto.setPreviousOwnerId(sender.getId());
+    requestDto.setNewOwnerId(receiver.getId());
+    requestDto.setTransferredResourceId(createdResource.getId());
+    requestDto.setQuantity(1);
+    return requestDto;
+  }
+
   private GemstoneResponseDto sendCreateGemstoneRequest() {
     ResourceRequestDto resourceRequest = getGemstoneRequestDto();
     ResponseEntity<GemstoneResponseDto> resourceResponseEntity =
@@ -303,6 +356,14 @@ class ResourceInUserCrudIntegrationTest {
     assertNotNull(createdResource);
     assertNotNull(createdResource.getId());
     return createdResource;
+  }
+
+  private UserResponseDto sendCreateUserRequest(UserRequestDto userRequest) {
+    ResponseEntity<UserResponseDto> userResponseEntity =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
+    UserResponseDto createdUser = userResponseEntity.getBody();
+    assertNotNull(createdUser);
+    return createdUser;
   }
 
   private UserResponseDto sendCreateUserRequest() {
@@ -341,6 +402,13 @@ class ResourceInUserCrudIntegrationTest {
         getBaseResourceAvailabilityUrl() + "/" + userId, ResourcesInUserResponseDto.class);
   }
 
+  private ResponseEntity<ResourceOwnedByUsersResponseDto>
+      sendGetUsersAndQuantitiesForResourceRequest(UUID resourceId) {
+    return testRestTemplate.getForEntity(
+        getBaseResourceAvailabilityUrl() + "/by-resource/" + resourceId,
+        ResourceOwnedByUsersResponseDto.class);
+  }
+
   private static void assertCreatedResourceIsInResourcesInUser(
       GemstoneResponseDto firstCreatedResource,
       ResponseEntity<ResourcesInUserResponseDto> response) {
@@ -352,7 +420,7 @@ class ResourceInUserCrudIntegrationTest {
                     resourceQuantityDto.getResource().equals(firstCreatedResource)));
   }
 
-  private static ResourceQuantityDto findResourceQuantityIn(
+  private static ResourceQuantityResponseDto findResourceQuantityIn(
       UUID idToFind, ResponseEntity<ResourcesInUserResponseDto> resourcesInUserResponse) {
     assertNotNull(resourcesInUserResponse.getBody());
     return resourcesInUserResponse.getBody().getResourcesAndQuantities().stream()

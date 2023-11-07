@@ -1,6 +1,5 @@
-package jewellery.inventory.dto;
+package jewellery.inventory.dto.response.resource;
 
-import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import lombok.*;
 
 @Getter
@@ -10,7 +9,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ResourceQuantityDto {
+public class ResourceQuantityResponseDto {
     private ResourceResponseDto resource;
     private double quantity;
 }

@@ -34,10 +34,11 @@ build/
 
 # Gradle files
 .gradle/
-build/
 
 # Spring Boot properties
 aws/docker/.env
+.env
+/src/main/resources/data.sql
 
 pom.xml.tag
 pom.xml.releaseBackup

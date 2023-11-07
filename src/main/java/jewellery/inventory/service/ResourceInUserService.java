@@ -3,13 +3,19 @@ package jewellery.inventory.service;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.TransferResourceRequestDto;
+import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
+import jewellery.inventory.dto.response.TransferResourceResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
+import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.mapper.ResourcesInUserMapper;
+import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
@@ -27,19 +33,38 @@ public class ResourceInUserService {
   private final ResourceRepository resourceRepository;
   private final ResourceInUserRepository resourceInUserRepository;
   private final ResourcesInUserMapper resourcesInUserMapper;
+  private final UserMapper userMapper;
+  private final ResourceMapper resourceMapper;
   private static final double EPSILON = 1e-10;
+
+  @Transactional
+  public TransferResourceResponseDto transferResources(
+      TransferResourceRequestDto transferResourceRequestDto) {
+
+    User previousOwner = findUserById(transferResourceRequestDto.getPreviousOwnerId());
+    User newOwner = findUserById(transferResourceRequestDto.getNewOwnerId());
+    ResourceInUser resourceInPreviousOwner =
+        findResourceInUserOrThrow(
+            previousOwner, transferResourceRequestDto.getTransferredResourceId());
+
+    removeQuantityFromResource(resourceInPreviousOwner, transferResourceRequestDto.getQuantity());
+    addResourceToUser(
+        newOwner, resourceInPreviousOwner.getResource(), transferResourceRequestDto.getQuantity());
+
+    return getTransferResourceResponseDto(
+        previousOwner,
+        newOwner,
+        resourceInPreviousOwner.getResource(),
+        transferResourceRequestDto.getQuantity());
+  }
 
   @Transactional
   public ResourcesInUserResponseDto addResourceToUser(ResourceInUserRequestDto resourceUserDto) {
     User user = findUserById(resourceUserDto.getUserId());
     Resource resource = findResourceById(resourceUserDto.getResourceId());
 
-    ResourceInUser resourceInUser =
-        findResourceInUser(user, resourceUserDto.getResourceId())
-            .orElseGet(() -> createAndAddNewResourceInUser(user, resource, 0));
+    addResourceToUser(user, resource, resourceUserDto.getQuantity());
 
-    resourceInUser.setQuantity(resourceInUser.getQuantity() + resourceUserDto.getQuantity());
-    resourceInUserRepository.save(resourceInUser);
     return resourcesInUserMapper.toResourcesInUserResponseDto(user);
   }
 
@@ -50,40 +75,60 @@ public class ResourceInUserService {
 
   @Transactional
   public void removeQuantityFromResource(UUID userId, UUID resourceId, double quantity) {
-    if (quantity < 0) {
-      throw new NegativeResourceQuantityException(quantity);
-    }
     User user = findUserById(userId);
-    ResourceInUser resourceInUser =
-        findResourceInUser(user, resourceId)
-            .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, userId));
+    ResourceInUser resourceInUser = findResourceInUserOrThrow(user, resourceId);
 
-    double totalQuantity = resourceInUser.getQuantity();
-    double newQuantity = totalQuantity - quantity;
-
-    if (newQuantity < 0) {
-      throw new InsufficientResourceQuantityException(quantity, totalQuantity);
-    }
-
-    resourceInUser.setQuantity(newQuantity);
-    if (Math.abs(newQuantity) < EPSILON) {
-      user.getResourcesOwned().remove(resourceInUser);
-    }
-    userRepository.save(user);
+    removeQuantityFromResource(resourceInUser, quantity);
   }
 
   @Transactional
   public void removeResourceFromUser(UUID userId, UUID resourceId) {
     User user = findUserById(userId);
-
-    ResourceInUser resourceToRemove =
-        user.getResourcesOwned().stream()
-            .filter(r -> r.getResource().getId().equals(resourceId))
-            .findFirst()
-            .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, userId));
+    ResourceInUser resourceToRemove = findResourceInUserOrThrow(user, resourceId);
 
     user.getResourcesOwned().remove(resourceToRemove);
     userRepository.save(user);
+  }
+
+  public ResourceOwnedByUsersResponseDto getUsersAndQuantities(UUID resourceId) {
+    Resource resource = findResourceById(resourceId);
+    return resourcesInUserMapper.toResourcesOwnedByUsersResponseDto(resource);
+  }
+
+  private User addResourceToUser(User user, Resource resource, Double quantity) {
+    ResourceInUser resourceInUser =
+        findResourceInUser(user, resource.getId())
+            .orElseGet(() -> createAndAddNewResourceInUser(user, resource, 0));
+
+    resourceInUser.setQuantity(resourceInUser.getQuantity() + quantity);
+    resourceInUserRepository.save(resourceInUser);
+    return user;
+  }
+
+  private User removeQuantityFromResource(ResourceInUser resourceInUser, double quantityToRemove) {
+    if (quantityToRemove < 0) {
+      throw new NegativeResourceQuantityException(quantityToRemove);
+    }
+
+    double totalQuantity = resourceInUser.getQuantity();
+    double newQuantity = totalQuantity - quantityToRemove;
+
+    if (newQuantity < 0) {
+      throw new InsufficientResourceQuantityException(quantityToRemove, totalQuantity);
+    }
+
+    resourceInUser.setQuantity(newQuantity);
+    User owner = resourceInUser.getOwner();
+    if (Math.abs(newQuantity) < EPSILON) {
+      owner.getResourcesOwned().remove(resourceInUser);
+    }
+    userRepository.save(owner);
+    return owner;
+  }
+
+  private ResourceInUser findResourceInUserOrThrow(User previousOwner, UUID resourceId) {
+    return findResourceInUser(previousOwner, resourceId)
+        .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, previousOwner.getId()));
   }
 
   private User findUserById(UUID userId) {
@@ -110,5 +155,18 @@ public class ResourceInUserService {
     resourceInUser.setQuantity(quantity);
     user.getResourcesOwned().add(resourceInUser);
     return resourceInUser;
+  }
+
+  private TransferResourceResponseDto getTransferResourceResponseDto(
+      User previousOwner, User newOwner, Resource resource, Double quantity) {
+    return TransferResourceResponseDto.builder()
+        .previousOwner(userMapper.toUserResponse(previousOwner))
+        .newOwner(userMapper.toUserResponse(newOwner))
+        .transferredResource(
+            ResourceQuantityResponseDto.builder()
+                .resource(resourceMapper.toResourceResponse(resource))
+                .quantity(quantity)
+                .build())
+        .build();
   }
 }
