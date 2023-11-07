@@ -41,6 +41,7 @@ public class SaleTestHelper {
     productRequest.setDiscount(discount);
     return productRequest;
   }
+
   public static List<SaleResponseDto> getSaleResponseList(SaleResponseDto saleResponseDto) {
     List<SaleResponseDto> saleResponseDtoList = new ArrayList<>();
     saleResponseDtoList.add(saleResponseDto);
@@ -52,6 +53,7 @@ public class SaleTestHelper {
     products.add(product);
     return products;
   }
+
   public static SaleResponseDto getSaleResponseDto(Sale sale) {
     SaleResponseDto dto = new SaleResponseDto();
     UserResponseDto userRequestDtoSeller = new UserResponseDto();
@@ -60,8 +62,11 @@ public class SaleTestHelper {
     dto.setSeller(userRequestDtoSeller);
     userRequestDtoBuyer.setId(sale.getBuyer().getId());
     dto.setBuyer(userRequestDtoBuyer);
-    dto.setTotalDiscountedPrice(sale.getProducts().get(0).getSalePrice());
-    dto.setTotalDiscount(sale.getProducts().get(0).getDiscount());
+    for (int i = 0; i < sale.getProducts().size(); i++) {
+      dto.setTotalDiscountedPrice(
+          dto.getTotalDiscountedPrice() + sale.getProducts().get(i).getSalePrice());
+      dto.setTotalDiscount(dto.getTotalDiscount() + sale.getProducts().get(i).getDiscount());
+    }
     List<ProductResponseDto> list = new ArrayList<>();
     for (int i = 0; i < sale.getProducts().size(); i++) {
       ProductResponseDto productResponseDto = new ProductResponseDto();

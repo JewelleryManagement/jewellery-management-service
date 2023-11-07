@@ -12,6 +12,7 @@ import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
+import jewellery.inventory.exception.product.ProductOwnerNotSeller;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.Product;
@@ -41,6 +42,7 @@ class SaleServiceTest {
   private Sale sale;
   private SaleRequestDto saleRequestDto;
   private SaleRequestDto saleRequestDtoOwnerEqualsRecipient;
+  private SaleRequestDto saleRequestDtoSellerNotOwner;
   private SaleResponseDto saleResponseDto;
   private ProductPriceDiscountRequestDto productPriceDiscountRequestDto;
   private List<SaleResponseDto> saleResponseDtoList;
@@ -65,6 +67,9 @@ class SaleServiceTest {
         SaleTestHelper.createSaleRequest(
             seller.getId(), seller.getId(), productPriceDiscountRequestDtoList);
     saleResponseDtoList = SaleTestHelper.getSaleResponseList(saleResponseDto);
+    saleRequestDtoSellerNotOwner =
+        SaleTestHelper.createSaleRequest(
+            buyer.getId(), buyer.getId(), productPriceDiscountRequestDtoList);
   }
 
   @Test
@@ -107,5 +112,18 @@ class SaleServiceTest {
     assertThrows(
         ProductOwnerEqualsRecipientException.class,
         () -> saleService.createSale(saleRequestDtoOwnerEqualsRecipient));
+  }
+
+  @Test
+  void testCreateSaleProductWillThrowsProductOwnerNotSeller() {
+    when(saleMapper.mapRequestToEntity(
+            saleRequestDtoSellerNotOwner, seller, buyer, List.of(product)))
+        .thenReturn(sale);
+    when(userRepository.findById(any(UUID.class)))
+        .thenReturn(Optional.of(seller), Optional.of(buyer));
+    when(productRepository.findById(any(UUID.class))).thenReturn(Optional.of(product));
+
+    assertThrows(
+        ProductOwnerNotSeller.class, () -> saleService.createSale(saleRequestDtoSellerNotOwner));
   }
 }
