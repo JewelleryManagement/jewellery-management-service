@@ -3,16 +3,15 @@ package jewellery.inventory.service;
 import jewellery.inventory.dto.request.ImageRequestDto;
 import jewellery.inventory.dto.response.ImageResponseDto;
 import jewellery.inventory.exception.image.MultipartFileContentTypeException;
-import jewellery.inventory.exception.duplicate.DuplicateFileException;
 import jewellery.inventory.exception.image.MultipartFileNotSelectedException;
 import jewellery.inventory.exception.not_found.ImageNotFoundException;
-import jewellery.inventory.exception.not_found.ProductNotFoundException;
 import jewellery.inventory.mapper.ImageDataMapper;
 import jewellery.inventory.model.Image;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.repository.ImageRepository;
-import jewellery.inventory.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,34 +19,39 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = {@Lazy})
 public class ImageService {
 
-  private static final String FOLDER_PATH = "C:/Windows/Temp/Jms/Images/";
+  @Value("${image.folder.path}")
+  private String folderPath;
 
   private final ImageRepository imageRepository;
   private final ImageDataMapper imageDataMapper;
-  private final ProductRepository productRepository;
+  @Lazy
+  private final ProductService productService;
 
   @Transactional
-  public ImageResponseDto uploadImage(ImageRequestDto imageRequestDto, UUID productId) throws IOException {
+  public ImageResponseDto uploadImage(ImageRequestDto imageRequestDto, UUID productId)
+      throws IOException {
 
     checkFileIsSelected(imageRequestDto.getImage());
     checkContentType(imageRequestDto.getImage());
 
-    String filePath = FOLDER_PATH + imageRequestDto.getImage().getOriginalFilename();
-    createDirectoryIfNotExists();
-    checkForExistedImage(imageRequestDto.getImage());
-    imageRequestDto.getImage().transferTo(new File(filePath));
+    String directory = folderPath + productId;
+    createDirectoryIfNotExists(directory);
+
+    String filePath = directory + "/" + imageRequestDto.getImage().getOriginalFilename();
 
     Product product = getProduct(productId);
     Image image = createImageData(imageRequestDto.getImage(), filePath, product);
     setProductImage(product, image);
+    imageRequestDto.getImage().transferTo(new File(filePath));
 
     return imageDataMapper.toImageResponse(image);
   }
@@ -56,8 +60,7 @@ public class ImageService {
   public byte[] downloadImage(UUID productId) throws IOException {
     Product product = getProduct(productId);
     checkForAttachedPicture(product);
-    Image fileData = getImage(product.getImage().getName());
-    return Files.readAllBytes(new File(fileData.getFilePath()).toPath());
+    return Files.readAllBytes(new File(product.getImage().getFilePath()).toPath());
   }
 
   @Transactional
@@ -75,28 +78,14 @@ public class ImageService {
             .build());
   }
 
-  private void checkForExistedImage(MultipartFile file) {
-    Image image = imageRepository.findByName(file.getOriginalFilename()).orElse(null);
-    if (image != null) {
-      throw new DuplicateFileException(file.getOriginalFilename());
+  private void createDirectoryIfNotExists(String directory) throws IOException {
+    if (Files.notExists(Path.of(directory))) {
+      Files.createDirectories(Path.of(directory));
     }
-  }
-
-  private void createDirectoryIfNotExists() {
-    File path = new File(FOLDER_PATH);
-    if (imageRepository.count() == 0) {
-      path.mkdirs();
-    }
-  }
-
-  private Image getImage(String name) {
-    return imageRepository.findByName(name).orElseThrow(() -> new ImageNotFoundException(name));
   }
 
   private Product getProduct(UUID productId) {
-    return productRepository
-        .findById(productId)
-        .orElseThrow(() -> new ProductNotFoundException(productId));
+    return productService.getProduct(productId);
   }
 
   private void setProductImage(Product product, Image image) throws IOException {
@@ -108,22 +97,22 @@ public class ImageService {
 
   private void removeImage(Product product) throws IOException {
     checkForAttachedPicture(product);
-    Image fileData = getImage(product.getImage().getName());
-    Files.deleteIfExists(Paths.get(fileData.getFilePath()));
+    Image image = product.getImage();
+    Files.deleteIfExists(Paths.get(product.getImage().getFilePath()));
     product.setImage(null);
-    imageRepository.delete(fileData);
+    imageRepository.delete(image);
   }
 
   private static void checkForAttachedPicture(Product product) {
     if (product.getImage() == null) {
-      throw new ImageNotFoundException();
+      throw new ImageNotFoundException(product.getId());
     }
   }
 
   private boolean isSupportedContentType(String contentType) {
     return contentType.equals("image/png")
-            || contentType.equals("image/jpg")
-            || contentType.equals("image/jpeg");
+        || contentType.equals("image/jpg")
+        || contentType.equals("image/jpeg");
   }
 
   private void checkContentType(MultipartFile file) {

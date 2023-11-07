@@ -1,11 +1,9 @@
 package jewellery.inventory.exception.not_found;
 
-public class ImageNotFoundException extends NotFoundException{
-    public ImageNotFoundException(String name) {
-        super("Image with name " + name + " is not found!");
-    }
+import java.util.UUID;
 
-    public ImageNotFoundException() {
-        super("There is no picture!");
+public class ImageNotFoundException extends NotFoundException{
+    public ImageNotFoundException(UUID productId) {
+        super("Product with id " + productId + " has no attached picture.");
     }
 }

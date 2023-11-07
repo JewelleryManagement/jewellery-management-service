@@ -23,6 +23,7 @@ import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.*;
+import jewellery.inventory.service.ImageService;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.ResourceInUserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +45,7 @@ class ProductServiceTest {
   @Mock private ResourceInUserRepository resourceInUserRepository;
   @Mock private ResourceInProductRepository resourceInProductRepository;
   @Mock private ResourceInUserService resourceInUserService;
+  @Mock private ImageService imageService;
 
   private User user;
   private Product product;
@@ -192,7 +194,7 @@ class ProductServiceTest {
   @Test
   void testGetProductShouldThrowWhenProductNotFound() {
     UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
-    assertThrows(ProductNotFoundException.class, () -> productService.getProduct(fakeId));
+    assertThrows(ProductNotFoundException.class, () -> productService.getProductResponse(fakeId));
   }
 
   @Test
@@ -203,7 +205,7 @@ class ProductServiceTest {
     ProductResponseDto response = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
 
-    ProductResponseDto actual = productService.getProduct(product.getId());
+    ProductResponseDto actual = productService.getProductResponse(product.getId());
 
     assertEquals(response, actual);
     assertEquals(response.getId(), actual.getId());

@@ -1,11 +1,10 @@
 package jewellery.inventory.service;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
@@ -16,7 +15,6 @@ import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.ProductMapper;
-import jewellery.inventory.model.Image;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
@@ -34,7 +32,7 @@ public class ProductService {
   private final ProductRepository productRepository;
   private final UserRepository userRepository;
   private final ResourceInUserRepository resourceInUserRepository;
-  private final ImageRepository imageRepository;
+  private final ImageService imageService;
   private final ResourceInUserService resourceInUserService;
   private final ProductMapper productMapper;
 
@@ -57,25 +55,25 @@ public class ProductService {
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
-  public ProductResponseDto getProduct(UUID id) {
-    Product product =
-        productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+  public Product getProduct(UUID id) {
+    return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+  }
 
-    return productMapper.mapToProductResponseDto(product);
+  public ProductResponseDto getProductResponse(UUID id) {
+    return productMapper.mapToProductResponseDto(productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id)));
   }
 
   @Transactional
   public void deleteProduct(UUID id) throws IOException {
 
-    Product product =
-        productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+    Product product = getProduct(id);
 
     throwExceptionIfProductIsSold(id, product);
     throwExceptionIfProductIsPartOfAnotherProduct(id, product);
 
     moveResourceInProductToResourceInUser(product);
     disassembleProductContent(product);
-    removeImage(product);
+    imageService.deleteImage(id);
 
     productRepository.deleteById(id);
   }
@@ -264,17 +262,5 @@ public class ProductService {
     resourceInProduct.setQuantity(incomingResourceInProduct.getQuantity());
     resourceInProduct.setProduct(product);
     return resourceInProduct;
-  }
-
-  private void removeImage(Product product) throws IOException {
-    if (product.getImage() != null) {
-      Image fileData =
-          imageRepository
-              .findByName(product.getImage().getName())
-              .orElseThrow(() -> new ImageNotFoundException(product.getImage().getName()));
-      Files.deleteIfExists(Paths.get(fileData.getFilePath()));
-      product.setImage(null);
-      imageRepository.delete(fileData);
-    }
   }
 }

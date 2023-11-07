@@ -2,8 +2,6 @@ package jewellery.inventory.dto.response;
 
 import lombok.*;
 
-import java.util.UUID;
-
 @Getter
 @Setter
 @AllArgsConstructor
@@ -13,5 +11,4 @@ public class ImageResponseDto {
     private String name;
     private String type;
     private String filePath;
-    private UUID productId;
 }
