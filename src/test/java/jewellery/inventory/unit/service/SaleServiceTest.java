@@ -4,6 +4,7 @@ import static jewellery.inventory.helper.ProductTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.*;
@@ -11,7 +12,6 @@ import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
-import jewellery.inventory.exception.product.ProductOwnerNotSeller;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.Product;
@@ -51,7 +51,7 @@ class SaleServiceTest {
     seller = createTestUserForSale();
     buyer = createSecondTestUser();
     product = getTestProduct(seller, new Resource());
-    productsForSale = SaleTestHelper.getProList(product);
+    productsForSale = SaleTestHelper.getProductsList(product);
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSale);
     saleResponseDto = SaleTestHelper.getSaleResponseDto(sale);
     productPriceDiscountRequestDto =
@@ -62,8 +62,8 @@ class SaleServiceTest {
         SaleTestHelper.createSaleRequest(
             seller.getId(), buyer.getId(), productPriceDiscountRequestDtoList);
     saleRequestDtoOwnerEqualsRecipient =
-            SaleTestHelper.createSaleRequest(
-                    seller.getId(), seller.getId(), productPriceDiscountRequestDtoList);
+        SaleTestHelper.createSaleRequest(
+            seller.getId(), seller.getId(), productPriceDiscountRequestDtoList);
     saleResponseDtoList = SaleTestHelper.getSaleResponseList(saleResponseDto);
   }
 
@@ -79,44 +79,33 @@ class SaleServiceTest {
     Assertions.assertEquals(sales.size(), responses.size());
   }
 
-//  @Test
-//  void testCreateSaleProductWhenDateIsCorrect() {
-//    when(saleMapper.mapRequestToEntity(saleRequestDto,seller,buyer,List.of(product))).thenReturn(sale);
-//
-//    when(saleRepository.save(sale)).thenReturn(sale);
-//
-//    when(saleMapper.mapEntityToResponseDto(sale)).thenReturn(saleResponseDto);
-//
-//    SaleResponseDto actual = saleService.createSale(saleRequestDto);
-//    assertNotEquals(actual.getBuyer(), actual.getSeller());
-//    Assertions.assertEquals(saleRequestDto.getSellerId(), actual.getSeller().getId());
-//    assertNotNull(actual);
-//  }
-//    TODO for tests
-//  @Test
-//  void testCreateSaleProductWhenProductOwnerEqualsRecipientException() {
-//    when(saleMapper.mapRequestToEntity(saleRequestDtoOwnerEqualsRecipient,seller,seller,List.of(product))).thenReturn(sale);
-//
-//    assertThrows(
-//            ProductOwnerEqualsRecipientException.class,
-//            () -> saleService.createSale(saleRequestDtoOwnerEqualsRecipient));
-//  }
+  @Test
+  void testCreateSaleProductWillSuccessfully() {
+    when(saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product)))
+        .thenReturn(sale);
+    when(userRepository.findById(any(UUID.class)))
+        .thenReturn(Optional.of(seller), Optional.of(buyer));
+    when(productRepository.findById(any(UUID.class))).thenReturn(Optional.of(product));
+    when(saleRepository.save(sale)).thenReturn(sale);
+
+    when(saleMapper.mapEntityToResponseDto(sale)).thenReturn(saleResponseDto);
+
+    SaleResponseDto actual = saleService.createSale(saleRequestDto);
+    assertNotEquals(actual.getBuyer(), actual.getSeller());
+    Assertions.assertEquals(saleRequestDto.getSellerId(), actual.getSeller().getId());
+    assertNotNull(actual);
+  }
 
   @Test
-  void testProductOwnerNotSeller() {
-    UUID ownerId = UUID.randomUUID();
-    UUID sellerId = UUID.randomUUID();
+  void testCreateSaleProductWillThrowsProductOwnerEqualsRecipientException() {
+    when(saleMapper.mapRequestToEntity(
+            saleRequestDtoOwnerEqualsRecipient, seller, seller, List.of(product)))
+        .thenReturn(sale);
+    when(userRepository.findById(any(UUID.class))).thenReturn(Optional.of(seller));
+    when(productRepository.findById(any(UUID.class))).thenReturn(Optional.of(product));
 
-    try {
-      throw new ProductOwnerNotSeller(ownerId, sellerId);
-    } catch (ProductOwnerNotSeller ex) {
-      String expectedMessage =
-          "The seller with ID "
-              + sellerId
-              + " cannot sell a product that is not owned by them. Owner ID: "
-              + ownerId;
-      String actualMessage = ex.getMessage();
-      Assertions.assertEquals(expectedMessage, actualMessage);
-    }
+    assertThrows(
+        ProductOwnerEqualsRecipientException.class,
+        () -> saleService.createSale(saleRequestDtoOwnerEqualsRecipient));
   }
 }
