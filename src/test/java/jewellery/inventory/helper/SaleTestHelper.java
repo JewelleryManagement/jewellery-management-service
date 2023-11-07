@@ -42,12 +42,6 @@ public class SaleTestHelper {
     return productRequest;
   }
 
-  public static List<SaleResponseDto> getSaleResponseList(SaleResponseDto saleResponseDto) {
-    List<SaleResponseDto> saleResponseDtoList = new ArrayList<>();
-    saleResponseDtoList.add(saleResponseDto);
-    return saleResponseDtoList;
-  }
-
   public static List<Product> getProductsList(Product product) {
     List<Product> products = new ArrayList<>();
     products.add(product);
