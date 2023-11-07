@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
+import java.io.IOException;
 import java.util.Collections;
 import jewellery.inventory.model.User;
 import jewellery.inventory.service.security.JwtTokenService;
@@ -37,7 +38,7 @@ abstract class AuthenticatedIntegrationTestBase {
   protected HttpHeaders headers;
 
   @BeforeEach
-  void setup() {
+  void setup() throws IOException {
     User adminUser = createTestUser();
     setupMockSecurityContext(adminUser);
     setupTestRestTemplateWithAuthHeaders();
