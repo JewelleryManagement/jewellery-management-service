@@ -18,7 +18,7 @@ public class Resource {
 
   private String clazz;
   private String quantityType;
-  private double pricePerQuantity;
+  private Double pricePerQuantity;
   private String note;
 
   @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL)
