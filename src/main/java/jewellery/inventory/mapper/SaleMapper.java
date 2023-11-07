@@ -65,10 +65,6 @@ public class SaleMapper {
       totalPrice += product.getSalePrice();
     }
 
-    if (totalPrice == 0) {
-      return 0;
-    }
-
     if ("percentage".equals(calculationType)) {
       return (totalDiscountAmount / totalPrice) * 100;
     } else if ("amount".equals(calculationType)) {
