@@ -12,6 +12,7 @@ import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
+import jewellery.inventory.dto.response.ImageResponseDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
@@ -27,6 +28,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
@@ -58,6 +61,10 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return getBaseUrl() + "/products/" + id;
   }
 
+  private String getBaseProductImageUrl(UUID productId) {
+    return getBaseProductUrl() + "/" + productId + "/picture";
+  }
+
   @Autowired private UserRepository userRepository;
   @Autowired private ProductRepository productRepository;
   @Autowired private ResourceRepository resourceRepository;
@@ -72,6 +79,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
   private ProductRequestDto productRequestDto;
   private ProductResponseDto productResponseDto;
+  private MultipartFile multipartFile;
 
   @BeforeEach
   void setUp() {
@@ -83,7 +91,21 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
     productRequestDto =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), user);
+    multipartFile = createTestImage();
   }
+
+//  @Test
+//  void imageUploadSuccessfullyAndAttachToProduct() {
+//    ProductResponseDto productResponse = createProductWithRequest(productRequestDto);
+//
+//    ResponseEntity<ImageResponseDto> response =
+//        this.testRestTemplate.postForEntity(
+//            getBaseProductImageUrl(productResponse.getId()),
+//                multipartFile,
+//            ImageResponseDto.class);
+//
+//    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+//  }
 
   @Test
   void transferProductFailsWithNotFoundWhenIdsIncorrect() {
@@ -268,5 +290,13 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     resourceRepository.deleteAll();
     resourceInUserRepository.deleteAll();
     resourceInProductRepository.deleteAll();
+  }
+
+  private MockMultipartFile createTestImage() {
+    return new MockMultipartFile(
+        "image",
+        "pearl.jpg",
+        MediaType.MULTIPART_FORM_DATA_VALUE,
+        "src/test/resources/static/img/pearl.jpg".getBytes());
   }
 }

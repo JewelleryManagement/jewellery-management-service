@@ -1,6 +1,8 @@
 package jewellery.inventory.exception;
 
 import io.jsonwebtoken.security.SignatureException;
+
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -10,6 +12,7 @@ import java.util.Map;
 import jewellery.inventory.exception.duplicate.DuplicateException;
 import jewellery.inventory.exception.image.MultipartFileContentTypeException;
 import jewellery.inventory.exception.image.MultipartFileNotSelectedException;
+import jewellery.inventory.exception.image.MultipartFileSizeException;
 import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
 import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MultipartException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -54,7 +58,8 @@ public class GlobalExceptionHandler {
     InvalidResourceQuantityException.class,
     DuplicateException.class,
     MultipartFileContentTypeException.class,
-    MultipartFileNotSelectedException.class
+    MultipartFileNotSelectedException.class,
+    MultipartFileSizeException.class
   })
   public ResponseEntity<Object> handleBadDataExceptions(RuntimeException ex) {
     return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());

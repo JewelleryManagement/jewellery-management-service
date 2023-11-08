@@ -1,15 +1,16 @@
 package jewellery.inventory.service;
 
-import jewellery.inventory.dto.request.ImageRequestDto;
 import jewellery.inventory.dto.response.ImageResponseDto;
 import jewellery.inventory.exception.image.MultipartFileContentTypeException;
 import jewellery.inventory.exception.image.MultipartFileNotSelectedException;
+import jewellery.inventory.exception.image.MultipartFileSizeException;
 import jewellery.inventory.exception.not_found.ImageNotFoundException;
 import jewellery.inventory.mapper.ImageDataMapper;
 import jewellery.inventory.model.Image;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;
+import org.codehaus.plexus.util.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -31,29 +33,42 @@ public class ImageService {
   @Value("${image.folder.path}")
   private String folderPath;
 
+  @Value("${multipart.file.max.size}")
+  private  Integer maxFileSize;
+
+  private static final Integer MB = 1024 * 1024;
+
   private final ImageRepository imageRepository;
   private final ImageDataMapper imageDataMapper;
   @Lazy
   private final ProductService productService;
 
   @Transactional
-  public ImageResponseDto uploadImage(ImageRequestDto imageRequestDto, UUID productId)
+  public ImageResponseDto uploadImage(MultipartFile multipartFile, UUID productId)
       throws IOException {
 
-    checkFileIsSelected(imageRequestDto.getImage());
-    checkContentType(imageRequestDto.getImage());
+    checkFileIsSelected(multipartFile);
+    checkContentType(multipartFile);
+    checkFileSize(multipartFile, maxFileSize);
 
     String directory = folderPath + productId;
     createDirectoryIfNotExists(directory);
 
-    String filePath = directory + "/" + imageRequestDto.getImage().getOriginalFilename();
+    String filePath = directory + "/" + multipartFile.getOriginalFilename();
 
     Product product = getProduct(productId);
-    Image image = createImageData(imageRequestDto.getImage(), filePath, product);
+    Image image = createImageData(multipartFile, filePath, product);
     setProductImage(product, image);
-    imageRequestDto.getImage().transferTo(new File(filePath));
 
+    Files.copy(multipartFile.getInputStream(), Path.of(filePath), StandardCopyOption.REPLACE_EXISTING);
+//    multipartFile.transferTo(new File(filePath));
     return imageDataMapper.toImageResponse(image);
+  }
+
+  private static void checkFileSize(MultipartFile multipartFile, Integer fileSize) {
+    if (multipartFile.getSize() > (long) fileSize * MB) {
+      throw new MultipartFileSizeException(fileSize);
+    }
   }
 
   @Transactional
