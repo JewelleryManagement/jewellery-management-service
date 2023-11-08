@@ -14,6 +14,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ProductPriceDiscountRequestDto {
   @NotNull private UUID productId;
-  @NotNull private double salePrice;
-  @NotNull private double discount;
+   private double salePrice;
+   private double discount;
 }
