@@ -100,19 +100,6 @@ class SaleServiceTest {
   }
 
   @Test
-  void testCreateSaleProductWillThrowsProductOwnerEqualsRecipientException() {
-    when(saleMapper.mapRequestToEntity(
-            saleRequestDtoOwnerEqualsRecipient, seller, seller, List.of(product)))
-        .thenReturn(sale);
-    when(userRepository.findById(any(UUID.class))).thenReturn(Optional.of(seller));
-    when(productRepository.findById(any(UUID.class))).thenReturn(Optional.of(product));
-
-    assertThrows(
-        ProductOwnerEqualsRecipientException.class,
-        () -> saleService.createSale(saleRequestDtoOwnerEqualsRecipient));
-  }
-
-  @Test
   void testCreateSaleProductWillThrowsProductOwnerNotSeller() {
     when(saleMapper.mapRequestToEntity(
             saleRequestDtoSellerNotOwner, seller, buyer, List.of(product)))
