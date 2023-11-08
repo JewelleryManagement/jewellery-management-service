@@ -56,10 +56,6 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
     return getBaseUrl() + "/products";
   }
 
-  private String getProductUrl(UUID id) {
-    return getBaseUrl() + "/products/" + id;
-  }
-
   private String getBaseSaleUrl() {
     return getBaseUrl() + "/sales";
   }
@@ -81,8 +77,8 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
   @BeforeEach
   void setUp() {
     cleanAllRepositories();
-    seller = createUserInDatabase(createSellerUserRequest());
-    buyer = createUserInDatabase(createBuyerUserRequest());
+    seller = createUserInDatabase(createTestUserRequest());
+    buyer = createUserInDatabase(createDifferentUserRequest());
     gemstone = createGemstoneInDatabase();
     resourceInUserRequestDto =
         getResourceInUserRequestDto(seller, Objects.requireNonNull(gemstone));
@@ -93,6 +89,15 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getAllSalesSuccessfully() {
+    ResponseEntity<ProductResponseDto> productResponse =
+            this.testRestTemplate.postForEntity(
+                    getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+
+    SaleRequestDto saleRequestDto = getSaleRequestDto(seller, buyer, productResponse);
+
+    ResponseEntity<SaleResponseDto> saleResponse =
+            this.testRestTemplate.postForEntity(
+                    getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
 
     ResponseEntity<List<SaleResponseDto>> response =
         this.testRestTemplate.exchange(
@@ -109,17 +114,22 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
         this.testRestTemplate.postForEntity(
             getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
 
-    SaleRequestDto saleRequestDto = getSaleRequestDto2(seller, buyer, productResponse);
+    SaleRequestDto saleRequestDto = getSaleRequestDto(seller, buyer, productResponse);
 
     ResponseEntity<SaleResponseDto> saleResponse =
         this.testRestTemplate.postForEntity(
             getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, saleResponse.getStatusCode());
+    assertEquals(saleRequestDto.getBuyerId(),saleResponse.getBody().getBuyer().getId());
+    assertEquals(saleRequestDto.getSellerId(),saleResponse.getBody().getSeller().getId());
+    assertEquals(saleRequestDto.getProducts().size(),saleResponse.getBody().getProducts().size());
+    assertEquals(saleRequestDto.getProducts().get(0).getProductId(),saleResponse.getBody().getProducts().get(0).getId());
+
   }
 
   @NotNull
-  private static SaleRequestDto getSaleRequestDto2(
+  private static SaleRequestDto getSaleRequestDto(
       User seller, User buyer, ResponseEntity<ProductResponseDto> productResponse) {
     SaleRequestDto saleRequestDto = new SaleRequestDto();
     saleRequestDto.setBuyerId(buyer.getId());

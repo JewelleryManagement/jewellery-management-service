@@ -68,20 +68,6 @@ public class UserTestHelper {
     userRequest.setPassword(USER_PASSWORD);
     return userRequest;
   }
-  public static UserRequestDto createSellerUserRequest() {
-    UserRequestDto userRequest = new UserRequestDto();
-    userRequest.setName("seller");
-    userRequest.setEmail("seller@example.com");
-    userRequest.setPassword(USER_PASSWORD);
-    return userRequest;
-  }
-  public static UserRequestDto createBuyerUserRequest() {
-    UserRequestDto userRequest = new UserRequestDto();
-    userRequest.setName("buyer");
-    userRequest.setEmail("buyer@example.com");
-    userRequest.setPassword(USER_PASSWORD);
-    return userRequest;
-  }
 
   public static UserRequestDto createInvalidUserRequest() {
     UserRequestDto invalidUserRequest = new UserRequestDto();

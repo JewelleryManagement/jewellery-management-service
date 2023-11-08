@@ -50,12 +50,12 @@ public class SaleTestHelper {
 
   public static SaleResponseDto getSaleResponseDto(Sale sale) {
     SaleResponseDto dto = new SaleResponseDto();
-    UserResponseDto userRequestDtoSeller = new UserResponseDto();
-    UserResponseDto userRequestDtoBuyer = new UserResponseDto();
-    userRequestDtoSeller.setId(sale.getSeller().getId());
-    dto.setSeller(userRequestDtoSeller);
-    userRequestDtoBuyer.setId(sale.getBuyer().getId());
-    dto.setBuyer(userRequestDtoBuyer);
+    UserResponseDto userResponseDtoSeller = new UserResponseDto();
+    UserResponseDto userResponseDtoBuyer = new UserResponseDto();
+    userResponseDtoSeller.setId(sale.getSeller().getId());
+    dto.setSeller(userResponseDtoSeller);
+    userResponseDtoBuyer.setId(sale.getBuyer().getId());
+    dto.setBuyer(userResponseDtoBuyer);
     for (int i = 0; i < sale.getProducts().size(); i++) {
       dto.setTotalDiscountedPrice(
           dto.getTotalDiscountedPrice() + sale.getProducts().get(i).getSalePrice());
