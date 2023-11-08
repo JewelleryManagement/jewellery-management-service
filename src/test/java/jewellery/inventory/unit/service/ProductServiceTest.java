@@ -244,7 +244,7 @@ class ProductServiceTest {
 
   @Test
   void testDeleteProductShouldThrowExceptionWhenProductIsSold() {
-    product.setPartOfSale(new Sale()); //TODO
+    product.setPartOfSale(new Sale());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
     assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
