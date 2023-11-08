@@ -5,6 +5,8 @@ import static jewellery.inventory.helper.UserTestHelper.createDifferentUserReque
 import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -27,9 +29,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
@@ -79,7 +82,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
   private ProductRequestDto productRequestDto;
   private ProductResponseDto productResponseDto;
-  private MultipartFile multipartFile;
+  private FileSystemResource multipartFile;
 
   @BeforeEach
   void setUp() {
@@ -94,18 +97,18 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     multipartFile = createTestImage();
   }
 
-//  @Test
-//  void imageUploadSuccessfullyAndAttachToProduct() {
-//    ProductResponseDto productResponse = createProductWithRequest(productRequestDto);
-//
-//    ResponseEntity<ImageResponseDto> response =
-//        this.testRestTemplate.postForEntity(
-//            getBaseProductImageUrl(productResponse.getId()),
-//                multipartFile,
-//            ImageResponseDto.class);
-//
-//    assertEquals(HttpStatus.CREATED, response.getStatusCode());
-//  }
+  @Test
+  void imageUploadSuccessfullyAndAttachToProduct() {
+    ProductResponseDto productResponse = createProductWithRequest(productRequestDto);
+    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+    body.add("image", multipartFile);
+
+    ResponseEntity<ImageResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseProductImageUrl(productResponse.getId()), body, ImageResponseDto.class);
+
+    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+  }
 
   @Test
   void transferProductFailsWithNotFoundWhenIdsIncorrect() {
@@ -292,11 +295,9 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     resourceInProductRepository.deleteAll();
   }
 
-  private MockMultipartFile createTestImage() {
-    return new MockMultipartFile(
-        "image",
-        "pearl.jpg",
-        MediaType.MULTIPART_FORM_DATA_VALUE,
-        "src/test/resources/static/img/pearl.jpg".getBytes());
+  private FileSystemResource createTestImage() {
+    return new FileSystemResource(
+        new File(
+            Objects.requireNonNull(getClass().getResource("/static/img/pearl.jpg")).getFile()));
   }
 }
