@@ -12,6 +12,7 @@ import jewellery.inventory.exception.product.*;
 import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInUser;
+import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInProduct;
@@ -55,8 +56,15 @@ public class ProductService {
 
     return productMapper.mapToProductResponseDto(product);
   }
+
   public Product returnProductByID(UUID id) {
     return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+  }
+
+  public void updateProductOwner(Product product, User newOwner, Sale sale) {
+    product.setOwner(newOwner);
+    product.setPartOfSale(sale);
+    productRepository.save(product);
   }
 
   @Transactional

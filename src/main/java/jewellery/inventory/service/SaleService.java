@@ -9,7 +9,6 @@ import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
-import jewellery.inventory.repository.ProductRepository;
 import jewellery.inventory.repository.SaleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 public class SaleService {
   private final SaleRepository saleRepository;
   private final SaleMapper saleMapper;
-  private final ProductRepository productRepository;
   private final ProductService productService;
   private final UserMapper userMapper;
   private final UserService userService;
@@ -53,9 +51,7 @@ public class SaleService {
 
   private void updateProductOwnersAndSale(List<Product> products, UUID buyerId, Sale sale) {
     for (Product product : products) {
-      product.setOwner(userMapper.toUserEntity(userService.getUser(buyerId)));
-      product.setPartOfSale(sale);
-      productRepository.save(product);
+      productService.updateProductOwner(product,userMapper.toUserEntity(userService.getUser(buyerId)),sale);
     }
   }
 
