@@ -9,13 +9,9 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class GemstoneRequestDto extends ResourceRequestDto {
+public class MetalRequestDto extends ResourceRequestDto {
+  private String type;
+  private int purity;
   private String color;
-  private double carat;
-  private String cut;
-  private String clarity;
-  private double dimensionX;
-  private double dimensionY;
-  private double dimensionZ;
-  private String shape;
+  private String plating;
 }

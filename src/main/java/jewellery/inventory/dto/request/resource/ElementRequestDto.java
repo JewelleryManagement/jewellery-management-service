@@ -9,6 +9,6 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class LinkingPartRequestDto extends ResourceRequestDto {
+public class ElementRequestDto extends ResourceRequestDto {
   private String description;
 }

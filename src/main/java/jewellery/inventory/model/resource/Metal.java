@@ -1,9 +1,7 @@
 package jewellery.inventory.model.resource;
 
-
-import lombok.*;
-
 import jakarta.persistence.Entity;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @EqualsAndHashCode(callSuper = true)
@@ -13,7 +11,9 @@ import lombok.experimental.SuperBuilder;
 @ToString(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class LinkingPart extends Resource {
-    private String description;
-
+public class Metal extends Resource {
+    private String type;
+    private Integer purity;
+    private String color;
+    private String plating;
 }

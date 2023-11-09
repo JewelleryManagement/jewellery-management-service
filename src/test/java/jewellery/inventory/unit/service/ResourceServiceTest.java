@@ -1,6 +1,6 @@
 package jewellery.inventory.unit.service;
 
-import static jewellery.inventory.helper.ResourceTestHelper.getGemstone;
+import static jewellery.inventory.helper.ResourceTestHelper.getPreciousStone;
 import static jewellery.inventory.helper.ResourceTestHelper.provideResources;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -107,7 +107,7 @@ class ResourceServiceTest {
 
   @Test
   void willDeleteAResource() {
-    Resource resource = getGemstone();
+    Resource resource = getPreciousStone();
     when(resourceRepository.findById(any())).thenReturn(Optional.ofNullable(resource));
 
     resourceService.deleteResourceById(resource.getId());
