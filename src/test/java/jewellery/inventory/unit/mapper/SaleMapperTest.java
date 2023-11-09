@@ -1,8 +1,7 @@
 package jewellery.inventory.unit.mapper;
 
 import static jewellery.inventory.helper.ProductTestHelper.getTestProduct;
-import static jewellery.inventory.helper.UserTestHelper.createSecondTestUser;
-import static jewellery.inventory.helper.UserTestHelper.createTestUserForSale;
+import static jewellery.inventory.helper.UserTestHelper.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
@@ -10,9 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
+import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.helper.SaleTestHelper;
+import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.mapper.SaleMapper;
+import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
@@ -21,14 +24,19 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class SaleMapperTest {
-  @Mock private SaleMapper saleMapper;
+  @InjectMocks private SaleMapper saleMapper;
+  @Mock private UserMapper userMapper;
+  @Mock private ProductMapper productMapper;
   private User seller;
   private User buyer;
+  private UserResponseDto sellerResponseDto;
+  private UserResponseDto buyerResponseDto;
   private Product product;
   private Sale sale;
   private SaleRequestDto saleRequestDto;
@@ -41,6 +49,8 @@ class SaleMapperTest {
     seller = createTestUserForSale();
     buyer = createSecondTestUser();
     product = getTestProduct(seller, new Resource());
+    sellerResponseDto=createTestUserResponseDto(seller);
+    buyerResponseDto=createTestUserResponseDto(buyer);
     productsForSale = SaleTestHelper.getProductsList(product);
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSale);
     saleResponseDto = SaleTestHelper.getSaleResponseDto(sale);
@@ -55,9 +65,6 @@ class SaleMapperTest {
 
   @Test
   void testMapRequestToEntity() {
-    when(saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product)))
-        .thenReturn(sale);
-
     Sale sale = saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product));
 
     assertNotNull(sale);
@@ -68,7 +75,10 @@ class SaleMapperTest {
 
   @Test
   void testMapEntityToResponseDto() {
-    when(saleMapper.mapEntityToResponseDto(sale)).thenReturn(saleResponseDto);
+    when(userMapper.toUserResponse(seller)).thenReturn(sellerResponseDto);
+    when(userMapper.toUserResponse(buyer)).thenReturn(buyerResponseDto);
+
+    when(productMapper.mapToProductResponseDto(product)).thenReturn(new ProductResponseDto());
 
     SaleResponseDto saleResponseDto = saleMapper.mapEntityToResponseDto(sale);
 

@@ -3,6 +3,8 @@ package jewellery.inventory.helper;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.Role;
 import jewellery.inventory.model.User;
 import org.jetbrains.annotations.NotNull;
@@ -11,7 +13,6 @@ public class UserTestHelper {
   public static final String USER_NAME = "john";
   public static final String USER_EMAIL = "john@example.com";
   public static final String USER_PASSWORD = "1P@ssword";
-  public static final String FAKE_USER = "fake_user";
 
   public static User createTestUserWithRandomId() {
     User user = createTestUser();
@@ -26,6 +27,13 @@ public class UserTestHelper {
     user.setPassword(USER_PASSWORD);
     user.setRole(Role.ADMIN);
     return user;
+  }
+  public static UserResponseDto createTestUserResponseDto(User user){
+    UserResponseDto userResponseDto=new UserResponseDto();
+    userResponseDto.setId(user.getId());
+    userResponseDto.setEmail(user.getEmail());
+    userResponseDto.setName(user.getName());
+    return userResponseDto;
   }
   public static User createTestUserForSale() {
     User user = new User();
