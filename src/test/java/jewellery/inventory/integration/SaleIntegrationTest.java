@@ -2,15 +2,13 @@ package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ProductTestHelper.getProductRequestDto;
 import static jewellery.inventory.helper.UserTestHelper.*;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
-
-import jakarta.transaction.Transactional;
 import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -105,6 +103,11 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(200));
     assertNotNull(response.getBody());
+    assertEquals(response.getBody().size(),saleResponse.getBody().getProducts().size());
+    assertEquals(response.getBody().get(0).getBuyer(),saleResponse.getBody().getProducts().get(0).getOwner());
+    assertNotEquals(response.getBody().get(0).getSeller(),saleResponse.getBody().getProducts().get(0).getOwner());
+
+
   }
 
   @Test
