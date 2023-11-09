@@ -15,12 +15,14 @@ import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientExceptio
 import jewellery.inventory.exception.product.ProductOwnerNotSeller;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.mapper.SaleMapper;
+import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.SaleService;
+import jewellery.inventory.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +36,8 @@ class SaleServiceTest {
   @InjectMocks private SaleService saleService;
   @Mock private SaleRepository saleRepository;
   @Mock private UserRepository userRepository;
+  @Mock private UserMapper userMapper;
+  @Mock private UserService userService;
   @Mock private ProductRepository productRepository;
   @Mock private SaleMapper saleMapper;
   private User seller;
@@ -86,8 +90,7 @@ class SaleServiceTest {
   void testCreateSaleProductWillSuccessfully() {
     when(saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product)))
         .thenReturn(sale);
-    when(userRepository.findById(any(UUID.class)))
-        .thenReturn(Optional.of(seller), Optional.of(buyer));
+    when(userMapper.toUserEntity(userService.getUser(any(UUID.class)))).thenReturn(seller, buyer);
     when(productRepository.findById(any(UUID.class))).thenReturn(Optional.of(product));
     when(saleRepository.save(sale)).thenReturn(sale);
 
@@ -104,8 +107,7 @@ class SaleServiceTest {
     when(saleMapper.mapRequestToEntity(
             saleRequestDtoSellerNotOwner, seller, buyer, List.of(product)))
         .thenReturn(sale);
-    when(userRepository.findById(any(UUID.class)))
-        .thenReturn(Optional.of(seller), Optional.of(buyer));
+    when(userMapper.toUserEntity(userService.getUser(any(UUID.class)))).thenReturn(seller, buyer);
     when(productRepository.findById(any(UUID.class))).thenReturn(Optional.of(product));
 
     assertThrows(
