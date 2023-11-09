@@ -5,15 +5,13 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.exception.not_found.ProductNotFoundException;
-import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.exception.product.ProductOwnerNotSeller;
 import jewellery.inventory.mapper.SaleMapper;
+import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
-import jewellery.inventory.model.User;
 import jewellery.inventory.repository.ProductRepository;
 import jewellery.inventory.repository.SaleRepository;
-import jewellery.inventory.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +21,8 @@ public class SaleService {
   private final SaleRepository saleRepository;
   private final SaleMapper saleMapper;
   private final ProductRepository productRepository;
-  private final UserRepository userRepository;
+  private final UserMapper userMapper;
+  private final UserService userService;
 
   public List<SaleResponseDto> getAllSales() {
     List<Sale> sales = saleRepository.findAll();
@@ -34,8 +33,8 @@ public class SaleService {
     Sale sale =
         saleMapper.mapRequestToEntity(
             saleRequestDto,
-            getUserById(saleRequestDto.getSellerId()),
-            getUserById(saleRequestDto.getBuyerId()),
+            userMapper.toUserEntity(userService.getUser(saleRequestDto.getSellerId())),
+            userMapper.toUserEntity(userService.getUser(saleRequestDto.getBuyerId())),
             getProductsFromSaleRequestDto(saleRequestDto));
 
     throwExceptionIfProductOwnerNotSeller(sale.getProducts(), saleRequestDto.getSellerId());
@@ -54,7 +53,7 @@ public class SaleService {
 
   private void updateProductOwnersAndSale(List<Product> products, UUID buyerId, Sale sale) {
     for (Product product : products) {
-      product.setOwner(userRepository.getReferenceById(buyerId));
+      product.setOwner(userMapper.toUserEntity(userService.getUser(buyerId)));
       product.setPartOfSale(sale);
       productRepository.save(product);
     }
@@ -71,9 +70,5 @@ public class SaleService {
                             new ProductNotFoundException(
                                 productPriceDiscountRequestDto.getProductId())))
         .toList();
-  }
-
-  private User getUserById(UUID userId) {
-    return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
   }
 }
