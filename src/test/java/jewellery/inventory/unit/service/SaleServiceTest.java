@@ -11,7 +11,6 @@ import java.util.*;
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
-import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
 import jewellery.inventory.exception.product.ProductOwnerNotSeller;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.mapper.SaleMapper;
@@ -35,7 +34,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class SaleServiceTest {
   @InjectMocks private SaleService saleService;
   @Mock private SaleRepository saleRepository;
-  @Mock private UserRepository userRepository;
   @Mock private UserMapper userMapper;
   @Mock private UserService userService;
   @Mock private ProductRepository productRepository;
