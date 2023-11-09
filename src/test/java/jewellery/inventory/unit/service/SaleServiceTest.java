@@ -20,6 +20,7 @@ import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.*;
+import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.SaleService;
 import jewellery.inventory.service.UserService;
 import org.junit.jupiter.api.Assertions;
@@ -36,7 +37,7 @@ class SaleServiceTest {
   @Mock private SaleRepository saleRepository;
   @Mock private UserMapper userMapper;
   @Mock private UserService userService;
-  @Mock private ProductRepository productRepository;
+  @Mock private ProductService productService;
   @Mock private SaleMapper saleMapper;
   private User seller;
   private User buyer;
@@ -89,8 +90,8 @@ class SaleServiceTest {
     when(saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product)))
         .thenReturn(sale);
     when(userMapper.toUserEntity(userService.getUser(any(UUID.class)))).thenReturn(seller, buyer);
-    when(productRepository.findById(any(UUID.class))).thenReturn(Optional.of(product));
     when(saleRepository.save(sale)).thenReturn(sale);
+    when(productService.returnProductByID(any(UUID.class))).thenReturn(product);
 
     when(saleMapper.mapEntityToResponseDto(sale)).thenReturn(saleResponseDto);
 
@@ -106,7 +107,7 @@ class SaleServiceTest {
             saleRequestDtoSellerNotOwner, seller, buyer, List.of(product)))
         .thenReturn(sale);
     when(userMapper.toUserEntity(userService.getUser(any(UUID.class)))).thenReturn(seller, buyer);
-    when(productRepository.findById(any(UUID.class))).thenReturn(Optional.of(product));
+    when(productService.returnProductByID(any(UUID.class))).thenReturn(product);
 
     assertThrows(
         ProductOwnerNotSeller.class, () -> saleService.createSale(saleRequestDtoSellerNotOwner));

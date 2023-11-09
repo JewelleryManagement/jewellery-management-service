@@ -55,6 +55,9 @@ public class ProductService {
 
     return productMapper.mapToProductResponseDto(product);
   }
+  public Product returnProductByID(UUID id) {
+    return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+  }
 
   @Transactional
   public void deleteProduct(UUID id) {

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
-import jewellery.inventory.exception.not_found.ProductNotFoundException;
 import jewellery.inventory.exception.product.ProductOwnerNotSeller;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.mapper.UserMapper;
@@ -21,6 +20,7 @@ public class SaleService {
   private final SaleRepository saleRepository;
   private final SaleMapper saleMapper;
   private final ProductRepository productRepository;
+  private final ProductService productService;
   private final UserMapper userMapper;
   private final UserService userService;
 
@@ -63,12 +63,6 @@ public class SaleService {
     return saleRequestDto.getProducts().stream()
         .map(
             productPriceDiscountRequestDto ->
-                productRepository
-                    .findById(productPriceDiscountRequestDto.getProductId())
-                    .orElseThrow(
-                        () ->
-                            new ProductNotFoundException(
-                                productPriceDiscountRequestDto.getProductId())))
-        .toList();
+                productService.returnProductByID(productPriceDiscountRequestDto.getProductId())).toList();
   }
 }
