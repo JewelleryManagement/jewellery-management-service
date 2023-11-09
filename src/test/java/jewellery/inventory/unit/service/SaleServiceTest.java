@@ -45,7 +45,6 @@ class SaleServiceTest {
   private Product product;
   private Sale sale;
   private SaleRequestDto saleRequestDto;
-  private SaleRequestDto saleRequestDtoOwnerEqualsRecipient;
   private SaleRequestDto saleRequestDtoSellerNotOwner;
   private SaleResponseDto saleResponseDto;
   private ProductPriceDiscountRequestDto productPriceDiscountRequestDto;
@@ -66,9 +65,6 @@ class SaleServiceTest {
     saleRequestDto =
         SaleTestHelper.createSaleRequest(
             seller.getId(), buyer.getId(), productPriceDiscountRequestDtoList);
-    saleRequestDtoOwnerEqualsRecipient =
-        SaleTestHelper.createSaleRequest(
-            seller.getId(), seller.getId(), productPriceDiscountRequestDtoList);
     saleRequestDtoSellerNotOwner =
         SaleTestHelper.createSaleRequest(
             buyer.getId(), buyer.getId(), productPriceDiscountRequestDtoList);

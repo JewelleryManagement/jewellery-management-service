@@ -3,7 +3,6 @@ package jewellery.inventory.helper;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
-import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.Role;
 import jewellery.inventory.model.User;
