@@ -38,6 +38,7 @@ class SaleServiceTest {
   @Mock private UserMapper userMapper;
   @Mock private UserService userService;
   @Mock private ProductService productService;
+  @Mock private ProductRepository productRepository;
   @Mock private SaleMapper saleMapper;
   private User seller;
   private User buyer;
