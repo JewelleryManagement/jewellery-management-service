@@ -48,8 +48,8 @@ class SaleMapperTest {
     seller = createTestUser();
     buyer = createSecondTestUser();
     product = getTestProduct(seller, new Resource());
-    sellerResponseDto=createTestUserResponseDto(seller);
-    buyerResponseDto=createTestUserResponseDto(buyer);
+    sellerResponseDto = createTestUserResponseDto(seller);
+    buyerResponseDto = createTestUserResponseDto(buyer);
     productsForSale = SaleTestHelper.getProductsList(product);
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSale);
     productPriceDiscountRequestDto =
