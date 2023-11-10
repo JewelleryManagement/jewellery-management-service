@@ -45,7 +45,7 @@ class SaleMapperTest {
 
   @BeforeEach
   void setUp() {
-    seller = createTestUserForSale();
+    seller = createTestUser();
     buyer = createSecondTestUser();
     product = getTestProduct(seller, new Resource());
     sellerResponseDto=createTestUserResponseDto(seller);

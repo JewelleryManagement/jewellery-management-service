@@ -34,15 +34,6 @@ public class UserTestHelper {
     userResponseDto.setName(user.getName());
     return userResponseDto;
   }
-  public static User createTestUserForSale() {
-    User user = new User();
-    user.setId(UUID.randomUUID());
-    user.setName(USER_NAME);
-    user.setEmail(USER_EMAIL);
-    user.setPassword(USER_PASSWORD);
-    user.setRole(Role.ADMIN);
-    return user;
-  }
 
   public static User createSecondTestUser() {
     User user = new User();

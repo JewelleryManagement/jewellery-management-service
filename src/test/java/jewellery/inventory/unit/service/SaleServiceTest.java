@@ -52,7 +52,7 @@ class SaleServiceTest {
 
   @BeforeEach
   void setUp() {
-    seller = createTestUserForSale();
+    seller = createTestUser();
     buyer = createSecondTestUser();
     product = getTestProduct(seller, new Resource());
     productsForSale = SaleTestHelper.getProductsList(product);
