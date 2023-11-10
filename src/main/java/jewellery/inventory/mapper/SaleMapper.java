@@ -1,6 +1,5 @@
 package jewellery.inventory.mapper;
 
-import java.time.Instant;
 import java.util.*;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -36,7 +35,7 @@ public class SaleMapper {
     sale.setBuyer(buyer);
     sale.setSeller(seller);
     sale.setProducts(setProductPriceAndDiscount(saleRequestDto, products));
-    sale.setDate(Date.from(Instant.now()));
+    sale.setDate(saleRequestDto.getDate());
     return sale;
   }
 
@@ -79,8 +78,10 @@ public class SaleMapper {
   private List<Product> setProductPriceAndDiscount(
       SaleRequestDto saleRequestDto, List<Product> products) {
     for (int i = 0; i < products.size(); i++) {
-      products.get(i).setSalePrice(saleRequestDto.getProducts().get(i).getSalePrice());
-      products.get(i).setDiscount(saleRequestDto.getProducts().get(i).getDiscount());
+      if (saleRequestDto.getProducts().get(i).getSalePrice() == 0) {
+        products.get(i).setSalePrice(saleRequestDto.getProducts().get(i).getSalePrice());
+        products.get(i).setDiscount(saleRequestDto.getProducts().get(i).getDiscount());
+      }
     }
     return products;
   }

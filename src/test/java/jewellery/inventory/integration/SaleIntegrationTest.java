@@ -140,8 +140,8 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
     ProductPriceDiscountRequestDto productPriceDiscountRequestDto =
         new ProductPriceDiscountRequestDto();
     productPriceDiscountRequestDto.setProductId(productResponse.getBody().getId());
-    productPriceDiscountRequestDto.setSalePrice(10000);
-    productPriceDiscountRequestDto.setDiscount(10);
+    productPriceDiscountRequestDto.setSalePrice(10000.0);
+    productPriceDiscountRequestDto.setDiscount(10.0);
     List<ProductPriceDiscountRequestDto> list = new ArrayList<>();
     list.add(productPriceDiscountRequestDto);
     saleRequestDto.setProducts(list);
