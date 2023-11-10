@@ -4,17 +4,17 @@ import jakarta.persistence.Entity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-@EqualsAndHashCode(callSuper = true)
 @Entity
 @Getter
 @Setter
+@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class Pearl extends Resource {
-    private String type;
-    private Double size;
-    private String quality;
+public class SemiPreciousStone extends Resource {
     private String color;
+    private String cut;
+    private String clarity;
     private String shape;
+    private Double size;
 }

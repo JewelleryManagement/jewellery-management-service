@@ -11,9 +11,10 @@ import java.util.UUID;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "clazz", visible = true, include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = PearlResponseDto.class, name = "Pearl"),
-        @JsonSubTypes.Type(value = GemstoneResponseDto.class, name = "Gemstone"),
-        @JsonSubTypes.Type(value = PreciousMetalResponseDto.class, name = "PreciousMetal"),
-        @JsonSubTypes.Type(value = LinkingPartResponseDto.class, name = "LinkingPart")
+        @JsonSubTypes.Type(value = PreciousStoneResponseDto.class, name = "PreciousStone"),
+        @JsonSubTypes.Type(value = MetalResponseDto.class, name = "Metal"),
+        @JsonSubTypes.Type(value = ElementResponseDto.class, name = "Element"),
+        @JsonSubTypes.Type(value = SemiPreciousStoneResponseDto.class, name = "SemiPreciousStone")
 })
 @SuperBuilder
 @Data
@@ -22,4 +23,6 @@ public class ResourceResponseDto {
     private UUID id;
     private String clazz;
     private String quantityType;
+    private double pricePerQuantity;
+    private String note;
 }

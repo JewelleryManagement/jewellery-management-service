@@ -1,6 +1,6 @@
 package jewellery.inventory.integration;
 
-import static jewellery.inventory.helper.ResourceTestHelper.getGemstoneRequestDto;
+import static jewellery.inventory.helper.ResourceTestHelper.getPreciousStoneRequestDto;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
+import jewellery.inventory.dto.response.resource.PreciousStoneResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
@@ -18,7 +20,6 @@ import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.dto.response.resource.GemstoneResponseDto;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
@@ -73,7 +74,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void addResourceToUserSuccessfully() {
     UserResponseDto createdUser = sendCreateUserRequest();
-    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendAddResourceInUserRequest(
@@ -88,7 +89,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   @Test
   void addResourceToUserFailsWhenUserNotFound() {
-    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     UUID nonExistentUserId = UUID.randomUUID();
 
     ResponseEntity<ResourcesInUserResponseDto> response =
@@ -115,7 +116,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void addResourceToUserFailsWhenQuantityInvalid() {
     UserResponseDto createdUser = sendCreateUserRequest();
-    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendAddResourceInUserRequest(
@@ -127,7 +128,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void updateResourceInUserSuccessfullyWhenAddedMultipleTimes() {
     UserResponseDto createdUser = sendCreateUserRequest();
-    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     ResourceInUserRequestDto resourceInUserRequestDto =
         createResourceInUserRequestDto(
             createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY);
@@ -148,8 +149,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void getAllResourcesFromUserSuccessfully() {
     UserResponseDto createdUser = sendCreateUserRequest();
-    GemstoneResponseDto firstCreatedResource = sendCreateGemstoneRequest();
-    GemstoneResponseDto secondCreatedResource = sendCreateGemstoneRequest();
+    PreciousStoneResponseDto firstCreatedResource = sendCreatePreciousStoneRequest();
+    PreciousStoneResponseDto secondCreatedResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
         createResourceInUserRequestDto(createdUser.getId(), firstCreatedResource.getId(), 5.00));
     sendAddResourceInUserRequest(
@@ -169,7 +170,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   void getAllUsersOwningResourceSuccessfully() {
     UserResponseDto firstCreatedUser = sendCreateUserRequest(createTestUserRequest());
     UserResponseDto secondCreatedUser = sendCreateUserRequest(createDifferentUserRequest());
-    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
         createResourceInUserRequestDto(firstCreatedUser.getId(), createdResource.getId(), 5.00));
     sendAddResourceInUserRequest(
@@ -198,7 +199,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void removeResourceFromUserSuccessfully() {
     UserResponseDto createdUser = sendCreateUserRequest();
-    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
         createResourceInUserRequestDto(
             createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY));
@@ -225,7 +226,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void removeResourceFromUserFailsWhenUserNotFound() {
     UUID nonExistentUserId = UUID.randomUUID();
-    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
 
     ResponseEntity<String> response =
         sendDeleteResourceInUserRequest(nonExistentUserId, createdResource.getId());
@@ -236,7 +237,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void removeResourceQuantityFromUserSuccessfully() {
     UserResponseDto createdUser = sendCreateUserRequest();
-    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
         createResourceInUserRequestDto(
             createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY));
@@ -265,7 +266,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void removeResourceQuantityFromUserFailsWhenUserNotFound() {
     UUID nonExistentUserId = UUID.randomUUID();
-    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
 
     ResponseEntity<String> response =
         sendDeleteQuantityFromResourceInUserRequest(
@@ -277,7 +278,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void removeResourceQuantityFromUserFailsWhenInsufficientQuantity() {
     UserResponseDto createdUser = sendCreateUserRequest();
-    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
         createResourceInUserRequestDto(
             createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY));
@@ -292,7 +293,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void removeResourceQuantityFromUserFailsWhenQuantityNegative() {
     UserResponseDto createdUser = sendCreateUserRequest();
-    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
         createResourceInUserRequestDto(
             createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY));
@@ -307,7 +308,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void transferResourceFromUserToAnotherUserSuccessfully() {
     UserResponseDto sender = sendCreateUserRequest();
-    GemstoneResponseDto createdResource = sendCreateGemstoneRequest();
+    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
         createResourceInUserRequestDto(sender.getId(), createdResource.getId(), RESOURCE_QUANTITY));
 
@@ -338,7 +339,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   @NotNull
   private static TransferResourceRequestDto getTransferResourceRequestDto(
-      UserResponseDto sender, GemstoneResponseDto createdResource, UserResponseDto receiver) {
+      UserResponseDto sender, PreciousStoneResponseDto createdResource, UserResponseDto receiver) {
     TransferResourceRequestDto requestDto = new TransferResourceRequestDto();
     requestDto.setPreviousOwnerId(sender.getId());
     requestDto.setNewOwnerId(receiver.getId());
@@ -347,15 +348,15 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     return requestDto;
   }
 
-  private GemstoneResponseDto sendCreateGemstoneRequest() {
-    ResourceRequestDto resourceRequest = getGemstoneRequestDto();
-    ResponseEntity<GemstoneResponseDto> resourceResponseEntity =
+    private PreciousStoneResponseDto sendCreatePreciousStoneRequest() {
+    ResourceRequestDto resourceRequest = getPreciousStoneRequestDto();
+    ResponseEntity<PreciousStoneResponseDto> resourceResponseEntity =
         this.testRestTemplate.postForEntity(
-            getBaseResourceUrl(), resourceRequest, GemstoneResponseDto.class);
+            getBaseResourceUrl(), resourceRequest, PreciousStoneResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, resourceResponseEntity.getStatusCode());
 
-    GemstoneResponseDto createdResource = resourceResponseEntity.getBody();
+    PreciousStoneResponseDto createdResource = resourceResponseEntity.getBody();
     assertNotNull(createdResource);
     assertNotNull(createdResource.getId());
     return createdResource;
@@ -413,7 +414,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   }
 
   private static void assertCreatedResourceIsInResourcesInUser(
-      GemstoneResponseDto firstCreatedResource,
+      PreciousStoneResponseDto firstCreatedResource,
       ResponseEntity<ResourcesInUserResponseDto> response) {
     assertNotNull(response.getBody());
     assertTrue(

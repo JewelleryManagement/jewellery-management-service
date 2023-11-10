@@ -1,8 +1,7 @@
-package jewellery.inventory.dto.response.resource;
+package jewellery.inventory.dto.request.resource;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
 
 @Getter
 @Setter
@@ -10,11 +9,13 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class GemstoneResponseDto extends ResourceResponseDto {
+public class PreciousStoneRequestDto extends ResourceRequestDto {
   private String color;
   private double carat;
   private String cut;
   private String clarity;
-  private String size;
+  private double dimensionX;
+  private double dimensionY;
+  private double dimensionZ;
   private String shape;
 }
