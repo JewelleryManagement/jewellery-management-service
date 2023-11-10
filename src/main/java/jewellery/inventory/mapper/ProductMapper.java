@@ -18,7 +18,6 @@ public class ProductMapper {
   private final ResourceMapper resourceMapper;
 
   public ProductResponseDto mapToProductResponseDto(Product product) {
-
     ProductResponseDto productResponseDto = new ProductResponseDto();
     productResponseDto.setId(product.getId());
     productResponseDto.setSold(product.isSold());

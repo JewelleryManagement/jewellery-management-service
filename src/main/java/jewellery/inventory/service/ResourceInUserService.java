@@ -2,6 +2,7 @@ package jewellery.inventory.service;
 
 import java.util.Optional;
 import java.util.UUID;
+import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogResourceQuantityRemovalEvent;
 import jewellery.inventory.aspect.annotation.LogTopUpEvent;
@@ -33,7 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class ResourceInUserService {
+public class ResourceInUserService implements EntityFetcher {
   private final UserRepository userRepository;
   private final ResourceRepository resourceRepository;
   private final ResourceInUserRepository resourceInUserRepository;
@@ -182,5 +183,16 @@ public class ResourceInUserService {
                 .quantity(quantity)
                 .build())
         .build();
+  }
+
+  @Override
+  public Object fetchEntity(UUID... ids) {
+    if (ids.length == 2) {
+      UUID userId = ids[0];
+      UUID resourceId = ids[1];
+      return getResourceInUser(userId, resourceId);
+    }
+    System.out.println("ResourceInUser not found");
+    return null;
   }
 }

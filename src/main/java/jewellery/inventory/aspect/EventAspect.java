@@ -4,19 +4,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogResourceQuantityRemovalEvent;
 import jewellery.inventory.aspect.annotation.LogTopUpEvent;
 import jewellery.inventory.aspect.annotation.LogTransferEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
-import jewellery.inventory.dto.UserQuantityDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
+import jewellery.inventory.mapper.ResourcesInUserMapper;
 import jewellery.inventory.model.EventType;
+import jewellery.inventory.model.ResourceInUser;
+import jewellery.inventory.model.User;
 import jewellery.inventory.service.SystemEventService;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
@@ -33,12 +36,12 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class EventAspect {
-  private final SystemEventService eventService;
-  private final EntityFetchUtility entityFetchUtility;
   private static final Logger logger = LoggerFactory.getLogger(EventAspect.class);
+  private final SystemEventService eventService;
+  private final ResourcesInUserMapper resourcesInUserMapper;
 
   @AfterReturning(pointcut = "@annotation(logCreateEvent)", returning = "result")
-  public void logCreation(JoinPoint joinPoint, LogCreateEvent logCreateEvent, Object result) {
+  public void logCreation(LogCreateEvent logCreateEvent, Object result) {
     EventType eventType = logCreateEvent.eventType();
     eventService.logEvent(eventType, result, null);
   }
@@ -52,65 +55,93 @@ public class EventAspect {
       throws Throwable {
     EventType eventType = logUpdateEvent.eventType();
     Object service = proceedingJoinPoint.getTarget();
-    Object oldEntity = entityFetchUtility.fetchEntity(service, id, entityRequest.getClass());
+
+    if (!(service instanceof EntityFetcher entityFetcher)) {
+      logger.error("Service does not implement EntityFetcher");
+      return null;
+    }
+
+    Object oldEntity = entityFetcher.fetchEntity(id);
     Object result = proceedingJoinPoint.proceed();
+
     if (oldEntity != null) {
       eventService.logEvent(eventType, result, oldEntity);
     }
+
     return result;
   }
 
   @Before("@annotation(logDeleteEvent) && args(id)")
   public void logDeletion(JoinPoint joinPoint, LogDeleteEvent logDeleteEvent, UUID id) {
     EventType eventType = logDeleteEvent.eventType();
-
     Object service = joinPoint.getTarget();
-    Class<?> entityType = entityFetchUtility.determineEntityType(service);
 
-    Object entity = entityFetchUtility.fetchEntity(service, id, entityType);
-    if (entity != null) {
-      eventService.logEvent(eventType, entity, null);
+    if (!(service instanceof EntityFetcher entityFetcher)) {
+      logger.error("Service does not implement EntityFetcher for deletion logging");
+      return;
+    }
+
+    Object entityBeforeDeletion = entityFetcher.fetchEntity(id);
+
+    if (entityBeforeDeletion != null) {
+      eventService.logEvent(eventType, entityBeforeDeletion, null);
+    } else {
+      logger.error("Entity not found for deletion logging");
     }
   }
 
   @Before("@annotation(logDeleteEvent) && args(userId, resourceId)")
   public void logResourceInUserDeletion(
       JoinPoint joinPoint, LogDeleteEvent logDeleteEvent, UUID userId, UUID resourceId) {
+    if (!(joinPoint.getTarget() instanceof EntityFetcher entityFetcher)) {
+      logger.error(
+          "Service does not implement EntityFetcher interface. Unable to log deletion event.");
+      return;
+    }
+
     EventType eventType = logDeleteEvent.eventType();
+    ResourcesInUserResponseDto userResourcesBeforeDeletion =
+        fetchUserResources(entityFetcher, userId, resourceId);
 
-    Object service = joinPoint.getTarget();
-
-    Object entity = entityFetchUtility.fetchEntity(service, userId);
-
-    if (entity != null) {
-      eventService.logEvent(eventType, entity, null);
+    if (userResourcesBeforeDeletion != null) {
+      eventService.logEvent(eventType, userResourcesBeforeDeletion, null);
     }
   }
 
-  @AfterReturning(pointcut = "@annotation(logTopUpEvent)", returning = "result")
-  public void logTopUp(JoinPoint joinPoint, LogTopUpEvent logTopUpEvent, Object result) {
+  @Around("@annotation(logTopUpEvent)")
+  public void logResourceTopUp(ProceedingJoinPoint proceedingJoinPoint, LogTopUpEvent logTopUpEvent)
+      throws Throwable {
+
     EventType eventType = logTopUpEvent.eventType();
+    Object service = proceedingJoinPoint.getTarget();
 
-    ResourceInUserRequestDto resourceUserDto = (ResourceInUserRequestDto) joinPoint.getArgs()[0];
+    if (!(service instanceof EntityFetcher entityFetcher)) {
+      logger.error("Service does not implement EntityFetcher");
+      return;
+    }
+    ResourceInUserRequestDto resourceUserDto =
+        (ResourceInUserRequestDto) proceedingJoinPoint.getArgs()[0];
 
-    ResourcesInUserResponseDto updatedResources = (ResourcesInUserResponseDto) result;
+    ResourcesInUserResponseDto oldResources =
+        fetchAndFilterResourceState(
+            entityFetcher, resourceUserDto.getUserId(), resourceUserDto.getResourceId());
+
+    ResourcesInUserResponseDto updatedResources =
+        (ResourcesInUserResponseDto) proceedingJoinPoint.proceed();
 
     Map<String, Object> payload = new HashMap<>();
-    payload.put("resourceUserDto", resourceUserDto);
+    payload.put("quantityAdded", resourceUserDto.getQuantity());
+    payload.put("oldResources", oldResources);
     payload.put("updatedResources", updatedResources);
 
     eventService.logEvent(eventType, payload, null);
   }
 
   @AfterReturning(pointcut = "@annotation(logTransferEvent)", returning = "result")
-  public void logTransfer(JoinPoint joinPoint, LogTransferEvent logTransferEvent, Object result) {
+  public void logTransfer(LogTransferEvent logTransferEvent, Object result) {
     EventType eventType = logTransferEvent.eventType();
-    if (eventType == EventType.RESOURCE_TRANSFER
-        && result instanceof TransferResourceResponseDto transferResourceResponseDto) {
-      eventService.logResourceTransfer(transferResourceResponseDto, eventType);
-    } else if (eventType == EventType.PRODUCT_TRANSFER
-        && result instanceof ProductResponseDto productResponseDto) {
-      eventService.logProductTransfer(productResponseDto, eventType);
+    if (result instanceof TransferResourceResponseDto || result instanceof ProductResponseDto) {
+      eventService.logEvent(eventType, result, null);
     }
   }
 
@@ -120,60 +151,72 @@ public class EventAspect {
       LogResourceQuantityRemovalEvent logResourceQuantityRemovalEvent)
       throws Throwable {
 
+    if (!(proceedingJoinPoint.getTarget() instanceof EntityFetcher entityFetcher)) {
+      logger.error("Service does not implement EntityFetcher interface. Unable to log event.");
+      return proceedingJoinPoint.proceed();
+    }
+
     UUID userId = (UUID) proceedingJoinPoint.getArgs()[0];
     UUID resourceId = (UUID) proceedingJoinPoint.getArgs()[1];
 
-    ResourceOwnedByUsersResponseDto resourceInUserBefore = fetchResourceInUser(resourceId);
+    ResourcesInUserResponseDto beforeDto =
+        fetchAndFilterResourceState(entityFetcher, userId, resourceId);
+    if (beforeDto == null) {
+      logStateNullWarning("before", userId, resourceId);
+      return proceedingJoinPoint.proceed();
+    }
+
     Object result = proceedingJoinPoint.proceed();
-    ResourceOwnedByUsersResponseDto resourceInUserAfter = fetchResourceInUser(resourceId);
 
-    Map<String, Object> payload =
-        buildResourceQuantityRemovalLogPayload(resourceInUserBefore, resourceInUserAfter, userId);
+    ResourcesInUserResponseDto afterDto =
+        fetchAndFilterResourceState(entityFetcher, userId, resourceId);
+    if (afterDto == null) {
+      logStateNullWarning("after", userId, resourceId);
+      return result;
+    }
 
-    EventType eventType = logResourceQuantityRemovalEvent.eventType();
-    eventService.logEvent(eventType, payload, null);
-
+    eventService.logEvent(logResourceQuantityRemovalEvent.eventType(), afterDto, beforeDto);
     return result;
   }
 
-  private ResourceOwnedByUsersResponseDto fetchResourceInUser(UUID resourceId) {
-    return entityFetchUtility.fetchResourceInUser(resourceId);
+  private ResourcesInUserResponseDto filterResourcesInUserResponseDto(User owner, UUID resourceId) {
+    ResourcesInUserResponseDto dto = resourcesInUserMapper.toResourcesInUserResponseDto(owner);
+    List<ResourceQuantityResponseDto> filteredResources =
+        dto.getResourcesAndQuantities().stream()
+            .filter(r -> r.getResource().getId().equals(resourceId))
+            .collect(Collectors.toList());
+    dto.setResourcesAndQuantities(filteredResources);
+    return dto;
   }
 
-  private Map<String, Object> buildResourceQuantityRemovalLogPayload(
-      ResourceOwnedByUsersResponseDto before, ResourceOwnedByUsersResponseDto after, UUID userId) {
+  private ResourcesInUserResponseDto fetchAndFilterResourceState(
+      EntityFetcher entityFetcher, UUID userId, UUID resourceId) {
+    ResourceInUser resourceEntity = (ResourceInUser) entityFetcher.fetchEntity(userId, resourceId);
+    if (resourceEntity == null) {
+      return null;
+    }
+    return filterResourcesInUserResponseDto(resourceEntity.getOwner(), resourceId);
+  }
 
-    Map<String, Object> payload = new HashMap<>();
-
-    UserQuantityDto userQuantityBefore = findUserQuantityDto(before, userId);
-    UserQuantityDto userQuantityAfter = findUserQuantityDto(after, userId);
-
-    if (userQuantityBefore != null && userQuantityAfter != null) {
-      double quantityRemoved = userQuantityBefore.getQuantity() - userQuantityAfter.getQuantity();
-      payload.put("QuantityRemoved", quantityRemoved);
-      payload.put("resourceInUserBefore", withSingleUserQuantityDto(before, userQuantityBefore));
-      payload.put("resourceInUserAfter", withSingleUserQuantityDto(after, userQuantityAfter));
-    } else {
-      logger.error("User data not found");
+  private ResourcesInUserResponseDto fetchUserResources(
+      EntityFetcher entityFetcher, UUID userId, UUID resourceId) {
+    ResourceInUser resourceInUser = (ResourceInUser) entityFetcher.fetchEntity(userId, resourceId);
+    if (resourceInUser == null) {
+      logger.warn(
+          "Entity before deletion is null. Unable to log deletion for userId: {}, resourceId: {}",
+          userId,
+          resourceId);
+      return null;
     }
 
-    return payload;
+    return resourcesInUserMapper.toResourcesInUserResponseDto(resourceInUser.getOwner());
   }
 
-  private UserQuantityDto findUserQuantityDto(
-      ResourceOwnedByUsersResponseDto resourceOwnedByUsersResponseDto, UUID userId) {
-
-    return resourceOwnedByUsersResponseDto.getUsersAndQuantities().stream()
-        .filter(uq -> uq.getOwner().getId().equals(userId))
-        .findFirst()
-        .orElse(null);
-  }
-
-  private ResourceOwnedByUsersResponseDto withSingleUserQuantityDto(
-      ResourceOwnedByUsersResponseDto resourceOwnedByUsersResponseDto,
-      UserQuantityDto userQuantityDto) {
-
-    resourceOwnedByUsersResponseDto.setUsersAndQuantities(List.of(userQuantityDto));
-    return resourceOwnedByUsersResponseDto;
+  private void logStateNullWarning(String state, UUID userId, UUID resourceId) {
+    logger.warn(
+        "ResourceInUser {} state is null. Changes will not be logged for userId: {}, resourceId: {}",
+        state,
+        userId,
+        resourceId);
   }
 }

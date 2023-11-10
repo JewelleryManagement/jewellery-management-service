@@ -3,6 +3,7 @@ package jewellery.inventory.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
@@ -21,7 +22,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class UserService implements EntityFetcher {
   private final UserRepository userRepository;
   private final UserMapper userMapper;
   private final PasswordEncoder passwordEncoder;
@@ -83,5 +84,10 @@ public class UserService {
   private boolean isNameUsedByOtherUser(String name, UUID id) {
     Optional<User> existingUser = userRepository.findByName(name);
     return existingUser.isPresent() && (id == null || !existingUser.get().getId().equals(id));
+  }
+
+  @Override
+  public Object fetchEntity(UUID... ids) {
+    return userMapper.toUserResponse(userRepository.findById(ids[0]).orElse(null));
   }
 }

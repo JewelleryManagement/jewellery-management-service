@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class SystemEventController {
 
-  private SystemEventService eventService;
+  private final SystemEventService eventService;
 
   @GetMapping
   public ResponseEntity<List<SystemEvent>> getAllEvents() {

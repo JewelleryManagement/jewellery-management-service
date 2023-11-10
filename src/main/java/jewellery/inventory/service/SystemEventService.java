@@ -31,7 +31,8 @@ public class SystemEventService {
   public <T, U> void logEvent(EventType type, T entity, @Nullable U oldEntity) {
     Map<String, Object> payload = new HashMap<>();
 
-    if (type.name().contains("_UPDATE") && oldEntity != null) {
+    if ((type.name().contains("_UPDATE") || type.name().contains("_QUANTITY"))
+        && oldEntity != null) {
       payload.put("entityBefore", oldEntity);
       payload.put("entityAfter", entity);
     } else {

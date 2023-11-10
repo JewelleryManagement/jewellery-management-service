@@ -2,6 +2,7 @@ package jewellery.inventory.service;
 
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
@@ -19,7 +20,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class ResourceService {
+public class ResourceService implements EntityFetcher {
   private final ResourceRepository resourceRepository;
   private final ResourceInUserRepository resourceInUserRepository;
   private final ResourceMapper resourceMapper;
@@ -78,5 +79,11 @@ public class ResourceService {
                     .quantity(resourceInUserRepository.sumQuantityByResource(resource.getId()))
                     .build())
         .toList();
+  }
+
+  @Override
+  public Object fetchEntity(UUID... ids) {
+    Resource resource = resourceRepository.findById(ids[0]).orElse(null);
+    return resourceMapper.toResourceResponse(resource);
   }
 }

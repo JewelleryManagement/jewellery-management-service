@@ -138,7 +138,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendGetResourcesInUserRequest(createdUser.getId());
     assertNotNull(response.getBody());
-    List<ResourceQuantityResponseDto> resourceQuantities = response.getBody().getResourcesAndQuantities();
+    List<ResourceQuantityResponseDto> resourceQuantities =
+        response.getBody().getResourcesAndQuantities();
     assertNotNull(resourceQuantities);
     assertEquals(1, resourceQuantities.size());
     assertEquals(RESOURCE_QUANTITY * 2, resourceQuantities.get(0).getQuantity(), 0.001);
@@ -325,11 +326,13 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertEquals(HttpStatus.OK, transferResourceResponseDtoResponseEntity.getStatusCode());
 
     assertEquals(
-        Objects.requireNonNull(response).getPreviousOwner().getId(), requestDto.getPreviousOwnerId());
+        Objects.requireNonNull(response).getPreviousOwner().getId(),
+        requestDto.getPreviousOwnerId());
     assertEquals(
         Objects.requireNonNull(response).getNewOwner().getId(), requestDto.getNewOwnerId());
     assertEquals(
-        response.getTransferredResource().getResource().getId(), requestDto.getTransferredResourceId());
+        response.getTransferredResource().getResource().getId(),
+        requestDto.getTransferredResourceId());
     assertEquals(response.getTransferredResource().getQuantity(), 1);
   }
 
