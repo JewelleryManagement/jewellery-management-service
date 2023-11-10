@@ -6,7 +6,6 @@ import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -82,7 +81,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
   private ProductRequestDto productRequestDto;
   private ProductResponseDto productResponseDto;
-  private FileSystemResource multipartFile;
+  private HttpEntity<MultiValueMap<String, Object>> multipartRequest;
 
   @BeforeEach
   void setUp() {
@@ -94,20 +93,38 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
     productRequestDto =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), user);
-    multipartFile = createTestImage();
+    multipartRequest = createMultipartRequest();
   }
 
   @Test
   void imageUploadSuccessfullyAndAttachToProduct() {
     ProductResponseDto productResponse = createProductWithRequest(productRequestDto);
-    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-    body.add("image", multipartFile);
-
     ResponseEntity<ImageResponseDto> response =
         this.testRestTemplate.postForEntity(
-            getBaseProductImageUrl(productResponse.getId()), body, ImageResponseDto.class);
+            getBaseProductImageUrl(productResponse.getId()),
+            createMultipartRequest(),
+            ImageResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
+  }
+
+  @Test
+  void downloadImageSuccessfully() {
+    ProductResponseDto productResponse = createProductWithRequest(productRequestDto);
+        ResponseEntity<byte[]> response =
+            this.testRestTemplate.getForEntity(
+                getBaseProductImageUrl(productResponse.getId()), byte[].class);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+  }
+
+  @Test
+  void deleteImageFromFileSystem() {
+    ResponseEntity<HttpStatus> response =
+        this.testRestTemplate.exchange(
+            getBaseProductImageUrl(UUID.randomUUID()), HttpMethod.DELETE, null, HttpStatus.class);
+
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
   }
 
   @Test
@@ -295,9 +312,15 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     resourceInProductRepository.deleteAll();
   }
 
-  private FileSystemResource createTestImage() {
+  private FileSystemResource createFileSystemResource() {
     return new FileSystemResource(
         new File(
             Objects.requireNonNull(getClass().getResource("/static/img/pearl.jpg")).getFile()));
+  }
+
+  private HttpEntity<MultiValueMap<String, Object>> createMultipartRequest() {
+    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+    body.add("image", createFileSystemResource());
+    return new HttpEntity<>(body, headers);
   }
 }
