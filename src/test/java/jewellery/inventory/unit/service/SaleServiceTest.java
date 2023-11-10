@@ -53,6 +53,7 @@ class SaleServiceTest {
   @BeforeEach
   void setUp() {
     seller = createTestUser();
+    seller.setId(UUID.randomUUID());
     buyer = createSecondTestUser();
     product = getTestProduct(seller, new Resource());
     productsForSale = SaleTestHelper.getProductsList(product);
