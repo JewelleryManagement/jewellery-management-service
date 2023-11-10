@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 public class SaleMapper {
   private final UserMapper userMapper;
   private final ProductMapper productMapper;
+  private static final String AMOUNT = "amount";
+  private static final String PERCENTAGE = "percentage";
 
   public SaleResponseDto mapEntityToResponseDto(Sale sale) {
     SaleResponseDto saleResponseDto = new SaleResponseDto();
@@ -23,8 +25,8 @@ public class SaleMapper {
     saleResponseDto.setBuyer(userMapper.toUserResponse(sale.getBuyer()));
     saleResponseDto.setProducts(mapAllProductsToResponse(sale));
     saleResponseDto.setTotalPrice(getTotalPriceFromEntity(sale.getProducts()));
-    saleResponseDto.setTotalDiscount(calculateDiscount(sale.getProducts(), "amount"));
-    saleResponseDto.setTotalDiscountedPrice(calculateDiscount(sale.getProducts(), "percentage"));
+    saleResponseDto.setTotalDiscount(calculateDiscount(sale.getProducts(), AMOUNT));
+    saleResponseDto.setTotalDiscountedPrice(calculateDiscount(sale.getProducts(), PERCENTAGE));
     return saleResponseDto;
   }
 
@@ -65,9 +67,9 @@ public class SaleMapper {
       totalPrice += product.getSalePrice();
     }
 
-    if ("percentage".equals(calculationType) && totalPrice != 0) {
+    if (PERCENTAGE.equals(calculationType) && totalPrice != 0) {
       return (totalDiscountAmount / totalPrice) * 100;
-    } else if ("amount".equals(calculationType)) {
+    } else if (AMOUNT.equals(calculationType)) {
       return totalPrice - totalDiscountAmount;
     }
 
