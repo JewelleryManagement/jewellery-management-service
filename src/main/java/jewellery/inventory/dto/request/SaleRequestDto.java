@@ -22,6 +22,7 @@ public class SaleRequestDto {
   @NotNull private UUID buyerId;
   @NotEmpty private List<ProductPriceDiscountRequestDto> products;
 
+  @NotNull
   @Past(message = "Date must be in the past")
   private Date date;
 }

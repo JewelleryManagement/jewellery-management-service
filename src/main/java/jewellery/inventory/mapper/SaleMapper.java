@@ -78,7 +78,7 @@ public class SaleMapper {
   private List<Product> setProductPriceAndDiscount(
       SaleRequestDto saleRequestDto, List<Product> products) {
     for (int i = 0; i < products.size(); i++) {
-      if (saleRequestDto.getProducts().get(i).getSalePrice() == 0) {
+      if (saleRequestDto.getProducts().get(i).getSalePrice() != 0) {
         products.get(i).setSalePrice(saleRequestDto.getProducts().get(i).getSalePrice());
         products.get(i).setDiscount(saleRequestDto.getProducts().get(i).getDiscount());
       }
