@@ -178,7 +178,7 @@ public class ProductService {
               product.setContentOf(parentProduct);
               products.add(product);
             } else {
-              throw new ProductOwnerNotSeller(parentProduct.getOwner().getId(), product.getId());
+              throw new UserNotOwnerException(parentProduct.getOwner().getId(), product.getId());
             }
           });
     }

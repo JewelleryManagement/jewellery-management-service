@@ -11,7 +11,7 @@ import java.util.*;
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
-import jewellery.inventory.exception.product.ProductOwnerNotSeller;
+import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.mapper.UserMapper;
@@ -108,6 +108,6 @@ class SaleServiceTest {
     when(productService.returnProductByID(any(UUID.class))).thenReturn(product);
 
     assertThrows(
-        ProductOwnerNotSeller.class, () -> saleService.createSale(saleRequestDtoSellerNotOwner));
+        UserNotOwnerException.class, () -> saleService.createSale(saleRequestDtoSellerNotOwner));
   }
 }

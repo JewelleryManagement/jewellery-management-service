@@ -54,7 +54,7 @@ public class GlobalExceptionHandler {
     ProductIsContentException.class,
     ProductIsSoldException.class,
     ProductOwnerEqualsRecipientException.class,
-    ProductOwnerNotSeller.class
+    UserNotOwnerException.class
   })
   public ResponseEntity<Object> handleEntityConstraintConflict(RuntimeException ex) {
     return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage());

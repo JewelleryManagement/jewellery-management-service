@@ -9,10 +9,7 @@ import java.util.*;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.not_found.*;
-import jewellery.inventory.exception.product.ProductIsContentException;
-import jewellery.inventory.exception.product.ProductIsSoldException;
-import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
-import jewellery.inventory.exception.product.ProductOwnerNotSeller;
+import jewellery.inventory.exception.product.*;
 import jewellery.inventory.helper.ProductTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ProductMapper;
@@ -71,7 +68,7 @@ class ProductServiceTest {
     productRequestDto.setProductsContent(List.of(product.getId()));
 
     assertThrows(
-            ProductOwnerNotSeller.class, () -> productService.createProduct(productRequestDto));
+            UserNotOwnerException.class, () -> productService.createProduct(productRequestDto));
   }
 
   @Test

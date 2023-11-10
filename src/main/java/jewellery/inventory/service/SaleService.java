@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
-import jewellery.inventory.exception.product.ProductOwnerNotSeller;
+import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.Product;
@@ -44,7 +44,7 @@ public class SaleService {
   private void throwExceptionIfProductOwnerNotSeller(List<Product> products, UUID sellerId) {
     for (Product product : products) {
       if (!product.getOwner().getId().equals(sellerId)) {
-        throw new ProductOwnerNotSeller(product.getOwner().getId(), sellerId);
+        throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
       }
     }
   }
