@@ -6,11 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.exception.MappingException;
-import jewellery.inventory.mapper.GemstoneMapper;
-import jewellery.inventory.mapper.LinkingPartMapper;
-import jewellery.inventory.mapper.PearlMapper;
-import jewellery.inventory.mapper.PreciousMetalMapper;
-import jewellery.inventory.mapper.ResourceMapper;
+import jewellery.inventory.mapper.*;
+import jewellery.inventory.mapper.MetalMapper;
 import jewellery.inventory.model.resource.Resource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,11 +20,12 @@ class ResourceMapperTest {
   @BeforeEach
   void setUp() {
     PearlMapper pearlMapper = PearlMapper.INSTANCE;
-    GemstoneMapper gemstoneMapper = GemstoneMapper.INSTANCE;
-    LinkingPartMapper linkingPartMapper = LinkingPartMapper.INSTANCE;
-    PreciousMetalMapper preciousMetalMapper = PreciousMetalMapper.INSTANCE;
+    PreciousStoneMapper preciousStoneMapper = PreciousStoneMapper.INSTANCE;
+    ElementMapper elementMapper = ElementMapper.INSTANCE;
+    MetalMapper metalMapper = MetalMapper.INSTANCE;
+    SemiPreciousStoneMapper semiPreciousStoneMapper = SemiPreciousStoneMapper.INSTANCE;
     resourceMapper =
-        new ResourceMapper(pearlMapper, gemstoneMapper, linkingPartMapper, preciousMetalMapper);
+        new ResourceMapper(pearlMapper, preciousStoneMapper, elementMapper, metalMapper, semiPreciousStoneMapper);
   }
 
   @ParameterizedTest

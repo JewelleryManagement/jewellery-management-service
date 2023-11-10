@@ -11,9 +11,13 @@ import lombok.experimental.SuperBuilder;
 @ToString(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class PreciousMetal extends Resource {
-    private String type;
-    private int purity;
-    private String color;
-    private String plating;
+public class PreciousStone extends Resource {
+  private String color;
+  private Double carat;
+  private String cut;
+  private String clarity;
+  private Double dimensionX;
+  private Double dimensionY;
+  private Double dimensionZ;
+  private String shape;
 }
