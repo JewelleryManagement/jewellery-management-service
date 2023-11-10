@@ -10,8 +10,6 @@ import org.mapstruct.Mapper;
 public interface UserMapper {
   UserRequestDto toUserRequest(User user);
 
-  User toUserEntity(UserResponseDto userResponseDto);
-
   UserResponseDto toUserResponse(User user);
 
   List<UserResponseDto> toUserResponseList(List<User> userList);

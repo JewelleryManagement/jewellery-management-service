@@ -26,10 +26,15 @@ public class UserService {
     return userMapper.toUserResponseList(userRepository.findAll());
   }
 
-  public UserResponseDto getUser(UUID id) {
+  public UserResponseDto getUserResponse(UUID id) {
     return userMapper.toUserResponse(
         userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id)));
   }
+
+  public User getUser(UUID id) {
+    return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+  }
+
 
   public UserResponseDto createUser(UserRequestDto user) {
     User userToCreate = userMapper.toUserEntity(user);

@@ -6,7 +6,6 @@ import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.SaleMapper;
-import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.repository.SaleRepository;
@@ -19,7 +18,6 @@ public class SaleService {
   private final SaleRepository saleRepository;
   private final SaleMapper saleMapper;
   private final ProductService productService;
-  private final UserMapper userMapper;
   private final UserService userService;
 
   public List<SaleResponseDto> getAllSales() {
@@ -31,8 +29,8 @@ public class SaleService {
     Sale sale =
         saleMapper.mapRequestToEntity(
             saleRequestDto,
-            userMapper.toUserEntity(userService.getUser(saleRequestDto.getSellerId())),
-            userMapper.toUserEntity(userService.getUser(saleRequestDto.getBuyerId())),
+            userService.getUser(saleRequestDto.getSellerId()),
+            userService.getUser(saleRequestDto.getBuyerId()),
             getProductsFromSaleRequestDto(saleRequestDto));
 
     throwExceptionIfProductOwnerNotSeller(sale.getProducts(), saleRequestDto.getSellerId());
@@ -51,7 +49,7 @@ public class SaleService {
 
   private void updateProductOwnersAndSale(List<Product> products, UUID buyerId, Sale sale) {
     for (Product product : products) {
-      productService.updateProductOwner(product,userMapper.toUserEntity(userService.getUser(buyerId)),sale);
+      productService.updateProductOwner(product, userService.getUser(buyerId), sale);
     }
   }
 
@@ -59,6 +57,7 @@ public class SaleService {
     return saleRequestDto.getProducts().stream()
         .map(
             productPriceDiscountRequestDto ->
-                productService.returnProductByID(productPriceDiscountRequestDto.getProductId())).toList();
+                productService.returnProductByID(productPriceDiscountRequestDto.getProductId()))
+        .toList();
   }
 }

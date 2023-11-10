@@ -35,7 +35,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class SaleServiceTest {
   @InjectMocks private SaleService saleService;
   @Mock private SaleRepository saleRepository;
-  @Mock private UserMapper userMapper;
   @Mock private UserService userService;
   @Mock private ProductService productService;
   @Mock private ProductRepository productRepository;
@@ -87,7 +86,7 @@ class SaleServiceTest {
   void testCreateSaleProductWillSuccessfully() {
     when(saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product)))
         .thenReturn(sale);
-    when(userMapper.toUserEntity(userService.getUser(any(UUID.class)))).thenReturn(seller, buyer);
+    when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(saleRepository.save(sale)).thenReturn(sale);
     when(productService.returnProductByID(any(UUID.class))).thenReturn(product);
 
@@ -104,7 +103,7 @@ class SaleServiceTest {
     when(saleMapper.mapRequestToEntity(
             saleRequestDtoSellerNotOwner, seller, buyer, List.of(product)))
         .thenReturn(sale);
-    when(userMapper.toUserEntity(userService.getUser(any(UUID.class)))).thenReturn(seller, buyer);
+    when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(productService.returnProductByID(any(UUID.class))).thenReturn(product);
 
     assertThrows(
