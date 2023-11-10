@@ -57,7 +57,7 @@ public class SaleService {
     return saleRequestDto.getProducts().stream()
         .map(
             productPriceDiscountRequestDto ->
-                productService.returnProductByID(productPriceDiscountRequestDto.getProductId()))
+                productService.getProduct(productPriceDiscountRequestDto.getProductId()))
         .toList();
   }
 }

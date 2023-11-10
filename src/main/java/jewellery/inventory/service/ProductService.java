@@ -50,14 +50,14 @@ public class ProductService {
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
-  public ProductResponseDto getProduct(UUID id) {
+  public ProductResponseDto getProductResponse(UUID id) {
     Product product =
         productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
 
     return productMapper.mapToProductResponseDto(product);
   }
 
-  public Product returnProductByID(UUID id) {
+  public Product getProduct(UUID id) {
     return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
   }
 
@@ -192,12 +192,12 @@ public class ProductService {
 
   private Product createProductWithoutResourcesAndProducts(
       ProductRequestDto productRequestDto, User user) {
-    Product product = getProduct(productRequestDto, user);
+    Product product = getProductResponse(productRequestDto, user);
     productRepository.save(product);
     return product;
   }
 
-  private Product getProduct(ProductRequestDto productRequestDto, User user) {
+  private Product getProductResponse(ProductRequestDto productRequestDto, User user) {
     Product product = new Product();
     product.setOwner(user);
     product.setAuthors(getAuthors(productRequestDto));

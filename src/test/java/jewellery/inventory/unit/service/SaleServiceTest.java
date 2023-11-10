@@ -14,7 +14,6 @@ import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.mapper.SaleMapper;
-import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
@@ -88,7 +87,7 @@ class SaleServiceTest {
         .thenReturn(sale);
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(saleRepository.save(sale)).thenReturn(sale);
-    when(productService.returnProductByID(any(UUID.class))).thenReturn(product);
+    when(productService.getProduct(any(UUID.class))).thenReturn(product);
 
     when(saleMapper.mapEntityToResponseDto(sale)).thenReturn(saleResponseDto);
 
@@ -104,7 +103,7 @@ class SaleServiceTest {
             saleRequestDtoSellerNotOwner, seller, buyer, List.of(product)))
         .thenReturn(sale);
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
-    when(productService.returnProductByID(any(UUID.class))).thenReturn(product);
+    when(productService.getProduct(any(UUID.class))).thenReturn(product);
 
     assertThrows(
         UserNotOwnerException.class, () -> saleService.createSale(saleRequestDtoSellerNotOwner));
