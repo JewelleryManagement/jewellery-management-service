@@ -18,7 +18,7 @@ import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.model.User;
-import jewellery.inventory.model.resource.Gemstone;
+import jewellery.inventory.model.resource.PreciousStone;
 import jewellery.inventory.repository.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -69,7 +69,8 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private User seller;
   private User buyer;
-  private Gemstone gemstone;
+  private PreciousStone preciousStone;
+
   private ResourceInUserRequestDto resourceInUserRequestDto;
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
   private ProductRequestDto productRequestDto;
@@ -79,9 +80,9 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
     cleanAllRepositories();
     seller = createUserInDatabase(createTestUserRequest());
     buyer = createUserInDatabase(createDifferentUserRequest());
-    gemstone = createGemstoneInDatabase();
+    preciousStone = createPreciousStoneInDatabase();
     resourceInUserRequestDto =
-        getResourceInUserRequestDto(seller, Objects.requireNonNull(gemstone));
+        getResourceInUserRequestDto(seller, Objects.requireNonNull(preciousStone));
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
     productRequestDto =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), seller);
@@ -90,14 +91,14 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
   void getAllSalesSuccessfully() {
     ResponseEntity<ProductResponseDto> productResponse =
-            this.testRestTemplate.postForEntity(
-                    getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+        this.testRestTemplate.postForEntity(
+            getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
 
     SaleRequestDto saleRequestDto = getSaleRequestDto(seller, buyer, productResponse);
 
     ResponseEntity<SaleResponseDto> saleResponse =
-            this.testRestTemplate.postForEntity(
-                    getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
+        this.testRestTemplate.postForEntity(
+            getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
 
     ResponseEntity<List<SaleResponseDto>> response =
         this.testRestTemplate.exchange(
@@ -105,11 +106,13 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(200));
     assertNotNull(response.getBody());
-    assertEquals(response.getBody().size(),saleResponse.getBody().getProducts().size());
-    assertEquals(response.getBody().get(0).getBuyer(),saleResponse.getBody().getProducts().get(0).getOwner());
-    assertNotEquals(response.getBody().get(0).getSeller(),saleResponse.getBody().getProducts().get(0).getOwner());
-
-
+    assertEquals(response.getBody().size(), saleResponse.getBody().getProducts().size());
+    assertEquals(
+        response.getBody().get(0).getBuyer(),
+        saleResponse.getBody().getProducts().get(0).getOwner());
+    assertNotEquals(
+        response.getBody().get(0).getSeller(),
+        saleResponse.getBody().getProducts().get(0).getOwner());
   }
 
   @Test
@@ -126,11 +129,12 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
             getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, saleResponse.getStatusCode());
-    assertEquals(saleRequestDto.getBuyerId(),saleResponse.getBody().getBuyer().getId());
-    assertEquals(saleRequestDto.getSellerId(),saleResponse.getBody().getSeller().getId());
-    assertEquals(saleRequestDto.getProducts().size(),saleResponse.getBody().getProducts().size());
-    assertEquals(saleRequestDto.getProducts().get(0).getProductId(),saleResponse.getBody().getProducts().get(0).getId());
-
+    assertEquals(saleRequestDto.getBuyerId(), saleResponse.getBody().getBuyer().getId());
+    assertEquals(saleRequestDto.getSellerId(), saleResponse.getBody().getSeller().getId());
+    assertEquals(saleRequestDto.getProducts().size(), saleResponse.getBody().getProducts().size());
+    assertEquals(
+        saleRequestDto.getProducts().get(0).getProductId(),
+        saleResponse.getBody().getProducts().get(0).getId());
   }
 
   @NotNull
@@ -152,10 +156,11 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Nullable
-  private Gemstone createGemstoneInDatabase() {
-    ResourceRequestDto resourceRequest = ResourceTestHelper.getGemstoneRequestDto();
-    ResponseEntity<Gemstone> createResource =
-        this.testRestTemplate.postForEntity(getBaseResourceUrl(), resourceRequest, Gemstone.class);
+  private PreciousStone createPreciousStoneInDatabase() {
+    ResourceRequestDto resourceRequest = ResourceTestHelper.getPreciousStoneRequestDto();
+    ResponseEntity<PreciousStone> createResource =
+        this.testRestTemplate.postForEntity(
+            getBaseResourceUrl(), resourceRequest, PreciousStone.class);
 
     return createResource.getBody();
   }
@@ -174,10 +179,10 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @NotNull
   private static ResourceInUserRequestDto getResourceInUserRequestDto(
-      User user, Gemstone gemstone) {
+      User user, PreciousStone preciousStone) {
     ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
     resourceInUserRequestDto.setUserId(user.getId());
-    resourceInUserRequestDto.setResourceId(gemstone.getId());
+    resourceInUserRequestDto.setResourceId(preciousStone.getId());
     resourceInUserRequestDto.setQuantity(20);
     return resourceInUserRequestDto;
   }
