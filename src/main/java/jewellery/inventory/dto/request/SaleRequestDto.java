@@ -1,5 +1,6 @@
 package jewellery.inventory.dto.request;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
@@ -20,7 +21,8 @@ import lombok.Setter;
 public class SaleRequestDto {
   @NotNull private UUID sellerId;
   @NotNull private UUID buyerId;
-  @NotEmpty private List<ProductPriceDiscountRequestDto> products;
+
+  @Valid @NotEmpty private List<ProductPriceDiscountRequestDto> products;
 
   @NotNull
   @Past(message = "Date must be in the past")
