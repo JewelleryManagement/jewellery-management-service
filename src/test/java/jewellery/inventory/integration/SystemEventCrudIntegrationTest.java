@@ -2,14 +2,12 @@ package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.EventType;
@@ -20,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 public class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
@@ -40,18 +39,16 @@ public class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTest
   void willGetAllSystemEvents() {
     createAndSaveUser();
 
-    ResponseEntity<Optional<List<SystemEvent>>> eventResponse =
+    ResponseEntity<List<SystemEvent>> eventResponse =
         this.testRestTemplate.exchange(
             getBaseSystemEventUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
 
-    Optional<List<SystemEvent>> retrievedEvents = eventResponse.getBody();
+    List<SystemEvent> retrievedEvents = eventResponse.getBody();
 
-    assertTrue(retrievedEvents.isPresent(), "No events retrieved");
-    assertFalse(retrievedEvents.get().isEmpty(), "Retrieved events list is empty");
-    assertNotNull(retrievedEvents);
+    assertNotNull(retrievedEvents, "Retrieved events list is empty");
 
-    Map<String, Object> payload = retrievedEvents.get().get(0).getPayload();
-    Object eventType = retrievedEvents.get().get(0).getType();
+    Map<String, Object> payload = retrievedEvents.get(0).getPayload();
+    Object eventType = retrievedEvents.get(0).getType();
 
     assertEquals(EventType.USER_CREATE, eventType);
     assertTrue(payload.containsKey("entity"));
@@ -63,5 +60,17 @@ public class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTest
 
     this.testRestTemplate.postForEntity(
         BASE_URL_PATH + port + "/users", userRequest, UserResponseDto.class);
+
+    ResponseEntity<List<UserResponseDto>> response =
+        this.testRestTemplate.exchange(
+            BASE_URL_PATH + port + "/users",
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+
+    List<UserResponseDto> users = response.getBody();
+    assertNotNull(users);
   }
 }
