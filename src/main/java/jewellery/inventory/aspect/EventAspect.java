@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogResourceQuantityRemovalEvent;
@@ -185,7 +184,7 @@ public class EventAspect {
     List<ResourceQuantityResponseDto> filteredResources =
         dto.getResourcesAndQuantities().stream()
             .filter(r -> r.getResource().getId().equals(resourceId))
-            .collect(Collectors.toList());
+            .toList();
     dto.setResourcesAndQuantities(filteredResources);
     return dto;
   }

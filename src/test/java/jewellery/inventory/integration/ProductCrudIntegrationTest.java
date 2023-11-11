@@ -1,10 +1,15 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ProductTestHelper.*;
+import static jewellery.inventory.helper.SystemEventTestHelper.assertEventWasLogged;
 import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
 import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
+import static jewellery.inventory.model.EventType.PRODUCT_CREATE;
+import static jewellery.inventory.model.EventType.PRODUCT_DISASSEMBLY;
+import static jewellery.inventory.model.EventType.PRODUCT_TRANSFER;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -56,11 +61,16 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return getBaseUrl() + "/products/" + id;
   }
 
+  private String getBaseSystemEventUrl() {
+    return getBaseUrl() + "/system-events";
+  }
+
   @Autowired private UserRepository userRepository;
   @Autowired private ProductRepository productRepository;
   @Autowired private ResourceRepository resourceRepository;
   @Autowired private ResourceInUserRepository resourceInUserRepository;
   @Autowired private ResourceInProductRepository resourceInProductRepository;
+  @Autowired private SystemEventRepository systemEventRepository;
 
   private User user;
   private PreciousStone preciousStone;
@@ -76,7 +86,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     user = createUserInDatabase(createTestUserRequest());
     preciousStone = createPreciousStoneInDatabase();
-    resourceInUserRequestDto = getResourceInUserRequestDto(user, Objects.requireNonNull(preciousStone));
+    resourceInUserRequestDto =
+        getResourceInUserRequestDto(user, Objects.requireNonNull(preciousStone));
     differentUser = createUserInDatabase(createDifferentUserRequest());
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
     productRequestDto =
@@ -98,7 +109,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void transferProductSuccessfully() {
+  void transferProductSuccessfully() throws JsonProcessingException {
     ResponseEntity<ProductResponseDto> productResponse =
         this.testRestTemplate.postForEntity(
             getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
@@ -119,10 +130,18 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertNotNull(resultResponse.getBody());
     assertEquals(differentUser.getId(), resultResponse.getBody().getOwner().getId());
     assertEquals(HttpStatus.OK, resultResponse.getStatusCode());
+
+    assertEventWasLogged(
+        this.testRestTemplate,
+        getBaseSystemEventUrl(),
+        PRODUCT_TRANSFER,
+        "entity",
+        "catalogNumber",
+        productResponse.getBody().getCatalogNumber());
   }
 
   @Test
-  void createProductSuccessfully() {
+  void createProductSuccessfully() throws JsonProcessingException {
 
     ResponseEntity<ProductResponseDto> response =
         this.testRestTemplate.postForEntity(
@@ -136,6 +155,14 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(productRequestDto.getOwnerId(), productResponseDto.getOwner().getId());
     assertEquals(productRequestDto.getProductionNumber(), productResponseDto.getProductionNumber());
     assertEquals(productRequestDto.getCatalogNumber(), productResponseDto.getCatalogNumber());
+
+    assertEventWasLogged(
+        this.testRestTemplate,
+        getBaseSystemEventUrl(),
+        PRODUCT_CREATE,
+        "entity",
+        "catalogNumber",
+        productRequestDto.getCatalogNumber());
   }
 
   @Test
@@ -182,7 +209,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void deleteProductSuccessfully() {
+  void deleteProductSuccessfully() throws JsonProcessingException {
     productResponseDto = createProductWithRequest(productRequestDto);
 
     ResponseEntity<HttpStatus> response =
@@ -200,6 +227,14 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             ProductResponseDto.class);
 
     assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
+
+    assertEventWasLogged(
+        this.testRestTemplate,
+        getBaseSystemEventUrl(),
+        PRODUCT_DISASSEMBLY,
+        "entity",
+        "catalogNumber",
+        productResponseDto.getCatalogNumber());
   }
 
   private void assertResponseMatchesCreatedRequest(
@@ -247,7 +282,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private PreciousStone createPreciousStoneInDatabase() {
     ResourceRequestDto resourceRequest = ResourceTestHelper.getPreciousStoneRequestDto();
     ResponseEntity<PreciousStone> createResource =
-        this.testRestTemplate.postForEntity(getBaseResourceUrl(), resourceRequest, PreciousStone.class);
+        this.testRestTemplate.postForEntity(
+            getBaseResourceUrl(), resourceRequest, PreciousStone.class);
 
     return createResource.getBody();
   }
@@ -266,5 +302,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     resourceRepository.deleteAll();
     resourceInUserRepository.deleteAll();
     resourceInProductRepository.deleteAll();
+    systemEventRepository.deleteAll();
   }
 }

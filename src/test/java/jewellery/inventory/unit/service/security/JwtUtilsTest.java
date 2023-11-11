@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.UUID;
 import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.exception.security.InvalidPrincipalTypeException;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
@@ -79,6 +80,14 @@ class JwtUtilsTest {
     UserResponseDto actualUserResponseDto = jwtUtils.getCurrentUser();
 
     assertEquals(expectedUserResponseDto, actualUserResponseDto);
+  }
+
+  @Test
+  void willThrowWhenAuthenticatedUserHasNullPrincipal() {
+    Authentication auth = new UsernamePasswordAuthenticationToken(null, null);
+    SecurityContextHolder.getContext().setAuthentication(auth);
+
+    assertThrows(InvalidPrincipalTypeException.class, () -> jwtUtils.getCurrentUser());
   }
 
   @Test

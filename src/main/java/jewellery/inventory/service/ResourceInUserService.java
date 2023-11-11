@@ -192,7 +192,6 @@ public class ResourceInUserService implements EntityFetcher {
       UUID resourceId = ids[1];
       return getResourceInUser(userId, resourceId);
     }
-    System.out.println("ResourceInUser not found");
     return null;
   }
 }

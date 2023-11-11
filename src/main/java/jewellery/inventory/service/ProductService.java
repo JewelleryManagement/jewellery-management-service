@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
+import jewellery.inventory.aspect.annotation.LogCreateEvent;
+import jewellery.inventory.aspect.annotation.LogDeleteEvent;
+import jewellery.inventory.aspect.annotation.LogTransferEvent;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
@@ -14,6 +17,7 @@ import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.ProductMapper;
+import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
@@ -35,7 +39,7 @@ public class ProductService implements EntityFetcher {
   private final ProductMapper productMapper;
 
   @Transactional
-  //  @LogCreateEvent(eventType = EventType.PRODUCT_CREATE)
+  @LogCreateEvent(eventType = EventType.PRODUCT_CREATE)
   public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
     User owner = getUser(productRequestDto.getOwnerId());
     Product product = createProductWithoutResourcesAndProducts(productRequestDto, owner);
@@ -62,7 +66,7 @@ public class ProductService implements EntityFetcher {
   }
 
   @Transactional
-  //  @LogDeleteEvent(eventType = EventType.PRODUCT_DISASSEMBLY)
+  @LogDeleteEvent(eventType = EventType.PRODUCT_DISASSEMBLY)
   public void deleteProduct(UUID id) {
 
     Product product =
@@ -77,7 +81,7 @@ public class ProductService implements EntityFetcher {
     productRepository.deleteById(id);
   }
 
-  //  @LogTransferEvent(eventType = EventType.PRODUCT_TRANSFER)
+  @LogTransferEvent(eventType = EventType.PRODUCT_TRANSFER)
   public ProductResponseDto transferProduct(UUID recipientId, UUID productId) {
     Product productForChangeOwner = getProductForTransfer(recipientId, productId);
     productForChangeOwner.setOwner(getUser(recipientId));
@@ -266,11 +270,10 @@ public class ProductService implements EntityFetcher {
 
   @Override
   public Object fetchEntity(UUID... ids) {
-    return getProduct(ids[0]); // productRepository.findById(ids[0]).orElse(null);
-    //    if (product == null) {
-    //      return null;
-    //    }
-
-    // return productMapper.mapToProductResponseDto(product);
+    Product product = productRepository.findById(ids[0]).orElse(null);
+    if (product == null) {
+      return null;
+    }
+    return productMapper.mapToProductResponseDto(product);
   }
 }

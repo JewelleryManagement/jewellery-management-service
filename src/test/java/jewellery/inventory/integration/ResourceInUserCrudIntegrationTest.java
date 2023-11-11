@@ -1,17 +1,20 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ResourceTestHelper.getPreciousStoneRequestDto;
+import static jewellery.inventory.helper.SystemEventTestHelper.assertEventWasLogged;
 import static jewellery.inventory.helper.UserTestHelper.*;
+import static jewellery.inventory.model.EventType.RESOURCE_IN_USER_DELETE;
+import static jewellery.inventory.model.EventType.RESOURCE_IN_USER_TOP_UP;
+import static jewellery.inventory.model.EventType.RESOURCE_QUANTITY_REMOVE;
+import static jewellery.inventory.model.EventType.RESOURCE_TRANSFER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-
-import jewellery.inventory.dto.response.resource.PreciousStoneResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
@@ -20,8 +23,11 @@ import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.dto.response.resource.PreciousStoneResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
+import jewellery.inventory.repository.SystemEventRepository;
 import jewellery.inventory.repository.UserRepository;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +41,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Autowired UserRepository userRepository;
   @Autowired ResourceRepository resourceRepository;
   @Autowired ResourceInUserRepository resourceInUserRepository;
+  @Autowired private SystemEventRepository systemEventRepository;
 
   private String getBaseUrl() {
     return BASE_URL_PATH + port;
@@ -50,6 +57,10 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   private String getBaseResourceAvailabilityTransferUrl() {
     return buildUrl("resources", "availability", "transfer");
+  }
+
+  private String getBaseSystemEventUrl() {
+    return getBaseUrl() + "/system-events";
   }
 
   private String getResourceAvailabilityUrl(UUID userId, UUID resourceId) {
@@ -69,10 +80,11 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     userRepository.deleteAll();
     resourceRepository.deleteAll();
     resourceInUserRepository.deleteAll();
+    systemEventRepository.deleteAll();
   }
 
   @Test
-  void addResourceToUserSuccessfully() {
+  void addResourceToUserSuccessfully() throws JsonProcessingException {
     UserResponseDto createdUser = sendCreateUserRequest();
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
 
@@ -85,6 +97,13 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertNotNull(response.getBody());
     assertEquals(1, response.getBody().getResourcesAndQuantities().size());
     assertEquals(createdUser, response.getBody().getOwner());
+    assertEventWasLogged(
+        this.testRestTemplate,
+        getBaseSystemEventUrl(),
+        RESOURCE_IN_USER_TOP_UP,
+        "entity",
+        "quantityAdded",
+        String.valueOf(response.getBody().getResourcesAndQuantities().get(0).getQuantity()));
   }
 
   @Test
@@ -197,7 +216,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   }
 
   @Test
-  void removeResourceFromUserSuccessfully() {
+  void removeResourceFromUserSuccessfully() throws JsonProcessingException {
     UserResponseDto createdUser = sendCreateUserRequest();
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
@@ -210,6 +229,14 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         sendGetResourcesInUserRequest(createdUser.getId());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().getResourcesAndQuantities().isEmpty());
+    System.out.println(response.getBody().getOwner().getName());
+    assertEventWasLogged(
+        this.testRestTemplate,
+        getBaseSystemEventUrl(),
+        RESOURCE_IN_USER_DELETE,
+        "entity",
+        "owner.name",
+        response.getBody().getOwner().getName());
   }
 
   @Test
@@ -235,7 +262,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   }
 
   @Test
-  void removeResourceQuantityFromUserSuccessfully() {
+  void removeResourceQuantityFromUserSuccessfully() throws JsonProcessingException {
     UserResponseDto createdUser = sendCreateUserRequest();
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
@@ -249,6 +276,14 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     ResourceQuantityResponseDto resourceQuantity =
         findResourceQuantityIn(createdResource.getId(), resourcesInUserResponse);
     assertEquals(RESOURCE_QUANTITY - 1, resourceQuantity.getQuantity(), 0.01);
+
+    assertEventWasLogged(
+        this.testRestTemplate,
+        getBaseSystemEventUrl(),
+        RESOURCE_QUANTITY_REMOVE,
+        "entityAfter",
+        "resourcesAndQuantities.quantity",
+        String.valueOf(resourceQuantity.getQuantity()));
   }
 
   @Test
@@ -306,7 +341,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   }
 
   @Test
-  void transferResourceFromUserToAnotherUserSuccessfully() {
+  void transferResourceFromUserToAnotherUserSuccessfully() throws JsonProcessingException {
     UserResponseDto sender = sendCreateUserRequest();
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
@@ -335,6 +370,14 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         response.getTransferredResource().getResource().getId(),
         requestDto.getTransferredResourceId());
     assertEquals(response.getTransferredResource().getQuantity(), 1);
+
+    assertEventWasLogged(
+        this.testRestTemplate,
+        getBaseSystemEventUrl(),
+        RESOURCE_TRANSFER,
+        "entity",
+        "newOwner.name",
+        response.getNewOwner().getName());
   }
 
   @NotNull
@@ -348,7 +391,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     return requestDto;
   }
 
-    private PreciousStoneResponseDto sendCreatePreciousStoneRequest() {
+  private PreciousStoneResponseDto sendCreatePreciousStoneRequest() {
     ResourceRequestDto resourceRequest = getPreciousStoneRequestDto();
     ResponseEntity<PreciousStoneResponseDto> resourceResponseEntity =
         this.testRestTemplate.postForEntity(
