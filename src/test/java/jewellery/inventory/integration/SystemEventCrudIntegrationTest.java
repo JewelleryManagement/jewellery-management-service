@@ -2,10 +2,10 @@ package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
 import jewellery.inventory.dto.request.UserRequestDto;
@@ -22,7 +22,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 public class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
-  private final ObjectMapper objectMapper = new ObjectMapper();
   @Autowired SystemEventRepository systemEventRepository;
 
   private String getBaseSystemEventUrl() {
@@ -30,8 +29,7 @@ public class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTest
   }
 
   @BeforeEach
-  void setUp() {
-    objectMapper.findAndRegisterModules();
+  void cleanup() {
     systemEventRepository.deleteAll();
   }
 
@@ -43,12 +41,12 @@ public class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTest
         this.testRestTemplate.exchange(
             getBaseSystemEventUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
 
-    List<SystemEvent> retrievedEvents = eventResponse.getBody();
+    List<SystemEvent> events = eventResponse.getBody();
+    assertFalse(events != null && events.isEmpty());
+    assertNotNull(events, "Retrieved events list is empty");
 
-    assertNotNull(retrievedEvents, "Retrieved events list is empty");
-
-    Map<String, Object> payload = retrievedEvents.get(0).getPayload();
-    Object eventType = retrievedEvents.get(0).getType();
+    Map<String, Object> payload = events.get(0).getPayload();
+    Object eventType = events.get(0).getType();
 
     assertEquals(EventType.USER_CREATE, eventType);
     assertTrue(payload.containsKey("entity"));
