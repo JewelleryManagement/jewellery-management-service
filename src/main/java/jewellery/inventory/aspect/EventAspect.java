@@ -109,15 +109,15 @@ public class EventAspect {
   }
 
   @Around("@annotation(logTopUpEvent)")
-  public void logResourceTopUp(ProceedingJoinPoint proceedingJoinPoint, LogTopUpEvent logTopUpEvent)
-      throws Throwable {
+  public Object logResourceTopUp(
+      ProceedingJoinPoint proceedingJoinPoint, LogTopUpEvent logTopUpEvent) throws Throwable {
 
     EventType eventType = logTopUpEvent.eventType();
     Object service = proceedingJoinPoint.getTarget();
 
     if (!(service instanceof EntityFetcher entityFetcher)) {
       logger.error("Service does not implement EntityFetcher");
-      return;
+      return proceedingJoinPoint.proceed();
     }
     ResourceInUserRequestDto resourceUserDto =
         (ResourceInUserRequestDto) proceedingJoinPoint.getArgs()[0];
@@ -135,6 +135,7 @@ public class EventAspect {
     payload.put("updatedResources", updatedResources);
 
     eventService.logEvent(eventType, payload, null);
+    return updatedResources;
   }
 
   @AfterReturning(pointcut = "@annotation(logTransferEvent)", returning = "result")
