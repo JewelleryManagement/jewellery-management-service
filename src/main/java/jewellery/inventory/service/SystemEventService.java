@@ -15,6 +15,7 @@ import jewellery.inventory.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +29,7 @@ public class SystemEventService {
     return systemEventRepository.findAll();
   }
 
+  @Transactional
   public <T, U> void logEvent(EventType type, T entity, @Nullable U oldEntity) {
     Map<String, Object> payload = new HashMap<>();
 
@@ -54,6 +56,7 @@ public class SystemEventService {
     systemEventRepository.save(event);
   }
 
+  @Transactional
   public void logResourceTransfer(TransferResourceResponseDto transferResult, EventType eventType) {
     Map<String, Object> payload = new HashMap<>();
     payload.put("previousOwner", transferResult.getPreviousOwner());
@@ -63,6 +66,7 @@ public class SystemEventService {
     logEvent(eventType, payload, null);
   }
 
+  @Transactional
   public void logProductTransfer(ProductResponseDto productResult, EventType eventType) {
     Map<String, Object> payload = new HashMap<>();
     payload.put("newOwner", productResult.getOwner());
