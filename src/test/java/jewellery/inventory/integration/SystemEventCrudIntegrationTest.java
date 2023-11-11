@@ -30,8 +30,7 @@ public class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTest
   }
 
   @BeforeEach
-  void setup() throws IOException {
-    super.setup();
+  void setUp() throws IOException {
     objectMapper.findAndRegisterModules();
     systemEventRepository.deleteAll();
   }
