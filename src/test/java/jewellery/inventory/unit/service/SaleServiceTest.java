@@ -82,7 +82,7 @@ class SaleServiceTest {
   }
 
   @Test
-  void testCreateSaleProductWillSuccessfully() {
+  void testCreateSaleSuccessfully() {
     when(saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product)))
         .thenReturn(sale);
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
@@ -92,9 +92,15 @@ class SaleServiceTest {
     when(saleMapper.mapEntityToResponseDto(sale)).thenReturn(saleResponseDto);
 
     SaleResponseDto actual = saleService.createSale(saleRequestDto);
-    assertNotEquals(actual.getBuyer(), actual.getSeller());
-    Assertions.assertEquals(saleRequestDto.getSellerId(), actual.getSeller().getId());
+
     assertNotNull(actual);
+    assertEquals(1, actual.getProducts().size());
+    assertEquals(saleRequestDto.getBuyerId(), actual.getProducts().get(0).getOwner().getId());
+    assertEquals(saleRequestDto.getSellerId(), actual.getSeller().getId());
+    assertNotEquals(actual.getBuyer(), actual.getSeller());
+    assertNotEquals(
+        saleRequestDto.getProducts().get(0).getSalePrice(),
+        actual.getProducts().get(0).getSalePrice());
   }
 
   @Test

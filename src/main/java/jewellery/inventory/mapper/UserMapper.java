@@ -6,7 +6,8 @@ import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.User;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring")
 public interface UserMapper {
   UserRequestDto toUserRequest(User user);
 

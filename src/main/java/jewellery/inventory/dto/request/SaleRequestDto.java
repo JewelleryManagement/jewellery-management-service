@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.PastOrPresent;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,6 @@ public class SaleRequestDto {
 
   @Valid @NotEmpty private List<ProductPriceDiscountRequestDto> products;
 
-  @NotNull
-  @Past(message = "Date must be in the past")
+  @PastOrPresent(message = "Date must be in the past")
   private Date date;
 }

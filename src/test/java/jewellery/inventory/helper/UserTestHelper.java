@@ -27,8 +27,9 @@ public class UserTestHelper {
     user.setRole(Role.ADMIN);
     return user;
   }
-  public static UserResponseDto createTestUserResponseDto(User user){
-    UserResponseDto userResponseDto=new UserResponseDto();
+
+  public static UserResponseDto createTestUserResponseDto(User user) {
+    UserResponseDto userResponseDto = new UserResponseDto();
     userResponseDto.setId(user.getId());
     userResponseDto.setEmail(user.getEmail());
     userResponseDto.setName(user.getName());
