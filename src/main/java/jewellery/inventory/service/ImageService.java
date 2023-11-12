@@ -33,14 +33,13 @@ public class ImageService {
   private String folderPath;
 
   @Value("${multipart.file.max.size}")
-  private  Integer maxFileSize;
+  private Integer maxFileSize;
 
   private static final Integer MB = 1024 * 1024;
 
   private final ImageRepository imageRepository;
   private final ImageDataMapper imageDataMapper;
-  @Lazy
-  private final ProductService productService;
+  @Lazy private final ProductService productService;
 
   @Transactional
   public ImageResponseDto uploadImage(MultipartFile multipartFile, UUID productId)
@@ -50,16 +49,16 @@ public class ImageService {
     checkContentType(multipartFile);
     checkFileSize(multipartFile, maxFileSize);
 
-    String directory = folderPath + productId;
+    String directory = createUploadDirectory(productId);
     createDirectoryIfNotExists(directory);
 
-    String filePath = directory + "/" + multipartFile.getOriginalFilename();
+    String filePath = createFilePath(multipartFile, directory);
 
     Product product = getProduct(productId);
     Image image = createImageData(multipartFile, filePath, product);
     setProductImage(product, image);
+    Files.copy(multipartFile.getInputStream(), Path.of(filePath));
 
-    multipartFile.transferTo(new File(filePath));
     return imageDataMapper.toImageResponse(image);
   }
 
@@ -138,5 +137,15 @@ public class ImageService {
     if (multipartFile.getSize() > (long) fileSize * MB) {
       throw new MultipartFileSizeException(fileSize);
     }
+  }
+
+  private String createUploadDirectory(UUID productId) {
+    return folderPath + productId;
+  }
+
+  private static String createFilePath(MultipartFile multipartFile, String directory) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(directory).append("/").append(multipartFile.getOriginalFilename());
+    return sb.toString();
   }
 }
