@@ -59,8 +59,7 @@ public class ImageService {
     Image image = createImageData(multipartFile, filePath, product);
     setProductImage(product, image);
 
-    Files.copy(multipartFile.getInputStream(), Path.of(filePath), StandardCopyOption.REPLACE_EXISTING);
-//    multipartFile.transferTo(new File(filePath));
+    multipartFile.transferTo(new File(filePath));
     return imageDataMapper.toImageResponse(image);
   }
 
