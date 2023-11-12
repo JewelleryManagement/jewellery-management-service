@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -59,7 +58,7 @@ public class ImageService {
     Image image = createImageData(multipartFile, filePath, product);
     setProductImage(product, image);
 
-    Files.copy(multipartFile.getInputStream(), Path.of(filePath), StandardCopyOption.REPLACE_EXISTING);
+    multipartFile.transferTo(new File(filePath));
 
     return imageDataMapper.toImageResponse(image);
   }
