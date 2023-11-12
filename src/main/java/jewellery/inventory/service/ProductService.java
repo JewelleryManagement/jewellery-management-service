@@ -73,7 +73,7 @@ public class ProductService {
 
     moveResourceInProductToResourceInUser(product);
     disassembleProductContent(product);
-    imageService.deleteImage(id);
+    deleteImageWhenAttached(id, product);
 
     productRepository.deleteById(id);
   }
@@ -83,6 +83,12 @@ public class ProductService {
     productForChangeOwner.setOwner(getUser(recipientId));
     productRepository.save(productForChangeOwner);
     return productMapper.mapToProductResponseDto(productForChangeOwner);
+  }
+
+  private void deleteImageWhenAttached(UUID id, Product product) throws IOException {
+    if (product.getImage() != null) {
+      imageService.deleteImage(id);
+    }
   }
 
   private void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {

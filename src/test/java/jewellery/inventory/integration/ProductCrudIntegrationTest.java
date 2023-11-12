@@ -26,7 +26,6 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
@@ -72,7 +71,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Autowired private ResourceRepository resourceRepository;
   @Autowired private ResourceInUserRepository resourceInUserRepository;
   @Autowired private ResourceInProductRepository resourceInProductRepository;
-  @MockBean private ImageService imageService;
+  @Autowired private ImageRepository imageRepository;
+  @Autowired private ImageService imageService;
 
   private User user;
   private User differentUser;
@@ -97,6 +97,38 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
+  void imageUploadShouldThrowWhenRequestFileIsNotImage() {
+    productResponseDto = createProductWithRequest(productRequestDto);
+    ResponseEntity<ImageResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()),
+            createMultipartRequestWithTxtFile(),
+            ImageResponseDto.class);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
+
+  @Test
+  void imageDownloadShouldThrowWhenProductImageNotAttached() {
+    productResponseDto = createProductWithRequest(productRequestDto);
+    ResponseEntity<byte[]> response =
+        this.testRestTemplate.getForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()), byte[].class);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+  }
+
+  @Test
+  void removeImageShouldThrowWhenProductImageNotAttached() {
+    productResponseDto = createProductWithRequest(productRequestDto);
+    ResponseEntity<byte[]> response =
+        this.testRestTemplate.getForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()), byte[].class);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+  }
+
+  @Test
   void imageUploadSuccessfullyAndAttachToProduct() {
     ProductResponseDto productResponse = createProductWithRequest(productRequestDto);
     ResponseEntity<ImageResponseDto> response =
@@ -104,27 +136,41 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             getBaseProductImageUrl(productResponse.getId()),
             createMultipartRequest(),
             ImageResponseDto.class);
+    ImageResponseDto imageResponseDto = response.getBody();
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    assertEquals(imageResponseDto.getProductId(), productResponse.getId());
   }
 
   @Test
   void downloadImageSuccessfully() {
     ProductResponseDto productResponse = createProductWithRequest(productRequestDto);
-        ResponseEntity<byte[]> response =
-            this.testRestTemplate.getForEntity(
-                getBaseProductImageUrl(productResponse.getId()), byte[].class);
+    ImageResponseDto imageResponseDto = createImageResponse(productResponse);
+    ResponseEntity<byte[]> response =
+        this.testRestTemplate.getForEntity(
+            getBaseProductImageUrl(imageResponseDto.getProductId()), byte[].class);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(HttpStatus.OK, response.getStatusCode());
   }
 
   @Test
   void deleteImageFromFileSystem() {
+    productResponseDto = createProductWithRequest(productRequestDto);
+    ImageResponseDto imageResponseDto = createImageResponse(productResponseDto);
     ResponseEntity<HttpStatus> response =
         this.testRestTemplate.exchange(
-            getBaseProductImageUrl(UUID.randomUUID()), HttpMethod.DELETE, null, HttpStatus.class);
+            getBaseProductImageUrl(imageResponseDto.getProductId()),
+            HttpMethod.DELETE,
+            null,
+            HttpStatus.class);
 
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+    ResponseEntity<byte[]> responseEntity =
+        this.testRestTemplate.getForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()), byte[].class);
+
+    assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
   }
 
   @Test
@@ -246,6 +292,36 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
   }
 
+  @Test
+  void deleteProductWithAttachedPicture() {
+    productResponseDto = createProductWithRequest(productRequestDto);
+    ImageResponseDto imageResponseDto = createImageResponse(productResponseDto);
+
+    assertEquals(imageResponseDto.getProductId(), productResponseDto.getId());
+
+    ResponseEntity<HttpStatus> response =
+        this.testRestTemplate.exchange(
+            getProductUrl(Objects.requireNonNull(productResponseDto).getId()),
+            HttpMethod.DELETE,
+            null,
+            HttpStatus.class);
+
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+    ResponseEntity<ProductResponseDto> newResponse =
+        this.testRestTemplate.getForEntity(
+            getProductUrl(Objects.requireNonNull(productResponseDto).getId()),
+            ProductResponseDto.class);
+
+    assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
+
+    ResponseEntity<byte[]> byteResponse =
+        this.testRestTemplate.getForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()), byte[].class);
+
+    assertEquals(HttpStatus.NOT_FOUND, byteResponse.getStatusCode());
+  }
+
   private void assertResponseMatchesCreatedRequest(
       ResponseEntity<List<ProductResponseDto>> response) {
     List<ProductResponseDto> productResponseDtos = response.getBody();
@@ -312,15 +388,31 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     resourceInProductRepository.deleteAll();
   }
 
-  private FileSystemResource createFileSystemResource() {
+  private FileSystemResource createFileSystemResource(String path) {
     return new FileSystemResource(
-        new File(
-            Objects.requireNonNull(getClass().getResource("/static/img/pearl.jpg")).getFile()));
+        new File(Objects.requireNonNull(getClass().getResource(path)).getFile()));
   }
 
   private HttpEntity<MultiValueMap<String, Object>> createMultipartRequest() {
     MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-    body.add("image", createFileSystemResource());
+    body.add("image", createFileSystemResource("/static/img/pearl.jpg"));
     return new HttpEntity<>(body, headers);
+  }
+
+  private HttpEntity<MultiValueMap<String, Object>> createMultipartRequestWithTxtFile() {
+    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+    body.add("image", createFileSystemResource("/static/img/test.txt"));
+    return new HttpEntity<>(body, headers);
+  }
+
+  private ImageResponseDto createImageResponse(ProductResponseDto productResponseDto) {
+
+    ResponseEntity<ImageResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()),
+            createMultipartRequest(),
+            ImageResponseDto.class);
+
+    return response.getBody();
   }
 }

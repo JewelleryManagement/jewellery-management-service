@@ -10,7 +10,6 @@ import jewellery.inventory.model.Image;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;
-import org.codehaus.plexus.util.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -61,14 +60,8 @@ public class ImageService {
     setProductImage(product, image);
 
     Files.copy(multipartFile.getInputStream(), Path.of(filePath), StandardCopyOption.REPLACE_EXISTING);
-//    multipartFile.transferTo(new File(filePath));
-    return imageDataMapper.toImageResponse(image);
-  }
 
-  private static void checkFileSize(MultipartFile multipartFile, Integer fileSize) {
-    if (multipartFile.getSize() > (long) fileSize * MB) {
-      throw new MultipartFileSizeException(fileSize);
-    }
+    return imageDataMapper.toImageResponse(image);
   }
 
   @Transactional
@@ -139,6 +132,12 @@ public class ImageService {
   private static void checkFileIsSelected(MultipartFile file) {
     if (file.isEmpty()) {
       throw new MultipartFileNotSelectedException();
+    }
+  }
+
+  private static void checkFileSize(MultipartFile multipartFile, Integer fileSize) {
+    if (multipartFile.getSize() > (long) fileSize * MB) {
+      throw new MultipartFileSizeException(fileSize);
     }
   }
 }
