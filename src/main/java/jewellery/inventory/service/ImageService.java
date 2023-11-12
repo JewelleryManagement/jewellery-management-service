@@ -49,15 +49,13 @@ public class ImageService {
     checkContentType(multipartFile);
     checkFileSize(multipartFile, maxFileSize);
 
-    String directory = createUploadDirectory(productId);
-    createDirectoryIfNotExists(directory);
-
-    String filePath = createFilePath(multipartFile, directory);
+    Path uploadPath = createDirectoryIfNotExists(productId);
+    Path filePath = createFilePath(multipartFile, uploadPath);
 
     Product product = getProduct(productId);
     Image image = createImageData(multipartFile, filePath, product);
     setProductImage(product, image);
-    Files.copy(multipartFile.getInputStream(), Path.of(filePath));
+    Files.copy(multipartFile.getInputStream(), filePath);
 
     return imageDataMapper.toImageResponse(image);
   }
@@ -74,20 +72,22 @@ public class ImageService {
     removeImage(getProduct(productId));
   }
 
-  private Image createImageData(MultipartFile file, String filePath, Product product) {
+  private Image createImageData(MultipartFile file, Path filePath, Product product) {
     return imageRepository.save(
         Image.builder()
             .name(file.getOriginalFilename())
             .type(file.getContentType())
-            .filePath(filePath)
+            .filePath(filePath.toString())
             .product(product)
             .build());
   }
 
-  private void createDirectoryIfNotExists(String directory) throws IOException {
-    if (Files.notExists(Path.of(directory))) {
-      Files.createDirectories(Path.of(directory));
+  private Path createDirectoryIfNotExists(UUID productId) throws IOException {
+    Path directory = Path.of(folderPath + productId);
+    if (Files.notExists(directory)) {
+      Files.createDirectories(directory);
     }
+    return directory;
   }
 
   private Product getProduct(UUID productId) {
@@ -139,13 +139,9 @@ public class ImageService {
     }
   }
 
-  private String createUploadDirectory(UUID productId) {
-    return folderPath + productId;
-  }
-
-  private static String createFilePath(MultipartFile multipartFile, String directory) {
+  private static Path createFilePath(MultipartFile multipartFile, Path directory) {
     StringBuilder sb = new StringBuilder();
     sb.append(directory).append("/").append(multipartFile.getOriginalFilename());
-    return sb.toString();
+    return Path.of(sb.toString());
   }
 }
