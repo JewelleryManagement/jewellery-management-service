@@ -34,6 +34,10 @@ import org.springframework.util.MultiValueMap;
 
 class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
+  private static final String IMAGE_FILE = "/static/img/pearl.jpg";
+  private static final String TEXT_FILE = "/static/img/test.txt";
+  private static final String BIG_IMAGE_FILE = "/static/img/Sample-jpg-image-10mb.jpg";
+
   private String getBaseUrl() {
     return BASE_URL_PATH + port;
   }
@@ -93,7 +97,18 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
     productRequestDto =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), user);
-    multipartRequest = createMultipartRequest();
+  }
+
+  @Test
+  void imageUploadShouldThrowWhenFileSizeLargerThan8MB() {
+    productResponseDto = createProductWithRequest(productRequestDto);
+    ResponseEntity<ImageResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()),
+            createMultipartRequest(BIG_IMAGE_FILE),
+            ImageResponseDto.class);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
 
   @Test
@@ -102,7 +117,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResponseEntity<ImageResponseDto> response =
         this.testRestTemplate.postForEntity(
             getBaseProductImageUrl(productResponseDto.getId()),
-            createMultipartRequestWithTxtFile(),
+            createMultipartRequest(TEXT_FILE),
             ImageResponseDto.class);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -134,7 +149,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResponseEntity<ImageResponseDto> response =
         this.testRestTemplate.postForEntity(
             getBaseProductImageUrl(productResponse.getId()),
-            createMultipartRequest(),
+            createMultipartRequest(IMAGE_FILE),
             ImageResponseDto.class);
     ImageResponseDto imageResponseDto = response.getBody();
 
@@ -393,15 +408,9 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         new File(Objects.requireNonNull(getClass().getResource(path)).getFile()));
   }
 
-  private HttpEntity<MultiValueMap<String, Object>> createMultipartRequest() {
+  private HttpEntity<MultiValueMap<String, Object>> createMultipartRequest(String path) {
     MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-    body.add("image", createFileSystemResource("/static/img/pearl.jpg"));
-    return new HttpEntity<>(body, headers);
-  }
-
-  private HttpEntity<MultiValueMap<String, Object>> createMultipartRequestWithTxtFile() {
-    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-    body.add("image", createFileSystemResource("/static/img/test.txt"));
+    body.add("image", createFileSystemResource(path));
     return new HttpEntity<>(body, headers);
   }
 
@@ -410,7 +419,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResponseEntity<ImageResponseDto> response =
         this.testRestTemplate.postForEntity(
             getBaseProductImageUrl(productResponseDto.getId()),
-            createMultipartRequest(),
+            createMultipartRequest(IMAGE_FILE),
             ImageResponseDto.class);
 
     return response.getBody();
