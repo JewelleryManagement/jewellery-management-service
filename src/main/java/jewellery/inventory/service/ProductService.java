@@ -269,8 +269,8 @@ public class ProductService implements EntityFetcher {
   }
 
   @Override
-  public Object fetchEntity(UUID... ids) {
-    Product product = productRepository.findById(ids[0]).orElse(null);
+  public Object fetchEntity(Object... ids) {
+    Product product = productRepository.findById((UUID) ids[0]).orElse(null);
     if (product == null) {
       return null;
     }

@@ -87,7 +87,7 @@ public class UserService implements EntityFetcher {
   }
 
   @Override
-  public Object fetchEntity(UUID... ids) {
-    return userMapper.toUserResponse(userRepository.findById(ids[0]).orElse(null));
+  public Object fetchEntity(Object... ids) {
+    return userMapper.toUserResponse(userRepository.findById((UUID) ids[0]).orElse(null));
   }
 }

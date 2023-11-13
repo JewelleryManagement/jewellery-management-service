@@ -3,10 +3,7 @@ package jewellery.inventory.service;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
-import jewellery.inventory.aspect.annotation.LogDeleteEvent;
-import jewellery.inventory.aspect.annotation.LogResourceQuantityRemovalEvent;
-import jewellery.inventory.aspect.annotation.LogTopUpEvent;
-import jewellery.inventory.aspect.annotation.LogTransferEvent;
+import jewellery.inventory.aspect.annotation.*;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
@@ -110,6 +107,14 @@ public class ResourceInUserService implements EntityFetcher {
     return findResourceInUser(user, resourceId).orElse(null);
   }
 
+  public ResourcesInUserResponseDto getResourceInUserResponse(UUID userId, UUID resourceId) {
+    ResourceInUser resourceInUser = getResourceInUser(userId, resourceId);
+    if (resourceInUser != null) {
+      return resourcesInUserMapper.toResourcesInUserResponseDto(resourceInUser);
+    }
+    return null;
+  }
+
   private User addResourceToUser(User user, Resource resource, Double quantity) {
     ResourceInUser resourceInUser =
         findResourceInUser(user, resource.getId())
@@ -186,11 +191,15 @@ public class ResourceInUserService implements EntityFetcher {
   }
 
   @Override
-  public Object fetchEntity(UUID... ids) {
-    if (ids.length == 2) {
-      UUID userId = ids[0];
-      UUID resourceId = ids[1];
-      return getResourceInUser(userId, resourceId);
+  public Object fetchEntity(Object... ids) {
+    if (ids != null && ids.length > 0) {
+      if (ids[0] instanceof ResourceInUserRequestDto resourceInUserRequestDto) {
+
+        return getResourceInUserResponse(
+            resourceInUserRequestDto.getUserId(), resourceInUserRequestDto.getResourceId());
+      } else {
+        return getResourceInUserResponse((UUID) ids[0], (UUID) ids[1]);
+      }
     }
     return null;
   }

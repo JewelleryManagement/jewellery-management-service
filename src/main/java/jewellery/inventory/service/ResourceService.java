@@ -82,8 +82,8 @@ public class ResourceService implements EntityFetcher {
   }
 
   @Override
-  public Object fetchEntity(UUID... ids) {
-    Resource resource = resourceRepository.findById(ids[0]).orElse(null);
+  public Object fetchEntity(Object... ids) {
+    Resource resource = resourceRepository.findById((UUID) ids[0]).orElse(null);
     return resourceMapper.toResourceResponse(resource);
   }
 }

@@ -6,8 +6,6 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.SystemEvent;
 import jewellery.inventory.repository.SystemEventRepository;
@@ -31,19 +29,27 @@ public class SystemEventService {
   public <T, U> void logEvent(EventType type, T entity, @Nullable U oldEntity) {
     Map<String, Object> payload = new HashMap<>();
 
-    if ((type.name().contains("_UPDATE") || type.name().contains("_QUANTITY"))
-        && oldEntity != null) {
-      payload.put("entityBefore", oldEntity);
-      payload.put("entityAfter", entity);
-    } else {
-      payload.put("entity", entity);
-    }
+    payload.put("entityBefore", oldEntity);
+    payload.put("entityAfter", entity);
 
+    logEvent(type, payload);
+  }
+
+
+  public <T, U> void logEvent(EventType type, T entity) {
+    Map<String, Object> payload = new HashMap<>();
+
+    payload.put("entity", entity);
+
+    logEvent(type, payload);
+  }
+
+  private void logEvent(EventType type, Map<String, Object> payload) {
     SystemEvent event = new SystemEvent();
     Object executor = jwtUtils.getCurrentUser();
     if (executor != null) {
       Map<String, Object> executorMap =
-          objectMapper.convertValue(executor, new TypeReference<>() {});
+              objectMapper.convertValue(executor, new TypeReference<>() {});
       event.setExecutor(executorMap);
     }
 
@@ -52,22 +58,5 @@ public class SystemEventService {
     event.setPayload(payload);
 
     systemEventRepository.save(event);
-  }
-
-  public void logResourceTransfer(TransferResourceResponseDto transferResult, EventType eventType) {
-    Map<String, Object> payload = new HashMap<>();
-    payload.put("previousOwner", transferResult.getPreviousOwner());
-    payload.put("newOwner", transferResult.getNewOwner());
-    payload.put("transferredResource", transferResult.getTransferredResource());
-
-    logEvent(eventType, payload, null);
-  }
-
-  public void logProductTransfer(ProductResponseDto productResult, EventType eventType) {
-    Map<String, Object> payload = new HashMap<>();
-    payload.put("newOwner", productResult.getOwner());
-    payload.put("transferredProduct", productResult);
-
-    logEvent(eventType, payload, null);
   }
 }
