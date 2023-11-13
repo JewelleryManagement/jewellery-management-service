@@ -9,6 +9,9 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class LinkingPartResponseDto extends ResourceResponseDto {
-  private String description;
+public class MetalResponseDto extends ResourceResponseDto {
+  private String type;
+  private int purity;
+  private String color;
+  private String plating;
 }
