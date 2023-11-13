@@ -12,19 +12,22 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ResourceMapper {
   private final PearlMapper pearlMapper;
-  private final GemstoneMapper gemstoneMapper;
-  private final LinkingPartMapper linkingPartMapper;
-  private final PreciousMetalMapper preciousMetalMapper;
+  private final PreciousStoneMapper preciousStoneMapper;
+  private final ElementMapper elementMapper;
+  private final MetalMapper metalMapper;
+  private final SemiPreciousStoneMapper semiPreciousStoneMapper;
 
   public ResourceResponseDto toResourceResponse(Resource resource) {
     if (resource instanceof Pearl pearl) {
       return pearlMapper.toResourceResponse(pearl);
-    } else if (resource instanceof Gemstone gemstone) {
-      return toGemstoneResponseWithSize(gemstone, gemstoneMapper.toResourceResponse(gemstone));
-    } else if (resource instanceof LinkingPart linkingPart) {
-      return linkingPartMapper.toResourceResponse(linkingPart);
-    } else if (resource instanceof PreciousMetal preciousMetal) {
-      return preciousMetalMapper.toResourceResponse(preciousMetal);
+    } else if (resource instanceof PreciousStone preciousStone) {
+      return toPreciousStoneResponseWithSize (preciousStone, preciousStoneMapper.toResourceResponse(preciousStone));
+    } else if (resource instanceof Element element) {
+      return elementMapper.toResourceResponse(element);
+    } else if (resource instanceof Metal metal) {
+      return metalMapper.toResourceResponse(metal);
+    } else if (resource instanceof SemiPreciousStone semiPreciousStone) {
+      return (semiPreciousStoneMapper.toResourceResponse(semiPreciousStone));
     }
     throw new MappingException(resource);
   }
@@ -33,28 +36,31 @@ public class ResourceMapper {
     if (resourceRequestDto instanceof PearlRequestDto pearlDto) {
       return pearlMapper.toResourceEntity(pearlDto);
     }
-    if (resourceRequestDto instanceof GemstoneRequestDto gemstoneDTO) {
-      return gemstoneMapper.toResourceEntity(gemstoneDTO);
+    if (resourceRequestDto instanceof PreciousStoneRequestDto preciousStoneDTO) {
+      return preciousStoneMapper.toResourceEntity(preciousStoneDTO);
     }
-    if (resourceRequestDto instanceof PreciousMetalRequestDto preciousMetalDto) {
-      return preciousMetalMapper.toResourceEntity(preciousMetalDto);
+    if (resourceRequestDto instanceof MetalRequestDto metalDto) {
+      return metalMapper.toResourceEntity(metalDto);
     }
-    if (resourceRequestDto instanceof LinkingPartRequestDto linkingPartDTO) {
-      return linkingPartMapper.toResourceEntity(linkingPartDTO);
+    if (resourceRequestDto instanceof ElementRequestDto linkingPartDTO) {
+      return elementMapper.toResourceEntity(linkingPartDTO);
+    }
+    if (resourceRequestDto instanceof SemiPreciousStoneRequestDto semiPreciousStoneRequestDto) {
+      return semiPreciousStoneMapper.toResourceEntity(semiPreciousStoneRequestDto);
     }
     throw new MappingException(resourceRequestDto);
   }
 
-  private ResourceResponseDto toGemstoneResponseWithSize(
-      Gemstone gemstone, GemstoneResponseDto gemstoneResponseDto) {
+  private ResourceResponseDto toPreciousStoneResponseWithSize(
+      PreciousStone preciousStone, PreciousStoneResponseDto preciousStoneResponseDto) {
     String size =
         String.format(
             Locale.US,
             "%.2fx%.2fx%.2f",
-            gemstone.getDimensionX(),
-            gemstone.getDimensionY(),
-            gemstone.getDimensionZ());
-    gemstoneResponseDto.setSize(size);
-    return gemstoneResponseDto;
+                preciousStone.getDimensionX(),
+                preciousStone.getDimensionY(),
+                preciousStone.getDimensionZ());
+    preciousStoneResponseDto.setSize(size);
+    return preciousStoneResponseDto;
   }
 }
