@@ -24,6 +24,6 @@ public class SaleRequestDto {
 
   @Valid @NotEmpty private List<ProductPriceDiscountRequestDto> products;
 
-  @PastOrPresent(message = "Date must be in the past")
+  @PastOrPresent(message = "Date must be in the past or present")
   private Date date;
 }

@@ -49,7 +49,7 @@ public class SaleService {
 
   private void updateProductOwnersAndSale(List<Product> products, UUID buyerId, Sale sale) {
     for (Product product : products) {
-      productService.updateProductOwner(product, userService.getUser(buyerId), sale);
+      productService.updateProductOwnerAndSale(product, userService.getUser(buyerId), sale);
     }
   }
 

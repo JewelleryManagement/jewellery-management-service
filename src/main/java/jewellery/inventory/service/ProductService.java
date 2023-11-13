@@ -61,7 +61,7 @@ public class ProductService {
     return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
   }
 
-  public void updateProductOwner(Product product, User newOwner, Sale sale) {
+  public void updateProductOwnerAndSale(Product product, User newOwner, Sale sale) {
     product.setOwner(newOwner);
     product.setPartOfSale(sale);
     productRepository.save(product);
