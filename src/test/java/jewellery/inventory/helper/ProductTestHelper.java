@@ -71,7 +71,6 @@ public class ProductTestHelper {
     testProduct.setProductionNumber("11");
     testProduct.setCatalogNumber("2");
     testProduct.setOwner(user);
-    testProduct.setSold(false);
     testProduct.setDescription("This is Test Product");
     testProduct.setSalePrice(1000);
     testProduct.setResourcesContent(List.of(getResourceInProduct(pearl)));
