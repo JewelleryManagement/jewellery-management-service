@@ -4,11 +4,9 @@ import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogResourceQuantityRemovalEvent;
-import jewellery.inventory.aspect.annotation.LogTopUpEvent;
 import jewellery.inventory.aspect.annotation.LogTransferEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.mapper.ResourcesInUserMapper;
 import jewellery.inventory.model.EventType;
@@ -38,9 +36,8 @@ public class EventAspect {
     eventService.logEvent(eventType, result);
   }
 
-  @Around("@annotation(logUpdateEvent) && args(.., id)")
-  public Object logUpdate(
-      ProceedingJoinPoint proceedingJoinPoint, LogUpdateEvent logUpdateEvent, UUID id)
+  @Around("@annotation(logUpdateEvent)")
+  public Object logUpdate(ProceedingJoinPoint proceedingJoinPoint, LogUpdateEvent logUpdateEvent)
       throws Throwable {
     EventType eventType = logUpdateEvent.eventType();
     Object service = proceedingJoinPoint.getTarget();
@@ -50,12 +47,10 @@ public class EventAspect {
       return null;
     }
 
-    Object oldEntity = entityFetcher.fetchEntity(id);
+    Object oldEntity = entityFetcher.fetchEntity(proceedingJoinPoint.getArgs());
     Object result = proceedingJoinPoint.proceed();
 
-    if (oldEntity != null) {
-      eventService.logEvent(eventType, result, oldEntity);
-    }
+    eventService.logEvent(eventType, result, oldEntity);
 
     return result;
   }
@@ -90,39 +85,12 @@ public class EventAspect {
 
     EventType eventType = logDeleteEvent.eventType();
     Object userResourcesBeforeDeletion = entityFetcher.fetchEntity(userId, resourceId);
-//    ResourcesInUserResponseDto userResourcesBeforeDeletion =
-//        fetchUserResources(entityFetcher, userId, resourceId);
+    //    ResourcesInUserResponseDto userResourcesBeforeDeletion =
+    //        fetchUserResources(entityFetcher, userId, resourceId);
 
     if (userResourcesBeforeDeletion != null) {
       eventService.logEvent(eventType, userResourcesBeforeDeletion);
     }
-  }
-
-  @Around("@annotation(logTopUpEvent)")
-  public Object logResourceTopUp(
-      ProceedingJoinPoint proceedingJoinPoint, LogTopUpEvent logTopUpEvent) throws Throwable {
-
-    //    return logUpdate(proceedingJoinPoint, logTopUpEvent);
-    EventType eventType = logTopUpEvent.eventType();
-    Object service = proceedingJoinPoint.getTarget();
-
-    if (!(service instanceof EntityFetcher entityFetcher)) {
-      logger.error("Service does not implement EntityFetcher");
-      return proceedingJoinPoint.proceed();
-    }
-    Object resourceUserDto = proceedingJoinPoint.getArgs()[0];
-
-    Object oldResources = entityFetcher.fetchEntity(resourceUserDto);
-
-    Object updatedResources = proceedingJoinPoint.proceed();
-
-    //    Map<String, Object> payload = new HashMap<>();
-    //    payload.put("quantityAdded", resourceUserDto.getQuantity());
-    //    payload.put("oldResources", oldResources);
-    //    payload.put("updatedResources", updatedResources);
-
-    eventService.logEvent(eventType, updatedResources, oldResources);
-    return updatedResources;
   }
 
   @AfterReturning(pointcut = "@annotation(logTransferEvent)", returning = "result")

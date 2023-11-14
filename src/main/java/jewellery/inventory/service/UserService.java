@@ -1,5 +1,6 @@
 package jewellery.inventory.service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -88,6 +89,7 @@ public class UserService implements EntityFetcher {
 
   @Override
   public Object fetchEntity(Object... ids) {
+    ids = Arrays.stream(ids).filter(UUID.class::isInstance).toArray();
     return userMapper.toUserResponse(userRepository.findById((UUID) ids[0]).orElse(null));
   }
 }

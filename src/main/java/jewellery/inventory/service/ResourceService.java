@@ -1,5 +1,6 @@
 package jewellery.inventory.service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
@@ -83,6 +84,7 @@ public class ResourceService implements EntityFetcher {
 
   @Override
   public Object fetchEntity(Object... ids) {
+    ids = Arrays.stream(ids).filter(UUID.class::isInstance).toArray();
     Resource resource = resourceRepository.findById((UUID) ids[0]).orElse(null);
     return resourceMapper.toResourceResponse(resource);
   }

@@ -63,7 +63,7 @@ public class ResourceInUserService implements EntityFetcher {
   }
 
   @Transactional
-  @LogTopUpEvent
+  @LogUpdateEvent(eventType = EventType.RESOURCE_IN_USER_TOP_UP)
   public ResourcesInUserResponseDto addResourceToUser(ResourceInUserRequestDto resourceUserDto) {
     User user = findUserById(resourceUserDto.getUserId());
     Resource resource = findResourceById(resourceUserDto.getResourceId());
