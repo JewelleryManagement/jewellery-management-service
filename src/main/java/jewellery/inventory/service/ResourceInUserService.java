@@ -72,7 +72,15 @@ public class ResourceInUserService implements EntityFetcher {
 
     addResourceToUser(user, resource, resourceUserDto.getQuantity());
 
-    return resourcesInUserMapper.toResourcesInUserResponseDto(user);
+    //TODO: refactor me
+    return resourcesInUserMapper.toResourcesInUserResponseDto(
+        user.getResourcesOwned().stream()
+            .filter(
+                resourceInUser ->
+                    resourceInUser.getResource().getId().equals(resourceUserDto.getResourceId()))
+            .findFirst()
+            .orElse(null));
+//    return resourcesInUserMapper.toResourcesInUserResponseDto(user);
   }
 
   public ResourcesInUserResponseDto getAllResourcesFromUser(UUID userId) {
