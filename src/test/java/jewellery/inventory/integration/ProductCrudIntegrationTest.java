@@ -17,7 +17,6 @@ import jewellery.inventory.dto.response.ImageResponseDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
-import jewellery.inventory.helper.mocks.EmptyImageMockData;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.PreciousStone;
 import jewellery.inventory.repository.*;
