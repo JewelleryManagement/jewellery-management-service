@@ -17,6 +17,7 @@ import jewellery.inventory.dto.response.ImageResponseDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
+import jewellery.inventory.helper.mocks.EmptyImageMockData;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.PreciousStone;
 import jewellery.inventory.repository.*;
@@ -85,7 +86,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
   private ProductRequestDto productRequestDto;
   private ProductResponseDto productResponseDto;
-  private HttpEntity<MultiValueMap<String, Object>> multipartRequest;
 
   @BeforeEach
   void setUp() {
