@@ -1,5 +1,7 @@
 package jewellery.inventory.service;
 
+import static jewellery.inventory.model.EventType.RESOURCE_QUANTITY_REMOVE;
+
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
@@ -79,16 +81,18 @@ public class ResourceInUserService implements EntityFetcher {
   }
 
   @Transactional
-  @LogResourceQuantityRemovalEvent
-  public void removeQuantityFromResource(UUID userId, UUID resourceId, double quantity) {
+  @LogUpdateEvent(eventType = RESOURCE_QUANTITY_REMOVE)
+  public ResourcesInUserResponseDto removeQuantityFromResource(
+      UUID userId, UUID resourceId, double quantity) {
     User user = findUserById(userId);
     ResourceInUser resourceInUser = findResourceInUserOrThrow(user, resourceId);
 
-    removeQuantityFromResource(resourceInUser, quantity);
+    return resourcesInUserMapper.toResourcesInUserResponseDto(
+        removeQuantityFromResource(resourceInUser, quantity));
   }
 
   @Transactional
-  @LogDeleteEvent(eventType = EventType.RESOURCE_IN_USER_DELETE)
+  @LogUpdateEvent(eventType = RESOURCE_QUANTITY_REMOVE)
   public void removeResourceFromUser(UUID userId, UUID resourceId) {
     User user = findUserById(userId);
     ResourceInUser resourceToRemove = findResourceInUserOrThrow(user, resourceId);
@@ -115,17 +119,17 @@ public class ResourceInUserService implements EntityFetcher {
     return null;
   }
 
-  private User addResourceToUser(User user, Resource resource, Double quantity) {
+  private void addResourceToUser(User user, Resource resource, Double quantity) {
     ResourceInUser resourceInUser =
         findResourceInUser(user, resource.getId())
             .orElseGet(() -> createAndAddNewResourceInUser(user, resource, 0));
 
     resourceInUser.setQuantity(resourceInUser.getQuantity() + quantity);
     resourceInUserRepository.save(resourceInUser);
-    return user;
   }
 
-  private User removeQuantityFromResource(ResourceInUser resourceInUser, double quantityToRemove) {
+  private ResourceInUser removeQuantityFromResource(
+      ResourceInUser resourceInUser, double quantityToRemove) {
     if (quantityToRemove < 0) {
       throw new NegativeResourceQuantityException(quantityToRemove);
     }
@@ -141,9 +145,10 @@ public class ResourceInUserService implements EntityFetcher {
     User owner = resourceInUser.getOwner();
     if (Math.abs(newQuantity) < EPSILON) {
       owner.getResourcesOwned().remove(resourceInUser);
+      resourceInUser = null;
     }
     userRepository.save(owner);
-    return owner;
+    return resourceInUser;
   }
 
   private ResourceInUser findResourceInUserOrThrow(User previousOwner, UUID resourceId) {

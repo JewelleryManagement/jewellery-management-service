@@ -3,7 +3,6 @@ package jewellery.inventory.integration;
 import static jewellery.inventory.helper.ResourceTestHelper.getPreciousStoneRequestDto;
 import static jewellery.inventory.helper.SystemEventTestHelper.assertEventWasLogged;
 import static jewellery.inventory.helper.UserTestHelper.*;
-import static jewellery.inventory.model.EventType.RESOURCE_IN_USER_DELETE;
 import static jewellery.inventory.model.EventType.RESOURCE_IN_USER_TOP_UP;
 import static jewellery.inventory.model.EventType.RESOURCE_QUANTITY_REMOVE;
 import static jewellery.inventory.model.EventType.RESOURCE_TRANSFER;
@@ -233,7 +232,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertEventWasLogged(
         this.testRestTemplate,
         getBaseSystemEventUrl(),
-        RESOURCE_IN_USER_DELETE,
+        RESOURCE_QUANTITY_REMOVE,
         "entity",
         "owner.name",
         response.getBody().getOwner().getName());

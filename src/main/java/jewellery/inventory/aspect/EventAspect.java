@@ -74,108 +74,11 @@ public class EventAspect {
     }
   }
 
-  @Before("@annotation(logDeleteEvent) && args(userId, resourceId)")
-  public void logResourceInUserDeletion(
-      JoinPoint joinPoint, LogDeleteEvent logDeleteEvent, UUID userId, UUID resourceId) {
-    if (!(joinPoint.getTarget() instanceof EntityFetcher entityFetcher)) {
-      logger.error(
-          "Service does not implement EntityFetcher interface. Unable to log deletion event.");
-      return;
-    }
-
-    EventType eventType = logDeleteEvent.eventType();
-    Object userResourcesBeforeDeletion = entityFetcher.fetchEntity(userId, resourceId);
-    //    ResourcesInUserResponseDto userResourcesBeforeDeletion =
-    //        fetchUserResources(entityFetcher, userId, resourceId);
-
-    if (userResourcesBeforeDeletion != null) {
-      eventService.logEvent(eventType, userResourcesBeforeDeletion);
-    }
-  }
-
   @AfterReturning(pointcut = "@annotation(logTransferEvent)", returning = "result")
   public void logTransfer(LogTransferEvent logTransferEvent, Object result) {
     EventType eventType = logTransferEvent.eventType();
     if (result instanceof TransferResourceResponseDto || result instanceof ProductResponseDto) {
       eventService.logEvent(eventType, result);
     }
-  }
-
-  @Around("@annotation(logResourceQuantityRemovalEvent)")
-  public Object logResourceQuantityRemoval(
-      ProceedingJoinPoint proceedingJoinPoint,
-      LogResourceQuantityRemovalEvent logResourceQuantityRemovalEvent)
-      throws Throwable {
-
-    if (!(proceedingJoinPoint.getTarget() instanceof EntityFetcher entityFetcher)) {
-      logger.error("Service does not implement EntityFetcher interface. Unable to log event.");
-      return proceedingJoinPoint.proceed();
-    }
-
-    UUID userId = (UUID) proceedingJoinPoint.getArgs()[0];
-    UUID resourceId = (UUID) proceedingJoinPoint.getArgs()[1];
-
-    Object beforeDto = entityFetcher.fetchEntity(userId, resourceId);
-    //    fetchAndFilterResourceState(entityFetcher, userId, resourceId);
-    if (beforeDto == null) {
-      logStateNullWarning("before", userId, resourceId);
-      return proceedingJoinPoint.proceed();
-    }
-
-    Object result = proceedingJoinPoint.proceed();
-
-    Object afterDto = entityFetcher.fetchEntity(userId, resourceId);
-    if (afterDto == null) {
-      logStateNullWarning("after", userId, resourceId);
-      return result;
-    }
-
-    eventService.logEvent(logResourceQuantityRemovalEvent.eventType(), afterDto, beforeDto);
-    return result;
-  }
-
-  //  private ResourcesInUserResponseDto filterResourcesInUserResponseDto(User owner, UUID
-  // resourceId) {
-  //    ResourcesInUserResponseDto dto = resourcesInUserMapper.toResourcesInUserResponseDto(owner);
-  //    List<ResourceQuantityResponseDto> filteredResources =
-  //        dto.getResourcesAndQuantities().stream()
-  //            .filter(r -> r.getResource().getId().equals(resourceId))
-  //            .toList();
-  //    dto.setResourcesAndQuantities(filteredResources);
-  //    return dto;
-  //  }
-
-  //  private ResourcesInUserResponseDto fetchAndFilterResourceState(
-  //      EntityFetcher entityFetcher, UUID userId, UUID resourceId) {
-  //    ResourceInUser resourceEntity = (ResourceInUser) entityFetcher.fetchEntity(userId,
-  // resourceId);
-  //    if (resourceEntity == null) {
-  //      return null;
-  //    }
-  //    return filterResourcesInUserResponseDto(resourceEntity.getOwner(), resourceId);
-  //  }
-
-  //  private ResourcesInUserResponseDto fetchUserResources(
-  //      EntityFetcher entityFetcher, UUID userId, UUID resourceId) {
-  //    ResourceInUser resourceInUser = (ResourceInUser) entityFetcher.fetchEntity(userId,
-  // resourceId);
-  //    if (resourceInUser == null) {
-  //      logger.warn(
-  //          "Entity before deletion is null. Unable to log deletion for userId: {}, resourceId:
-  // {}",
-  //          userId,
-  //          resourceId);
-  //      return null;
-  //    }
-  //
-  //    return resourcesInUserMapper.toResourcesInUserResponseDto(resourceInUser.getOwner());
-  //  }
-
-  private void logStateNullWarning(String state, UUID userId, UUID resourceId) {
-    logger.warn(
-        "ResourceInUser {} state is null. Changes will not be logged for userId: {}, resourceId: {}",
-        state,
-        userId,
-        resourceId);
   }
 }
