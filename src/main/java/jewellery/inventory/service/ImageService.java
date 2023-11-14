@@ -122,7 +122,7 @@ public class ImageService {
   }
 
   private void checkContentType(MultipartFile file) {
-    if (!isSupportedContentType(file.getContentType())) {
+    if (!isSupportedContentType(Objects.requireNonNull(file.getContentType()))) {
       throw new MultipartFileContentTypeException();
     }
   }
