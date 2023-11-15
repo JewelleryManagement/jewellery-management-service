@@ -1,10 +1,8 @@
 package jewellery.inventory.model;
 
 import jakarta.persistence.*;
-
 import java.util.List;
 import java.util.UUID;
-
 import jewellery.inventory.model.resource.ResourceInProduct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -44,5 +42,6 @@ public class Product {
   private String productionNumber;
   private String description;
   private double salePrice;
-  private boolean isSold;
+  private double discount;
+  @ManyToOne private Sale partOfSale;
 }
