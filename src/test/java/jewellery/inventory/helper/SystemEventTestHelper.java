@@ -32,11 +32,7 @@ public class SystemEventTestHelper {
       throws JsonProcessingException {
 
     Optional<SystemEvent> event =
-        findEventByTypeAndEntity(
-            testRestTemplate,
-            baseSystemEventUrl,
-            eventType,
-            toCompare);
+        findEventByTypeAndEntity(testRestTemplate, baseSystemEventUrl, eventType, toCompare);
 
     assertTrue(event.isPresent(), "Event of type " + eventType + " for entity " + " not logged");
   }
@@ -45,15 +41,13 @@ public class SystemEventTestHelper {
       TestRestTemplate testRestTemplate,
       String baseSystemEventUrl,
       EventType eventType,
-     Map<String, Object> toCompare)
+      Map<String, Object> toCompare)
       throws JsonProcessingException {
 
     List<SystemEvent> events = fetchAllSystemEvents(testRestTemplate, baseSystemEventUrl);
     return events.stream()
         .filter(
-            event ->
-                event.getType().equals(eventType)
-                    && entityMatches(event.getPayload(), toCompare))
+            event -> event.getType().equals(eventType) && isSubmap(toCompare, event.getPayload()))
         .findFirst();
   }
 
@@ -65,27 +59,47 @@ public class SystemEventTestHelper {
     return objectMapper.readValue(response.getBody(), new TypeReference<>() {});
   }
 
-  private static boolean entityMatches(
-      Map<String, Object> payload, Map<String, Object> toCompare) {
+  private static boolean entityMatches(Map<String, Object> payload, Map<String, Object> toCompare) {
 
     return payload.entrySet().containsAll(toCompare.entrySet());
 
-//    Object currentObject = payload.get(entityPayloadKey);
-//    String[] keys = entityKey.split("\\.");
-//
-//    for (String key : keys) {
-//      if (currentObject instanceof Map<?, ?> currentMap) {
-//        if (!currentMap.containsKey(key)) {
-//          return false;
-//        }
-//        currentObject = currentMap.get(key);
-//      } else if (currentObject instanceof List<?> list && !((List<?>) currentObject).isEmpty()) {
-//        currentObject = ((Map<?, ?>) list.get(0)).get(key);
-//      } else {
-//        return false;
-//      }
-//    }
-//
-//    return entityValue.equals(String.valueOf(currentObject));
+    //    Object currentObject = payload.get(entityPayloadKey);
+    //    String[] keys = entityKey.split("\\.");
+    //
+    //    for (String key : keys) {
+    //      if (currentObject instanceof Map<?, ?> currentMap) {
+    //        if (!currentMap.containsKey(key)) {
+    //          return false;
+    //        }
+    //        currentObject = currentMap.get(key);
+    //      } else if (currentObject instanceof List<?> list && !((List<?>)
+    // currentObject).isEmpty()) {
+    //        currentObject = ((Map<?, ?>) list.get(0)).get(key);
+    //      } else {
+    //        return false;
+    //      }
+    //    }
+    //
+    //    return entityValue.equals(String.valueOf(currentObject));
+  }
+
+  public static <K, V> boolean isSubmap(Map<K, V> submap, Map<K, V> map) {
+    for (Map.Entry<K, V> entry : submap.entrySet()) {
+      K submapKey = entry.getKey();
+      V submapValue = entry.getValue();
+
+      boolean endValueNotEqualsValue =
+          !(submapValue instanceof Map<?, ?>) && !map.get(submapKey).equals(submapValue);
+      if (!map.containsKey(submapKey) || endValueNotEqualsValue) {
+        return false;
+      }
+
+      if (submapValue instanceof Map
+          && !isSubmap((Map<K, V>) submapValue, (Map<K, V>) map.get(submapKey))) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }
