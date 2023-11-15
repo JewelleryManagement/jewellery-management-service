@@ -67,20 +67,15 @@ public class ResourceInUserService implements EntityFetcher {
   @Transactional
   @LogUpdateEvent(eventType = EventType.RESOURCE_IN_USER_TOP_UP)
   public ResourcesInUserResponseDto addResourceToUser(ResourceInUserRequestDto resourceUserDto) {
+    return addResourceToUserNoLog(resourceUserDto);
+  }
+
+  public ResourcesInUserResponseDto addResourceToUserNoLog(ResourceInUserRequestDto resourceUserDto) {
     User user = findUserById(resourceUserDto.getUserId());
     Resource resource = findResourceById(resourceUserDto.getResourceId());
 
-    addResourceToUser(user, resource, resourceUserDto.getQuantity());
-
-    //TODO: refactor me
     return resourcesInUserMapper.toResourcesInUserResponseDto(
-        user.getResourcesOwned().stream()
-            .filter(
-                resourceInUser ->
-                    resourceInUser.getResource().getId().equals(resourceUserDto.getResourceId()))
-            .findFirst()
-            .orElse(null));
-//    return resourcesInUserMapper.toResourcesInUserResponseDto(user);
+            addResourceToUser(user, resource, resourceUserDto.getQuantity()));
   }
 
   public ResourcesInUserResponseDto getAllResourcesFromUser(UUID userId) {
@@ -92,11 +87,15 @@ public class ResourceInUserService implements EntityFetcher {
   @LogUpdateEvent(eventType = RESOURCE_QUANTITY_REMOVE)
   public ResourcesInUserResponseDto removeQuantityFromResource(
       UUID userId, UUID resourceId, double quantity) {
+    return removeQuantityFromResourceNoLog(userId, resourceId, quantity);
+  }
+
+  public ResourcesInUserResponseDto removeQuantityFromResourceNoLog(UUID userId, UUID resourceId, double quantity) {
     User user = findUserById(userId);
     ResourceInUser resourceInUser = findResourceInUserOrThrow(user, resourceId);
 
     return resourcesInUserMapper.toResourcesInUserResponseDto(
-        removeQuantityFromResource(resourceInUser, quantity));
+            removeQuantityFromResource(resourceInUser, quantity));
   }
 
   @Transactional
@@ -127,13 +126,13 @@ public class ResourceInUserService implements EntityFetcher {
     return null;
   }
 
-  private void addResourceToUser(User user, Resource resource, Double quantity) {
+  private ResourceInUser addResourceToUser(User user, Resource resource, Double quantity) {
     ResourceInUser resourceInUser =
         findResourceInUser(user, resource.getId())
             .orElseGet(() -> createAndAddNewResourceInUser(user, resource, 0));
 
     resourceInUser.setQuantity(resourceInUser.getQuantity() + quantity);
-    resourceInUserRepository.save(resourceInUser);
+    return resourceInUserRepository.save(resourceInUser);
   }
 
   private ResourceInUser removeQuantityFromResource(

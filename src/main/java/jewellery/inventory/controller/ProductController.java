@@ -51,7 +51,7 @@ public class ProductController {
   @PutMapping("/{productId}/transfer/{recipientId}")
   public ProductResponseDto transferProduct(
       @PathVariable("productId") UUID productId, @PathVariable("recipientId") UUID recipientId) {
-    return productService.transferProduct(recipientId, productId);
+    return productService.transferProduct(productId, recipientId);
   }
 
   @Operation(summary = "Delete a product by Id")

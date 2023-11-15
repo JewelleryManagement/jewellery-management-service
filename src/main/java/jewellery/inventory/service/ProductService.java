@@ -6,7 +6,7 @@ import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
-import jewellery.inventory.aspect.annotation.LogTransferEvent;
+import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
@@ -81,8 +81,8 @@ public class ProductService implements EntityFetcher {
     productRepository.deleteById(id);
   }
 
-  @LogTransferEvent(eventType = EventType.PRODUCT_TRANSFER)
-  public ProductResponseDto transferProduct(UUID recipientId, UUID productId) {
+  @LogUpdateEvent(eventType = EventType.PRODUCT_TRANSFER)
+  public ProductResponseDto transferProduct(UUID productId, UUID recipientId) {
     Product productForChangeOwner = getProductForTransfer(recipientId, productId);
     productForChangeOwner.setOwner(getUser(recipientId));
     productRepository.save(productForChangeOwner);
@@ -128,7 +128,7 @@ public class ProductService implements EntityFetcher {
 
     resourcesInProduct.forEach(
         resourceInProduct ->
-            resourceInUserService.addResourceToUser(
+            resourceInUserService.addResourceToUserNoLog(
                 getResourceInUserRequest(owner, resourceInProduct)));
   }
 
@@ -251,7 +251,7 @@ public class ProductService implements EntityFetcher {
   private ResourceInProduct transferSingleResourceQuantityFromUserToProduct(
       User owner, ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
     ResourceInUser resourceInUser = getResourceInUser(owner, incomingResourceInProduct.getId());
-    resourceInUserService.removeQuantityFromResource(
+    resourceInUserService.removeQuantityFromResourceNoLog(
         owner.getId(),
         resourceInUser.getResource().getId(),
         incomingResourceInProduct.getQuantity());

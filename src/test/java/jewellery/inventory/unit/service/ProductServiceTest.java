@@ -69,7 +69,7 @@ class ProductServiceTest {
 
     assertThrows(
         ProductIsContentException.class,
-        () -> productService.transferProduct(user.getId(), contentProduct.getId()));
+        () -> productService.transferProduct(contentProduct.getId(), user.getId()));
 
     assertNotNull(contentProduct.getContentOf());
   }
@@ -81,7 +81,7 @@ class ProductServiceTest {
 
     assertThrows(
         ProductIsSoldException.class,
-        () -> productService.transferProduct(user.getId(), product.getId()));
+        () -> productService.transferProduct(product.getId(), user.getId()));
 
     assertTrue(product.isSold());
   }
@@ -92,7 +92,7 @@ class ProductServiceTest {
 
     assertThrows(
         ProductOwnerEqualsRecipientException.class,
-        () -> productService.transferProduct(user.getId(), product.getId()));
+        () -> productService.transferProduct(product.getId(), user.getId()));
 
     assertEquals(product.getOwner().getId(), user.getId());
   }
@@ -104,7 +104,7 @@ class ProductServiceTest {
     when(userRepository.findById(recipient.getId())).thenReturn(Optional.of(recipient));
     assertEquals(product.getOwner().getId(), user.getId());
 
-    productService.transferProduct(recipient.getId(), product.getId());
+    productService.transferProduct(product.getId(), recipient.getId());
 
     assertNotEquals(recipient.getId(), user.getId());
     assertFalse(product.isSold());
