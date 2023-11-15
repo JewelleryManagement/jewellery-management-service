@@ -3,11 +3,7 @@ package jewellery.inventory.aspect;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
-import jewellery.inventory.aspect.annotation.LogResourceQuantityRemovalEvent;
-import jewellery.inventory.aspect.annotation.LogTransferEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
-import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.mapper.ResourcesInUserMapper;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.service.SystemEventService;
@@ -71,14 +67,6 @@ public class EventAspect {
       eventService.logEvent(eventType, entityBeforeDeletion);
     } else {
       logger.error("Entity not found for deletion logging");
-    }
-  }
-
-  @AfterReturning(pointcut = "@annotation(logTransferEvent)", returning = "result")
-  public void logTransfer(LogTransferEvent logTransferEvent, Object result) {
-    EventType eventType = logTransferEvent.eventType();
-    if (result instanceof TransferResourceResponseDto || result instanceof ProductResponseDto) {
-      eventService.logEvent(eventType, result);
     }
   }
 }

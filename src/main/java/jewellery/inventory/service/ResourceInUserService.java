@@ -43,7 +43,7 @@ public class ResourceInUserService implements EntityFetcher {
   private static final double EPSILON = 1e-10;
 
   @Transactional
-  @LogTransferEvent(eventType = EventType.RESOURCE_TRANSFER)
+  @LogCreateEvent(eventType = EventType.RESOURCE_TRANSFER)
   public TransferResourceResponseDto transferResources(
       TransferResourceRequestDto transferResourceRequestDto) {
 
