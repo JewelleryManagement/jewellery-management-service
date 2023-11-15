@@ -73,7 +73,7 @@ class UserServiceTest {
   void getUserWhenUserIdDoesNotExistThenThrowException() {
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-    assertThrows(UserNotFoundException.class, () -> userService.getUser(userId));
+    assertThrows(UserNotFoundException.class, () -> userService.getUserResponse(userId));
 
     verify(userRepository, times(1)).findById(userId);
   }
@@ -83,7 +83,7 @@ class UserServiceTest {
   void getUserWhenUserIdExists() {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-    UserResponseDto result = userService.getUser(userId);
+    UserResponseDto result = userService.getUserResponse(userId);
 
     assertEquals(userResponse, result);
     verify(userRepository, times(1)).findById(userId);

@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.repository.ProductRepository;
+import jewellery.inventory.repository.SaleRepository;
 import jewellery.inventory.repository.SystemEventRepository;
 import jewellery.inventory.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,20 +33,25 @@ import org.springframework.http.ResponseEntity;
 class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Autowired UserRepository userRepository;
   @Autowired SystemEventRepository systemEventRepository;
+  @Autowired SaleRepository saleRepository;
+  @Autowired ProductRepository productRepository;
 
   private String getBaseUserUrl() {
     return BASE_URL_PATH + port + "/users";
   }
 
+  @BeforeEach
+  void cleanUp() {
+    productRepository.deleteAll();
+    saleRepository.deleteAll();
+    userRepository.deleteAll();
+      systemEventRepository.deleteAll();
+  }
   private String getBaseSystemEventUrl() {
     return BASE_URL_PATH + port + "/system-events";
   }
 
-  @BeforeEach
-  void cleanUp() {
-    userRepository.deleteAll();
-    systemEventRepository.deleteAll();
-  }
+
 
   @Test
   void createUserSuccessfully() throws Exception {
@@ -65,6 +72,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEventWasLogged(
         this.testRestTemplate, getBaseSystemEventUrl(), USER_CREATE, "entity", "name", "john");
   }
+
 
   @Test
   void createUserFailsWhenNameInvalid() {
@@ -163,6 +171,14 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     UserRequestDto updatedUserRequest = createDifferentUserRequest();
     HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(updatedUserRequest);
 
+    ResponseEntity<UserResponseDto> response =
+        this.testRestTemplate.exchange(
+            getBaseUserUrl() + "/" + createdUser.getId(),
+            HttpMethod.PUT,
+            requestUpdate,
+            UserResponseDto.class);
+    UserRequestDto updatedUserRequest = createTestUserRequest();
+    HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(updatedUserRequest);
     ResponseEntity<UserResponseDto> response =
         this.testRestTemplate.exchange(
             getBaseUserUrl() + "/" + createdUser.getId(),

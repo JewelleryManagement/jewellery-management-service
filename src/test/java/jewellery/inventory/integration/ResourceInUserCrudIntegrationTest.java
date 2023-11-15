@@ -15,6 +15,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
+import jewellery.inventory.dto.response.*;
+import jewellery.inventory.dto.response.resource.PreciousStoneResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
@@ -29,6 +33,7 @@ import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.SystemEventRepository;
 import jewellery.inventory.repository.UserRepository;
+import jewellery.inventory.repository.*;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +44,9 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   private static final double RESOURCE_QUANTITY = 5.00;
   @Autowired UserRepository userRepository;
+  @Autowired SaleRepository saleRepository;
+  @Autowired
+  ProductRepository productRepository;
   @Autowired ResourceRepository resourceRepository;
   @Autowired ResourceInUserRepository resourceInUserRepository;
   @Autowired private SystemEventRepository systemEventRepository;
@@ -77,6 +85,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   @BeforeEach
   void cleanup() {
+    productRepository.deleteAll();
+    saleRepository.deleteAll();
     userRepository.deleteAll();
     resourceRepository.deleteAll();
     resourceInUserRepository.deleteAll();
