@@ -42,7 +42,7 @@ public class ProductService implements EntityFetcher {
   @LogCreateEvent(eventType = EventType.PRODUCT_CREATE)
   public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
     User owner = getUser(productRequestDto.getOwnerId());
-    Product product = createProductWithoutResourcesAndProducts(productRequestDto, owner);
+    Product product = persistProductWithoutResourcesAndProducts(productRequestDto, owner);
     addProductsContentToProduct(productRequestDto, product);
     addResourcesToProduct(productRequestDto, owner, product);
     return productMapper.mapToProductResponseDto(product);
@@ -58,7 +58,7 @@ public class ProductService implements EntityFetcher {
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
-  public ProductResponseDto getProduct(UUID id) {
+  public ProductResponseDto getProductWithoutResourcesAndProduct(UUID id) {
     Product product =
         productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
 
@@ -190,14 +190,15 @@ public class ProductService implements EntityFetcher {
     return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
   }
 
-  private Product createProductWithoutResourcesAndProducts(
+  private Product persistProductWithoutResourcesAndProducts(
       ProductRequestDto productRequestDto, User user) {
-    Product product = getProduct(productRequestDto, user);
+    Product product = getProductWithoutResourcesAndProduct(productRequestDto, user);
     productRepository.save(product);
     return product;
   }
 
-  private Product getProduct(ProductRequestDto productRequestDto, User user) {
+  private Product getProductWithoutResourcesAndProduct(
+      ProductRequestDto productRequestDto, User user) {
     Product product = new Product();
     product.setOwner(user);
     product.setAuthors(getAuthors(productRequestDto));
@@ -206,6 +207,8 @@ public class ProductService implements EntityFetcher {
     product.setSalePrice(productRequestDto.getSalePrice());
     product.setProductionNumber(productRequestDto.getProductionNumber());
     product.setCatalogNumber(productRequestDto.getCatalogNumber());
+    product.setProductsContent(new ArrayList<>());
+    product.setResourcesContent(new ArrayList<>());
     return product;
   }
 

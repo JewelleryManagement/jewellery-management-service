@@ -29,19 +29,22 @@ public class SystemEventService {
   public <T, U> void logEvent(EventType type, T entity, @Nullable U oldEntity) {
     Map<String, Object> payload = new HashMap<>();
 
-    payload.put("entityBefore", oldEntity);
-    payload.put("entityAfter", entity);
+    payload.put("entityBefore", createMap(oldEntity));
+    payload.put("entityAfter", createMap(entity));
 
     logEvent(type, payload);
   }
 
-
   public <T, U> void logEvent(EventType type, T entity) {
     Map<String, Object> payload = new HashMap<>();
 
-    payload.put("entity", entity);
+    payload.put("entity", createMap(entity));
 
     logEvent(type, payload);
+  }
+
+  private <U> Object createMap(U entity) {
+    return objectMapper.convertValue(entity, new TypeReference<>() {});
   }
 
   private void logEvent(EventType type, Map<String, Object> payload) {
@@ -49,7 +52,7 @@ public class SystemEventService {
     Object executor = jwtUtils.getCurrentUser();
     if (executor != null) {
       Map<String, Object> executorMap =
-              objectMapper.convertValue(executor, new TypeReference<>() {});
+          objectMapper.convertValue(executor, new TypeReference<>() {});
       event.setExecutor(executorMap);
     }
 

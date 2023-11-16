@@ -43,7 +43,7 @@ public class ProductController {
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")
   public ProductResponseDto getProduct(@PathVariable("id") UUID id) {
-    return productService.getProduct(id);
+    return productService.getProductWithoutResourcesAndProduct(id);
   }
 
   @Operation(summary = "Transfer a product")

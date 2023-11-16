@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.SystemEvent;
@@ -60,19 +61,20 @@ public class SystemEventTestHelper {
     return objectMapper.readValue(response.getBody(), new TypeReference<>() {});
   }
 
-  public static <K, V> boolean isSubmap(Map<K, V> submap, Map<K, V> map) {
-    for (Map.Entry<K, V> entry : submap.entrySet()) {
-      K submapKey = entry.getKey();
-      V submapValue = entry.getValue();
+  public static boolean isSubmap(Map<String, Object> submap, Map<String, Object> map) {
+    for (Map.Entry<String, Object> entry : submap.entrySet()) {
+      String submapKey = entry.getKey();
+      Object submapValue = entry.getValue();
 
       boolean endValueNotEqualsValue =
-          !(submapValue instanceof Map<?, ?>) && !map.get(submapKey).equals(submapValue);
+          !(submapValue instanceof Map<?, ?>) && !Objects.equals(submapValue, map.get(submapKey));
       if (!map.containsKey(submapKey) || endValueNotEqualsValue) {
         return false;
       }
 
       if (submapValue instanceof Map
-          && !isSubmap((Map<K, V>) submapValue, (Map<K, V>) map.get(submapKey))) {
+          && !isSubmap(
+              (Map<String, Object>) submapValue, (Map<String, Object>) map.get(submapKey))) {
         return false;
       }
     }
@@ -80,10 +82,8 @@ public class SystemEventTestHelper {
     return true;
   }
 
-
-
-  public static Map<String, Object> createUserAsMap(User user) {
-    return Map.of("name", user.getName(), "email", user.getEmail(), "id", user.getId().toString());
+  public static Map<String, Object> getEntityAsMap(Object entity) {
+    return objectMapper.convertValue(entity, new TypeReference<>() {});
   }
 
   public static Map<String, Object> getUpdateEventPayload(
@@ -91,7 +91,7 @@ public class SystemEventTestHelper {
     return Map.ofEntries(createEntityBefore(entityBefore), createEntityAfter(entityAfter));
   }
 
-  public static Map<String, Object> createCreateOrDeleteEvent(Map<String, Object> entity) {
+  public static Map<String, Object> getCreateOrDeleteEventPayload(Map<String, Object> entity) {
     return Map.ofEntries(createEntity(entity));
   }
 
@@ -109,7 +109,4 @@ public class SystemEventTestHelper {
     return Map.entry("entity", value);
   }
 
-  public static Map.Entry getOwnerEntry(User user) {
-    return Map.entry("owner", createUserAsMap(user));
-  }
 }

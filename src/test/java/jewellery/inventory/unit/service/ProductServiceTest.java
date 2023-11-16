@@ -191,7 +191,7 @@ class ProductServiceTest {
   @Test
   void testGetProductShouldThrowWhenProductNotFound() {
     UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
-    assertThrows(ProductNotFoundException.class, () -> productService.getProduct(fakeId));
+    assertThrows(ProductNotFoundException.class, () -> productService.getProductWithoutResourcesAndProduct(fakeId));
   }
 
   @Test
@@ -202,7 +202,7 @@ class ProductServiceTest {
     ProductResponseDto response = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
 
-    ProductResponseDto actual = productService.getProduct(product.getId());
+    ProductResponseDto actual = productService.getProductWithoutResourcesAndProduct(product.getId());
 
     assertEquals(response, actual);
     assertEquals(response.getId(), actual.getId());
