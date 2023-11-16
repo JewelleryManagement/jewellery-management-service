@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.exception.product.ProductIsContentException;
+import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.Product;
@@ -33,18 +35,31 @@ public class SaleService {
             userService.getUser(saleRequestDto.getBuyerId()),
             getProductsFromSaleRequestDto(saleRequestDto));
 
-    throwExceptionIfProductOwnerNotSeller(sale.getProducts(), saleRequestDto.getSellerId());
+    validateProductsOwnersAndContentsOf(sale.getProducts(), saleRequestDto.getSellerId());
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
 
-  private void throwExceptionIfProductOwnerNotSeller(List<Product> products, UUID sellerId) {
-    for (Product product : products) {
-      if (!product.getOwner().getId().equals(sellerId)) {
-        throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
-      }
-    }
+  private void validateProductsOwnersAndContentsOf(List<Product> products, UUID sellerId) {
+    products.stream()
+        .filter(product -> product.getPartOfSale() != null)
+        .forEach(
+            product -> {
+              throw new ProductIsSoldException(product.getId());
+            });
+    products.stream()
+        .filter(product -> product.getContentOf() != null)
+        .forEach(
+            product -> {
+              throw new ProductIsContentException(product.getId());
+            });
+    products.stream()
+        .filter(product -> !product.getOwner().getId().equals(sellerId))
+        .forEach(
+            product -> {
+              throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
+            });
   }
 
   private void updateProductOwnersAndSale(List<Product> products, UUID buyerId, Sale sale) {
