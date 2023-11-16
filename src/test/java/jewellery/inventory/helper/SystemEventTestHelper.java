@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.SystemEvent;
+import jewellery.inventory.model.User;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 
@@ -59,30 +60,6 @@ public class SystemEventTestHelper {
     return objectMapper.readValue(response.getBody(), new TypeReference<>() {});
   }
 
-  private static boolean entityMatches(Map<String, Object> payload, Map<String, Object> toCompare) {
-
-    return payload.entrySet().containsAll(toCompare.entrySet());
-
-    //    Object currentObject = payload.get(entityPayloadKey);
-    //    String[] keys = entityKey.split("\\.");
-    //
-    //    for (String key : keys) {
-    //      if (currentObject instanceof Map<?, ?> currentMap) {
-    //        if (!currentMap.containsKey(key)) {
-    //          return false;
-    //        }
-    //        currentObject = currentMap.get(key);
-    //      } else if (currentObject instanceof List<?> list && !((List<?>)
-    // currentObject).isEmpty()) {
-    //        currentObject = ((Map<?, ?>) list.get(0)).get(key);
-    //      } else {
-    //        return false;
-    //      }
-    //    }
-    //
-    //    return entityValue.equals(String.valueOf(currentObject));
-  }
-
   public static <K, V> boolean isSubmap(Map<K, V> submap, Map<K, V> map) {
     for (Map.Entry<K, V> entry : submap.entrySet()) {
       K submapKey = entry.getKey();
@@ -101,5 +78,38 @@ public class SystemEventTestHelper {
     }
 
     return true;
+  }
+
+
+
+  public static Map<String, Object> createUserAsMap(User user) {
+    return Map.of("name", user.getName(), "email", user.getEmail(), "id", user.getId().toString());
+  }
+
+  public static Map<String, Object> getUpdateEventPayload(
+      Map<String, Object> entityBefore, Map<String, Object> entityAfter) {
+    return Map.ofEntries(createEntityBefore(entityBefore), createEntityAfter(entityAfter));
+  }
+
+  public static Map<String, Object> createCreateOrDeleteEvent(Map<String, Object> entity) {
+    return Map.ofEntries(createEntity(entity));
+  }
+
+  public static Map.Entry<String, Map<String, Object>> createEntityBefore(
+      Map<String, Object> value) {
+    return Map.entry("entityBefore", value);
+  }
+
+  public static Map.Entry<String, Map<String, Object>> createEntityAfter(
+      Map<String, Object> value) {
+    return Map.entry("entityAfter", value);
+  }
+
+  public static Map.Entry<String, Map<String, Object>> createEntity(Map<String, Object> value) {
+    return Map.entry("entity", value);
+  }
+
+  public static Map.Entry getOwnerEntry(User user) {
+    return Map.entry("owner", createUserAsMap(user));
   }
 }

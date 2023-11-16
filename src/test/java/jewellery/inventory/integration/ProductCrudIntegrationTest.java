@@ -1,11 +1,9 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ProductTestHelper.*;
-import static jewellery.inventory.helper.SystemEventTestHelper.assertEventWasLogged;
+import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
 import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
-import static jewellery.inventory.model.EventType.PRODUCT_CREATE;
-import static jewellery.inventory.model.EventType.PRODUCT_DISASSEMBLY;
 import static jewellery.inventory.model.EventType.PRODUCT_TRANSFER;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -131,12 +129,12 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertNotNull(resultResponse.getBody());
     assertEquals(differentUser.getId(), resultResponse.getBody().getOwner().getId());
     assertEquals(HttpStatus.OK, resultResponse.getStatusCode());
-    Map<String, Object> expected =
-        Map.of(
-            "entityAfter", Map.of("catalogNumber", productResponse.getBody().getCatalogNumber()));
+    Map<String, Object> expectedEventSubPayload =
+        getUpdateEventPayload(
+            Map.ofEntries(getOwnerEntry(user)), Map.ofEntries(getOwnerEntry(differentUser)));
 
     assertEventWasLogged(
-        this.testRestTemplate, getBaseSystemEventUrl(), PRODUCT_TRANSFER, expected);
+        this.testRestTemplate, getBaseSystemEventUrl(), PRODUCT_TRANSFER, expectedEventSubPayload);
   }
 
   @Test
