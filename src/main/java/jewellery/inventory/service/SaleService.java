@@ -35,30 +35,39 @@ public class SaleService {
             userService.getUser(saleRequestDto.getBuyerId()),
             getProductsFromSaleRequestDto(saleRequestDto));
 
-    validateProductsOwnersContentsOfAndPartOfSale(sale.getProducts(), saleRequestDto.getSellerId());
+    throwExceptionIfProductIsSold(sale.getProducts());
+    throwExceptionIfProductIsPartOfAnotherProduct(sale.getProducts());
+    throwExceptionIfUserNotSeller(sale.getProducts(), saleRequestDto.getSellerId());
+
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
 
-  private void validateProductsOwnersContentsOfAndPartOfSale(List<Product> products, UUID sellerId) {
+  private void throwExceptionIfUserNotSeller(List<Product> products, UUID sellerId) {
     products.stream()
-        .filter(product -> product.getPartOfSale() != null)
+        .filter(product -> !product.getOwner().getId().equals(sellerId))
         .forEach(
             product -> {
-              throw new ProductIsSoldException(product.getId());
+              throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
             });
+  }
+
+  private void throwExceptionIfProductIsPartOfAnotherProduct(List<Product> products) {
     products.stream()
         .filter(product -> product.getContentOf() != null)
         .forEach(
             product -> {
               throw new ProductIsContentException(product.getId());
             });
+  }
+
+  private void throwExceptionIfProductIsSold(List<Product> products) {
     products.stream()
-        .filter(product -> !product.getOwner().getId().equals(sellerId))
+        .filter(product -> product.getPartOfSale() != null)
         .forEach(
             product -> {
-              throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
+              throw new ProductIsSoldException(product.getId());
             });
   }
 
