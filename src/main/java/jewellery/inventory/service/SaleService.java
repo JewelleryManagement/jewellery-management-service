@@ -35,13 +35,13 @@ public class SaleService {
             userService.getUser(saleRequestDto.getBuyerId()),
             getProductsFromSaleRequestDto(saleRequestDto));
 
-    validateProductsOwnersAndContentsOf(sale.getProducts(), saleRequestDto.getSellerId());
+    validateProductsOwnersContentsOfAndPartOfSale(sale.getProducts(), saleRequestDto.getSellerId());
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
 
-  private void validateProductsOwnersAndContentsOf(List<Product> products, UUID sellerId) {
+  private void validateProductsOwnersContentsOfAndPartOfSale(List<Product> products, UUID sellerId) {
     products.stream()
         .filter(product -> product.getPartOfSale() != null)
         .forEach(
