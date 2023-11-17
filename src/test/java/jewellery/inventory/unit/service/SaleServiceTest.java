@@ -62,7 +62,7 @@ class SaleServiceTest {
     productsForSale = SaleTestHelper.getProductsList(product);
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSale);
     saleResponseDto = SaleTestHelper.getSaleResponseDto(sale);
-    productResponseDto = getРeturnedProductResponseDto(product, createTestUserResponseDto(buyer));
+    productResponseDto = getReturnedProductResponseDto(product, createTestUserResponseDto(buyer));
     productPriceDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(product.getId(), 1000, 10);
     List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
