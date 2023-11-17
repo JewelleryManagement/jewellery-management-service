@@ -119,28 +119,24 @@ class SaleServiceTest {
 
   @Test
   void testCreateSaleProductWillThrowsProductIsSold() {
-    when(saleMapper.mapRequestToEntity(
-            saleRequestDtoSellerNotOwner, seller, buyer, List.of(product)))
-        .thenReturn(sale);
+    when(saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product)))
+            .thenReturn(sale);
     sale.getProducts().get(0).setPartOfSale(new Sale());
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
 
-    assertThrows(
-        ProductIsSoldException.class, () -> saleService.createSale(saleRequestDtoSellerNotOwner));
+    assertThrows(ProductIsSoldException.class, () -> saleService.createSale(saleRequestDto));
   }
+
 
   @Test
   void testCreateSaleProductWillThrowsProductIsPartOfAnotherProduct() {
-    when(saleMapper.mapRequestToEntity(
-            saleRequestDtoSellerNotOwner, seller, buyer, List.of(product)))
+    when(saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product)))
         .thenReturn(sale);
     sale.getProducts().get(0).setContentOf(new Product());
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
 
-    assertThrows(
-        ProductIsContentException.class,
-        () -> saleService.createSale(saleRequestDtoSellerNotOwner));
+    assertThrows(ProductIsContentException.class, () -> saleService.createSale(saleRequestDto));
   }
 }
