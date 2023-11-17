@@ -3,9 +3,12 @@ package jewellery.inventory.service;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.SaleRequestDto;
+import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
+import jewellery.inventory.exception.product.ProductNotSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.Product;
@@ -44,12 +47,32 @@ public class SaleService {
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
 
+  public ProductResponseDto returnProduct(UUID productId) {
+    Product productToReturn = productService.getProduct(productId);
+
+    throwExceptionIfProductNotSold(productToReturn);
+    throwExceptionIfProductIsPartOfAnotherProduct(productToReturn);
+
+    Sale sale = getSale(productToReturn.getPartOfSale().getId());
+    sale.setProducts(removeProductFormSale(sale.getProducts(), productToReturn));
+
+    productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
+
+    deleteSaleIfProductsIsEmpty(sale);
+
+    return productService.getProductResponse(productId);
+  }
+
+  private Sale getSale(UUID saleId) {
+    return saleRepository.findById(saleId).orElseThrow(() -> new SaleNotFoundException(saleId));
+  }
+
   private void throwExceptionIfUserNotSeller(List<Product> products, UUID sellerId) {
     products.stream()
         .filter(product -> !product.getOwner().getId().equals(sellerId))
         .forEach(
             product -> {
-              throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
+              throw new UserNotOwnerException(sellerId, product.getId());
             });
   }
 
@@ -60,6 +83,18 @@ public class SaleService {
             product -> {
               throw new ProductIsContentException(product.getId());
             });
+  }
+
+  private void throwExceptionIfProductIsPartOfAnotherProduct(Product product) {
+    if (product.getContentOf() != null) {
+      throw new ProductIsContentException(product.getId());
+    }
+  }
+
+  private void throwExceptionIfProductNotSold(Product product) {
+    if (product.getPartOfSale() == null) {
+      throw new ProductNotSoldException(product.getId());
+    }
   }
 
   private void throwExceptionIfProductIsSold(List<Product> products) {
@@ -83,5 +118,16 @@ public class SaleService {
             productPriceDiscountRequestDto ->
                 productService.getProduct(productPriceDiscountRequestDto.getProductId()))
         .toList();
+  }
+
+  private void deleteSaleIfProductsIsEmpty(Sale sale) {
+    if (sale.getProducts().isEmpty()) {
+      saleRepository.deleteById(sale.getId());
+    } else saleRepository.save(sale);
+  }
+
+  private List<Product> removeProductFormSale(List<Product> products, Product productToRemove) {
+    products.remove(productToRemove);
+    return products;
   }
 }
