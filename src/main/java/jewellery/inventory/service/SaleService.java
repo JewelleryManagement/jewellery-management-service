@@ -35,9 +35,9 @@ public class SaleService {
             userService.getUser(saleRequestDto.getBuyerId()),
             getProductsFromSaleRequestDto(saleRequestDto));
 
-    throwExceptionIfProductIsSold(sale.getProducts());
-    throwExceptionIfProductIsPartOfAnotherProduct(sale.getProducts());
     throwExceptionIfUserNotSeller(sale.getProducts(), saleRequestDto.getSellerId());
+    throwExceptionIfProductIsPartOfAnotherProduct(sale.getProducts());
+    throwExceptionIfProductIsSold(sale.getProducts());
 
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
