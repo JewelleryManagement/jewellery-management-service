@@ -12,6 +12,7 @@ import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductNotSoldException;
@@ -157,6 +158,13 @@ class SaleServiceTest {
     UUID productId = product.getId();
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
     assertThrows(ProductIsContentException.class, () -> saleService.returnProduct(productId));
+  }
+  @Test
+  void testReturnProductWillThrowsSaleNotFoundException() {
+    product.setPartOfSale(new Sale());
+    UUID productId = product.getId();
+    when(productService.getProduct(any(UUID.class))).thenReturn(product);
+    assertThrows(SaleNotFoundException.class, () -> saleService.returnProduct(productId));
   }
 
   @Test
