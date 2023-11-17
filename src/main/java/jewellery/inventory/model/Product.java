@@ -42,6 +42,6 @@ public class Product {
   private String productionNumber;
   private String description;
   private double salePrice;
-  private Double discount;
+  private double discount;
   @ManyToOne private Sale partOfSale;
 }
