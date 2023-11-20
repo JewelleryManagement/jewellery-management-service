@@ -3,6 +3,7 @@ package jewellery.inventory.integration;
 import static jewellery.inventory.helper.ProductTestHelper.getProductRequestDto;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -17,11 +18,13 @@ import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
+import jewellery.inventory.model.Product;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.PreciousStone;
 import jewellery.inventory.repository.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,6 +89,35 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
     productRequestDto =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), seller);
+  }
+
+  @Test
+  void returnProductSuccessfully() {
+    ResponseEntity<ProductResponseDto> productResponse =
+        this.testRestTemplate.postForEntity(
+            getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+
+    SaleRequestDto saleRequestDto = getSaleRequestDto(seller, buyer, productResponse);
+
+    ResponseEntity<SaleResponseDto> saleResponse =
+        this.testRestTemplate.postForEntity(
+            getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
+
+    ResponseEntity<ProductResponseDto> response =
+        this.testRestTemplate.exchange(
+            getBaseSaleUrl()
+                + "/return-product/"
+                + Objects.requireNonNull(productResponse.getBody()).getId(),
+            HttpMethod.PUT,
+            null,
+            new ParameterizedTypeReference<>() {});
+
+    assertNotNull(response.getBody());
+    Assertions.assertNull(response.getBody().getPartOfSale());
+    Assertions.assertNotEquals(
+        response.getBody().getOwner().getId(),
+        Objects.requireNonNull(saleResponse.getBody()).getBuyer().getId());
+    assertEquals(response.getBody().getOwner().getId(), saleResponse.getBody().getSeller().getId());
   }
 
   @Test
