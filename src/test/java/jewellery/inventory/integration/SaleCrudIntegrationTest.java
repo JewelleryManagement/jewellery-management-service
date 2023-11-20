@@ -31,7 +31,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
-class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
+class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
+  @Autowired private UserRepository userRepository;
+  @Autowired private SaleRepository saleRepository;
+  @Autowired private ProductRepository productRepository;
+  @Autowired private ResourceRepository resourceRepository;
+  @Autowired private ResourceInUserRepository resourceInUserRepository;
+  @Autowired private ResourceInProductRepository resourceInProductRepository;
+  private User seller;
+  private User buyer;
+  private PreciousStone preciousStone;
+  private ResourceInUserRequestDto resourceInUserRequestDto;
+  private ResourcesInUserResponseDto resourcesInUserResponseDto;
+  private ProductRequestDto productRequestDto;
+  private ProductRequestDto productRequestDto2;
+
   private String getBaseUrl() {
     return BASE_URL_PATH + port;
   }
@@ -60,21 +74,6 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
     return getBaseUrl() + "/sales";
   }
 
-  @Autowired private UserRepository userRepository;
-  @Autowired private SaleRepository saleRepository;
-  @Autowired private ProductRepository productRepository;
-  @Autowired private ResourceRepository resourceRepository;
-  @Autowired private ResourceInUserRepository resourceInUserRepository;
-  @Autowired private ResourceInProductRepository resourceInProductRepository;
-
-  private User seller;
-  private User buyer;
-  private PreciousStone preciousStone;
-
-  private ResourceInUserRequestDto resourceInUserRequestDto;
-  private ResourcesInUserResponseDto resourcesInUserResponseDto;
-  private ProductRequestDto productRequestDto;
-
   @BeforeEach
   void setUp() {
     cleanAllRepositories();
@@ -85,6 +84,8 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
         getResourceInUserRequestDto(seller, Objects.requireNonNull(preciousStone));
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
     productRequestDto =
+        getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), seller);
+    productRequestDto2 =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), seller);
   }
 
@@ -122,12 +123,20 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
         this.testRestTemplate.postForEntity(
             getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
 
-    SaleRequestDto saleRequestDto = getSaleRequestDto(seller, buyer, productResponse);
+    productRequestDto2.setProductsContent(List.of(productResponse.getBody().getId()));
+    ResponseEntity<ProductResponseDto> productResponse2 =
+        this.testRestTemplate.postForEntity(
+            getBaseProductUrl(), productRequestDto2, ProductResponseDto.class);
+
+    SaleRequestDto saleRequestDto = getSaleRequestDto(seller, buyer, productResponse2);
 
     ResponseEntity<SaleResponseDto> saleResponse =
         this.testRestTemplate.postForEntity(
             getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
 
+    assertEquals(
+        buyer.getId(),
+        saleResponse.getBody().getProducts().get(0).getProductsContent().get(0).getOwner().getId());
     assertEquals(HttpStatus.CREATED, saleResponse.getStatusCode());
     assertEquals(saleRequestDto.getBuyerId(), saleResponse.getBody().getBuyer().getId());
     assertEquals(saleRequestDto.getSellerId(), saleResponse.getBody().getSeller().getId());
@@ -155,6 +164,16 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
     return saleRequestDto;
   }
 
+  @NotNull
+  private static ResourceInUserRequestDto getResourceInUserRequestDto(
+      User user, PreciousStone preciousStone) {
+    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
+    resourceInUserRequestDto.setUserId(user.getId());
+    resourceInUserRequestDto.setResourceId(preciousStone.getId());
+    resourceInUserRequestDto.setQuantity(20);
+    return resourceInUserRequestDto;
+  }
+
   @Nullable
   private PreciousStone createPreciousStoneInDatabase() {
     ResourceRequestDto resourceRequest = ResourceTestHelper.getPreciousStoneRequestDto();
@@ -175,16 +194,6 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
             ResourcesInUserResponseDto.class);
 
     return createResourceInUser.getBody();
-  }
-
-  @NotNull
-  private static ResourceInUserRequestDto getResourceInUserRequestDto(
-      User user, PreciousStone preciousStone) {
-    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
-    resourceInUserRequestDto.setUserId(user.getId());
-    resourceInUserRequestDto.setResourceId(preciousStone.getId());
-    resourceInUserRequestDto.setQuantity(20);
-    return resourceInUserRequestDto;
   }
 
   @Nullable

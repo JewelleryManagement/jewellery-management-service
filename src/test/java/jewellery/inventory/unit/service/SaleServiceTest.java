@@ -11,6 +11,8 @@ import java.util.*;
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.exception.product.ProductIsContentException;
+import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.mapper.SaleMapper;
@@ -113,5 +115,28 @@ class SaleServiceTest {
 
     assertThrows(
         UserNotOwnerException.class, () -> saleService.createSale(saleRequestDtoSellerNotOwner));
+  }
+
+  @Test
+  void testCreateSaleProductWillThrowsProductIsSold() {
+    when(saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product)))
+            .thenReturn(sale);
+    sale.getProducts().get(0).setPartOfSale(new Sale());
+    when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
+    when(productService.getProduct(any(UUID.class))).thenReturn(product);
+
+    assertThrows(ProductIsSoldException.class, () -> saleService.createSale(saleRequestDto));
+  }
+
+
+  @Test
+  void testCreateSaleProductWillThrowsProductIsPartOfAnotherProduct() {
+    when(saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product)))
+        .thenReturn(sale);
+    sale.getProducts().get(0).setContentOf(new Product());
+    when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
+    when(productService.getProduct(any(UUID.class))).thenReturn(product);
+
+    assertThrows(ProductIsContentException.class, () -> saleService.createSale(saleRequestDto));
   }
 }
