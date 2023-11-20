@@ -10,6 +10,7 @@ import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
+import jewellery.inventory.model.User;
 import jewellery.inventory.repository.SaleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,9 +36,9 @@ public class SaleService {
             userService.getUser(saleRequestDto.getBuyerId()),
             getProductsFromSaleRequestDto(saleRequestDto));
 
+    throwExceptionIfProductIsSold(sale.getProducts());
     throwExceptionIfUserNotSeller(sale.getProducts(), saleRequestDto.getSellerId());
     throwExceptionIfProductIsPartOfAnotherProduct(sale.getProducts());
-    throwExceptionIfProductIsSold(sale.getProducts());
 
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
@@ -45,35 +46,42 @@ public class SaleService {
   }
 
   private void throwExceptionIfUserNotSeller(List<Product> products, UUID sellerId) {
-    products.stream()
-        .filter(product -> !product.getOwner().getId().equals(sellerId))
-        .forEach(
-            product -> {
-              throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
-            });
+    for (Product product : products) {
+      if (!product.getOwner().getId().equals(sellerId)) {
+        throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
+      }
+    }
   }
 
   private void throwExceptionIfProductIsPartOfAnotherProduct(List<Product> products) {
-    products.stream()
-        .filter(product -> product.getContentOf() != null)
-        .forEach(
-            product -> {
-              throw new ProductIsContentException(product.getId());
-            });
+    for (Product product : products) {
+      if (product.getContentOf() != null) {
+        throw new ProductIsContentException(product.getId());
+      }
+    }
   }
 
   private void throwExceptionIfProductIsSold(List<Product> products) {
-    products.stream()
-        .filter(product -> product.getPartOfSale() != null)
-        .forEach(
-            product -> {
-              throw new ProductIsSoldException(product.getId());
-            });
+    for (Product product : products) {
+      if (product.getPartOfSale() != null) {
+        throw new ProductIsSoldException(product.getId());
+      }
+    }
   }
 
   private void updateProductOwnersAndSale(List<Product> products, UUID buyerId, Sale sale) {
+    User newOwner = userService.getUser(buyerId);
     for (Product product : products) {
-      productService.updateProductOwnerAndSale(product, userService.getUser(buyerId), sale);
+      updateOwnerAndSubProducts(product, newOwner, sale);
+    }
+  }
+
+  private void updateOwnerAndSubProducts(Product product, User newOwner, Sale sale) {
+    productService.updateProductOwnerAndSale(product, newOwner, sale);
+
+    List<Product> subProducts = product.getProductsContent();
+    for (Product subProduct : subProducts) {
+      updateOwnerAndSubProducts(subProduct, newOwner, sale);
     }
   }
 
