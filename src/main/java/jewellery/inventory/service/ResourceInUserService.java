@@ -166,7 +166,7 @@ public class ResourceInUserService {
             ResourceQuantityResponseDto.builder()
                 .resource(resourceMapper.toResourceResponse(resource))
                 .quantity(quantity)
-                .build())
+                 .build())
         .build();
   }
 }
