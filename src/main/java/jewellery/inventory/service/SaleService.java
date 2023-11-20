@@ -78,10 +78,11 @@ public class SaleService {
 
   private void updateOwnerAndSubProducts(Product product, User newOwner, Sale sale) {
     productService.updateProductOwnerAndSale(product, newOwner, sale);
-
-    List<Product> subProducts = product.getProductsContent();
-    for (Product subProduct : subProducts) {
-      updateOwnerAndSubProducts(subProduct, newOwner, sale);
+    if (product.getProductsContent() != null) {
+      List<Product> subProducts = product.getProductsContent();
+      for (Product subProduct : subProducts) {
+        updateOwnerAndSubProducts(subProduct, newOwner, sale);
+      }
     }
   }
 

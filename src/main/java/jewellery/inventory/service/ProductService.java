@@ -69,9 +69,11 @@ public class ProductService {
 
   private void updateProductOwnerRecursively(Product product, User newOwner) {
     product.setOwner(newOwner);
-    List<Product> subProducts = product.getProductsContent();
-    for (Product subProduct : subProducts) {
-      updateProductOwnerRecursively(subProduct, newOwner);
+    if (product.getProductsContent() != null) {
+      List<Product> subProducts = product.getProductsContent();
+      for (Product subProduct : subProducts) {
+        updateProductOwnerRecursively(subProduct, newOwner);
+      }
     }
   }
 
@@ -92,7 +94,7 @@ public class ProductService {
 
   public ProductResponseDto transferProduct(UUID recipientId, UUID productId) {
     Product productForChangeOwner = getProductForTransfer(recipientId, productId);
-    updateProductOwnerRecursively(productForChangeOwner,getUser(recipientId));
+    updateProductOwnerRecursively(productForChangeOwner, getUser(recipientId));
     productRepository.save(productForChangeOwner);
     return productMapper.mapToProductResponseDto(productForChangeOwner);
   }
