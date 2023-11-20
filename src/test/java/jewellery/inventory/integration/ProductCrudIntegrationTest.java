@@ -29,6 +29,8 @@ import org.springframework.http.*;
 class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Autowired private UserRepository userRepository;
+
+  @Autowired private SaleRepository saleRepository;
   @Autowired private ProductRepository productRepository;
   @Autowired private ResourceRepository resourceRepository;
   @Autowired private ResourceInUserRepository resourceInUserRepository;
@@ -273,8 +275,9 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   private void cleanAllRepositories() {
-    userRepository.deleteAll();
     productRepository.deleteAll();
+    saleRepository.deleteAll();
+    userRepository.deleteAll();
     resourceRepository.deleteAll();
     resourceInUserRepository.deleteAll();
     resourceInProductRepository.deleteAll();
