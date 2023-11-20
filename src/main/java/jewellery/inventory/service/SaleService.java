@@ -37,7 +37,7 @@ public class SaleService {
             getProductsFromSaleRequestDto(saleRequestDto));
 
     throwExceptionIfProductIsSold(sale.getProducts());
-    throwExceptionIfUserNotSeller(sale.getProducts(), saleRequestDto.getSellerId());
+    throwExceptionIfSellerNotProductOwner(sale.getProducts(), saleRequestDto.getSellerId());
     throwExceptionIfProductIsPartOfAnotherProduct(sale.getProducts());
 
     Sale createdSale = saleRepository.save(sale);
@@ -45,7 +45,7 @@ public class SaleService {
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
 
-  private void throwExceptionIfUserNotSeller(List<Product> products, UUID sellerId) {
+  private void throwExceptionIfSellerNotProductOwner(List<Product> products, UUID sellerId) {
     for (Product product : products) {
       if (!product.getOwner().getId().equals(sellerId)) {
         throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
@@ -72,17 +72,7 @@ public class SaleService {
   private void updateProductOwnersAndSale(List<Product> products, UUID buyerId, Sale sale) {
     User newOwner = userService.getUser(buyerId);
     for (Product product : products) {
-      updateOwnerAndSubProducts(product, newOwner, sale);
-    }
-  }
-
-  private void updateOwnerAndSubProducts(Product product, User newOwner, Sale sale) {
-    productService.updateProductOwnerAndSale(product, newOwner, sale);
-    if (product.getProductsContent() != null) {
-      List<Product> subProducts = product.getProductsContent();
-      for (Product subProduct : subProducts) {
-        updateOwnerAndSubProducts(subProduct, newOwner, sale);
-      }
+      productService.updateProductOwnerAndSale(product, newOwner, sale);
     }
   }
 

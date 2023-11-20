@@ -42,16 +42,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private ProductRequestDto productRequestDto2;
   private ProductResponseDto productResponseDto;
 
-  @NotNull
-  private static ResourceInUserRequestDto getResourceInUserRequestDto(
-      User user, PreciousStone preciousStone) {
-    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
-    resourceInUserRequestDto.setUserId(user.getId());
-    resourceInUserRequestDto.setResourceId(preciousStone.getId());
-    resourceInUserRequestDto.setQuantity(20);
-    return resourceInUserRequestDto;
-  }
-
   private String getBaseUrl() {
     return BASE_URL_PATH + port;
   }
@@ -134,7 +124,9 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             null,
             ProductResponseDto.class);
 
-    assertEquals(differentUser.getId(), resultResponse.getBody().getProductsContent().get(0).getOwner().getId());
+    assertEquals(
+        differentUser.getId(),
+        resultResponse.getBody().getProductsContent().get(0).getOwner().getId());
     assertNotNull(resultResponse.getBody());
     assertEquals(differentUser.getId(), resultResponse.getBody().getOwner().getId());
     assertEquals(HttpStatus.OK, resultResponse.getStatusCode());
@@ -219,6 +211,16 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             ProductResponseDto.class);
 
     assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
+  }
+
+  @NotNull
+  private static ResourceInUserRequestDto getResourceInUserRequestDto(
+      User user, PreciousStone preciousStone) {
+    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
+    resourceInUserRequestDto.setUserId(user.getId());
+    resourceInUserRequestDto.setResourceId(preciousStone.getId());
+    resourceInUserRequestDto.setQuantity(20);
+    return resourceInUserRequestDto;
   }
 
   private void assertResponseMatchesCreatedRequest(

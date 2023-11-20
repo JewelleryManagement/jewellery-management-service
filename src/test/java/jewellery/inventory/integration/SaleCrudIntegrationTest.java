@@ -31,7 +31,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
-class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
+class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Autowired private UserRepository userRepository;
   @Autowired private SaleRepository saleRepository;
   @Autowired private ProductRepository productRepository;
@@ -45,34 +45,6 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
   private ProductRequestDto productRequestDto;
   private ProductRequestDto productRequestDto2;
-
-  @NotNull
-  private static SaleRequestDto getSaleRequestDto(
-      User seller, User buyer, ResponseEntity<ProductResponseDto> productResponse) {
-    SaleRequestDto saleRequestDto = new SaleRequestDto();
-    saleRequestDto.setBuyerId(buyer.getId());
-    saleRequestDto.setSellerId(seller.getId());
-    saleRequestDto.setDate(Date.from(Instant.now()));
-    ProductPriceDiscountRequestDto productPriceDiscountRequestDto =
-        new ProductPriceDiscountRequestDto();
-    productPriceDiscountRequestDto.setProductId(productResponse.getBody().getId());
-    productPriceDiscountRequestDto.setSalePrice(10000.0);
-    productPriceDiscountRequestDto.setDiscount(10.0);
-    List<ProductPriceDiscountRequestDto> list = new ArrayList<>();
-    list.add(productPriceDiscountRequestDto);
-    saleRequestDto.setProducts(list);
-    return saleRequestDto;
-  }
-
-  @NotNull
-  private static ResourceInUserRequestDto getResourceInUserRequestDto(
-      User user, PreciousStone preciousStone) {
-    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
-    resourceInUserRequestDto.setUserId(user.getId());
-    resourceInUserRequestDto.setResourceId(preciousStone.getId());
-    resourceInUserRequestDto.setQuantity(20);
-    return resourceInUserRequestDto;
-  }
 
   private String getBaseUrl() {
     return BASE_URL_PATH + port;
@@ -150,7 +122,7 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResponseEntity<ProductResponseDto> productResponse =
         this.testRestTemplate.postForEntity(
             getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
-    
+
     productRequestDto2.setProductsContent(List.of(productResponse.getBody().getId()));
     ResponseEntity<ProductResponseDto> productResponse2 =
         this.testRestTemplate.postForEntity(
@@ -160,9 +132,11 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     ResponseEntity<SaleResponseDto> saleResponse =
         this.testRestTemplate.postForEntity(
-            getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class); 
+            getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
 
-    assertEquals(buyer.getId(), saleResponse.getBody().getProducts().get(0).getProductsContent().get(0).getOwner().getId());
+    assertEquals(
+        buyer.getId(),
+        saleResponse.getBody().getProducts().get(0).getProductsContent().get(0).getOwner().getId());
     assertEquals(HttpStatus.CREATED, saleResponse.getStatusCode());
     assertEquals(saleRequestDto.getBuyerId(), saleResponse.getBody().getBuyer().getId());
     assertEquals(saleRequestDto.getSellerId(), saleResponse.getBody().getSeller().getId());
@@ -170,6 +144,34 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(),
         saleResponse.getBody().getProducts().get(0).getId());
+  }
+
+  @NotNull
+  private static SaleRequestDto getSaleRequestDto(
+      User seller, User buyer, ResponseEntity<ProductResponseDto> productResponse) {
+    SaleRequestDto saleRequestDto = new SaleRequestDto();
+    saleRequestDto.setBuyerId(buyer.getId());
+    saleRequestDto.setSellerId(seller.getId());
+    saleRequestDto.setDate(Date.from(Instant.now()));
+    ProductPriceDiscountRequestDto productPriceDiscountRequestDto =
+        new ProductPriceDiscountRequestDto();
+    productPriceDiscountRequestDto.setProductId(productResponse.getBody().getId());
+    productPriceDiscountRequestDto.setSalePrice(10000.0);
+    productPriceDiscountRequestDto.setDiscount(10.0);
+    List<ProductPriceDiscountRequestDto> list = new ArrayList<>();
+    list.add(productPriceDiscountRequestDto);
+    saleRequestDto.setProducts(list);
+    return saleRequestDto;
+  }
+
+  @NotNull
+  private static ResourceInUserRequestDto getResourceInUserRequestDto(
+      User user, PreciousStone preciousStone) {
+    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
+    resourceInUserRequestDto.setUserId(user.getId());
+    resourceInUserRequestDto.setResourceId(preciousStone.getId());
+    resourceInUserRequestDto.setQuantity(20);
+    return resourceInUserRequestDto;
   }
 
   @Nullable
