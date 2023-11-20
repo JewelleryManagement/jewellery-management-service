@@ -9,18 +9,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.time.Instant;
 import java.util.*;
-
 import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
-import jewellery.inventory.model.Product;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.PreciousStone;
 import jewellery.inventory.repository.*;
-import org.glassfish.jaxb.core.v2.TODO;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Assertions;
@@ -79,21 +76,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private String getSaleReturnProductUrl(UUID productId) {
     return getBaseUrl() + "/sales/return-product/" + productId;
   }
-
-  @Autowired private UserRepository userRepository;
-  @Autowired private SaleRepository saleRepository;
-  @Autowired private ProductRepository productRepository;
-  @Autowired private ResourceRepository resourceRepository;
-  @Autowired private ResourceInUserRepository resourceInUserRepository;
-  @Autowired private ResourceInProductRepository resourceInProductRepository;
-
-  private User seller;
-  private User buyer;
-  private PreciousStone preciousStone;
-
-  private ResourceInUserRequestDto resourceInUserRequestDto;
-  private ResourcesInUserResponseDto resourcesInUserResponseDto;
-  private ProductRequestDto productRequestDto;
 
   @BeforeEach
   void setUp() {

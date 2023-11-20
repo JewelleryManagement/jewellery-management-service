@@ -76,15 +76,6 @@ public class SaleService {
     return saleRepository.findById(saleId).orElseThrow(() -> new SaleNotFoundException(saleId));
   }
 
-  private void throwExceptionIfUserNotSeller(List<Product> products, UUID sellerId) {
-    products.stream()
-        .filter(product -> !product.getOwner().getId().equals(sellerId))
-        .forEach(
-            product -> {
-              throw new UserNotOwnerException(sellerId, product.getId());
-            });
-  }
-
   private void throwExceptionIfProductIsPartOfAnotherProduct(List<Product> products) {
     for (Product product : products) {
       if (product.getContentOf() != null) {
