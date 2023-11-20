@@ -5,6 +5,7 @@ import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
 import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
 import static jewellery.inventory.model.EventType.PRODUCT_CREATE;
+import static jewellery.inventory.model.EventType.PRODUCT_DISASSEMBLY;
 import static jewellery.inventory.model.EventType.PRODUCT_TRANSFER;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -223,14 +224,11 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             ProductResponseDto.class);
 
     assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
+    Map<String, Object> expectedEventSubPayload =
+        getCreateOrDeleteEventPayload(getEntityAsMap(productResponseDto));
 
-//    assertEventWasLogged(
-//        this.testRestTemplate,
-//        getBaseSystemEventUrl(),
-//        PRODUCT_DISASSEMBLY,
-//        "entity",
-//        "catalogNumber",
-//        productResponseDto.getCatalogNumber());
+    assertEventWasLogged(
+        this.testRestTemplate, getBaseSystemEventUrl(), PRODUCT_DISASSEMBLY, expectedEventSubPayload);
   }
 
   private void assertResponseMatchesCreatedRequest(

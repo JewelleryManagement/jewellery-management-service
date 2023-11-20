@@ -5,13 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.SystemEvent;
-import jewellery.inventory.model.User;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 
@@ -86,9 +86,11 @@ public class SystemEventTestHelper {
     return objectMapper.convertValue(entity, new TypeReference<>() {});
   }
 
-  public static Map<String, Object> getUpdateEventPayload(
-      Map<String, Object> entityBefore, Map<String, Object> entityAfter) {
-    return Map.ofEntries(createEntityBefore(entityBefore), createEntityAfter(entityAfter));
+  public static Map<String, Object> getUpdateEventPayload(Map<String, Object> entityBefore, Map<String, Object> entityAfter) {
+    Map<String, Object> payloadUpdatedEvent = new HashMap<>();
+    payloadUpdatedEvent.put("entityBefore", entityBefore);
+    payloadUpdatedEvent.put("entityAfter", entityAfter);
+    return payloadUpdatedEvent;
   }
 
   public static Map<String, Object> getCreateOrDeleteEventPayload(Map<String, Object> entity) {

@@ -2,6 +2,9 @@ package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ResourceTestHelper.getPreciousStoneRequestDto;
 import static jewellery.inventory.helper.SystemEventTestHelper.assertEventWasLogged;
+import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
+import static jewellery.inventory.helper.SystemEventTestHelper.getEntityAsMap;
+import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.model.EventType.RESOURCE_IN_USER_TOP_UP;
 import static jewellery.inventory.model.EventType.RESOURCE_QUANTITY_REMOVE;
@@ -12,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
@@ -41,6 +45,37 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Autowired ResourceRepository resourceRepository;
   @Autowired ResourceInUserRepository resourceInUserRepository;
   @Autowired private SystemEventRepository systemEventRepository;
+
+  @NotNull
+  private static TransferResourceRequestDto getTransferResourceRequestDto(
+      UserResponseDto sender, PreciousStoneResponseDto createdResource, UserResponseDto receiver) {
+    TransferResourceRequestDto requestDto = new TransferResourceRequestDto();
+    requestDto.setPreviousOwnerId(sender.getId());
+    requestDto.setNewOwnerId(receiver.getId());
+    requestDto.setTransferredResourceId(createdResource.getId());
+    requestDto.setQuantity(1);
+    return requestDto;
+  }
+
+  private static void assertCreatedResourceIsInResourcesInUser(
+      PreciousStoneResponseDto firstCreatedResource,
+      ResponseEntity<ResourcesInUserResponseDto> response) {
+    assertNotNull(response.getBody());
+    assertTrue(
+        response.getBody().getResourcesAndQuantities().stream()
+            .anyMatch(
+                resourceQuantityDto ->
+                    resourceQuantityDto.getResource().equals(firstCreatedResource)));
+  }
+
+  private static ResourceQuantityResponseDto findResourceQuantityIn(
+      UUID idToFind, ResponseEntity<ResourcesInUserResponseDto> resourcesInUserResponse) {
+    assertNotNull(resourcesInUserResponse.getBody());
+    return resourcesInUserResponse.getBody().getResourcesAndQuantities().stream()
+        .filter(rq -> rq.getResource().getId().equals(idToFind))
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("Expected resource not found"));
+  }
 
   private String getBaseUrl() {
     return BASE_URL_PATH + port;
@@ -96,13 +131,16 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertNotNull(response.getBody());
     assertEquals(1, response.getBody().getResourcesAndQuantities().size());
     assertEquals(createdUser, response.getBody().getOwner());
-//    assertEventWasLogged(
-//        this.testRestTemplate,
-//        getBaseSystemEventUrl(),
-//        RESOURCE_IN_USER_TOP_UP,
-//        "entityAfter",
-//        "resourcesAndQuantities.quantity",
-//        String.valueOf(response.getBody().getResourcesAndQuantities().get(0).getQuantity()));
+    ResourcesInUserResponseDto result = response.getBody();
+
+    Map<String, Object> expectedEventSubPayload =
+        getUpdateEventPayload(null, getEntityAsMap(result));
+
+    assertEventWasLogged(
+        this.testRestTemplate,
+        getBaseSystemEventUrl(),
+        RESOURCE_IN_USER_TOP_UP,
+        expectedEventSubPayload);
   }
 
   @Test
@@ -218,9 +256,11 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   void removeResourceFromUserSuccessfully() throws JsonProcessingException {
     UserResponseDto createdUser = sendCreateUserRequest();
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
-    sendAddResourceInUserRequest(
-        createResourceInUserRequestDto(
-            createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY));
+
+    ResponseEntity<ResourcesInUserResponseDto> entity =
+        sendAddResourceInUserRequest(
+            createResourceInUserRequestDto(
+                createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY));
 
     sendDeleteResourceInUserRequest(createdUser.getId(), createdResource.getId());
 
@@ -228,14 +268,15 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         sendGetResourcesInUserRequest(createdUser.getId());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().getResourcesAndQuantities().isEmpty());
-    System.out.println(response.getBody().getOwner().getName());
-//    assertEventWasLogged(
-//        this.testRestTemplate,
-//        getBaseSystemEventUrl(),
-//        RESOURCE_QUANTITY_REMOVE,
-//        "entityAfter",
-//        "owner.name",
-//        response.getBody().getOwner().getName());
+
+    Map<String, Object> expectedEventSubPayload =
+        getUpdateEventPayload(getEntityAsMap(entity.getBody()), null);
+
+    assertEventWasLogged(
+        this.testRestTemplate,
+        getBaseSystemEventUrl(),
+        RESOURCE_QUANTITY_REMOVE,
+        expectedEventSubPayload);
   }
 
   @Test
@@ -264,11 +305,12 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   void removeResourceQuantityFromUserSuccessfully() throws JsonProcessingException {
     UserResponseDto createdUser = sendCreateUserRequest();
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
-    sendAddResourceInUserRequest(
-        createResourceInUserRequestDto(
-            createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY));
+    ResponseEntity<ResourcesInUserResponseDto> response =
+        sendAddResourceInUserRequest(
+            createResourceInUserRequestDto(
+                createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY));
 
-    sendDeleteQuantityFromResourceInUserRequest(createdUser.getId(), createdResource.getId(), 1.0);
+   ResponseEntity<ResourcesInUserResponseDto> deleteQuantityResponse =  sendDeleteQuantityFromResourceInUserRequest(createdUser.getId(), createdResource.getId(), 1.0);
 
     ResponseEntity<ResourcesInUserResponseDto> resourcesInUserResponse =
         sendGetResourcesInUserRequest(createdUser.getId());
@@ -276,13 +318,14 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         findResourceQuantityIn(createdResource.getId(), resourcesInUserResponse);
     assertEquals(RESOURCE_QUANTITY - 1, resourceQuantity.getQuantity(), 0.01);
 
-//    assertEventWasLogged(
-//        this.testRestTemplate,
-//        getBaseSystemEventUrl(),
-//        RESOURCE_QUANTITY_REMOVE,
-//        "entityAfter",
-//        "resourcesAndQuantities.quantity",
-//        String.valueOf(resourceQuantity.getQuantity()));
+    Map<String, Object> expectedEventSubPayload =
+        getUpdateEventPayload(getEntityAsMap(response.getBody()), getEntityAsMap(deleteQuantityResponse.getBody()));
+
+    assertEventWasLogged(
+        this.testRestTemplate,
+        getBaseSystemEventUrl(),
+        RESOURCE_QUANTITY_REMOVE,
+        expectedEventSubPayload);
   }
 
   @Test
@@ -290,7 +333,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     UserResponseDto createdUser = sendCreateUserRequest();
     UUID nonExistentResourceId = UUID.randomUUID();
 
-    ResponseEntity<String> response =
+    ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
             createdUser.getId(), nonExistentResourceId, 1.0);
 
@@ -302,7 +345,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     UUID nonExistentUserId = UUID.randomUUID();
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
 
-    ResponseEntity<String> response =
+    ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
             nonExistentUserId, createdResource.getId(), 1.8);
 
@@ -317,7 +360,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         createResourceInUserRequestDto(
             createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY));
 
-    ResponseEntity<String> response =
+    ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
             createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY + 1);
 
@@ -332,7 +375,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         createResourceInUserRequestDto(
             createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY));
 
-    ResponseEntity<String> response =
+    ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
             createdUser.getId(), createdResource.getId(), -1.0);
 
@@ -370,24 +413,12 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         requestDto.getTransferredResourceId());
     assertEquals(response.getTransferredResource().getQuantity(), 1);
 
-//    assertEventWasLogged(
-//        this.testRestTemplate,
-//        getBaseSystemEventUrl(),
-//        RESOURCE_TRANSFER,
-//        "entity",
-//        "newOwner.name",
-//        response.getNewOwner().getName());
-  }
+    Map<String, Object> expectedEventSubPayload =
+        getCreateOrDeleteEventPayload(getEntityAsMap(response));
 
-  @NotNull
-  private static TransferResourceRequestDto getTransferResourceRequestDto(
-      UserResponseDto sender, PreciousStoneResponseDto createdResource, UserResponseDto receiver) {
-    TransferResourceRequestDto requestDto = new TransferResourceRequestDto();
-    requestDto.setPreviousOwnerId(sender.getId());
-    requestDto.setNewOwnerId(receiver.getId());
-    requestDto.setTransferredResourceId(createdResource.getId());
-    requestDto.setQuantity(1);
-    return requestDto;
+    assertEventWasLogged(
+        this.testRestTemplate, getBaseSystemEventUrl(), RESOURCE_TRANSFER, expectedEventSubPayload);
+
   }
 
   private PreciousStoneResponseDto sendCreatePreciousStoneRequest() {
@@ -427,12 +458,12 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         removeResourceUrl, HttpMethod.DELETE, HttpEntity.EMPTY, String.class);
   }
 
-  private ResponseEntity<String> sendDeleteQuantityFromResourceInUserRequest(
+  private ResponseEntity<ResourcesInUserResponseDto> sendDeleteQuantityFromResourceInUserRequest(
       UUID userId, UUID resourceId, double quantity) {
     String removeResourceUrl =
         getBaseResourceAvailabilityUrl() + "/" + userId + "/" + resourceId + "/" + quantity;
     return testRestTemplate.exchange(
-        removeResourceUrl, HttpMethod.DELETE, HttpEntity.EMPTY, String.class);
+        removeResourceUrl, HttpMethod.DELETE, HttpEntity.EMPTY, ResourcesInUserResponseDto.class);
   }
 
   private ResponseEntity<ResourcesInUserResponseDto> sendAddResourceInUserRequest(
@@ -453,25 +484,5 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     return testRestTemplate.getForEntity(
         getBaseResourceAvailabilityUrl() + "/by-resource/" + resourceId,
         ResourceOwnedByUsersResponseDto.class);
-  }
-
-  private static void assertCreatedResourceIsInResourcesInUser(
-      PreciousStoneResponseDto firstCreatedResource,
-      ResponseEntity<ResourcesInUserResponseDto> response) {
-    assertNotNull(response.getBody());
-    assertTrue(
-        response.getBody().getResourcesAndQuantities().stream()
-            .anyMatch(
-                resourceQuantityDto ->
-                    resourceQuantityDto.getResource().equals(firstCreatedResource)));
-  }
-
-  private static ResourceQuantityResponseDto findResourceQuantityIn(
-      UUID idToFind, ResponseEntity<ResourcesInUserResponseDto> resourcesInUserResponse) {
-    assertNotNull(resourcesInUserResponse.getBody());
-    return resourcesInUserResponse.getBody().getResourcesAndQuantities().stream()
-        .filter(rq -> rq.getResource().getId().equals(idToFind))
-        .findFirst()
-        .orElseThrow(() -> new AssertionError("Expected resource not found"));
   }
 }

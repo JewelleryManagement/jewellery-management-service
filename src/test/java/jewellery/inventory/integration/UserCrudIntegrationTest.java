@@ -1,6 +1,9 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.SystemEventTestHelper.assertEventWasLogged;
+import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
+import static jewellery.inventory.helper.SystemEventTestHelper.getEntityAsMap;
+import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
 import static jewellery.inventory.helper.UserTestHelper.createInvalidUserRequest;
 import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
@@ -14,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
@@ -62,8 +66,11 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertNotNull(userResponse.getId());
     assertEquals(userRequest.getName(), userResponse.getName());
     assertEquals(userRequest.getEmail(), userResponse.getEmail());
-//    assertEventWasLogged(
-//        this.testRestTemplate, getBaseSystemEventUrl(), USER_CREATE, "entity", "name", "john");
+    Map<String, Object> expectedEventSubPayload =
+        getCreateOrDeleteEventPayload(getEntityAsMap(userResponse));
+
+    assertEventWasLogged(
+        this.testRestTemplate, getBaseSystemEventUrl(), USER_CREATE, expectedEventSubPayload);
   }
 
   @Test
@@ -177,13 +184,13 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(createdUser.getId(), updatedUser.getId());
     assertEquals(updatedUserRequest.getName(), updatedUser.getName());
     assertEquals(updatedUserRequest.getEmail(), updatedUser.getEmail());
-//    assertEventWasLogged(
-//        this.testRestTemplate,
-//        getBaseSystemEventUrl(),
-//        USER_UPDATE,
-//        "entityAfter",
-//        "name",
-//        updatedUserRequest.getName());
+    
+    Map<String, Object> expectedEventSubPayload =
+        getUpdateEventPayload(
+            getEntityAsMap(createdUser), getEntityAsMap(updatedUser));
+
+    assertEventWasLogged(
+        this.testRestTemplate, getBaseSystemEventUrl(), USER_UPDATE, expectedEventSubPayload);
   }
 
   @Test
@@ -262,13 +269,11 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             getBaseUserUrl() + "/" + createdUser.getId(), String.class);
     assertEquals(HttpStatus.NOT_FOUND, getUserResponse.getStatusCode());
 
-//    assertEventWasLogged(
-//        this.testRestTemplate,
-//        getBaseSystemEventUrl(),
-//        USER_DELETE,
-//        "entity",
-//        "name",
-//        createdUser.getName());
+    Map<String, Object> expectedEventSubPayload =
+        getCreateOrDeleteEventPayload(getEntityAsMap(createdUser));
+
+    assertEventWasLogged(
+        this.testRestTemplate, getBaseSystemEventUrl(), USER_DELETE, expectedEventSubPayload);
   }
 
   @Test
