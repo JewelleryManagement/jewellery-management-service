@@ -32,7 +32,7 @@ public class SaleController {
     return saleService.createSale(saleRequestDto);
   }
 
-  @Operation(summary = "Return sold product")
+  @Operation(summary = "Return of a sold product")
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/return-product/{productId}")
   public ProductResponseDto returnProduct(@PathVariable("productId") UUID productId) {
