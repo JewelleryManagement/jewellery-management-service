@@ -59,8 +59,8 @@ public class SaleService {
   public ProductResponseDto returnProduct(UUID productId) {
     Product productToReturn = productService.getProduct(productId);
 
-    throwExceptionIfProductNotSold(productToReturn);
     throwExceptionIfProductIsPartOfAnotherProduct(productToReturn);
+    throwExceptionIfProductNotSold(productToReturn);
 
     Sale sale = getSale(productToReturn.getPartOfSale().getId());
     sale.setProducts(removeProductFormSale(sale.getProducts(), productToReturn));
