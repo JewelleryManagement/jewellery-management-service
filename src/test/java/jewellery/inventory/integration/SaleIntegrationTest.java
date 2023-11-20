@@ -8,10 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+
 import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -22,6 +20,7 @@ import jewellery.inventory.model.Product;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.PreciousStone;
 import jewellery.inventory.repository.*;
+import org.glassfish.jaxb.core.v2.TODO;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Assertions;
@@ -61,6 +60,10 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private String getBaseSaleUrl() {
     return getBaseUrl() + "/sales";
+  }
+
+  private String getSaleReturnProductUrl(UUID productId) {
+    return getBaseUrl() + "/sales/return-product/" + productId;
   }
 
   @Autowired private UserRepository userRepository;
@@ -105,19 +108,35 @@ class SaleIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     ResponseEntity<ProductResponseDto> response =
         this.testRestTemplate.exchange(
-            getBaseSaleUrl()
-                + "/return-product/"
-                + Objects.requireNonNull(productResponse.getBody()).getId(),
+            getSaleReturnProductUrl(productResponse.getBody().getId()),
             HttpMethod.PUT,
             null,
             new ParameterizedTypeReference<>() {});
 
+    assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     Assertions.assertNull(response.getBody().getPartOfSale());
     Assertions.assertNotEquals(
         response.getBody().getOwner().getId(),
         Objects.requireNonNull(saleResponse.getBody()).getBuyer().getId());
     assertEquals(response.getBody().getOwner().getId(), saleResponse.getBody().getSeller().getId());
+  }
+
+  @Test
+  void returnProductWillThrowsProductNotSoldException() {
+    ResponseEntity<ProductResponseDto> productResponse =
+        this.testRestTemplate.postForEntity(
+            getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+
+    ResponseEntity<ProductResponseDto> response =
+        this.testRestTemplate.exchange(
+            getSaleReturnProductUrl(productResponse.getBody().getId()),
+            HttpMethod.PUT,
+            null,
+            new ParameterizedTypeReference<>() {});
+    assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    assertNull(Objects.requireNonNull(productResponse.getBody()).getPartOfSale());
+    assertNull(Objects.requireNonNull(response.getBody()).getPartOfSale());
   }
 
   @Test
