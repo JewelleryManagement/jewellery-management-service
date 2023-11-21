@@ -49,15 +49,11 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     productRepository.deleteAll();
     saleRepository.deleteAll();
     userRepository.deleteAll();
-  }
-  private String getBaseSystemEventUrl() {
-    return BASE_URL_PATH + port + "/system-events";
+    systemEventRepository.deleteAll();
   }
 
-  @BeforeEach
-  void cleanUp() {
-    userRepository.deleteAll();
-    systemEventRepository.deleteAll();
+  private String getBaseSystemEventUrl() {
+    return BASE_URL_PATH + port + "/system-events";
   }
 
   @Test
@@ -82,7 +78,6 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEventWasLogged(
         this.testRestTemplate, getBaseSystemEventUrl(), USER_CREATE, expectedEventSubPayload);
   }
-
 
   @Test
   void createUserFailsWhenNameInvalid() {
@@ -123,7 +118,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void getAllUsersSuccessfully() throws JsonProcessingException {
+  void getAllUsersSuccessfully() {
     UserRequestDto userRequest = createTestUserRequest();
 
     ResponseEntity<UserResponseDto> userResponseEntity =
@@ -197,8 +192,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(updatedUserRequest.getEmail(), updatedUser.getEmail());
 
     Map<String, Object> expectedEventSubPayload =
-        getUpdateEventPayload(
-            getEntityAsMap(createdUser), getEntityAsMap(updatedUser));
+        getUpdateEventPayload(getEntityAsMap(createdUser), getEntityAsMap(updatedUser));
 
     assertEventWasLogged(
         this.testRestTemplate, getBaseSystemEventUrl(), USER_UPDATE, expectedEventSubPayload);

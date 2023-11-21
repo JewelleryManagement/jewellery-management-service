@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 import jewellery.inventory.dto.request.AuthenticationRequestDto;
 import jewellery.inventory.dto.response.UserAuthDetailsDto;
 import jewellery.inventory.model.User;
+import jewellery.inventory.repository.ProductRepository;
+import jewellery.inventory.repository.SaleRepository;
 import jewellery.inventory.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Autowired private UserRepository userRepository;
+  @Autowired private SaleRepository saleRepository;
+  @Autowired private ProductRepository productRepository;
   @MockBean private PasswordEncoder passwordEncoder;
   private User testUser;
   private final AuthenticationRequestDto authRequest = new AuthenticationRequestDto();
@@ -36,6 +40,8 @@ class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Override
   @BeforeEach
   void setup() {
+    productRepository.deleteAll();
+    saleRepository.deleteAll();
     userRepository.deleteAll();
     createAndSaveTestUser();
   }

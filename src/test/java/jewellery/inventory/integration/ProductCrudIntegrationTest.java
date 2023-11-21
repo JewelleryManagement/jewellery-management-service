@@ -35,6 +35,7 @@ import org.springframework.http.*;
 class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Autowired private UserRepository userRepository;
+  @Autowired private SystemEventRepository systemEventRepository;
 
   @Autowired private SaleRepository saleRepository;
   @Autowired private ProductRepository productRepository;
@@ -78,19 +79,9 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return getBaseUrl() + "/products/" + id;
   }
 
-  @Autowired private UserRepository userRepository;
-  @Autowired private ProductRepository productRepository;
-  @Autowired private ResourceRepository resourceRepository;
-  @Autowired private ResourceInUserRepository resourceInUserRepository;
-  @Autowired private ResourceInProductRepository resourceInProductRepository;
-
-  private User user;
-  private PreciousStone preciousStone;
-  private User differentUser;
-  private ResourceInUserRequestDto resourceInUserRequestDto;
-  private ResourcesInUserResponseDto resourcesInUserResponseDto;
-  private ProductRequestDto productRequestDto;
-  private ProductResponseDto productResponseDto;
+  private String getBaseSystemEventUrl() {
+    return getBaseUrl() + "/system-events";
+  }
 
   @BeforeEach
   void setUp() {
@@ -152,9 +143,10 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertNotNull(resultResponse.getBody());
     assertEquals(differentUser.getId(), resultResponse.getBody().getOwner().getId());
     assertEquals(HttpStatus.OK, resultResponse.getStatusCode());
+
     Map<String, Object> expectedEventSubPayload =
         getUpdateEventPayload(
-            getEntityAsMap(productResponse.getBody()), getEntityAsMap(resultResponse.getBody()));
+            getEntityAsMap(productResponse2.getBody()), getEntityAsMap(resultResponse.getBody()));
 
     assertEventWasLogged(
         this.testRestTemplate, getBaseSystemEventUrl(), PRODUCT_TRANSFER, expectedEventSubPayload);
@@ -249,17 +241,10 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         getCreateOrDeleteEventPayload(getEntityAsMap(productResponseDto));
 
     assertEventWasLogged(
-        this.testRestTemplate, getBaseSystemEventUrl(), PRODUCT_DISASSEMBLY, expectedEventSubPayload);
-  }
-
-  @NotNull
-  private static ResourceInUserRequestDto getResourceInUserRequestDto(
-      User user, PreciousStone preciousStone) {
-    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
-    resourceInUserRequestDto.setUserId(user.getId());
-    resourceInUserRequestDto.setResourceId(preciousStone.getId());
-    resourceInUserRequestDto.setQuantity(20);
-    return resourceInUserRequestDto;
+        this.testRestTemplate,
+        getBaseSystemEventUrl(),
+        PRODUCT_DISASSEMBLY,
+        expectedEventSubPayload);
   }
 
   private void assertResponseMatchesCreatedRequest(

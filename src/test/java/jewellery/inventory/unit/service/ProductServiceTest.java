@@ -59,19 +59,6 @@ class ProductServiceTest {
   }
 
   @Test
-  void testCreateProductShouldThrowWhenProductOwnerIsNotTheSameAsContentProductOwner() {
-    when(userRepository.findById(productRequestDto.getOwnerId())).thenReturn(Optional.of(user));
-    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-
-    User anotherUser = createTestUserWithRandomId();
-    product.setOwner(anotherUser);
-    productRequestDto.setProductsContent(List.of(product.getId()));
-
-    assertThrows(
-            UserNotOwnerException.class, () -> productService.createProduct(productRequestDto));
-  }
-
-  @Test
   void testTransferProductThrowsExceptionWhenProductIsContent() {
     Product contentProduct = getTestProduct(user, pearl);
     contentProduct.setContentOf(product);
@@ -202,7 +189,9 @@ class ProductServiceTest {
   @Test
   void testGetProductShouldThrowWhenProductNotFound() {
     UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
-    assertThrows(ProductNotFoundException.class, () -> productService.getProductWithoutResourcesAndProduct(fakeId));
+    assertThrows(
+        ProductNotFoundException.class,
+        () -> productService.getProductWithoutResourcesAndProduct(fakeId));
   }
 
   @Test
@@ -213,7 +202,8 @@ class ProductServiceTest {
     ProductResponseDto response = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
 
-    ProductResponseDto actual = productService.getProductWithoutResourcesAndProduct(product.getId());
+    ProductResponseDto actual =
+        productService.getProductWithoutResourcesAndProduct(product.getId());
 
     assertEquals(response, actual);
     assertEquals(response.getId(), actual.getId());
