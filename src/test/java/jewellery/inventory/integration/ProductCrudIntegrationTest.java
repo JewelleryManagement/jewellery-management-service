@@ -39,12 +39,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private static final String TEXT_FILE = "/static/img/test.txt";
   private static final String BIG_IMAGE_FILE = "/static/img/Sample-jpg-image-10mb.jpg";
 
-  @Autowired private UserRepository userRepository;
-  @Autowired private SaleRepository saleRepository;
-  @Autowired private ProductRepository productRepository;
-  @Autowired private ResourceRepository resourceRepository;
-  @Autowired private ResourceInUserRepository resourceInUserRepository;
-  @Autowired private ResourceInProductRepository resourceInProductRepository;
   private User user;
   private PreciousStone preciousStone;
   private User differentUser;
@@ -54,6 +48,14 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private ProductRequestDto productRequestDto2;
   private ProductResponseDto productResponseDto;
 
+  @Autowired private UserRepository userRepository;
+  @Autowired private ProductRepository productRepository;
+  @Autowired private ResourceRepository resourceRepository;
+  @Autowired private ResourceInUserRepository resourceInUserRepository;
+  @Autowired private ResourceInProductRepository resourceInProductRepository;
+  @Autowired private ImageRepository imageRepository;
+  @Autowired private ImageService imageService;
+  @Autowired private SaleRepository saleRepository;
 
   private String getBaseUrl() {
     return BASE_URL_PATH + port;
@@ -86,23 +88,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private String getBaseProductImageUrl(UUID productId) {
     return getBaseProductUrl() + "/" + productId + "/picture";
   }
-
-  @Autowired private UserRepository userRepository;
-  @Autowired private ProductRepository productRepository;
-  @Autowired private ResourceRepository resourceRepository;
-  @Autowired private ResourceInUserRepository resourceInUserRepository;
-  @Autowired private ResourceInProductRepository resourceInProductRepository;
-  @Autowired private ImageRepository imageRepository;
-  @Autowired private ImageService imageService;
-
-  private User user;
-  private PreciousStone preciousStone;
-  private User differentUser;
-  private ResourceInUserRequestDto resourceInUserRequestDto;
-  private ResourcesInUserResponseDto resourcesInUserResponseDto;
-  private ProductRequestDto productRequestDto;
-  private ProductResponseDto productResponseDto;
-
 
   @BeforeEach
   void setUp() {
@@ -365,6 +350,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             getBaseProductImageUrl(productResponseDto.getId()), byte[].class);
 
     assertEquals(HttpStatus.NOT_FOUND, byteResponse.getStatusCode());
+  }
 
   @NotNull
   private static ResourceInUserRequestDto getResourceInUserRequestDto(
