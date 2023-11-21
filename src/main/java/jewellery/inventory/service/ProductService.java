@@ -57,7 +57,7 @@ public class ProductService {
   }
 
   public ProductResponseDto getProductResponse(UUID id) {
-    return productMapper.mapToProductResponseDto(productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id)));
+    return productMapper.mapToProductResponseDto(getProduct(id));
   }
 
   public void updateProductOwnerAndSale(Product product, User newOwner, Sale sale) {
