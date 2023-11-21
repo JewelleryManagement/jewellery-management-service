@@ -12,10 +12,7 @@ import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.SystemEvent;
-import jewellery.inventory.repository.SystemEventRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -23,15 +20,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 
 class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
-  @Autowired SystemEventRepository systemEventRepository;
-
   private String getBaseSystemEventUrl() {
     return BASE_URL_PATH + port + "/system-events";
-  }
-
-  @BeforeEach
-  void cleanup() {
-    systemEventRepository.deleteAll();
   }
 
   @Test

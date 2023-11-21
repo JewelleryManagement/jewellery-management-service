@@ -34,14 +34,6 @@ import org.springframework.http.*;
 
 class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
-  @Autowired private UserRepository userRepository;
-  @Autowired private SystemEventRepository systemEventRepository;
-
-  @Autowired private SaleRepository saleRepository;
-  @Autowired private ProductRepository productRepository;
-  @Autowired private ResourceRepository resourceRepository;
-  @Autowired private ResourceInUserRepository resourceInUserRepository;
-  @Autowired private ResourceInProductRepository resourceInProductRepository;
   private User user;
   private PreciousStone preciousStone;
   private User differentUser;
@@ -85,8 +77,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @BeforeEach
   void setUp() {
-    cleanAllRepositories();
-
     user = createUserInDatabase(createTestUserRequest());
     preciousStone = createPreciousStoneInDatabase();
     resourceInUserRequestDto =
@@ -304,15 +294,5 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, User.class);
 
     return createUser.getBody();
-  }
-
-  private void cleanAllRepositories() {
-    productRepository.deleteAll();
-    saleRepository.deleteAll();
-    userRepository.deleteAll();
-    resourceRepository.deleteAll();
-    resourceInUserRepository.deleteAll();
-    resourceInProductRepository.deleteAll();
-    systemEventRepository.deleteAll();
   }
 }

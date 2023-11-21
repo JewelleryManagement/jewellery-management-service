@@ -21,13 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.repository.ProductRepository;
-import jewellery.inventory.repository.SaleRepository;
-import jewellery.inventory.repository.SystemEventRepository;
-import jewellery.inventory.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -35,21 +29,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
-  @Autowired UserRepository userRepository;
-  @Autowired SystemEventRepository systemEventRepository;
-  @Autowired SaleRepository saleRepository;
-  @Autowired ProductRepository productRepository;
 
   private String getBaseUserUrl() {
     return BASE_URL_PATH + port + "/users";
-  }
-
-  @BeforeEach
-  void cleanUp() {
-    productRepository.deleteAll();
-    saleRepository.deleteAll();
-    userRepository.deleteAll();
-    systemEventRepository.deleteAll();
   }
 
   private String getBaseSystemEventUrl() {

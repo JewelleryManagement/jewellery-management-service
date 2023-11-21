@@ -8,6 +8,13 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import java.io.IOException;
 import java.util.Collections;
 import jewellery.inventory.model.User;
+import jewellery.inventory.repository.ProductRepository;
+import jewellery.inventory.repository.ResourceInProductRepository;
+import jewellery.inventory.repository.ResourceInUserRepository;
+import jewellery.inventory.repository.ResourceRepository;
+import jewellery.inventory.repository.SaleRepository;
+import jewellery.inventory.repository.SystemEventRepository;
+import jewellery.inventory.repository.UserRepository;
 import jewellery.inventory.service.security.JwtTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,10 +34,15 @@ abstract class AuthenticatedIntegrationTestBase {
   protected static final String BASE_URL_PATH = "http://localhost:";
 
   @Autowired protected TestRestTemplate testRestTemplate;
-
   @Autowired private JwtTokenService jwtService;
-
   @MockBean protected UserDetailsService userDetailsService;
+  @Autowired private UserRepository userRepository;
+  @Autowired private SystemEventRepository systemEventRepository;
+  @Autowired private SaleRepository saleRepository;
+  @Autowired private ProductRepository productRepository;
+  @Autowired private ResourceRepository resourceRepository;
+  @Autowired private ResourceInUserRepository resourceInUserRepository;
+  @Autowired private ResourceInProductRepository resourceInProductRepository;
 
   @Value(value = "${local.server.port}")
   protected int port;
@@ -38,7 +50,14 @@ abstract class AuthenticatedIntegrationTestBase {
   protected HttpHeaders headers;
 
   @BeforeEach
-  void setup() throws IOException {
+  void setup() {
+    productRepository.deleteAll();
+    saleRepository.deleteAll();
+    userRepository.deleteAll();
+    resourceRepository.deleteAll();
+    resourceInUserRepository.deleteAll();
+    resourceInProductRepository.deleteAll();
+    systemEventRepository.deleteAll();
     User adminUser = createTestUserWithId();
     setupMockSecurityContext(adminUser);
     setupTestRestTemplateWithAuthHeaders();

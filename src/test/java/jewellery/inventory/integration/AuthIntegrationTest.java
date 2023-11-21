@@ -9,11 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import jewellery.inventory.dto.request.AuthenticationRequestDto;
 import jewellery.inventory.dto.response.UserAuthDetailsDto;
 import jewellery.inventory.model.User;
-import jewellery.inventory.repository.ProductRepository;
-import jewellery.inventory.repository.SaleRepository;
 import jewellery.inventory.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,21 +27,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
-
   @Autowired private UserRepository userRepository;
-  @Autowired private SaleRepository saleRepository;
-  @Autowired private ProductRepository productRepository;
   @MockBean private PasswordEncoder passwordEncoder;
   private User testUser;
   private final AuthenticationRequestDto authRequest = new AuthenticationRequestDto();
   private final HttpHeaders headers = new HttpHeaders();
 
-  @Override
   @BeforeEach
-  void setup() {
-    productRepository.deleteAll();
-    saleRepository.deleteAll();
-    userRepository.deleteAll();
+  void setUp() {
+    this.setup();
     createAndSaveTestUser();
   }
 

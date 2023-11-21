@@ -23,10 +23,8 @@ import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ResourceMapper;
-import jewellery.inventory.repository.SystemEventRepository;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
@@ -39,7 +37,6 @@ import org.springframework.http.ResponseEntity;
 class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private final ObjectMapper objectMapper = new ObjectMapper();
   @Autowired private ResourceMapper resourceMapper;
-  @Autowired private SystemEventRepository systemEventRepository;
 
   @NotNull
   private static List<UUID> getIds(List<ResourceResponseDto> dtos) {
@@ -52,11 +49,6 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private String getBaseSystemEventUrl() {
     return BASE_URL_PATH + port + "/system-events";
-  }
-
-  @BeforeEach
-  void cleanup() {
-    systemEventRepository.deleteAll();
   }
 
   @AfterEach
