@@ -140,6 +140,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.CREATED, saleResponse.getStatusCode());
     assertEquals(saleRequestDto.getBuyerId(), saleResponse.getBody().getBuyer().getId());
     assertEquals(saleRequestDto.getSellerId(), saleResponse.getBody().getSeller().getId());
+    assertEquals(saleRequestDto.getDate(), saleResponse.getBody().getDate());
     assertEquals(saleRequestDto.getProducts().size(), saleResponse.getBody().getProducts().size());
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(),

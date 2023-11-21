@@ -26,6 +26,7 @@ public class SaleMapper {
     saleResponseDto.setTotalPrice(getTotalPriceFromEntity(sale.getProducts()));
     saleResponseDto.setTotalDiscount(calculateDiscount(sale.getProducts(), AMOUNT));
     saleResponseDto.setTotalDiscountedPrice(calculateDiscount(sale.getProducts(), PERCENTAGE));
+    saleResponseDto.setDate(sale.getDate());
     return saleResponseDto;
   }
 

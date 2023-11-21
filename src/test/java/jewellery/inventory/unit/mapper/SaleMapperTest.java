@@ -2,8 +2,7 @@ package jewellery.inventory.unit.mapper;
 
 import static jewellery.inventory.helper.ProductTestHelper.getTestProduct;
 import static jewellery.inventory.helper.UserTestHelper.*;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -85,6 +84,7 @@ class SaleMapperTest {
     Assertions.assertEquals(saleResponseDto.getSeller().getId(), sale.getSeller().getId());
     Assertions.assertEquals(saleResponseDto.getBuyer().getId(), sale.getBuyer().getId());
     Assertions.assertEquals(saleResponseDto.getProducts().size(), sale.getProducts().size());
+    assertEquals(saleResponseDto.getDate(), sale.getDate());
   }
 
   @Test
