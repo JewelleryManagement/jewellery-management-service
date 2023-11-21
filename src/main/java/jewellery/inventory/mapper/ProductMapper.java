@@ -20,13 +20,16 @@ public class ProductMapper {
   public ProductResponseDto mapToProductResponseDto(Product product) {
     ProductResponseDto productResponseDto = new ProductResponseDto();
     productResponseDto.setId(product.getId());
-    productResponseDto.setSold(product.isSold());
+    if (product.getPartOfSale() != null) {
+      productResponseDto.setPartOfSale(product.getPartOfSale().getId());
+    }
     productResponseDto.setAuthors(getAuthorsResponse(product));
     productResponseDto.setDescription(product.getDescription());
     productResponseDto.setSalePrice(product.getSalePrice());
     productResponseDto.setOwner(userMapper.toUserResponse(product.getOwner()));
     productResponseDto.setProductionNumber(product.getProductionNumber());
     productResponseDto.setCatalogNumber(product.getCatalogNumber());
+    productResponseDto.setDiscount(product.getDiscount());
 
     setContentProductToResponse(product, productResponseDto);
     setResourcesToResponse(product, productResponseDto);
