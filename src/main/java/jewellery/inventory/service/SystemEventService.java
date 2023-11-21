@@ -35,7 +35,7 @@ public class SystemEventService {
     logEvent(type, payload);
   }
 
-  public <T, U> void logEvent(EventType type, T entity) {
+  public <T> void logEvent(EventType type, T entity) {
     Map<String, Object> payload = new HashMap<>();
 
     payload.put("entity", createMap(entity));
