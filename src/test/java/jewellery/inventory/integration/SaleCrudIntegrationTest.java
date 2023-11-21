@@ -5,7 +5,6 @@ import static jewellery.inventory.helper.SystemEventTestHelper.assertEventWasLog
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getEntityAsMap;
 import static jewellery.inventory.helper.UserTestHelper.*;
-import static jewellery.inventory.model.EventType.PRODUCT_CREATE;
 import static jewellery.inventory.model.EventType.SALE_CREATE;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
