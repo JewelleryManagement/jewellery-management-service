@@ -26,6 +26,7 @@ import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.repository.SystemEventRepository;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
@@ -53,6 +54,11 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return BASE_URL_PATH + port + "/system-events";
   }
 
+  @BeforeEach
+  void cleanup() {
+    systemEventRepository.deleteAll();
+  }
+
   @AfterEach
   void deleteResources() throws JsonProcessingException {
     List<ResourceResponseDto> resourceDtosFromDb = getResourcesWithRequest();
@@ -64,7 +70,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void willAddResourceToDatabase() throws JsonProcessingException {
     List<ResourceRequestDto> inputDtos = provideResourceRequestDtos().toList();
 
-    List<ResourceResponseDto> createdResources=  sendCreateRequestsFor(inputDtos);
+    List<ResourceResponseDto> createdResources = sendCreateRequestsFor(inputDtos);
 
     assertInputMatchesFetchedFromServer(inputDtos);
 
@@ -129,7 +135,8 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertInputMatchesFetchedFromServer(updatedInputDtos);
 
     Map<String, Object> expectedEventSubPayload =
-        getUpdateEventPayload(getEntityAsMap(createdDtos.get(0)), getEntityAsMap(updatedDtos.get(0)));
+        getUpdateEventPayload(
+            getEntityAsMap(createdDtos.get(0)), getEntityAsMap(updatedDtos.get(0)));
 
     assertEventWasLogged(
         this.testRestTemplate, getBaseSystemEventUrl(), RESOURCE_UPDATE, expectedEventSubPayload);
