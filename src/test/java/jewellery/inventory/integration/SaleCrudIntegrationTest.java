@@ -1,15 +1,22 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ProductTestHelper.getProductRequestDto;
+import static jewellery.inventory.helper.SystemEventTestHelper.assertEventWasLogged;
+import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
+import static jewellery.inventory.helper.SystemEventTestHelper.getEntityAsMap;
 import static jewellery.inventory.helper.UserTestHelper.*;
+import static jewellery.inventory.model.EventType.PRODUCT_CREATE;
+import static jewellery.inventory.model.EventType.SALE_CREATE;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
@@ -74,6 +81,10 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return getBaseUrl() + "/sales";
   }
 
+  private String getBaseSystemEventUrl() {
+    return getBaseUrl() + "/system-events";
+  }
+
   @BeforeEach
   void setUp() {
     cleanAllRepositories();
@@ -117,7 +128,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void createSaleSuccessfully() {
+  void createSaleSuccessfully() throws JsonProcessingException {
 
     ResponseEntity<ProductResponseDto> productResponse =
         this.testRestTemplate.postForEntity(
@@ -144,6 +155,12 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(),
         saleResponse.getBody().getProducts().get(0).getId());
+
+    Map<String, Object> expectedEventSubPayload =
+        getCreateOrDeleteEventPayload(getEntityAsMap(saleResponse.getBody()));
+
+    assertEventWasLogged(
+        this.testRestTemplate, getBaseSystemEventUrl(), SALE_CREATE, expectedEventSubPayload);
   }
 
   @NotNull
