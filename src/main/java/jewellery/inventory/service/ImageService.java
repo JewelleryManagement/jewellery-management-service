@@ -139,7 +139,14 @@ public class ImageService {
 
   private static Path createFilePath(MultipartFile multipartFile, Path directory) {
     StringBuilder sb = new StringBuilder();
-    sb.append(directory).append("/").append(multipartFile.getOriginalFilename());
+    sb.append(directory).append("/");
+
+    switch (Objects.requireNonNull(multipartFile.getContentType())) {
+      case "image/png" -> sb.append("ProductPicture.png");
+      case "image/jpg" -> sb.append("ProductPicture.jpg");
+      case "image/jpeg" -> sb.append("ProductPicture.jpeg");
+    }
+
     return Path.of(sb.toString());
   }
 }
