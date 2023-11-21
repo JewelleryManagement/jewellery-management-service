@@ -73,7 +73,6 @@ public class ImageService {
   private Image createImageData(MultipartFile file, Path filePath, Product product) {
     return imageRepository.save(
         Image.builder()
-            .name(file.getOriginalFilename())
             .type(file.getContentType())
             .filePath(filePath.toString())
             .product(product)

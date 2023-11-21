@@ -16,7 +16,6 @@ public class Image {
     @GeneratedValue
     private UUID id;
 
-    private String name;
     private String type;
     private String filePath;
 
