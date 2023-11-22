@@ -4,7 +4,6 @@ import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
-import jewellery.inventory.mapper.ResourcesInUserMapper;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.service.SystemEventService;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Component;
 public class EventAspect {
   private static final Logger logger = LoggerFactory.getLogger(EventAspect.class);
   private final SystemEventService eventService;
-  private final ResourcesInUserMapper resourcesInUserMapper;
 
   @AfterReturning(pointcut = "@annotation(logCreateEvent)", returning = "result")
   public void logCreation(LogCreateEvent logCreateEvent, Object result) {
@@ -44,11 +42,11 @@ public class EventAspect {
     }
 
     Object oldEntity = entityFetcher.fetchEntity(proceedingJoinPoint.getArgs());
-    Object result = proceedingJoinPoint.proceed();
+    Object newEntity = proceedingJoinPoint.proceed();
 
-    eventService.logEvent(eventType, result, oldEntity);
+    eventService.logEvent(eventType, newEntity, oldEntity);
 
-    return result;
+    return newEntity;
   }
 
   @Before("@annotation(logDeleteEvent) && args(id)")
@@ -57,7 +55,8 @@ public class EventAspect {
     Object service = joinPoint.getTarget();
 
     if (!(service instanceof EntityFetcher entityFetcher)) {
-      logger.error("Service does not implement EntityFetcher for deletion logging");
+      logger.error(
+          "Service: {} does not implement EntityFetcher for deletion logging", service.getClass());
       return;
     }
 
@@ -66,7 +65,7 @@ public class EventAspect {
     if (entityBeforeDeletion != null) {
       eventService.logEvent(eventType, entityBeforeDeletion);
     } else {
-      logger.error("Entity not found for deletion logging");
+      logger.error("Entity with id: {} not found for deletion logging", id);
     }
   }
 }

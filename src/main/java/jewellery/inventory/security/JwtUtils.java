@@ -8,10 +8,8 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.WeakKeyException;
 import java.security.Key;
-import java.util.UUID;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.not_found.NoAuthenticatedUserException;
-import jewellery.inventory.exception.security.InvalidPrincipalTypeException;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import jewellery.inventory.exception.security.jwt.JwtExpiredException;
 import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
@@ -32,20 +30,12 @@ public class JwtUtils {
 
   private final UserMapper userMapper;
 
-  public UUID getCurrentUserId() {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth != null && auth.getPrincipal() instanceof User user) {
-      return user.getId();
-    }
-    throw new NoAuthenticatedUserException();
-  }
-
   public UserResponseDto getCurrentUser() {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     if (auth != null && auth.getPrincipal() instanceof User user) {
       return userMapper.toUserResponse(user);
     }
-    throw new InvalidPrincipalTypeException();
+    throw new NoAuthenticatedUserException();
   }
 
   public Key getSigningKey() {

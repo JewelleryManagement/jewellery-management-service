@@ -1,11 +1,9 @@
 package jewellery.inventory.unit.service.security;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
 
-import java.util.UUID;
 import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.exception.security.InvalidPrincipalTypeException;
+import jewellery.inventory.exception.not_found.NoAuthenticatedUserException;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
@@ -40,33 +38,6 @@ class JwtUtilsTest {
   }
 
   @Test
-  void willGetUserIdWhenAuthenticatedUser() {
-    UUID userId = UUID.randomUUID();
-    when(user.getId()).thenReturn(userId);
-
-    Authentication auth = new UsernamePasswordAuthenticationToken(user, null);
-    SecurityContextHolder.getContext().setAuthentication(auth);
-
-    UUID result = jwtUtils.getCurrentUserId();
-    assertEquals(userId, result);
-  }
-
-  @Test
-  void willThrowWhenNoAuthenticatedUser() {
-    SecurityContextHolder.getContext().setAuthentication(null);
-
-    assertThrows(RuntimeException.class, () -> jwtUtils.getCurrentUserId());
-  }
-
-  @Test
-  void willThrowWhenInvalidPrincipalType() {
-    Authentication auth = new UsernamePasswordAuthenticationToken("invalid", null);
-    SecurityContextHolder.getContext().setAuthentication(auth);
-
-    assertThrows(RuntimeException.class, () -> jwtUtils.getCurrentUserId());
-  }
-
-  @Test
   void willGetUserResponseWhenAuthenticatedUser() {
     User user = new User();
     UserResponseDto expectedUserResponseDto = new UserResponseDto();
@@ -87,7 +58,7 @@ class JwtUtilsTest {
     Authentication auth = new UsernamePasswordAuthenticationToken(null, null);
     SecurityContextHolder.getContext().setAuthentication(auth);
 
-    assertThrows(InvalidPrincipalTypeException.class, () -> jwtUtils.getCurrentUser());
+    assertThrows(NoAuthenticatedUserException.class, () -> jwtUtils.getCurrentUser());
   }
 
   @Test
@@ -96,7 +67,7 @@ class JwtUtilsTest {
     Mockito.when(securityContext.getAuthentication()).thenReturn(null);
     SecurityContextHolder.setContext(securityContext);
 
-    assertThrows(RuntimeException.class, () -> jwtUtils.getCurrentUser());
+    assertThrows(NoAuthenticatedUserException.class, () -> jwtUtils.getCurrentUser());
   }
 
   @Test
