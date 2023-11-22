@@ -63,7 +63,7 @@ public class SaleService {
     throwExceptionIfProductNotSold(productToReturn);
 
     Sale sale = getSale(productToReturn.getPartOfSale().getId());
-    sale.setProducts(removeProductFormSale(sale.getProducts(), productToReturn));
+    sale.setProducts(removeProductFromSale(sale.getProducts(), productToReturn));
 
     productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
 
@@ -125,7 +125,7 @@ public class SaleService {
     } else saleRepository.save(sale);
   }
 
-  private List<Product> removeProductFormSale(List<Product> products, Product productToRemove) {
+  private List<Product> removeProductFromSale(List<Product> products, Product productToRemove) {
     products.remove(productToRemove);
     return products;
   }
