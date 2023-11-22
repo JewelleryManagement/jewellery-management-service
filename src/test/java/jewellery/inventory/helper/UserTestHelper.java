@@ -83,6 +83,4 @@ public class UserTestHelper {
     requestDto.setQuantity(quantity);
     return requestDto;
   }
-
-
 }

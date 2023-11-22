@@ -70,12 +70,13 @@ public class ResourceInUserService implements EntityFetcher {
     return addResourceToUserNoLog(resourceUserDto);
   }
 
-  public ResourcesInUserResponseDto addResourceToUserNoLog(ResourceInUserRequestDto resourceUserDto) {
+  public ResourcesInUserResponseDto addResourceToUserNoLog(
+      ResourceInUserRequestDto resourceUserDto) {
     User user = findUserById(resourceUserDto.getUserId());
     Resource resource = findResourceById(resourceUserDto.getResourceId());
 
     return resourcesInUserMapper.toResourcesInUserResponseDto(
-            addResourceToUser(user, resource, resourceUserDto.getQuantity()));
+        addResourceToUser(user, resource, resourceUserDto.getQuantity()));
   }
 
   public ResourcesInUserResponseDto getAllResourcesFromUser(UUID userId) {
@@ -90,12 +91,13 @@ public class ResourceInUserService implements EntityFetcher {
     return removeQuantityFromResourceNoLog(userId, resourceId, quantity);
   }
 
-  public ResourcesInUserResponseDto removeQuantityFromResourceNoLog(UUID userId, UUID resourceId, double quantity) {
+  public ResourcesInUserResponseDto removeQuantityFromResourceNoLog(
+      UUID userId, UUID resourceId, double quantity) {
     User user = findUserById(userId);
     ResourceInUser resourceInUser = findResourceInUserOrThrow(user, resourceId);
 
     return resourcesInUserMapper.toResourcesInUserResponseDto(
-            removeQuantityFromResource(resourceInUser, quantity));
+        removeQuantityFromResource(resourceInUser, quantity));
   }
 
   @Transactional
@@ -113,12 +115,12 @@ public class ResourceInUserService implements EntityFetcher {
     return resourcesInUserMapper.toResourcesOwnedByUsersResponseDto(resource);
   }
 
-  public ResourceInUser getResourceInUser(UUID userId, UUID resourceId) {
+  private ResourceInUser getResourceInUser(UUID userId, UUID resourceId) {
     User user = findUserById(userId);
     return findResourceInUser(user, resourceId).orElse(null);
   }
 
-  public ResourcesInUserResponseDto getResourceInUserResponse(UUID userId, UUID resourceId) {
+  private ResourcesInUserResponseDto getResourceInUserResponse(UUID userId, UUID resourceId) {
     ResourceInUser resourceInUser = getResourceInUser(userId, resourceId);
     if (resourceInUser != null) {
       return resourcesInUserMapper.toResourcesInUserResponseDto(resourceInUser);

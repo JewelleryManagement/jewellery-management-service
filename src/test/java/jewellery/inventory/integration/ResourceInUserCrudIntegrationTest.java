@@ -36,21 +36,6 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   private static final double RESOURCE_QUANTITY = 5.00;
 
-  @NotNull
-  private static TransferResourceRequestDto getTransferResourceRequestDto(
-      UserResponseDto sender, PreciousStoneResponseDto createdResource, UserResponseDto receiver) {
-    TransferResourceRequestDto requestDto = new TransferResourceRequestDto();
-    requestDto.setPreviousOwnerId(sender.getId());
-    requestDto.setNewOwnerId(receiver.getId());
-    requestDto.setTransferredResourceId(createdResource.getId());
-    requestDto.setQuantity(1);
-    return requestDto;
-  }
-
-  private String getBaseUrl() {
-    return BASE_URL_PATH + port;
-  }
-
   private String buildUrl(String... paths) {
     return getBaseUrl() + "/" + String.join("/", paths);
   }
@@ -61,10 +46,6 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   private String getBaseResourceAvailabilityTransferUrl() {
     return buildUrl("resources", "availability", "transfer");
-  }
-
-  private String getBaseSystemEventUrl() {
-    return getBaseUrl() + "/system-events";
   }
 
   private String getResourceAvailabilityUrl(UUID userId, UUID resourceId) {
@@ -95,7 +76,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertEquals(createdUser, response.getBody().getOwner());
     ResourcesInUserResponseDto result = response.getBody();
 
-    Map<String, Object> expectedEventSubPayload =
+    Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(null, getEntityAsMap(result, objectMapper));
 
     assertEventWasLogged(
@@ -103,7 +84,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         objectMapper,
         getBaseSystemEventUrl(),
             RESOURCE_ADD_QUANTITY,
-        expectedEventSubPayload);
+        expectedEventPayload);
   }
 
   @Test
@@ -232,7 +213,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertNotNull(response.getBody());
     assertTrue(response.getBody().getResourcesAndQuantities().isEmpty());
 
-    Map<String, Object> expectedEventSubPayload =
+    Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(getEntityAsMap(entity.getBody(), objectMapper), null);
 
     assertEventWasLogged(
@@ -240,7 +221,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         objectMapper,
         getBaseSystemEventUrl(),
             RESOURCE_REMOVE_QUANTITY,
-        expectedEventSubPayload);
+        expectedEventPayload);
   }
 
   @Test
@@ -284,7 +265,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         findResourceQuantityIn(createdResource.getId(), resourcesInUserResponse);
     assertEquals(RESOURCE_QUANTITY - 1, resourceQuantity.getQuantity(), 0.01);
 
-    Map<String, Object> expectedEventSubPayload =
+    Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(
             getEntityAsMap(response.getBody(), objectMapper),
             getEntityAsMap(deleteQuantityResponse.getBody(), objectMapper));
@@ -294,7 +275,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         objectMapper,
         getBaseSystemEventUrl(),
             RESOURCE_REMOVE_QUANTITY,
-        expectedEventSubPayload);
+        expectedEventPayload);
   }
 
   @Test
@@ -382,7 +363,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         requestDto.getTransferredResourceId());
     assertEquals(response.getTransferredResource().getQuantity(), 1);
 
-    Map<String, Object> expectedEventSubPayload =
+    Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(getEntityAsMap(response, objectMapper));
 
     assertEventWasLogged(
@@ -390,7 +371,18 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         objectMapper,
         getBaseSystemEventUrl(),
         RESOURCE_TRANSFER,
-        expectedEventSubPayload);
+        expectedEventPayload);
+  }
+
+  @NotNull
+  private static TransferResourceRequestDto getTransferResourceRequestDto(
+          UserResponseDto sender, PreciousStoneResponseDto createdResource, UserResponseDto receiver) {
+    TransferResourceRequestDto requestDto = new TransferResourceRequestDto();
+    requestDto.setPreviousOwnerId(sender.getId());
+    requestDto.setNewOwnerId(receiver.getId());
+    requestDto.setTransferredResourceId(createdResource.getId());
+    requestDto.setQuantity(1);
+    return requestDto;
   }
 
   private PreciousStoneResponseDto sendCreatePreciousStoneRequest() {

@@ -45,10 +45,6 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return BASE_URL_PATH + port + "/resources";
   }
 
-  private String getBaseSystemEventUrl() {
-    return BASE_URL_PATH + port + "/system-events";
-  }
-
   @AfterEach
   void deleteResources() throws JsonProcessingException {
     List<ResourceResponseDto> resourceDtosFromDb = getResourcesWithRequest();
@@ -64,7 +60,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertInputMatchesFetchedFromServer(inputDtos);
 
-    Map<String, Object> expectedEventSubPayload =
+    Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(getEntityAsMap(createdResources.get(0), objectMapper));
 
     assertEventWasLogged(
@@ -72,7 +68,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         objectMapper,
         getBaseSystemEventUrl(),
         RESOURCE_CREATE,
-        expectedEventSubPayload);
+        expectedEventPayload);
   }
 
   @Test
@@ -128,7 +124,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     List<ResourceResponseDto> updatedDtos = getResourcesWithRequest();
     assertInputMatchesFetchedFromServer(updatedInputDtos);
 
-    Map<String, Object> expectedEventSubPayload =
+    Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(
             getEntityAsMap(createdDtos.get(0), objectMapper),
             getEntityAsMap(updatedDtos.get(0), objectMapper));
@@ -138,7 +134,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         objectMapper,
         getBaseSystemEventUrl(),
         RESOURCE_UPDATE,
-        expectedEventSubPayload);
+        expectedEventPayload);
   }
 
   @Test
@@ -151,7 +147,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     List<ResourceResponseDto> afterDeleteDtos = getResourcesWithRequest();
     assertEquals(0, afterDeleteDtos.size());
 
-    Map<String, Object> expectedEventSubPayload =
+    Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(getEntityAsMap(createdDtos.get(0), objectMapper));
 
     assertEventWasLogged(
@@ -159,7 +155,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         objectMapper,
         getBaseSystemEventUrl(),
         RESOURCE_DELETE,
-        expectedEventSubPayload);
+        expectedEventPayload);
   }
 
   @Test

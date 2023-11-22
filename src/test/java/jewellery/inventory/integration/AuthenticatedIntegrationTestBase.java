@@ -51,6 +51,13 @@ abstract class AuthenticatedIntegrationTestBase {
 
   protected HttpHeaders headers;
 
+  protected String getBaseUrl() {
+    return BASE_URL_PATH + port;
+  }
+  protected String getBaseSystemEventUrl() {
+    return getBaseUrl() + "/system-events";
+  }
+
   @BeforeEach
   void setup() {
     deleteAllImages();

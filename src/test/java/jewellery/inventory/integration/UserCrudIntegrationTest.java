@@ -34,10 +34,6 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return BASE_URL_PATH + port + "/users";
   }
 
-  private String getBaseSystemEventUrl() {
-    return BASE_URL_PATH + port + "/system-events";
-  }
-
   @Test
   void createUserSuccessfully() throws Exception {
 
@@ -54,7 +50,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertNotNull(userResponse.getId());
     assertEquals(userRequest.getName(), userResponse.getName());
     assertEquals(userRequest.getEmail(), userResponse.getEmail());
-    Map<String, Object> expectedEventSubPayload =
+    Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(getEntityAsMap(userResponse, objectMapper));
 
     assertEventWasLogged(
@@ -62,7 +58,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         objectMapper,
         getBaseSystemEventUrl(),
         USER_CREATE,
-        expectedEventSubPayload);
+            expectedEventPayload);
   }
 
   @Test
@@ -177,7 +173,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(updatedUserRequest.getName(), updatedUser.getName());
     assertEquals(updatedUserRequest.getEmail(), updatedUser.getEmail());
 
-    Map<String, Object> expectedEventSubPayload =
+    Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(
             getEntityAsMap(createdUser, objectMapper), getEntityAsMap(updatedUser, objectMapper));
 
@@ -186,7 +182,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         objectMapper,
         getBaseSystemEventUrl(),
         USER_UPDATE,
-        expectedEventSubPayload);
+        expectedEventPayload);
   }
 
   @Test
@@ -265,7 +261,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             getBaseUserUrl() + "/" + createdUser.getId(), String.class);
     assertEquals(HttpStatus.NOT_FOUND, getUserResponse.getStatusCode());
 
-    Map<String, Object> expectedEventSubPayload =
+    Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(getEntityAsMap(createdUser, objectMapper));
 
     assertEventWasLogged(
@@ -273,7 +269,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         objectMapper,
         getBaseSystemEventUrl(),
         USER_DELETE,
-        expectedEventSubPayload);
+            expectedEventPayload);
   }
 
   @Test

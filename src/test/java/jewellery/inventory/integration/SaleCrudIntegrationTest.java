@@ -39,12 +39,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private static final Double SALE_TOTAL_PRICE = 10000.0;
   private static final Double SALE_DISCOUNT = 10.0;
   private static final Double SALE_DISCOUNTED_PRICE = 9000.0;
-  @Autowired private UserRepository userRepository;
-  @Autowired private SaleRepository saleRepository;
-  @Autowired private ProductRepository productRepository;
-  @Autowired private ResourceRepository resourceRepository;
-  @Autowired private ResourceInUserRepository resourceInUserRepository;
-  @Autowired private ResourceInProductRepository resourceInProductRepository;
   private User seller;
   private User buyer;
   private PreciousStone preciousStone;
@@ -52,10 +46,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
   private ProductRequestDto productRequestDto;
   private ProductRequestDto productRequestDto2;
-
-  private String getBaseUrl() {
-    return BASE_URL_PATH + port;
-  }
 
   private String buildUrl(String... paths) {
     return getBaseUrl() + "/" + String.join("/", paths);
@@ -81,13 +71,8 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return getBaseUrl() + "/sales";
   }
 
-  private String getBaseSystemEventUrl() {
-    return getBaseUrl() + "/system-events";
-  }
-
   @BeforeEach
   void setUp() {
-    cleanAllRepositories();
     seller = createUserInDatabase(createTestUserRequest());
     buyer = createUserInDatabase(createDifferentUserRequest());
     preciousStone = createPreciousStoneInDatabase();
@@ -160,7 +145,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount());
     assertEquals(SALE_DISCOUNTED_PRICE, saleResponse.getBody().getTotalDiscountedPrice());
 
-    Map<String, Object> expectedEventSubPayload =
+    Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(getEntityAsMap(saleResponse.getBody(), objectMapper));
 
     assertEventWasLogged(
@@ -168,7 +153,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         objectMapper,
         getBaseSystemEventUrl(),
         SALE_CREATE,
-        expectedEventSubPayload);
+            expectedEventPayload);
   }
 
   @NotNull
@@ -227,15 +212,5 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, User.class);
 
     return createUser.getBody();
-  }
-
-  private void cleanAllRepositories() {
-    productRepository.deleteAll();
-    saleRepository.deleteAll();
-    userRepository.deleteAll();
-    productRepository.deleteAll();
-    resourceRepository.deleteAll();
-    resourceInUserRepository.deleteAll();
-    resourceInProductRepository.deleteAll();
   }
 }

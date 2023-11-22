@@ -9,7 +9,6 @@ import java.util.Map;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.SystemEvent;
 import jewellery.inventory.repository.SystemEventRepository;
-import jewellery.inventory.security.JwtUtils;
 import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
@@ -27,11 +26,11 @@ public class SystemEventService {
     return systemEventRepository.findAll();
   }
 
-  public <T, U> void logEvent(EventType type, T entity, @Nullable U oldEntity) {
+  public <T, U> void logEvent(EventType type, T newEntity, @Nullable U oldEntity) {
     Map<String, Object> payload = new HashMap<>();
 
     payload.put("entityBefore", createMap(oldEntity));
-    payload.put("entityAfter", createMap(entity));
+    payload.put("entityAfter", createMap(newEntity));
 
     logEvent(type, payload);
   }
@@ -50,17 +49,18 @@ public class SystemEventService {
 
   private void logEvent(EventType type, Map<String, Object> payload) {
     SystemEvent event = new SystemEvent();
-    Object executor = authService.getCurrentUser();
-    if (executor != null) {
-      Map<String, Object> executorMap =
-          objectMapper.convertValue(executor, new TypeReference<>() {});
-      event.setExecutor(executorMap);
-    }
-
+    event.setExecutor(getCurrentUser());
     event.setType(type);
     event.setTimestamp(Instant.now());
     event.setPayload(payload);
 
     systemEventRepository.save(event);
+  }
+
+  private Map<String, Object> getCurrentUser() {
+    Object executor = authService.getCurrentUser();
+    return executor != null
+        ? objectMapper.convertValue(executor, new TypeReference<>() {})
+        : Map.of();
   }
 }

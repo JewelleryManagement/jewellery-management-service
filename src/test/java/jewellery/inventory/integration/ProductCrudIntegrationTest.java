@@ -62,10 +62,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Autowired private ImageRepository imageRepository;
   @Autowired private ImageService imageService;
 
-  private String getBaseUrl() {
-    return BASE_URL_PATH + port;
-  }
-
   private String buildUrl(String... paths) {
     return getBaseUrl() + "/" + String.join("/", paths);
   }
@@ -88,10 +84,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private String getProductUrl(UUID id) {
     return getBaseUrl() + "/products/" + id;
-  }
-
-  private String getBaseSystemEventUrl() {
-    return getBaseUrl() + "/system-events";
   }
 
   private String getBaseProductImageUrl(UUID productId) {
@@ -246,7 +238,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(differentUser.getId(), resultResponse.getBody().getOwner().getId());
     assertEquals(HttpStatus.OK, resultResponse.getStatusCode());
 
-    Map<String, Object> expectedEventSubPayload =
+    Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(
             getEntityAsMap(productResponse2.getBody(), objectMapper),
             getEntityAsMap(resultResponse.getBody(), objectMapper));
@@ -256,7 +248,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         objectMapper,
         getBaseSystemEventUrl(),
         PRODUCT_TRANSFER,
-        expectedEventSubPayload);
+        expectedEventPayload);
   }
 
   @Test
@@ -275,7 +267,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(productRequestDto.getProductionNumber(), productResponseDto.getProductionNumber());
     assertEquals(productRequestDto.getCatalogNumber(), productResponseDto.getCatalogNumber());
 
-    Map<String, Object> expectedEventSubPayload =
+    Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(getEntityAsMap(productResponseDto, objectMapper));
 
     assertEventWasLogged(
@@ -283,7 +275,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         objectMapper,
         getBaseSystemEventUrl(),
         PRODUCT_CREATE,
-        expectedEventSubPayload);
+        expectedEventPayload);
   }
 
   @Test
@@ -348,7 +340,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             ProductResponseDto.class);
 
     assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
-    Map<String, Object> expectedEventSubPayload =
+    Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(getEntityAsMap(productResponseDto, objectMapper));
 
     assertEventWasLogged(
@@ -356,7 +348,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         objectMapper,
         getBaseSystemEventUrl(),
         PRODUCT_DISASSEMBLY,
-        expectedEventSubPayload);
+        expectedEventPayload);
   }
 
   @Test
@@ -391,6 +383,16 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.NOT_FOUND, byteResponse.getStatusCode());
   }
 
+  @NotNull
+  private static ResourceInUserRequestDto getResourceInUserRequestDto(
+          User user, PreciousStone preciousStone) {
+    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
+    resourceInUserRequestDto.setUserId(user.getId());
+    resourceInUserRequestDto.setResourceId(preciousStone.getId());
+    resourceInUserRequestDto.setQuantity(20);
+    return resourceInUserRequestDto;
+  }
+
   private void assertResponseMatchesCreatedRequest(
       ResponseEntity<List<ProductResponseDto>> response) {
     List<ProductResponseDto> productResponseDtos = response.getBody();
@@ -420,16 +422,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             ResourcesInUserResponseDto.class);
 
     return createResourceInUser.getBody();
-  }
-
-  @NotNull
-  private static ResourceInUserRequestDto getResourceInUserRequestDto(
-      User user, PreciousStone preciousStone) {
-    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
-    resourceInUserRequestDto.setUserId(user.getId());
-    resourceInUserRequestDto.setResourceId(preciousStone.getId());
-    resourceInUserRequestDto.setQuantity(20);
-    return resourceInUserRequestDto;
   }
 
   @Nullable
