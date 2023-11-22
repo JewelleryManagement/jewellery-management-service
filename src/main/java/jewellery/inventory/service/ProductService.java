@@ -1,5 +1,6 @@
 package jewellery.inventory.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -28,6 +29,7 @@ public class ProductService {
   private final ProductRepository productRepository;
   private final UserRepository userRepository;
   private final ResourceInUserRepository resourceInUserRepository;
+  private final ImageService imageService;
   private final ResourceInUserService resourceInUserService;
   private final ProductMapper productMapper;
 
@@ -50,15 +52,12 @@ public class ProductService {
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
-  public ProductResponseDto getProductResponse(UUID id) {
-    Product product =
-        productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
-
-    return productMapper.mapToProductResponseDto(product);
-  }
-
   public Product getProduct(UUID id) {
     return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+  }
+
+  public ProductResponseDto getProductResponse(UUID id) {
+    return productMapper.mapToProductResponseDto(getProduct(id));
   }
 
   public void updateProductOwnerAndSale(Product product, User newOwner, Sale sale) {
@@ -78,16 +77,16 @@ public class ProductService {
   }
 
   @Transactional
-  public void deleteProduct(UUID id) {
+  public void deleteProduct(UUID id) throws IOException {
 
-    Product product =
-        productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+    Product product = getProduct(id);
 
     throwExceptionIfProductIsSold(id, product);
     throwExceptionIfProductIsPartOfAnotherProduct(id, product);
 
     moveResourceInProductToResourceInUser(product);
     disassembleProductContent(product);
+    deleteImageWhenAttached(id, product);
 
     productRepository.deleteById(id);
   }
@@ -97,6 +96,12 @@ public class ProductService {
     updateProductOwnerRecursively(productForChangeOwner, getUser(recipientId));
     productRepository.save(productForChangeOwner);
     return productMapper.mapToProductResponseDto(productForChangeOwner);
+  }
+
+  private void deleteImageWhenAttached(UUID id, Product product) throws IOException {
+    if (product.getImage() != null) {
+      imageService.deleteImage(id);
+    }
   }
 
   private void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {

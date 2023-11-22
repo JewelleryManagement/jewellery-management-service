@@ -5,6 +5,7 @@ import static jewellery.inventory.helper.UserTestHelper.createTestUserWithRandom
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.io.IOException;
 import java.util.*;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -20,6 +21,7 @@ import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.*;
+import jewellery.inventory.service.ImageService;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.ResourceInUserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +43,7 @@ class ProductServiceTest {
   @Mock private ResourceInUserRepository resourceInUserRepository;
   @Mock private ResourceInProductRepository resourceInProductRepository;
   @Mock private ResourceInUserService resourceInUserService;
+  @Mock private ImageService imageService;
 
   private User user;
   private Product product;
@@ -220,7 +223,7 @@ class ProductServiceTest {
   }
 
   @Test
-  void testDeleteProductSuccessfully() {
+  void testDeleteProductSuccessfully() throws IOException {
 
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
@@ -231,7 +234,7 @@ class ProductServiceTest {
   }
 
   @Test
-  void testDeleteProductDisassembleContentProduct() {
+  void testDeleteProductDisassembleContentProduct() throws IOException {
     Product content1 = getTestProduct(user, pearl);
     Product content2 = getTestProduct(user, pearl);
 

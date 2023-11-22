@@ -1,5 +1,6 @@
 package jewellery.inventory.dto.response;
 
+import java.util.Date;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,6 +15,7 @@ public class SaleResponseDto {
   private UserResponseDto seller;
   private UserResponseDto buyer;
   private List<ProductResponseDto> products;
+  private Date date;
   private double totalPrice;
   private double totalDiscountedPrice;
   private double totalDiscount;
