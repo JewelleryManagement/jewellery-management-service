@@ -28,7 +28,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 
@@ -136,10 +135,15 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     Map<String, Object> expectedEventSubPayload =
         getUpdateEventPayload(
-            getEntityAsMap(productResponse2.getBody()), getEntityAsMap(resultResponse.getBody()));
+            getEntityAsMap(productResponse2.getBody(), objectMapper),
+            getEntityAsMap(resultResponse.getBody(), objectMapper));
 
     assertEventWasLogged(
-        this.testRestTemplate, getBaseSystemEventUrl(), PRODUCT_TRANSFER, expectedEventSubPayload);
+        this.testRestTemplate,
+        objectMapper,
+        getBaseSystemEventUrl(),
+        PRODUCT_TRANSFER,
+        expectedEventSubPayload);
   }
 
   @Test
@@ -159,10 +163,14 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(productRequestDto.getCatalogNumber(), productResponseDto.getCatalogNumber());
 
     Map<String, Object> expectedEventSubPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(productResponseDto));
+        getCreateOrDeleteEventPayload(getEntityAsMap(productResponseDto, objectMapper));
 
     assertEventWasLogged(
-        this.testRestTemplate, getBaseSystemEventUrl(), PRODUCT_CREATE, expectedEventSubPayload);
+        this.testRestTemplate,
+        objectMapper,
+        getBaseSystemEventUrl(),
+        PRODUCT_CREATE,
+        expectedEventSubPayload);
   }
 
   @Test
@@ -228,10 +236,11 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
     Map<String, Object> expectedEventSubPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(productResponseDto));
+        getCreateOrDeleteEventPayload(getEntityAsMap(productResponseDto, objectMapper));
 
     assertEventWasLogged(
         this.testRestTemplate,
+        objectMapper,
         getBaseSystemEventUrl(),
         PRODUCT_DISASSEMBLY,
         expectedEventSubPayload);

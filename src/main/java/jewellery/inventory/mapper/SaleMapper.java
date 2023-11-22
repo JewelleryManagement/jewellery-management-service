@@ -24,8 +24,9 @@ public class SaleMapper {
     saleResponseDto.setBuyer(userMapper.toUserResponse(sale.getBuyer()));
     saleResponseDto.setProducts(mapAllProductsToResponse(sale));
     saleResponseDto.setTotalPrice(getTotalPriceFromEntity(sale.getProducts()));
-    saleResponseDto.setTotalDiscount(calculateDiscount(sale.getProducts(), AMOUNT));
-    saleResponseDto.setTotalDiscountedPrice(calculateDiscount(sale.getProducts(), PERCENTAGE));
+    saleResponseDto.setTotalDiscount(calculateDiscount(sale.getProducts(), PERCENTAGE));
+    saleResponseDto.setTotalDiscountedPrice(calculateDiscount(sale.getProducts(), AMOUNT));
+    saleResponseDto.setDate(sale.getDate());
     return saleResponseDto;
   }
 

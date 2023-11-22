@@ -5,7 +5,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-import java.io.IOException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.ProductRepository;
@@ -32,6 +32,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 abstract class AuthenticatedIntegrationTestBase {
 
   protected static final String BASE_URL_PATH = "http://localhost:";
+
+  @Autowired protected ObjectMapper objectMapper;
 
   @Autowired protected TestRestTemplate testRestTemplate;
   @Autowired private JwtTokenService jwtService;

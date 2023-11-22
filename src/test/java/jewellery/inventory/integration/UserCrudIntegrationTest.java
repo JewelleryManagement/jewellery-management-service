@@ -55,10 +55,14 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(userRequest.getName(), userResponse.getName());
     assertEquals(userRequest.getEmail(), userResponse.getEmail());
     Map<String, Object> expectedEventSubPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(userResponse));
+        getCreateOrDeleteEventPayload(getEntityAsMap(userResponse, objectMapper));
 
     assertEventWasLogged(
-        this.testRestTemplate, getBaseSystemEventUrl(), USER_CREATE, expectedEventSubPayload);
+        this.testRestTemplate,
+        objectMapper,
+        getBaseSystemEventUrl(),
+        USER_CREATE,
+        expectedEventSubPayload);
   }
 
   @Test
@@ -174,10 +178,15 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(updatedUserRequest.getEmail(), updatedUser.getEmail());
 
     Map<String, Object> expectedEventSubPayload =
-        getUpdateEventPayload(getEntityAsMap(createdUser), getEntityAsMap(updatedUser));
+        getUpdateEventPayload(
+            getEntityAsMap(createdUser, objectMapper), getEntityAsMap(updatedUser, objectMapper));
 
     assertEventWasLogged(
-        this.testRestTemplate, getBaseSystemEventUrl(), USER_UPDATE, expectedEventSubPayload);
+        this.testRestTemplate,
+        objectMapper,
+        getBaseSystemEventUrl(),
+        USER_UPDATE,
+        expectedEventSubPayload);
   }
 
   @Test
@@ -257,10 +266,14 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.NOT_FOUND, getUserResponse.getStatusCode());
 
     Map<String, Object> expectedEventSubPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(createdUser));
+        getCreateOrDeleteEventPayload(getEntityAsMap(createdUser, objectMapper));
 
     assertEventWasLogged(
-        this.testRestTemplate, getBaseSystemEventUrl(), USER_DELETE, expectedEventSubPayload);
+        this.testRestTemplate,
+        objectMapper,
+        getBaseSystemEventUrl(),
+        USER_DELETE,
+        expectedEventSubPayload);
   }
 
   @Test

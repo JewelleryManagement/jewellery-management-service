@@ -96,10 +96,11 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     ResourcesInUserResponseDto result = response.getBody();
 
     Map<String, Object> expectedEventSubPayload =
-        getUpdateEventPayload(null, getEntityAsMap(result));
+        getUpdateEventPayload(null, getEntityAsMap(result, objectMapper));
 
     assertEventWasLogged(
         this.testRestTemplate,
+        objectMapper,
         getBaseSystemEventUrl(),
         RESOURCE_IN_USER_TOP_UP,
         expectedEventSubPayload);
@@ -232,10 +233,11 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertTrue(response.getBody().getResourcesAndQuantities().isEmpty());
 
     Map<String, Object> expectedEventSubPayload =
-        getUpdateEventPayload(getEntityAsMap(entity.getBody()), null);
+        getUpdateEventPayload(getEntityAsMap(entity.getBody(), objectMapper), null);
 
     assertEventWasLogged(
         this.testRestTemplate,
+        objectMapper,
         getBaseSystemEventUrl(),
         RESOURCE_QUANTITY_REMOVE,
         expectedEventSubPayload);
@@ -284,10 +286,12 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     Map<String, Object> expectedEventSubPayload =
         getUpdateEventPayload(
-            getEntityAsMap(response.getBody()), getEntityAsMap(deleteQuantityResponse.getBody()));
+            getEntityAsMap(response.getBody(), objectMapper),
+            getEntityAsMap(deleteQuantityResponse.getBody(), objectMapper));
 
     assertEventWasLogged(
         this.testRestTemplate,
+        objectMapper,
         getBaseSystemEventUrl(),
         RESOURCE_QUANTITY_REMOVE,
         expectedEventSubPayload);
@@ -379,10 +383,14 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertEquals(response.getTransferredResource().getQuantity(), 1);
 
     Map<String, Object> expectedEventSubPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(response));
+        getCreateOrDeleteEventPayload(getEntityAsMap(response, objectMapper));
 
     assertEventWasLogged(
-        this.testRestTemplate, getBaseSystemEventUrl(), RESOURCE_TRANSFER, expectedEventSubPayload);
+        this.testRestTemplate,
+        objectMapper,
+        getBaseSystemEventUrl(),
+        RESOURCE_TRANSFER,
+        expectedEventSubPayload);
   }
 
   private PreciousStoneResponseDto sendCreatePreciousStoneRequest() {

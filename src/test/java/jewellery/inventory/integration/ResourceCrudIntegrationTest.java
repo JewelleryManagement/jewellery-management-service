@@ -13,7 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +34,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
-  private final ObjectMapper objectMapper = new ObjectMapper();
   @Autowired private ResourceMapper resourceMapper;
 
   @NotNull
@@ -67,10 +65,14 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertInputMatchesFetchedFromServer(inputDtos);
 
     Map<String, Object> expectedEventSubPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(createdResources.get(0)));
+        getCreateOrDeleteEventPayload(getEntityAsMap(createdResources.get(0), objectMapper));
 
     assertEventWasLogged(
-        this.testRestTemplate, getBaseSystemEventUrl(), RESOURCE_CREATE, expectedEventSubPayload);
+        this.testRestTemplate,
+        objectMapper,
+        getBaseSystemEventUrl(),
+        RESOURCE_CREATE,
+        expectedEventSubPayload);
   }
 
   @Test
@@ -128,10 +130,15 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     Map<String, Object> expectedEventSubPayload =
         getUpdateEventPayload(
-            getEntityAsMap(createdDtos.get(0)), getEntityAsMap(updatedDtos.get(0)));
+            getEntityAsMap(createdDtos.get(0), objectMapper),
+            getEntityAsMap(updatedDtos.get(0), objectMapper));
 
     assertEventWasLogged(
-        this.testRestTemplate, getBaseSystemEventUrl(), RESOURCE_UPDATE, expectedEventSubPayload);
+        this.testRestTemplate,
+        objectMapper,
+        getBaseSystemEventUrl(),
+        RESOURCE_UPDATE,
+        expectedEventSubPayload);
   }
 
   @Test
@@ -145,10 +152,14 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(0, afterDeleteDtos.size());
 
     Map<String, Object> expectedEventSubPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(createdDtos.get(0)));
+        getCreateOrDeleteEventPayload(getEntityAsMap(createdDtos.get(0), objectMapper));
 
     assertEventWasLogged(
-        this.testRestTemplate, getBaseSystemEventUrl(), RESOURCE_DELETE, expectedEventSubPayload);
+        this.testRestTemplate,
+        objectMapper,
+        getBaseSystemEventUrl(),
+        RESOURCE_DELETE,
+        expectedEventSubPayload);
   }
 
   @Test

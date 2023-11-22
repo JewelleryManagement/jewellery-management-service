@@ -17,36 +17,30 @@ import org.springframework.http.ResponseEntity;
 
 public class SystemEventTestHelper {
 
-  private static final ObjectMapper objectMapper = createObjectMapper();
-  private static final TestRestTemplate testRestTemplate = new TestRestTemplate();
-
-  private static ObjectMapper createObjectMapper() {
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.findAndRegisterModules();
-    return mapper;
-  }
-
   public static void assertEventWasLogged(
       TestRestTemplate testRestTemplate,
+      ObjectMapper objectMapper,
       String baseSystemEventUrl,
       EventType eventType,
       Map<String, Object> toCompare)
       throws JsonProcessingException {
 
     Optional<SystemEvent> event =
-        findEventByTypeAndEntity(testRestTemplate, baseSystemEventUrl, eventType, toCompare);
+        findEventByTypeAndEntity(testRestTemplate, objectMapper, baseSystemEventUrl, eventType, toCompare);
 
     assertTrue(event.isPresent(), "Event of type " + eventType + " for entity " + " not logged");
   }
 
-  public static Optional<SystemEvent> findEventByTypeAndEntity(
+  private static Optional<SystemEvent> findEventByTypeAndEntity(
       TestRestTemplate testRestTemplate,
+      ObjectMapper objectMapper,
       String baseSystemEventUrl,
       EventType eventType,
       Map<String, Object> toCompare)
       throws JsonProcessingException {
 
-    List<SystemEvent> events = fetchAllSystemEvents(testRestTemplate, baseSystemEventUrl);
+    List<SystemEvent> events =
+        fetchAllSystemEvents(testRestTemplate, objectMapper, baseSystemEventUrl);
     return events.stream()
         .filter(
             event -> event.getType().equals(eventType) && isSubmap(toCompare, event.getPayload()))
@@ -54,7 +48,8 @@ public class SystemEventTestHelper {
   }
 
   private static List<SystemEvent> fetchAllSystemEvents(
-      TestRestTemplate testRestTemplate, String baseSystemEventUrl) throws JsonProcessingException {
+      TestRestTemplate testRestTemplate, ObjectMapper objectMapper, String baseSystemEventUrl)
+      throws JsonProcessingException {
 
     ResponseEntity<String> response =
         testRestTemplate.getForEntity(baseSystemEventUrl, String.class);
@@ -82,11 +77,12 @@ public class SystemEventTestHelper {
     return true;
   }
 
-  public static Map<String, Object> getEntityAsMap(Object entity) {
+  public static Map<String, Object> getEntityAsMap(Object entity, ObjectMapper objectMapper) {
     return objectMapper.convertValue(entity, new TypeReference<>() {});
   }
 
-  public static Map<String, Object> getUpdateEventPayload(Map<String, Object> entityBefore, Map<String, Object> entityAfter) {
+  public static Map<String, Object> getUpdateEventPayload(
+      Map<String, Object> entityBefore, Map<String, Object> entityAfter) {
     Map<String, Object> payloadUpdatedEvent = new HashMap<>();
     payloadUpdatedEvent.put("entityBefore", entityBefore);
     payloadUpdatedEvent.put("entityAfter", entityAfter);
@@ -110,5 +106,4 @@ public class SystemEventTestHelper {
   public static Map.Entry<String, Map<String, Object>> createEntity(Map<String, Object> value) {
     return Map.entry("entity", value);
   }
-
 }
