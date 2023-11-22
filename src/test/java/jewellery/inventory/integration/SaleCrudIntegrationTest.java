@@ -32,6 +32,11 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
 class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
+
+  private static final Double SALE_TOTAL_PRICE = 10000.0;
+  private static final Double SALE_DISCOUNT = 10.0;
+  private static final Double SALE_DISCOUNTED_PRICE = 9000.0;
+
   @Autowired private UserRepository userRepository;
   @Autowired private SaleRepository saleRepository;
   @Autowired private ProductRepository productRepository;
@@ -140,10 +145,14 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.CREATED, saleResponse.getStatusCode());
     assertEquals(saleRequestDto.getBuyerId(), saleResponse.getBody().getBuyer().getId());
     assertEquals(saleRequestDto.getSellerId(), saleResponse.getBody().getSeller().getId());
+    assertEquals(saleRequestDto.getDate(), saleResponse.getBody().getDate());
     assertEquals(saleRequestDto.getProducts().size(), saleResponse.getBody().getProducts().size());
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(),
         saleResponse.getBody().getProducts().get(0).getId());
+    assertEquals(SALE_TOTAL_PRICE, saleResponse.getBody().getTotalPrice());
+    assertEquals(SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount());
+    assertEquals(SALE_DISCOUNTED_PRICE, saleResponse.getBody().getTotalDiscountedPrice());
   }
 
   @NotNull
@@ -156,8 +165,8 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ProductPriceDiscountRequestDto productPriceDiscountRequestDto =
         new ProductPriceDiscountRequestDto();
     productPriceDiscountRequestDto.setProductId(productResponse.getBody().getId());
-    productPriceDiscountRequestDto.setSalePrice(10000.0);
-    productPriceDiscountRequestDto.setDiscount(10.0);
+    productPriceDiscountRequestDto.setSalePrice(SALE_TOTAL_PRICE);
+    productPriceDiscountRequestDto.setDiscount(SALE_DISCOUNT);
     List<ProductPriceDiscountRequestDto> list = new ArrayList<>();
     list.add(productPriceDiscountRequestDto);
     saleRequestDto.setProducts(list);
