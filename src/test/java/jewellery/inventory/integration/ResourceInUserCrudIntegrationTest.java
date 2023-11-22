@@ -6,8 +6,8 @@ import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDelete
 import static jewellery.inventory.helper.SystemEventTestHelper.getEntityAsMap;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.helper.UserTestHelper.*;
-import static jewellery.inventory.model.EventType.RESOURCE_IN_USER_TOP_UP;
-import static jewellery.inventory.model.EventType.RESOURCE_QUANTITY_REMOVE;
+import static jewellery.inventory.model.EventType.RESOURCE_ADD_QUANTITY;
+import static jewellery.inventory.model.EventType.RESOURCE_REMOVE_QUANTITY;
 import static jewellery.inventory.model.EventType.RESOURCE_TRANSFER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -102,7 +102,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         this.testRestTemplate,
         objectMapper,
         getBaseSystemEventUrl(),
-        RESOURCE_IN_USER_TOP_UP,
+            RESOURCE_ADD_QUANTITY,
         expectedEventSubPayload);
   }
 
@@ -239,7 +239,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         this.testRestTemplate,
         objectMapper,
         getBaseSystemEventUrl(),
-        RESOURCE_QUANTITY_REMOVE,
+            RESOURCE_REMOVE_QUANTITY,
         expectedEventSubPayload);
   }
 
@@ -293,7 +293,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         this.testRestTemplate,
         objectMapper,
         getBaseSystemEventUrl(),
-        RESOURCE_QUANTITY_REMOVE,
+            RESOURCE_REMOVE_QUANTITY,
         expectedEventSubPayload);
   }
 

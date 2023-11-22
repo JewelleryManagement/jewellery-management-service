@@ -19,17 +19,9 @@ public class ResourcesInUserMapper {
   private final ResourceMapper resourceMapper;
 
   public ResourcesInUserResponseDto toResourcesInUserResponseDto(ResourceInUser resourceInUser) {
-    List<ResourceQuantityResponseDto> resourcesWithQuantities =
-        List.of(
-            ResourceQuantityResponseDto.builder()
-                .resource(resourceMapper.toResourceResponse(resourceInUser.getResource()))
-                .quantity(resourceInUser.getQuantity())
-                .build());
-
     ResourcesInUserResponseDto responseDto = new ResourcesInUserResponseDto();
-
     responseDto.setOwner(userMapper.toUserResponse(resourceInUser.getOwner()));
-    responseDto.setResourcesAndQuantities(resourcesWithQuantities);
+    responseDto.setResourcesAndQuantities(getSingleResourceQuantityResponse(resourceInUser));
     return responseDto;
   }
 
@@ -65,5 +57,14 @@ public class ResourcesInUserMapper {
         .usersAndQuantities(userQuantityDtos)
         .resource(resourceMapper.toResourceResponse(resource))
         .build();
+  }
+
+  private List<ResourceQuantityResponseDto> getSingleResourceQuantityResponse(
+      ResourceInUser resourceInUser) {
+    return List.of(
+        ResourceQuantityResponseDto.builder()
+            .resource(resourceMapper.toResourceResponse(resourceInUser.getResource()))
+            .quantity(resourceInUser.getQuantity())
+            .build());
   }
 }

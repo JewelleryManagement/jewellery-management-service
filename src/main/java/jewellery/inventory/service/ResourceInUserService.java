@@ -1,6 +1,6 @@
 package jewellery.inventory.service;
 
-import static jewellery.inventory.model.EventType.RESOURCE_QUANTITY_REMOVE;
+import static jewellery.inventory.model.EventType.RESOURCE_REMOVE_QUANTITY;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -65,7 +65,7 @@ public class ResourceInUserService implements EntityFetcher {
   }
 
   @Transactional
-  @LogUpdateEvent(eventType = EventType.RESOURCE_IN_USER_TOP_UP)
+  @LogUpdateEvent(eventType = EventType.RESOURCE_ADD_QUANTITY)
   public ResourcesInUserResponseDto addResourceToUser(ResourceInUserRequestDto resourceUserDto) {
     return addResourceToUserNoLog(resourceUserDto);
   }
@@ -84,7 +84,7 @@ public class ResourceInUserService implements EntityFetcher {
   }
 
   @Transactional
-  @LogUpdateEvent(eventType = RESOURCE_QUANTITY_REMOVE)
+  @LogUpdateEvent(eventType = RESOURCE_REMOVE_QUANTITY)
   public ResourcesInUserResponseDto removeQuantityFromResource(
       UUID userId, UUID resourceId, double quantity) {
     return removeQuantityFromResourceNoLog(userId, resourceId, quantity);
@@ -99,7 +99,7 @@ public class ResourceInUserService implements EntityFetcher {
   }
 
   @Transactional
-  @LogUpdateEvent(eventType = RESOURCE_QUANTITY_REMOVE)
+  @LogUpdateEvent(eventType = RESOURCE_REMOVE_QUANTITY)
   public void removeResourceFromUser(UUID userId, UUID resourceId) {
     User user = findUserById(userId);
     ResourceInUser resourceToRemove = findResourceInUserOrThrow(user, resourceId);

@@ -10,6 +10,7 @@ import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.SystemEvent;
 import jewellery.inventory.repository.SystemEventRepository;
 import jewellery.inventory.security.JwtUtils;
+import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,7 @@ import org.springframework.stereotype.Service;
 public class SystemEventService {
 
   private final SystemEventRepository systemEventRepository;
-  private final JwtUtils jwtUtils;
+  private final AuthService authService;
   private final ObjectMapper objectMapper;
 
   public List<SystemEvent> getAllEvents() {
@@ -49,7 +50,7 @@ public class SystemEventService {
 
   private void logEvent(EventType type, Map<String, Object> payload) {
     SystemEvent event = new SystemEvent();
-    Object executor = jwtUtils.getCurrentUser();
+    Object executor = authService.getCurrentUser();
     if (executor != null) {
       Map<String, Object> executorMap =
           objectMapper.convertValue(executor, new TypeReference<>() {});

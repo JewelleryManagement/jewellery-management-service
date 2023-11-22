@@ -8,17 +8,11 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.WeakKeyException;
 import java.security.Key;
-import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.exception.not_found.NoAuthenticatedUserException;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import jewellery.inventory.exception.security.jwt.JwtExpiredException;
 import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
-import jewellery.inventory.mapper.UserMapper;
-import jewellery.inventory.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -27,16 +21,6 @@ public class JwtUtils {
 
   @Value("${jwt.secret.key}")
   private String secretKey;
-
-  private final UserMapper userMapper;
-
-  public UserResponseDto getCurrentUser() {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth != null && auth.getPrincipal() instanceof User user) {
-      return userMapper.toUserResponse(user);
-    }
-    throw new NoAuthenticatedUserException();
-  }
 
   public Key getSigningKey() {
     try {

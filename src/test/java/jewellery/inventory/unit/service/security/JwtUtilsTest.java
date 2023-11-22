@@ -2,8 +2,6 @@ package jewellery.inventory.unit.service.security;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.exception.not_found.NoAuthenticatedUserException;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
@@ -13,11 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -26,48 +20,12 @@ class JwtUtilsTest {
 
   @InjectMocks private JwtUtils jwtUtils;
 
-  @Mock private User user;
-  @Mock private UserMapper userMapper;
-
   private static final String SECRET_KEY = "3upwHfxELiEU8C7+DEOLJxQWVqKQ/abSpdzixM8YQ+I=";
 
   @BeforeEach
   public void setUp() {
     ReflectionTestUtils.setField(jwtUtils, "secretKey", SECRET_KEY);
     SecurityContextHolder.clearContext();
-  }
-
-  @Test
-  void willGetUserResponseWhenAuthenticatedUser() {
-    User user = new User();
-    UserResponseDto expectedUserResponseDto = new UserResponseDto();
-    Authentication authentication = Mockito.mock(Authentication.class);
-    Mockito.when(authentication.getPrincipal()).thenReturn(user);
-    SecurityContext securityContext = Mockito.mock(SecurityContext.class);
-    Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
-    SecurityContextHolder.setContext(securityContext);
-    Mockito.when(userMapper.toUserResponse(user)).thenReturn(expectedUserResponseDto);
-
-    UserResponseDto actualUserResponseDto = jwtUtils.getCurrentUser();
-
-    assertEquals(expectedUserResponseDto, actualUserResponseDto);
-  }
-
-  @Test
-  void willThrowWhenAuthenticatedUserHasNullPrincipal() {
-    Authentication auth = new UsernamePasswordAuthenticationToken(null, null);
-    SecurityContextHolder.getContext().setAuthentication(auth);
-
-    assertThrows(NoAuthenticatedUserException.class, () -> jwtUtils.getCurrentUser());
-  }
-
-  @Test
-  void willThrowWhenNoAuthenticatedUserForUserResponse() {
-    SecurityContext securityContext = Mockito.mock(SecurityContext.class);
-    Mockito.when(securityContext.getAuthentication()).thenReturn(null);
-    SecurityContextHolder.setContext(securityContext);
-
-    assertThrows(NoAuthenticatedUserException.class, () -> jwtUtils.getCurrentUser());
   }
 
   @Test
