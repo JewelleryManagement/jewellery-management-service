@@ -34,6 +34,10 @@ public class Product {
   @OneToMany(mappedBy = "contentOf", cascade = CascadeType.ALL)
   private List<Product> productsContent;
 
+  @OneToOne(cascade = CascadeType.ALL)
+  @JoinColumn(name = "image_id", referencedColumnName = "id")
+  private Image image;
+
   private String catalogNumber;
   private String productionNumber;
   private String description;

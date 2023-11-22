@@ -6,15 +6,12 @@ import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.util.Collections;
+import jewellery.inventory.model.Image;
 import jewellery.inventory.model.User;
-import jewellery.inventory.repository.ProductRepository;
-import jewellery.inventory.repository.ResourceInProductRepository;
-import jewellery.inventory.repository.ResourceInUserRepository;
-import jewellery.inventory.repository.ResourceRepository;
-import jewellery.inventory.repository.SaleRepository;
-import jewellery.inventory.repository.SystemEventRepository;
-import jewellery.inventory.repository.UserRepository;
+import jewellery.inventory.repository.*;
+import jewellery.inventory.service.ImageService;
 import jewellery.inventory.service.security.JwtTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,6 +43,9 @@ abstract class AuthenticatedIntegrationTestBase {
   @Autowired private ResourceInUserRepository resourceInUserRepository;
   @Autowired private ResourceInProductRepository resourceInProductRepository;
 
+  @Autowired private ImageService imageService;
+  @Autowired private ImageRepository imageRepository;
+
   @Value(value = "${local.server.port}")
   protected int port;
 
@@ -53,6 +53,7 @@ abstract class AuthenticatedIntegrationTestBase {
 
   @BeforeEach
   void setup() {
+    deleteAllImages();
     productRepository.deleteAll();
     saleRepository.deleteAll();
     userRepository.deleteAll();
@@ -63,6 +64,18 @@ abstract class AuthenticatedIntegrationTestBase {
     User adminUser = createTestUserWithId();
     setupMockSecurityContext(adminUser);
     setupTestRestTemplateWithAuthHeaders();
+  }
+
+  private void deleteAllImages() {
+    imageRepository.findAll().forEach(this::deleteImage);
+  }
+
+  private void deleteImage(Image image) {
+    try {
+      imageService.deleteImage(image.getProduct().getId());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   protected String generateTokenForUser(User user) {
