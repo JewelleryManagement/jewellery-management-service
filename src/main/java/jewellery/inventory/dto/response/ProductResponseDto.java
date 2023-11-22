@@ -20,7 +20,8 @@ public class ProductResponseDto {
   private UUID contentOf;
   private String description;
   private double salePrice;
-  private boolean isSold;
+  private UUID partOfSale;
   private String catalogNumber;
   private String productionNumber;
+  private double discount;
 }

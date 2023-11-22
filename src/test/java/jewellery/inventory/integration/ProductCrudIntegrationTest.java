@@ -28,6 +28,22 @@ import org.springframework.http.*;
 
 class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
+  @Autowired private UserRepository userRepository;
+
+  @Autowired private SaleRepository saleRepository;
+  @Autowired private ProductRepository productRepository;
+  @Autowired private ResourceRepository resourceRepository;
+  @Autowired private ResourceInUserRepository resourceInUserRepository;
+  @Autowired private ResourceInProductRepository resourceInProductRepository;
+  private User user;
+  private PreciousStone preciousStone;
+  private User differentUser;
+  private ResourceInUserRequestDto resourceInUserRequestDto;
+  private ResourcesInUserResponseDto resourcesInUserResponseDto;
+  private ProductRequestDto productRequestDto;
+  private ProductRequestDto productRequestDto2;
+  private ProductResponseDto productResponseDto;
+
   private String getBaseUrl() {
     return BASE_URL_PATH + port;
   }
@@ -56,30 +72,19 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return getBaseUrl() + "/products/" + id;
   }
 
-  @Autowired private UserRepository userRepository;
-  @Autowired private ProductRepository productRepository;
-  @Autowired private ResourceRepository resourceRepository;
-  @Autowired private ResourceInUserRepository resourceInUserRepository;
-  @Autowired private ResourceInProductRepository resourceInProductRepository;
-
-  private User user;
-  private PreciousStone preciousStone;
-  private User differentUser;
-  private ResourceInUserRequestDto resourceInUserRequestDto;
-  private ResourcesInUserResponseDto resourcesInUserResponseDto;
-  private ProductRequestDto productRequestDto;
-  private ProductResponseDto productResponseDto;
-
   @BeforeEach
   void setUp() {
     cleanAllRepositories();
 
     user = createUserInDatabase(createTestUserRequest());
     preciousStone = createPreciousStoneInDatabase();
-    resourceInUserRequestDto = getResourceInUserRequestDto(user, Objects.requireNonNull(preciousStone));
+    resourceInUserRequestDto =
+        getResourceInUserRequestDto(user, Objects.requireNonNull(preciousStone));
     differentUser = createUserInDatabase(createDifferentUserRequest());
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
     productRequestDto =
+        getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), user);
+    productRequestDto2 =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), user);
   }
 
@@ -103,19 +108,27 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         this.testRestTemplate.postForEntity(
             getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
 
+    productRequestDto2.setProductsContent(List.of(productResponse.getBody().getId()));
+    ResponseEntity<ProductResponseDto> productResponse2 =
+        this.testRestTemplate.postForEntity(
+            getBaseProductUrl(), productRequestDto2, ProductResponseDto.class);
+
     assertNotEquals(differentUser.getId(), productResponse.getBody().getOwner().getId());
 
     ResponseEntity<ProductResponseDto> resultResponse =
         this.testRestTemplate.exchange(
             getBaseProductUrl()
                 + "/"
-                + productResponse.getBody().getId()
+                + productResponse2.getBody().getId()
                 + "/transfer/"
                 + differentUser.getId(),
             HttpMethod.PUT,
             null,
             ProductResponseDto.class);
 
+    assertEquals(
+        differentUser.getId(),
+        resultResponse.getBody().getProductsContent().get(0).getOwner().getId());
     assertNotNull(resultResponse.getBody());
     assertEquals(differentUser.getId(), resultResponse.getBody().getOwner().getId());
     assertEquals(HttpStatus.OK, resultResponse.getStatusCode());
@@ -202,6 +215,16 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
   }
 
+  @NotNull
+  private static ResourceInUserRequestDto getResourceInUserRequestDto(
+      User user, PreciousStone preciousStone) {
+    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
+    resourceInUserRequestDto.setUserId(user.getId());
+    resourceInUserRequestDto.setResourceId(preciousStone.getId());
+    resourceInUserRequestDto.setQuantity(20);
+    return resourceInUserRequestDto;
+  }
+
   private void assertResponseMatchesCreatedRequest(
       ResponseEntity<List<ProductResponseDto>> response) {
     List<ProductResponseDto> productResponseDtos = response.getBody();
@@ -233,21 +256,12 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return createResourceInUser.getBody();
   }
 
-  @NotNull
-  private static ResourceInUserRequestDto getResourceInUserRequestDto(
-      User user, PreciousStone preciousStone) {
-    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
-    resourceInUserRequestDto.setUserId(user.getId());
-    resourceInUserRequestDto.setResourceId(preciousStone.getId());
-    resourceInUserRequestDto.setQuantity(20);
-    return resourceInUserRequestDto;
-  }
-
   @Nullable
   private PreciousStone createPreciousStoneInDatabase() {
     ResourceRequestDto resourceRequest = ResourceTestHelper.getPreciousStoneRequestDto();
     ResponseEntity<PreciousStone> createResource =
-        this.testRestTemplate.postForEntity(getBaseResourceUrl(), resourceRequest, PreciousStone.class);
+        this.testRestTemplate.postForEntity(
+            getBaseResourceUrl(), resourceRequest, PreciousStone.class);
 
     return createResource.getBody();
   }
@@ -261,8 +275,9 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   private void cleanAllRepositories() {
-    userRepository.deleteAll();
     productRepository.deleteAll();
+    saleRepository.deleteAll();
+    userRepository.deleteAll();
     resourceRepository.deleteAll();
     resourceInUserRepository.deleteAll();
     resourceInProductRepository.deleteAll();
