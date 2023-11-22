@@ -178,13 +178,8 @@ class SaleServiceTest {
 
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
     when(saleRepository.findById(any(UUID.class))).thenReturn(Optional.of(sale));
-    when(productService.getProductResponse(product.getId())).thenReturn(productResponseDto);
-    ProductResponseDto result = saleService.returnProduct(product.getId());
+    saleService.returnProduct(product.getId());
 
-    assertNotNull(result);
-    assertNull(result.getPartOfSale());
-    assertEquals(productBeforeReturn.getOwner().getId(), sale.getSeller().getId());
-    assertNotEquals(productBeforeReturn.getOwner().getId(), result.getOwner().getId());
     assertEquals(0, sale.getProducts().size());
   }
 }

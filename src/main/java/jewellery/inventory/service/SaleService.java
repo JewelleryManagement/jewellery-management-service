@@ -3,7 +3,6 @@ package jewellery.inventory.service;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.SaleRequestDto;
-import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
@@ -56,7 +55,7 @@ public class SaleService {
     }
   }
 
-  public ProductResponseDto returnProduct(UUID productId) {
+  public void returnProduct(UUID productId) {
     Product productToReturn = productService.getProduct(productId);
 
     throwExceptionIfProductIsPartOfAnotherProduct(productToReturn);
@@ -68,8 +67,6 @@ public class SaleService {
     productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
 
     deleteSaleIfProductsIsEmpty(sale);
-
-    return productService.getProductResponse(productId);
   }
 
   private Sale getSale(UUID saleId) {
