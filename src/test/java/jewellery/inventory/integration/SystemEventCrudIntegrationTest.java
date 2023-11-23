@@ -16,14 +16,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 
 class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
-//  @Transactional
   void willGetAllSystemEvents() throws JsonProcessingException {
     UserResponseDto userResponseDto = createAndSaveUser();
-    System.out.println(userResponseDto);
 
     ResponseEntity<List<SystemEvent>> eventResponse =
         this.testRestTemplate.exchange(
@@ -38,7 +35,6 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     ResponseEntity<String> response =
         testRestTemplate.getForEntity(getBaseSystemEventUrl(), String.class);
-    System.out.println(response);
 
     assertEventWasLogged(
         testRestTemplate,
@@ -51,10 +47,8 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private UserResponseDto createAndSaveUser() {
     UserRequestDto userRequest = createTestUserRequest();
 
-    ResponseEntity<UserResponseDto> response =
-        this.testRestTemplate.postForEntity(
-            BASE_URL_PATH + port + "/users", userRequest, UserResponseDto.class);
-    System.out.println(response);
-    return response.getBody();
+    return this.testRestTemplate
+        .postForEntity(BASE_URL_PATH + port + "/users", userRequest, UserResponseDto.class)
+        .getBody();
   }
 }
