@@ -2,12 +2,14 @@ package jewellery.inventory.service;
 
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.SaleMapper;
+import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
@@ -28,6 +30,7 @@ public class SaleService {
     return sales.stream().map(saleMapper::mapEntityToResponseDto).toList();
   }
 
+  @LogCreateEvent(eventType = EventType.SALE_CREATE)
   public SaleResponseDto createSale(SaleRequestDto saleRequestDto) {
     Sale sale =
         saleMapper.mapRequestToEntity(

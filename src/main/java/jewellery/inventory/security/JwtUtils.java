@@ -11,10 +11,12 @@ import java.security.Key;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import jewellery.inventory.exception.security.jwt.JwtExpiredException;
 import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class JwtUtils {
 
   @Value("${jwt.secret.key}")

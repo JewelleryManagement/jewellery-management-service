@@ -3,6 +3,7 @@ package jewellery.inventory.service.security;
 import jewellery.inventory.dto.request.AuthenticationRequestDto;
 import jewellery.inventory.dto.response.UserAuthDetailsDto;
 import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.exception.not_found.NoAuthenticatedUserException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.exception.security.InvalidCredentialsException;
 import jewellery.inventory.exception.security.jwt.JwtAuthenticationBaseException;
@@ -12,6 +13,8 @@ import jewellery.inventory.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,6 +29,14 @@ public class AuthService {
     User user = findUserByEmail(authRequest.getEmail());
     authenticate(authRequest);
     return createAuthUserResponse(user);
+  }
+
+  public UserResponseDto getCurrentUser() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth != null && auth.getPrincipal() instanceof User user) {
+      return userMapper.toUserResponse(user);
+    }
+    throw new NoAuthenticatedUserException();
   }
 
   private void authenticate(AuthenticationRequestDto authRequest) {

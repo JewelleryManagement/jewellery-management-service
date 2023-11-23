@@ -4,9 +4,8 @@ import static jewellery.inventory.helper.ProductTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.createTestUserWithRandomId;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.IOException;
 import java.util.Arrays;
-
+import java.util.UUID;
 import jewellery.inventory.exception.image.MultipartFileContentTypeException;
 import jewellery.inventory.exception.image.MultipartFileNotSelectedException;
 import jewellery.inventory.exception.image.MultipartFileSizeException;
@@ -39,6 +38,7 @@ class ImageServiceTest {
 
   private User user;
   private Product product;
+  private UUID productId;
   private Resource pearl;
   private MultipartFile multipartFile;
 
@@ -47,26 +47,29 @@ class ImageServiceTest {
     user = createTestUserWithRandomId();
     pearl = ResourceTestHelper.getPearl();
     product = getTestProduct(user, pearl);
+    productId = product.getId();
 
     ReflectionTestUtils.setField(imageService, "folderPath", "/tmp/Jms/Images/");
     ReflectionTestUtils.setField(imageService, "maxFileSize", 1);
   }
 
   @Test
-  void uploadImageShouldThrowWhenFileIsNotSelected() throws IOException {
+  void uploadImageShouldThrowWhenFileIsNotSelected() {
 
     multipartFile = new MockMultipartFile("test.jpg", new byte[] {});
     assertThrows(
         MultipartFileNotSelectedException.class,
-        () -> imageService.uploadImage(multipartFile, product.getId()));
+        () -> imageService.uploadImage(multipartFile, productId));
   }
 
   @Test
   void uploadImageShouldThrowWhenWrongContentType() {
-    multipartFile = new MockMultipartFile("test", "test.jpg", String.valueOf(MediaType.ANY_TEXT_TYPE), new byte[] {0, 0});
+    multipartFile =
+        new MockMultipartFile(
+            "test", "test.jpg", String.valueOf(MediaType.ANY_TEXT_TYPE), new byte[] {0, 0});
     assertThrows(
         MultipartFileContentTypeException.class,
-        () -> imageService.uploadImage(multipartFile, product.getId()));
+        () -> imageService.uploadImage(multipartFile, productId));
   }
 
   @Test
@@ -77,7 +80,6 @@ class ImageServiceTest {
 
     multipartFile = new MockMultipartFile("test", "test.jpg", "image/jpg", largeFileContent);
     assertThrows(
-        MultipartFileSizeException.class,
-        () -> imageService.uploadImage(multipartFile, product.getId()));
+        MultipartFileSizeException.class, () -> imageService.uploadImage(multipartFile, productId));
   }
 }

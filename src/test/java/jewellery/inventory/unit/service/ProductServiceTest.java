@@ -83,7 +83,7 @@ class ProductServiceTest {
 
     assertThrows(
         ProductIsContentException.class,
-        () -> productService.transferProduct(user.getId(), contentProduct.getId()));
+        () -> productService.transferProduct(contentProduct.getId(), user.getId()));
 
     assertNotNull(contentProduct.getContentOf());
   }
@@ -95,7 +95,7 @@ class ProductServiceTest {
 
     assertThrows(
         ProductIsSoldException.class,
-        () -> productService.transferProduct(user.getId(), product.getId()));
+        () -> productService.transferProduct(product.getId(), user.getId()));
 
     assertNotNull(product.getPartOfSale());
   }
@@ -106,7 +106,7 @@ class ProductServiceTest {
 
     assertThrows(
         ProductOwnerEqualsRecipientException.class,
-        () -> productService.transferProduct(user.getId(), product.getId()));
+        () -> productService.transferProduct(product.getId(), user.getId()));
 
     assertEquals(product.getOwner().getId(), user.getId());
   }
@@ -118,7 +118,7 @@ class ProductServiceTest {
     when(userRepository.findById(recipient.getId())).thenReturn(Optional.of(recipient));
     assertEquals(product.getOwner().getId(), user.getId());
 
-    productService.transferProduct(recipient.getId(), product.getId());
+    productService.transferProduct(product.getId(), recipient.getId());
 
     assertNotEquals(recipient.getId(), user.getId());
     assertNull(product.getPartOfSale());
@@ -152,6 +152,7 @@ class ProductServiceTest {
     assertThrows(
         ProductNotFoundException.class, () -> productService.createProduct(productRequestDto));
   }
+
   @Test
   void testCreateProductShouldSetContentProduct() {
 
@@ -191,7 +192,9 @@ class ProductServiceTest {
   @Test
   void testGetProductShouldThrowWhenProductNotFound() {
     UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
-    assertThrows(ProductNotFoundException.class, () -> productService.getProductResponse(fakeId));
+    assertThrows(
+        ProductNotFoundException.class,
+        () -> productService.getProductResponse(fakeId));
   }
 
   @Test
@@ -202,7 +205,8 @@ class ProductServiceTest {
     ProductResponseDto response = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
 
-    ProductResponseDto actual = productService.getProductResponse(product.getId());
+    ProductResponseDto actual =
+        productService.getProductResponse(product.getId());
 
     assertEquals(response, actual);
     assertEquals(response.getId(), actual.getId());
