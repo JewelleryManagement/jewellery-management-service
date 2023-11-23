@@ -154,6 +154,7 @@ public class ImageService {
       case "image/png" -> sb.append(FILE_NAME + ".png");
       case "image/jpg" -> sb.append(FILE_NAME + ".jpg");
       case "image/jpeg" -> sb.append(FILE_NAME + ".jpeg");
+      default -> throw new MultipartFileContentTypeException();
     }
 
     return Path.of(sb.toString());
