@@ -241,7 +241,8 @@ class JwtTokenServiceTest {
   }
 
   private String generateExpiredToken() {
-    Date expiredDate = new Date(System.currentTimeMillis() - ONE_DAY_IN_MILLISECONDS);
+    Date expiredDate =
+        new Date(System.currentTimeMillis() - ONE_DAY_IN_MILLISECONDS);
 
     return Jwts.builder()
         .setSubject("testUser")
