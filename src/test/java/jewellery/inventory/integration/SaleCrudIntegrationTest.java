@@ -75,7 +75,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   private String getSaleReturnProductUrl(UUID productId) {
-    return "/sales/return-product/" + productId;
+    return getBaseSaleUrl() + "/return-product/" + productId;
   }
 
   @BeforeEach
