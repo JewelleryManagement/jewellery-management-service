@@ -239,9 +239,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.OK, resultResponse.getStatusCode());
 
     Map<String, Object> expectedEventPayload =
-        getUpdateEventPayload(
-            getEntityAsMap(productResponse2.getBody(), objectMapper),
-            getEntityAsMap(resultResponse.getBody(), objectMapper));
+        getUpdateEventPayload(productResponse2.getBody(), resultResponse.getBody(), objectMapper);
 
     assertEventWasLogged(
         this.testRestTemplate,
@@ -268,7 +266,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(productRequestDto.getCatalogNumber(), productResponseDto.getCatalogNumber());
 
     Map<String, Object> expectedEventPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(productResponseDto, objectMapper));
+        getCreateOrDeleteEventPayload(productResponseDto, objectMapper);
 
     assertEventWasLogged(
         this.testRestTemplate,
@@ -341,7 +339,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
     Map<String, Object> expectedEventPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(productResponseDto, objectMapper));
+        getCreateOrDeleteEventPayload(productResponseDto, objectMapper);
 
     assertEventWasLogged(
         this.testRestTemplate,
@@ -385,7 +383,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @NotNull
   private static ResourceInUserRequestDto getResourceInUserRequestDto(
-          User user, PreciousStone preciousStone) {
+      User user, PreciousStone preciousStone) {
     ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
     resourceInUserRequestDto.setUserId(user.getId());
     resourceInUserRequestDto.setResourceId(preciousStone.getId());

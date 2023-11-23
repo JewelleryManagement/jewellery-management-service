@@ -2,7 +2,6 @@ package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.SystemEventTestHelper.assertEventWasLogged;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
-import static jewellery.inventory.helper.SystemEventTestHelper.getEntityAsMap;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
 import static jewellery.inventory.helper.UserTestHelper.createInvalidUserRequest;
@@ -51,14 +50,14 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(userRequest.getName(), userResponse.getName());
     assertEquals(userRequest.getEmail(), userResponse.getEmail());
     Map<String, Object> expectedEventPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(userResponse, objectMapper));
+        getCreateOrDeleteEventPayload(userResponse, objectMapper);
 
     assertEventWasLogged(
         this.testRestTemplate,
         objectMapper,
         getBaseSystemEventUrl(),
         USER_CREATE,
-            expectedEventPayload);
+        expectedEventPayload);
   }
 
   @Test
@@ -174,8 +173,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(updatedUserRequest.getEmail(), updatedUser.getEmail());
 
     Map<String, Object> expectedEventPayload =
-        getUpdateEventPayload(
-            getEntityAsMap(createdUser, objectMapper), getEntityAsMap(updatedUser, objectMapper));
+        getUpdateEventPayload(createdUser, updatedUser, objectMapper);
 
     assertEventWasLogged(
         this.testRestTemplate,
@@ -262,14 +260,14 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.NOT_FOUND, getUserResponse.getStatusCode());
 
     Map<String, Object> expectedEventPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(createdUser, objectMapper));
+        getCreateOrDeleteEventPayload(createdUser, objectMapper);
 
     assertEventWasLogged(
         this.testRestTemplate,
         objectMapper,
         getBaseSystemEventUrl(),
         USER_DELETE,
-            expectedEventPayload);
+        expectedEventPayload);
   }
 
   @Test

@@ -31,7 +31,7 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertNotNull(events, "Retrieved events list is empty");
 
     Map<String, Object> expectedEventPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(userResponseDto, objectMapper));
+        getCreateOrDeleteEventPayload(userResponseDto, objectMapper);
 
     ResponseEntity<String> response =
         testRestTemplate.getForEntity(getBaseSystemEventUrl(), String.class);

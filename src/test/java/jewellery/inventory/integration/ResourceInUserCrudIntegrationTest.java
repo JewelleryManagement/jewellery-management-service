@@ -3,7 +3,6 @@ package jewellery.inventory.integration;
 import static jewellery.inventory.helper.ResourceTestHelper.getPreciousStoneRequestDto;
 import static jewellery.inventory.helper.SystemEventTestHelper.assertEventWasLogged;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
-import static jewellery.inventory.helper.SystemEventTestHelper.getEntityAsMap;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.model.EventType.RESOURCE_ADD_QUANTITY;
@@ -76,14 +75,13 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertEquals(createdUser, response.getBody().getOwner());
     ResourcesInUserResponseDto result = response.getBody();
 
-    Map<String, Object> expectedEventPayload =
-        getUpdateEventPayload(null, getEntityAsMap(result, objectMapper));
+    Map<String, Object> expectedEventPayload = getUpdateEventPayload(null, result, objectMapper);
 
     assertEventWasLogged(
         this.testRestTemplate,
         objectMapper,
         getBaseSystemEventUrl(),
-            RESOURCE_ADD_QUANTITY,
+        RESOURCE_ADD_QUANTITY,
         expectedEventPayload);
   }
 
@@ -214,13 +212,13 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertTrue(response.getBody().getResourcesAndQuantities().isEmpty());
 
     Map<String, Object> expectedEventPayload =
-        getUpdateEventPayload(getEntityAsMap(entity.getBody(), objectMapper), null);
+        getUpdateEventPayload(entity.getBody(), null, objectMapper);
 
     assertEventWasLogged(
         this.testRestTemplate,
         objectMapper,
         getBaseSystemEventUrl(),
-            RESOURCE_REMOVE_QUANTITY,
+        RESOURCE_REMOVE_QUANTITY,
         expectedEventPayload);
   }
 
@@ -266,15 +264,13 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertEquals(RESOURCE_QUANTITY - 1, resourceQuantity.getQuantity(), 0.01);
 
     Map<String, Object> expectedEventPayload =
-        getUpdateEventPayload(
-            getEntityAsMap(response.getBody(), objectMapper),
-            getEntityAsMap(deleteQuantityResponse.getBody(), objectMapper));
+        getUpdateEventPayload(response.getBody(), deleteQuantityResponse.getBody(), objectMapper);
 
     assertEventWasLogged(
         this.testRestTemplate,
         objectMapper,
         getBaseSystemEventUrl(),
-            RESOURCE_REMOVE_QUANTITY,
+        RESOURCE_REMOVE_QUANTITY,
         expectedEventPayload);
   }
 
@@ -364,7 +360,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertEquals(response.getTransferredResource().getQuantity(), 1);
 
     Map<String, Object> expectedEventPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(response, objectMapper));
+        getCreateOrDeleteEventPayload(response, objectMapper);
 
     assertEventWasLogged(
         this.testRestTemplate,
@@ -376,7 +372,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   @NotNull
   private static TransferResourceRequestDto getTransferResourceRequestDto(
-          UserResponseDto sender, PreciousStoneResponseDto createdResource, UserResponseDto receiver) {
+      UserResponseDto sender, PreciousStoneResponseDto createdResource, UserResponseDto receiver) {
     TransferResourceRequestDto requestDto = new TransferResourceRequestDto();
     requestDto.setPreviousOwnerId(sender.getId());
     requestDto.setNewOwnerId(receiver.getId());

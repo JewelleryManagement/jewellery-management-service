@@ -27,7 +27,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -146,14 +145,14 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(SALE_DISCOUNTED_PRICE, saleResponse.getBody().getTotalDiscountedPrice());
 
     Map<String, Object> expectedEventPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(saleResponse.getBody(), objectMapper));
+        getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
 
     assertEventWasLogged(
         this.testRestTemplate,
         objectMapper,
         getBaseSystemEventUrl(),
         SALE_CREATE,
-            expectedEventPayload);
+        expectedEventPayload);
   }
 
   @NotNull

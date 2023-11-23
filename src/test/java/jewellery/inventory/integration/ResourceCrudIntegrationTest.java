@@ -3,7 +3,6 @@ package jewellery.inventory.integration;
 import static jewellery.inventory.helper.ResourceTestHelper.*;
 import static jewellery.inventory.helper.SystemEventTestHelper.assertEventWasLogged;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
-import static jewellery.inventory.helper.SystemEventTestHelper.getEntityAsMap;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.model.EventType.RESOURCE_CREATE;
 import static jewellery.inventory.model.EventType.RESOURCE_DELETE;
@@ -61,7 +60,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertInputMatchesFetchedFromServer(inputDtos);
 
     Map<String, Object> expectedEventPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(createdResources.get(0), objectMapper));
+        getCreateOrDeleteEventPayload(createdResources.get(0), objectMapper);
 
     assertEventWasLogged(
         this.testRestTemplate,
@@ -125,9 +124,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertInputMatchesFetchedFromServer(updatedInputDtos);
 
     Map<String, Object> expectedEventPayload =
-        getUpdateEventPayload(
-            getEntityAsMap(createdDtos.get(0), objectMapper),
-            getEntityAsMap(updatedDtos.get(0), objectMapper));
+        getUpdateEventPayload(createdDtos.get(0), updatedDtos.get(0), objectMapper);
 
     assertEventWasLogged(
         this.testRestTemplate,
@@ -148,7 +145,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(0, afterDeleteDtos.size());
 
     Map<String, Object> expectedEventPayload =
-        getCreateOrDeleteEventPayload(getEntityAsMap(createdDtos.get(0), objectMapper));
+        getCreateOrDeleteEventPayload(createdDtos.get(0), objectMapper);
 
     assertEventWasLogged(
         this.testRestTemplate,

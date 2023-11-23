@@ -29,7 +29,24 @@ public class SystemEventTestHelper {
         findEventByTypeAndEntity(
             testRestTemplate, objectMapper, baseSystemEventUrl, eventType, toCompare);
 
-    assertTrue(event.isPresent(), "Event of type " + eventType + " for entity " + toCompare + " not logged");
+    assertTrue(
+        event.isPresent(),
+        "Event of type " + eventType + " for entity " + toCompare + " not logged");
+  }
+
+  public static Map<String, Object> getUpdateEventPayload(
+      Object entityBefore, Object entityAfter, ObjectMapper objectMapper) {
+    Map<String, Object> payloadUpdatedEvent = new HashMap<>();
+    payloadUpdatedEvent.put(
+        "entityBefore", objectMapper.convertValue(entityBefore, new TypeReference<>() {}));
+    payloadUpdatedEvent.put(
+        "entityAfter", objectMapper.convertValue(entityAfter, new TypeReference<>() {}));
+    return payloadUpdatedEvent;
+  }
+
+  public static Map<String, Object> getCreateOrDeleteEventPayload(
+      Object entity, ObjectMapper objectMapper) {
+    return Map.of("entity", objectMapper.convertValue(entity, new TypeReference<>() {}));
   }
 
   private static Optional<SystemEvent> findEventByTypeAndEntity(
@@ -56,25 +73,5 @@ public class SystemEventTestHelper {
     ResponseEntity<String> response =
         testRestTemplate.getForEntity(baseSystemEventUrl, String.class);
     return objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-  }
-
-  public static Map<String, Object> getEntityAsMap(Object entity, ObjectMapper objectMapper) {
-    return objectMapper.convertValue(entity, new TypeReference<>() {});
-  }
-
-  public static Map<String, Object> getUpdateEventPayload(
-      Map<String, Object> entityBefore, Map<String, Object> entityAfter) {
-    Map<String, Object> payloadUpdatedEvent = new HashMap<>();
-    payloadUpdatedEvent.put("entityBefore", entityBefore);
-    payloadUpdatedEvent.put("entityAfter", entityAfter);
-    return payloadUpdatedEvent;
-  }
-
-  public static Map<String, Object> getCreateOrDeleteEventPayload(Map<String, Object> entity) {
-    return Map.ofEntries(createEntity(entity));
-  }
-
-  public static Map.Entry<String, Map<String, Object>> createEntity(Map<String, Object> value) {
-    return Map.entry("entity", value);
   }
 }
