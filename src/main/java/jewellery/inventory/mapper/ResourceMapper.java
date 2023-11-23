@@ -18,6 +18,9 @@ public class ResourceMapper {
   private final SemiPreciousStoneMapper semiPreciousStoneMapper;
 
   public ResourceResponseDto toResourceResponse(Resource resource) {
+    if (resource == null) {
+      return null;
+    }
     if (resource instanceof Pearl pearl) {
       return pearlMapper.toResourceResponse(pearl);
     } else if (resource instanceof PreciousStone preciousStone) {

@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.aspect.EntityFetcher;
+import jewellery.inventory.aspect.annotation.LogCreateEvent;
+import jewellery.inventory.aspect.annotation.LogDeleteEvent;
+import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
@@ -11,6 +15,7 @@ import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.*;
 import jewellery.inventory.mapper.ProductMapper;
+import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.Sale;
@@ -24,7 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class ProductService {
+public class ProductService implements EntityFetcher {
 
   private final ProductRepository productRepository;
   private final UserRepository userRepository;
@@ -34,9 +39,10 @@ public class ProductService {
   private final ProductMapper productMapper;
 
   @Transactional
+  @LogCreateEvent(eventType = EventType.PRODUCT_CREATE)
   public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
     User owner = getUser(productRequestDto.getOwnerId());
-    Product product = createProductWithoutResourcesAndProducts(productRequestDto, owner);
+    Product product = persistProductWithoutResourcesAndProducts(productRequestDto, owner);
     addProductsContentToProduct(productRequestDto, product);
     addResourcesToProduct(productRequestDto, owner, product);
     return productMapper.mapToProductResponseDto(product);
@@ -77,6 +83,7 @@ public class ProductService {
   }
 
   @Transactional
+  @LogDeleteEvent(eventType = EventType.PRODUCT_DISASSEMBLY)
   public void deleteProduct(UUID id) throws IOException {
 
     Product product = getProduct(id);
@@ -91,7 +98,8 @@ public class ProductService {
     productRepository.deleteById(id);
   }
 
-  public ProductResponseDto transferProduct(UUID recipientId, UUID productId) {
+  @LogUpdateEvent(eventType = EventType.PRODUCT_TRANSFER)
+  public ProductResponseDto transferProduct(UUID productId, UUID recipientId) {
     Product productForChangeOwner = getProductForTransfer(recipientId, productId);
     updateProductOwnerRecursively(productForChangeOwner, getUser(recipientId));
     productRepository.save(productForChangeOwner);
@@ -143,7 +151,7 @@ public class ProductService {
 
     resourcesInProduct.forEach(
         resourceInProduct ->
-            resourceInUserService.addResourceToUser(
+            resourceInUserService.addResourceToUserNoLog(
                 getResourceInUserRequest(owner, resourceInProduct)));
   }
 
@@ -205,14 +213,15 @@ public class ProductService {
     return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
   }
 
-  private Product createProductWithoutResourcesAndProducts(
+  private Product persistProductWithoutResourcesAndProducts(
       ProductRequestDto productRequestDto, User user) {
-    Product product = getProductResponse(productRequestDto, user);
+    Product product = getProductWithoutResourcesAndProduct(productRequestDto, user);
     productRepository.save(product);
     return product;
   }
 
-  private Product getProductResponse(ProductRequestDto productRequestDto, User user) {
+  private Product getProductWithoutResourcesAndProduct(
+      ProductRequestDto productRequestDto, User user) {
     Product product = new Product();
     product.setOwner(user);
     product.setAuthors(getAuthors(productRequestDto));
@@ -221,6 +230,8 @@ public class ProductService {
     product.setSalePrice(productRequestDto.getSalePrice());
     product.setProductionNumber(productRequestDto.getProductionNumber());
     product.setCatalogNumber(productRequestDto.getCatalogNumber());
+    product.setProductsContent(new ArrayList<>());
+    product.setResourcesContent(new ArrayList<>());
     return product;
   }
 
@@ -266,7 +277,7 @@ public class ProductService {
   private ResourceInProduct transferSingleResourceQuantityFromUserToProduct(
       User owner, ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
     ResourceInUser resourceInUser = getResourceInUser(owner, incomingResourceInProduct.getId());
-    resourceInUserService.removeQuantityFromResource(
+    resourceInUserService.removeQuantityFromResourceNoLog(
         owner.getId(),
         resourceInUser.getResource().getId(),
         incomingResourceInProduct.getQuantity());
@@ -281,5 +292,14 @@ public class ProductService {
     resourceInProduct.setQuantity(incomingResourceInProduct.getQuantity());
     resourceInProduct.setProduct(product);
     return resourceInProduct;
+  }
+
+  @Override
+  public Object fetchEntity(Object... ids) {
+    Product product = productRepository.findById((UUID) ids[0]).orElse(null);
+    if (product == null) {
+      return null;
+    }
+    return productMapper.mapToProductResponseDto(product);
   }
 }

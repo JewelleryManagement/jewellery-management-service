@@ -1,10 +1,11 @@
 package jewellery.inventory.service;
 
+import static jewellery.inventory.model.Image.FILE_NAME;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.response.ImageResponseDto;
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -101,9 +103,17 @@ public class ImageService {
   private void removeImage(Product product) throws IOException {
     checkForAttachedPicture(product);
     Image image = product.getImage();
-    Files.deleteIfExists(Paths.get(product.getImage().getFilePath()));
+    FileSystemUtils.deleteRecursively(getImageFolderPath(product));
     product.setImage(null);
     imageRepository.delete(image);
+  }
+
+  private static Path getImageFolderPath(Product product) {
+    return Path.of(
+        product
+            .getImage()
+            .getFilePath()
+            .substring(0, product.getImage().getFilePath().indexOf(FILE_NAME)));
   }
 
   private static void checkForAttachedPicture(Product product) {
@@ -141,9 +151,10 @@ public class ImageService {
     sb.append(directory).append("/");
 
     switch (Objects.requireNonNull(multipartFile.getContentType())) {
-      case "image/png" -> sb.append("ProductPicture.png");
-      case "image/jpg" -> sb.append("ProductPicture.jpg");
-      case "image/jpeg" -> sb.append("ProductPicture.jpeg");
+      case "image/png" -> sb.append(FILE_NAME + ".png");
+      case "image/jpg" -> sb.append(FILE_NAME + ".jpg");
+      case "image/jpeg" -> sb.append(FILE_NAME + ".jpeg");
+      default -> throw new MultipartFileContentTypeException();
     }
 
     return Path.of(sb.toString());

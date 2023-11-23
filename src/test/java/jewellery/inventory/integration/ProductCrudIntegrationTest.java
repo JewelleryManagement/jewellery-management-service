@@ -1,12 +1,20 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ProductTestHelper.*;
+import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
 import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
+import static jewellery.inventory.model.EventType.PRODUCT_CREATE;
+import static jewellery.inventory.model.EventType.PRODUCT_DISASSEMBLY;
+import static jewellery.inventory.model.EventType.PRODUCT_TRANSFER;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ProductRequestDto;
@@ -26,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
@@ -34,10 +43,12 @@ import org.springframework.util.MultiValueMap;
 
 class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
-
   private static final String IMAGE_FILE = "/static/img/pearl.jpg";
   private static final String TEXT_FILE = "/static/img/test.txt";
   private static final String BIG_IMAGE_FILE = "/static/img/Sample-jpg-image-10mb.jpg";
+
+  @Value(value = "${image.folder.path}")
+  private String PATH_TO_IMAGES;
 
   private User user;
   private PreciousStone preciousStone;
@@ -48,21 +59,11 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private ProductRequestDto productRequestDto2;
   private ProductResponseDto productResponseDto;
 
-  @Autowired private UserRepository userRepository;
-  @Autowired private ProductRepository productRepository;
-  @Autowired private ResourceRepository resourceRepository;
-  @Autowired private ResourceInUserRepository resourceInUserRepository;
-  @Autowired private ResourceInProductRepository resourceInProductRepository;
   @Autowired private ImageRepository imageRepository;
   @Autowired private ImageService imageService;
-  @Autowired private SaleRepository saleRepository;
-
-  private String getBaseUrl() {
-    return BASE_URL_PATH + port;
-  }
 
   private String buildUrl(String... paths) {
-    return getBaseUrl() + "/" + String.join("/", paths);
+    return "/" + String.join("/", paths);
   }
 
   private String getBaseResourceAvailabilityUrl() {
@@ -70,19 +71,19 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   private String getBaseResourceUrl() {
-    return getBaseUrl() + "/resources";
+    return "/resources";
   }
 
   private String getBaseUserUrl() {
-    return getBaseUrl() + "/users";
+    return "/users";
   }
 
   private String getBaseProductUrl() {
-    return getBaseUrl() + "/products";
+    return "/products";
   }
 
   private String getProductUrl(UUID id) {
-    return getBaseUrl() + "/products/" + id;
+    return "/products/" + id;
   }
 
   private String getBaseProductImageUrl(UUID productId) {
@@ -91,8 +92,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @BeforeEach
   void setUp() {
-    cleanAllRepositories();
-
     user = createUserInDatabase(createTestUserRequest());
     preciousStone = createPreciousStoneInDatabase();
     resourceInUserRequestDto =
@@ -209,7 +208,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void transferProductSuccessfully() {
+  void transferProductSuccessfully() throws JsonProcessingException {
     ResponseEntity<ProductResponseDto> productResponse =
         this.testRestTemplate.postForEntity(
             getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
@@ -238,10 +237,15 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertNotNull(resultResponse.getBody());
     assertEquals(differentUser.getId(), resultResponse.getBody().getOwner().getId());
     assertEquals(HttpStatus.OK, resultResponse.getStatusCode());
+
+    Map<String, Object> expectedEventPayload =
+        getUpdateEventPayload(productResponse2.getBody(), resultResponse.getBody(), objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_TRANSFER, expectedEventPayload);
   }
 
   @Test
-  void createProductSuccessfully() {
+  void createProductSuccessfully() throws JsonProcessingException {
 
     ResponseEntity<ProductResponseDto> response =
         this.testRestTemplate.postForEntity(
@@ -255,6 +259,11 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(productRequestDto.getOwnerId(), productResponseDto.getOwner().getId());
     assertEquals(productRequestDto.getProductionNumber(), productResponseDto.getProductionNumber());
     assertEquals(productRequestDto.getCatalogNumber(), productResponseDto.getCatalogNumber());
+
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(productResponseDto, objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_CREATE, expectedEventPayload);
   }
 
   @Test
@@ -301,7 +310,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void deleteProductSuccessfully() {
+  void deleteProductSuccessfully() throws JsonProcessingException {
     productResponseDto = createProductWithRequest(productRequestDto);
 
     ResponseEntity<HttpStatus> response =
@@ -319,8 +328,11 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             ProductResponseDto.class);
 
     assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
-  }
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(productResponseDto, objectMapper);
 
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_DISASSEMBLY, expectedEventPayload);
+  }
 
   @Test
   void deleteProductWithAttachedPicture() {
@@ -328,6 +340,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ImageResponseDto imageResponseDto = createImageResponse(productResponseDto);
 
     assertEquals(imageResponseDto.getProductId(), productResponseDto.getId());
+    assertTrue(Files.exists(Path.of(PATH_TO_IMAGES + productResponseDto.getId().toString())));
 
     ResponseEntity<HttpStatus> response =
         this.testRestTemplate.exchange(
@@ -349,6 +362,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         this.testRestTemplate.getForEntity(
             getBaseProductImageUrl(productResponseDto.getId()), byte[].class);
 
+    assertFalse(Files.exists(Path.of(PATH_TO_IMAGES + productResponseDto.getId().toString())));
     assertEquals(HttpStatus.NOT_FOUND, byteResponse.getStatusCode());
   }
 
@@ -409,15 +423,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, User.class);
 
     return createUser.getBody();
-  }
-
-  private void cleanAllRepositories() {
-    productRepository.deleteAll();
-    saleRepository.deleteAll();
-    userRepository.deleteAll();
-    resourceRepository.deleteAll();
-    resourceInUserRepository.deleteAll();
-    resourceInProductRepository.deleteAll();
   }
 
   private FileSystemResource createFileSystemResource(String path) {

@@ -26,17 +26,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
-
   @Autowired private UserRepository userRepository;
   @MockBean private PasswordEncoder passwordEncoder;
   private User testUser;
   private final AuthenticationRequestDto authRequest = new AuthenticationRequestDto();
   private final HttpHeaders headers = new HttpHeaders();
 
-  @Override
   @BeforeEach
-  void setup() {
-    userRepository.deleteAll();
+  void setUp() {
+    this.setup();
     createAndSaveTestUser();
   }
 
@@ -92,11 +90,11 @@ class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   private String getBaseAuthUrl() {
-    return BASE_URL_PATH + port + "/login";
+    return "/login";
   }
 
   private String getBaseUserUrl() {
-    return BASE_URL_PATH + port + "/users";
+    return "/users";
   }
 
   private void setupAuthRequestAndHeaders() {
