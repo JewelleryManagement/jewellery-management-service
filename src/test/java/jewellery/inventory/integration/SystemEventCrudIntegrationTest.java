@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
-  @Transactional
+//  @Transactional
   void willGetAllSystemEvents() throws JsonProcessingException {
     UserResponseDto userResponseDto = createAndSaveUser();
     System.out.println(userResponseDto);
