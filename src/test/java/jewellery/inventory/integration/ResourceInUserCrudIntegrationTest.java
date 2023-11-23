@@ -1,7 +1,6 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ResourceTestHelper.getPreciousStoneRequestDto;
-import static jewellery.inventory.helper.SystemEventTestHelper.assertEventWasLogged;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.helper.UserTestHelper.*;
@@ -36,7 +35,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   private static final double RESOURCE_QUANTITY = 5.00;
 
   private String buildUrl(String... paths) {
-    return getBaseUrl() + "/" + String.join("/", paths);
+    return "/" + String.join("/", paths);
   }
 
   private String getBaseResourceAvailabilityUrl() {
@@ -77,12 +76,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     Map<String, Object> expectedEventPayload = getUpdateEventPayload(null, result, objectMapper);
 
-    assertEventWasLogged(
-        this.testRestTemplate,
-        objectMapper,
-        getBaseSystemEventUrl(),
-        RESOURCE_ADD_QUANTITY,
-        expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(RESOURCE_ADD_QUANTITY, expectedEventPayload);
   }
 
   @Test
@@ -214,12 +208,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(entity.getBody(), null, objectMapper);
 
-    assertEventWasLogged(
-        this.testRestTemplate,
-        objectMapper,
-        getBaseSystemEventUrl(),
-        RESOURCE_REMOVE_QUANTITY,
-        expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(RESOURCE_REMOVE_QUANTITY, expectedEventPayload);
   }
 
   @Test
@@ -266,12 +255,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(response.getBody(), deleteQuantityResponse.getBody(), objectMapper);
 
-    assertEventWasLogged(
-        this.testRestTemplate,
-        objectMapper,
-        getBaseSystemEventUrl(),
-        RESOURCE_REMOVE_QUANTITY,
-        expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(RESOURCE_REMOVE_QUANTITY, expectedEventPayload);
   }
 
   @Test
@@ -362,12 +346,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(response, objectMapper);
 
-    assertEventWasLogged(
-        this.testRestTemplate,
-        objectMapper,
-        getBaseSystemEventUrl(),
-        RESOURCE_TRANSFER,
-        expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(RESOURCE_TRANSFER, expectedEventPayload);
   }
 
   @NotNull

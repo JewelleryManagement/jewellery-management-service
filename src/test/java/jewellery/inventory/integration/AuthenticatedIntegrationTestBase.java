@@ -8,6 +8,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Collections;
+import jewellery.inventory.helper.SystemEventTestHelper;
 import jewellery.inventory.model.Image;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.*;
@@ -16,7 +17,6 @@ import jewellery.inventory.service.security.JwtTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -28,11 +28,10 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 abstract class AuthenticatedIntegrationTestBase {
 
-  protected static final String BASE_URL_PATH = "http://localhost:";
-
   @Autowired protected ObjectMapper objectMapper;
 
   @Autowired protected TestRestTemplate testRestTemplate;
+  @Autowired protected SystemEventTestHelper systemEventTestHelper;
   @Autowired private JwtTokenService jwtService;
   @MockBean protected UserDetailsService userDetailsService;
   @Autowired private UserRepository userRepository;
@@ -46,17 +45,7 @@ abstract class AuthenticatedIntegrationTestBase {
   @Autowired private ImageService imageService;
   @Autowired private ImageRepository imageRepository;
 
-  @Value(value = "${local.server.port}")
-  protected int port;
-
   protected HttpHeaders headers;
-
-  protected String getBaseUrl() {
-    return BASE_URL_PATH + port;
-  }
-  protected String getBaseSystemEventUrl() {
-    return getBaseUrl() + "/system-events";
-  }
 
   @BeforeEach
   void setup() {

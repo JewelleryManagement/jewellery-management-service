@@ -36,19 +36,18 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResponseEntity<String> response =
         testRestTemplate.getForEntity(getBaseSystemEventUrl(), String.class);
 
-    assertEventWasLogged(
-        testRestTemplate,
-        objectMapper,
-        getBaseSystemEventUrl(),
-        EventType.USER_CREATE,
-        expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(EventType.USER_CREATE, expectedEventPayload);
+  }
+
+  private String getBaseSystemEventUrl() {
+    return "/system-events";
   }
 
   private UserResponseDto createAndSaveUser() {
     UserRequestDto userRequest = createTestUserRequest();
 
     return this.testRestTemplate
-        .postForEntity(BASE_URL_PATH + port + "/users", userRequest, UserResponseDto.class)
+        .postForEntity("/users", userRequest, UserResponseDto.class)
         .getBody();
   }
 }

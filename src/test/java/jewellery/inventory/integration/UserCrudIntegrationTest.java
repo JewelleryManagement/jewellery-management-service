@@ -1,6 +1,5 @@
 package jewellery.inventory.integration;
 
-import static jewellery.inventory.helper.SystemEventTestHelper.assertEventWasLogged;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
@@ -30,7 +29,7 @@ import org.springframework.http.ResponseEntity;
 class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private String getBaseUserUrl() {
-    return BASE_URL_PATH + port + "/users";
+    return "/users";
   }
 
   @Test
@@ -52,12 +51,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(userResponse, objectMapper);
 
-    assertEventWasLogged(
-        this.testRestTemplate,
-        objectMapper,
-        getBaseSystemEventUrl(),
-        USER_CREATE,
-        expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(USER_CREATE, expectedEventPayload);
   }
 
   @Test
@@ -175,12 +169,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(createdUser, updatedUser, objectMapper);
 
-    assertEventWasLogged(
-        this.testRestTemplate,
-        objectMapper,
-        getBaseSystemEventUrl(),
-        USER_UPDATE,
-        expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(USER_UPDATE, expectedEventPayload);
   }
 
   @Test
@@ -262,12 +251,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(createdUser, objectMapper);
 
-    assertEventWasLogged(
-        this.testRestTemplate,
-        objectMapper,
-        getBaseSystemEventUrl(),
-        USER_DELETE,
-        expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(USER_DELETE, expectedEventPayload);
   }
 
   @Test

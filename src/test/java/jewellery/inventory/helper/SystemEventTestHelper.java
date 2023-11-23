@@ -12,22 +12,23 @@ import java.util.Objects;
 import java.util.Optional;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.SystemEvent;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 
+@Component
+@RequiredArgsConstructor
 public class SystemEventTestHelper {
 
-  public static void assertEventWasLogged(
-      TestRestTemplate testRestTemplate,
-      ObjectMapper objectMapper,
-      String baseSystemEventUrl,
-      EventType eventType,
-      Map<String, Object> toCompare)
+  private final TestRestTemplate testRestTemplate;
+  private final ObjectMapper objectMapper;
+
+  public void assertEventWasLogged(EventType eventType, Map<String, Object> toCompare)
       throws JsonProcessingException {
 
     Optional<SystemEvent> event =
-        findEventByTypeAndEntity(
-            testRestTemplate, objectMapper, baseSystemEventUrl, eventType, toCompare);
+        findEventByTypeAndEntity(testRestTemplate, objectMapper, eventType, toCompare);
 
     assertTrue(
         event.isPresent(),
@@ -52,13 +53,11 @@ public class SystemEventTestHelper {
   private static Optional<SystemEvent> findEventByTypeAndEntity(
       TestRestTemplate testRestTemplate,
       ObjectMapper objectMapper,
-      String baseSystemEventUrl,
       EventType eventType,
       Map<String, Object> toCompare)
       throws JsonProcessingException {
 
-    List<SystemEvent> events =
-        fetchAllSystemEvents(testRestTemplate, objectMapper, baseSystemEventUrl);
+    List<SystemEvent> events = fetchAllSystemEvents(testRestTemplate, objectMapper);
     return events.stream()
         .filter(
             event ->
@@ -67,11 +66,9 @@ public class SystemEventTestHelper {
   }
 
   private static List<SystemEvent> fetchAllSystemEvents(
-      TestRestTemplate testRestTemplate, ObjectMapper objectMapper, String baseSystemEventUrl)
-      throws JsonProcessingException {
+      TestRestTemplate testRestTemplate, ObjectMapper objectMapper) throws JsonProcessingException {
 
-    ResponseEntity<String> response =
-        testRestTemplate.getForEntity(baseSystemEventUrl, String.class);
+    ResponseEntity<String> response = testRestTemplate.getForEntity("/system-events", String.class);
     return objectMapper.readValue(response.getBody(), new TypeReference<>() {});
   }
 }

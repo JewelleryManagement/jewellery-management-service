@@ -47,7 +47,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private ProductRequestDto productRequestDto2;
 
   private String buildUrl(String... paths) {
-    return getBaseUrl() + "/" + String.join("/", paths);
+    return "/" + String.join("/", paths);
   }
 
   private String getBaseResourceAvailabilityUrl() {
@@ -55,19 +55,19 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   private String getBaseResourceUrl() {
-    return getBaseUrl() + "/resources";
+    return "/resources";
   }
 
   private String getBaseUserUrl() {
-    return getBaseUrl() + "/users";
+    return "/users";
   }
 
   private String getBaseProductUrl() {
-    return getBaseUrl() + "/products";
+    return "/products";
   }
 
   private String getBaseSaleUrl() {
-    return getBaseUrl() + "/sales";
+    return "/sales";
   }
 
   @BeforeEach
@@ -147,12 +147,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
 
-    assertEventWasLogged(
-        this.testRestTemplate,
-        objectMapper,
-        getBaseSystemEventUrl(),
-        SALE_CREATE,
-        expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(SALE_CREATE, expectedEventPayload);
   }
 
   @NotNull

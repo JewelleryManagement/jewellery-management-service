@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import jewellery.inventory.dto.request.AuthenticationRequestDto;
 import jewellery.inventory.dto.response.UserAuthDetailsDto;
 import jewellery.inventory.model.User;
@@ -91,11 +90,11 @@ class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   private String getBaseAuthUrl() {
-    return BASE_URL_PATH + port + "/login";
+    return "/login";
   }
 
   private String getBaseUserUrl() {
-    return BASE_URL_PATH + port + "/users";
+    return "/users";
   }
 
   private void setupAuthRequestAndHeaders() {

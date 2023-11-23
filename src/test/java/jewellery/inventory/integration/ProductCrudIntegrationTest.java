@@ -63,7 +63,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Autowired private ImageService imageService;
 
   private String buildUrl(String... paths) {
-    return getBaseUrl() + "/" + String.join("/", paths);
+    return "/" + String.join("/", paths);
   }
 
   private String getBaseResourceAvailabilityUrl() {
@@ -71,19 +71,19 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   private String getBaseResourceUrl() {
-    return getBaseUrl() + "/resources";
+    return "/resources";
   }
 
   private String getBaseUserUrl() {
-    return getBaseUrl() + "/users";
+    return "/users";
   }
 
   private String getBaseProductUrl() {
-    return getBaseUrl() + "/products";
+    return "/products";
   }
 
   private String getProductUrl(UUID id) {
-    return getBaseUrl() + "/products/" + id;
+    return "/products/" + id;
   }
 
   private String getBaseProductImageUrl(UUID productId) {
@@ -241,12 +241,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(productResponse2.getBody(), resultResponse.getBody(), objectMapper);
 
-    assertEventWasLogged(
-        this.testRestTemplate,
-        objectMapper,
-        getBaseSystemEventUrl(),
-        PRODUCT_TRANSFER,
-        expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_TRANSFER, expectedEventPayload);
   }
 
   @Test
@@ -268,12 +263,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(productResponseDto, objectMapper);
 
-    assertEventWasLogged(
-        this.testRestTemplate,
-        objectMapper,
-        getBaseSystemEventUrl(),
-        PRODUCT_CREATE,
-        expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_CREATE, expectedEventPayload);
   }
 
   @Test
@@ -341,12 +331,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(productResponseDto, objectMapper);
 
-    assertEventWasLogged(
-        this.testRestTemplate,
-        objectMapper,
-        getBaseSystemEventUrl(),
-        PRODUCT_DISASSEMBLY,
-        expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_DISASSEMBLY, expectedEventPayload);
   }
 
   @Test

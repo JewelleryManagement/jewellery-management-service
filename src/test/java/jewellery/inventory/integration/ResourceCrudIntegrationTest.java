@@ -1,7 +1,6 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ResourceTestHelper.*;
-import static jewellery.inventory.helper.SystemEventTestHelper.assertEventWasLogged;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.model.EventType.RESOURCE_CREATE;
@@ -41,7 +40,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   private String getBaseResourceUrl() {
-    return BASE_URL_PATH + port + "/resources";
+    return "/resources";
   }
 
   @AfterEach
@@ -62,12 +61,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(createdResources.get(0), objectMapper);
 
-    assertEventWasLogged(
-        this.testRestTemplate,
-        objectMapper,
-        getBaseSystemEventUrl(),
-        RESOURCE_CREATE,
-        expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(RESOURCE_CREATE, expectedEventPayload);
   }
 
   @Test
@@ -126,12 +120,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(createdDtos.get(0), updatedDtos.get(0), objectMapper);
 
-    assertEventWasLogged(
-        this.testRestTemplate,
-        objectMapper,
-        getBaseSystemEventUrl(),
-        RESOURCE_UPDATE,
-        expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(RESOURCE_UPDATE, expectedEventPayload);
   }
 
   @Test
@@ -147,12 +136,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(createdDtos.get(0), objectMapper);
 
-    assertEventWasLogged(
-        this.testRestTemplate,
-        objectMapper,
-        getBaseSystemEventUrl(),
-        RESOURCE_DELETE,
-        expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(RESOURCE_DELETE, expectedEventPayload);
   }
 
   @Test
