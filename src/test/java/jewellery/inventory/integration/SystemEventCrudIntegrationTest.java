@@ -23,6 +23,7 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Transactional
   void willGetAllSystemEvents() throws JsonProcessingException {
     UserResponseDto userResponseDto = createAndSaveUser();
+    System.out.println(userResponseDto);
 
     ResponseEntity<List<SystemEvent>> eventResponse =
         this.testRestTemplate.exchange(
@@ -50,8 +51,10 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private UserResponseDto createAndSaveUser() {
     UserRequestDto userRequest = createTestUserRequest();
 
-    return this.testRestTemplate
-        .postForEntity(BASE_URL_PATH + port + "/users", userRequest, UserResponseDto.class)
-        .getBody();
+    ResponseEntity<UserResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            BASE_URL_PATH + port + "/users", userRequest, UserResponseDto.class);
+    System.out.println(response);
+    return response.getBody();
   }
 }
