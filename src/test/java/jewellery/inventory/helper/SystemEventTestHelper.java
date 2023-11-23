@@ -29,7 +29,7 @@ public class SystemEventTestHelper {
         findEventByTypeAndEntity(
             testRestTemplate, objectMapper, baseSystemEventUrl, eventType, toCompare);
 
-    assertTrue(event.isPresent(), "Event of type " + eventType + " for entity " + " not logged");
+    assertTrue(event.isPresent(), "Event of type " + eventType + " for entity " + toCompare + " not logged");
   }
 
   private static Optional<SystemEvent> findEventByTypeAndEntity(

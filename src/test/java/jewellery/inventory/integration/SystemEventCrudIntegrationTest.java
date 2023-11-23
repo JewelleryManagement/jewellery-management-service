@@ -35,6 +35,10 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(getEntityAsMap(userResponseDto, objectMapper));
 
+    ResponseEntity<String> response =
+        testRestTemplate.getForEntity(getBaseSystemEventUrl(), String.class);
+    System.out.println(response);
+
     assertEventWasLogged(
         testRestTemplate,
         objectMapper,
