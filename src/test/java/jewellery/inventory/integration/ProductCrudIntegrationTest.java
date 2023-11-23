@@ -151,15 +151,15 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
   void imageUploadSuccessfullyAndAttachToProduct() {
     ProductResponseDto productResponse = createProductWithRequest(productRequestDto);
-    ResponseEntity<ImageResponseDto> response =
-        this.testRestTemplate.postForEntity(
-            getBaseProductImageUrl(productResponse.getId()),
-            createMultipartRequest(IMAGE_FILE),
-            ImageResponseDto.class);
-    ImageResponseDto imageResponseDto = response.getBody();
+    uploadImageAndAssertSuccessfulResponse(productResponse);
+  }
 
-    assertEquals(HttpStatus.CREATED, response.getStatusCode());
-    assertEquals(imageResponseDto.getProductId(), productResponse.getId());
+  @Test
+  void imageAttachedToProducOverrideSuccessfully() {
+    ProductResponseDto productResponse = createProductWithRequest(productRequestDto);
+
+    uploadImageAndAssertSuccessfulResponse(productResponse);
+    uploadImageAndAssertSuccessfulResponse(productResponse);
   }
 
   @Test
@@ -364,6 +364,19 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertFalse(Files.exists(Path.of(PATH_TO_IMAGES + productResponseDto.getId().toString())));
     assertEquals(HttpStatus.NOT_FOUND, byteResponse.getStatusCode());
+  }
+
+  private void uploadImageAndAssertSuccessfulResponse(ProductResponseDto productResponse) {
+    ResponseEntity<ImageResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseProductImageUrl(productResponse.getId()),
+            createMultipartRequest(IMAGE_FILE),
+            ImageResponseDto.class);
+    ImageResponseDto imageResponseDto = response.getBody();
+
+    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    assertNotNull(imageResponseDto);
+    assertEquals(imageResponseDto.getProductId(), productResponse.getId());
   }
 
   @NotNull
