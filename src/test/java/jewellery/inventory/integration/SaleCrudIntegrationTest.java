@@ -15,6 +15,7 @@ import java.util.*;
 import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
@@ -97,7 +98,13 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         this.testRestTemplate.postForEntity(
             getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
 
-    ResponseEntity<ProductResponseDto> response =
+    assertEquals(
+        saleRequestDto.getProducts().get(0).getProductId(), productResponse.getBody().getId());
+    assertNotEquals(
+        saleResponse.getBody().getProducts().get(0).getOwner(),
+        productResponse.getBody().getOwner());
+
+    ResponseEntity<ProductReturnResponseDto> response =
         this.testRestTemplate.exchange(
             getSaleReturnProductUrl(productResponse.getBody().getId()),
             HttpMethod.PUT,
@@ -105,6 +112,12 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             new ParameterizedTypeReference<>() {});
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(null, response.getBody().getSaleAfter());
+    assertEquals(null, response.getBody().getReturnedProduct().getPartOfSale());
+    assertEquals(
+        productResponse.getBody().getOwner(), response.getBody().getReturnedProduct().getOwner());
+    assertEquals(response.getBody().getDate(), LocalDate.now());
   }
 
   @Test
@@ -113,7 +126,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         this.testRestTemplate.postForEntity(
             getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
 
-    ResponseEntity<ProductResponseDto> response =
+    ResponseEntity<ProductReturnResponseDto> response =
         this.testRestTemplate.exchange(
             getSaleReturnProductUrl(productResponse.getBody().getId()),
             HttpMethod.PUT,
@@ -121,7 +134,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             new ParameterizedTypeReference<>() {});
     assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     assertNull(Objects.requireNonNull(productResponse.getBody()).getPartOfSale());
-    assertNull(Objects.requireNonNull(response.getBody()).getPartOfSale());
+    assertNull(Objects.requireNonNull(response.getBody()).getReturnedProduct());
   }
 
   @Test
