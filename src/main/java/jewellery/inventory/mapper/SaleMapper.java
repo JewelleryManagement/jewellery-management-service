@@ -20,6 +20,7 @@ public class SaleMapper {
 
   public SaleResponseDto mapEntityToResponseDto(Sale sale) {
     SaleResponseDto saleResponseDto = new SaleResponseDto();
+    saleResponseDto.setId(sale.getId());
     saleResponseDto.setSeller(userMapper.toUserResponse(sale.getSeller()));
     saleResponseDto.setBuyer(userMapper.toUserResponse(sale.getBuyer()));
     saleResponseDto.setProducts(mapAllProductsToResponse(sale));
