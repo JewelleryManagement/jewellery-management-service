@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.SaleRequestDto;
+import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.service.SaleService;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,7 @@ public class SaleController {
   @Operation(summary = "Return of a sold product")
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/return-product/{productId}")
-  public void returnProduct(@PathVariable("productId") UUID productId) {
-    saleService.returnProduct(productId);
+  public ProductReturnResponseDto returnProduct(@PathVariable("productId") UUID productId) {
+    return saleService.returnProduct(productId);
   }
 }

@@ -27,6 +27,7 @@ import jewellery.inventory.repository.*;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.SaleService;
 import jewellery.inventory.service.UserService;
+import org.glassfish.jaxb.core.v2.TODO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -180,6 +181,6 @@ class SaleServiceTest {
     when(saleRepository.findById(any(UUID.class))).thenReturn(Optional.of(sale));
     saleService.returnProduct(product.getId());
 
-    assertEquals(0, sale.getProducts().size());
+    assertEquals(0, sale.getProducts().size()); //TODO
   }
 }

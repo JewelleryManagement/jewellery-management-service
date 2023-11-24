@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.dto.request.SaleRequestDto;
+import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
@@ -58,7 +59,7 @@ public class SaleService {
     }
   }
 
-  public void returnProduct(UUID productId) {
+  public ProductReturnResponseDto returnProduct(UUID productId) {
     Product productToReturn = productService.getProduct(productId);
 
     throwExceptionIfProductIsPartOfAnotherProduct(productToReturn);
@@ -70,6 +71,7 @@ public class SaleService {
     productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
 
     deleteSaleIfProductsIsEmpty(sale);
+    return validateSaleAfterReturnProduct(sale, productToReturn);
   }
 
   private Sale getSale(UUID saleId) {
@@ -123,6 +125,15 @@ public class SaleService {
     if (sale.getProducts().isEmpty()) {
       saleRepository.deleteById(sale.getId());
     } else saleRepository.save(sale);
+  }
+
+  private ProductReturnResponseDto validateSaleAfterReturnProduct(
+      Sale sale, Product productToReturn) {
+    if (sale.getProducts().isEmpty()) {
+      return productService.getProductReturnResponseDto(null, productToReturn);
+    }
+    return productService.getProductReturnResponseDto(
+        saleMapper.mapEntityToResponseDto(sale), productToReturn);
   }
 
   private List<Product> removeProductFromSale(List<Product> products, Product productToRemove) {
