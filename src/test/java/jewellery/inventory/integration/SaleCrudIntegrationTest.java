@@ -113,8 +113,8 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
-    assertEquals(null, response.getBody().getSaleAfter());
-    assertEquals(null, response.getBody().getReturnedProduct().getPartOfSale());
+    assertNull(response.getBody().getSaleAfter());
+    assertNull(response.getBody().getReturnedProduct().getPartOfSale());
     assertEquals(
         productResponse.getBody().getOwner(), response.getBody().getReturnedProduct().getOwner());
     assertEquals(response.getBody().getDate(), LocalDate.now());
@@ -133,8 +133,8 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             null,
             new ParameterizedTypeReference<>() {});
     assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-    assertNull(Objects.requireNonNull(productResponse.getBody()).getPartOfSale());
-    assertNull(Objects.requireNonNull(response.getBody()).getReturnedProduct());
+    assertNull((productResponse.getBody()).getPartOfSale());
+    assertNull((response.getBody()).getReturnedProduct());
   }
 
   @Test
