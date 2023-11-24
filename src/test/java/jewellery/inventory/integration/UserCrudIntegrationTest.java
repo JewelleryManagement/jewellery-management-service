@@ -46,7 +46,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertNotNull(userResponse);
     assertNotNull(userResponse.getId());
-    assertEquals(userRequest.getName(), userResponse.getName());
+    assertEquals(userRequest.getFirstName(), userResponse.getFirstName());
     assertEquals(userRequest.getEmail(), userResponse.getEmail());
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(userResponse, objectMapper);
@@ -82,7 +82,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
 
     UserRequestDto duplicateNameUserRequest = new UserRequestDto();
-    duplicateNameUserRequest.setName(userRequest.getName());
+    duplicateNameUserRequest.setFirstName(userRequest.getFirstName());
     duplicateNameUserRequest.setEmail("differentEmail@example.com");
 
     ResponseEntity<UserResponseDto> response =
@@ -109,7 +109,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     List<UserResponseDto> users = response.getBody();
     assertNotNull(users);
     assertFalse(users.isEmpty());
-    assertEquals(userRequest.getName(), users.get(0).getName());
+    assertEquals(userRequest.getFirstName(), users.get(0).getFirstName());
     assertEquals(userRequest.getEmail(), users.get(0).getEmail());
   }
 
@@ -129,7 +129,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertNotNull(fetchedUser);
     assertEquals(createdUser.getId(), fetchedUser.getId());
-    assertEquals(userRequest.getName(), fetchedUser.getName());
+    assertEquals(userRequest.getFirstName(), fetchedUser.getFirstName());
     assertEquals(userRequest.getEmail(), fetchedUser.getEmail());
   }
 
@@ -163,7 +163,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertNotNull(updatedUser);
     assertEquals(createdUser.getId(), updatedUser.getId());
-    assertEquals(updatedUserRequest.getName(), updatedUser.getName());
+    assertEquals(updatedUserRequest.getFirstName(), updatedUser.getFirstName());
     assertEquals(updatedUserRequest.getEmail(), updatedUser.getEmail());
 
     Map<String, Object> expectedEventPayload =
@@ -180,7 +180,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     UserResponseDto secondUser = sendUserCreateRequest(createDifferentUserRequest());
 
     UserRequestDto secondUserRequest = new UserRequestDto();
-    secondUserRequest.setName(secondUser.getName());
+    secondUserRequest.setFirstName(secondUser.getFirstName());
     secondUserRequest.setEmail(firstUser.getEmail());
 
     HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(secondUserRequest);
@@ -202,7 +202,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     UserRequestDto firstUserRequest = createTestUserRequest();
     UserRequestDto secondUserRequest = createDifferentUserRequest();
 
-    secondUserRequest.setName(firstUserRequest.getName());
+    secondUserRequest.setFirstName(firstUserRequest.getFirstName());
     HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(secondUserRequest);
     ResponseEntity<UserResponseDto> responseEntity =
         this.testRestTemplate.exchange(

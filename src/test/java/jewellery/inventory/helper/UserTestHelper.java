@@ -21,7 +21,7 @@ public class UserTestHelper {
 
   public static User createTestUser() {
     User user = new User();
-    user.setName(USER_NAME);
+    user.setFirstName(USER_NAME);
     user.setEmail(USER_EMAIL);
     user.setPassword(USER_PASSWORD);
     user.setRole(Role.ADMIN);
@@ -32,14 +32,14 @@ public class UserTestHelper {
     UserResponseDto userResponseDto = new UserResponseDto();
     userResponseDto.setId(user.getId());
     userResponseDto.setEmail(user.getEmail());
-    userResponseDto.setName(user.getName());
+    userResponseDto.setFirstName(user.getFirstName());
     return userResponseDto;
   }
 
   public static User createSecondTestUser() {
     User user = new User();
     user.setId(UUID.randomUUID());
-    user.setName(USER_NAME + 2);
+    user.setFirstName(USER_NAME + 2);
     user.setEmail(USER_EMAIL + 2);
     user.setPassword(USER_PASSWORD + 2);
     user.setRole(Role.ADMIN);
@@ -54,7 +54,7 @@ public class UserTestHelper {
 
   public static UserRequestDto createTestUserRequest() {
     UserRequestDto userRequest = new UserRequestDto();
-    userRequest.setName(USER_NAME);
+    userRequest.setFirstName(USER_NAME);
     userRequest.setEmail(USER_EMAIL);
     userRequest.setPassword(USER_PASSWORD);
     return userRequest;
@@ -62,7 +62,7 @@ public class UserTestHelper {
 
   public static UserRequestDto createDifferentUserRequest() {
     UserRequestDto userRequest = new UserRequestDto();
-    userRequest.setName("different_user");
+    userRequest.setFirstName("different_user");
     userRequest.setEmail("user@example.com");
     userRequest.setPassword(USER_PASSWORD);
     return userRequest;
@@ -70,7 +70,7 @@ public class UserTestHelper {
 
   public static UserRequestDto createInvalidUserRequest() {
     UserRequestDto invalidUserRequest = new UserRequestDto();
-    invalidUserRequest.setName("__");
+    invalidUserRequest.setFirstName("__");
     invalidUserRequest.setEmail(USER_EMAIL);
     return invalidUserRequest;
   }

@@ -3,6 +3,7 @@ package jewellery.inventory.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
 import lombok.Data;
 
 @Data
@@ -15,7 +16,7 @@ public class UserRequestDto {
   @NotBlank(message = "Name must not be blank, empty or null")
   @Size(min = 3, max = 64, message = "Name size must be between 3 and 64")
   @Pattern(regexp = "^(?!.*__)[A-Za-z0-9_]*$", message = NAME_PATTERN_VALIDATION_MSG)
-  private String name;
+  private String firstName;
 
   @NotBlank(message = "Email must not be blank, empty or null")
   @Pattern(
@@ -29,4 +30,13 @@ public class UserRequestDto {
       regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$",
       message = PWD_PATTERN_VALIDATION_MSG)
   private String password;
+
+  private String address;
+  private String phone;
+  private LocalDate birthDate;
+  private String fingersSizeLeftHand;
+  private String fingersSizeRightHand;
+  private String neckSize;
+  private String favouriteColor;
+  private String note;
 }

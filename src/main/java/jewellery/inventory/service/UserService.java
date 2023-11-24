@@ -11,7 +11,6 @@ import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.duplicate.DuplicateEmailException;
-import jewellery.inventory.exception.duplicate.DuplicateNameException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.EventType;
@@ -71,9 +70,9 @@ public class UserService implements EntityFetcher {
   }
 
   private void validateUserEmailAndName(User user) {
-    if (isNameUsedByOtherUser(user.getName(), user.getId())) {
-      throw new DuplicateNameException(user.getName());
-    }
+    //    if (isNameUsedByOtherUser(user.getName(), user.getId())) {
+    //      throw new DuplicateNameException(user.getName());
+    //    }
 
     if (isEmailUsedByOtherUser(user.getEmail(), user.getId())) {
       throw new DuplicateEmailException(user.getEmail());
@@ -85,10 +84,10 @@ public class UserService implements EntityFetcher {
     return existingUser.isPresent() && (id == null || !existingUser.get().getId().equals(id));
   }
 
-  private boolean isNameUsedByOtherUser(String name, UUID id) {
-    Optional<User> existingUser = userRepository.findByName(name);
-    return existingUser.isPresent() && (id == null || !existingUser.get().getId().equals(id));
-  }
+  //  private boolean isNameUsedByOtherUser(String name, UUID id) {
+  //    Optional<User> existingUser = userRepository.findByName(name);
+  //    return existingUser.isPresent() && (id == null || !existingUser.get().getId().equals(id));
+  //  }
 
   @Override
   public Object fetchEntity(Object... ids) {

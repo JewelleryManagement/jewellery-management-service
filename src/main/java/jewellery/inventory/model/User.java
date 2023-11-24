@@ -1,6 +1,7 @@
 package jewellery.inventory.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -27,11 +28,20 @@ public class User implements UserDetails {
   @ManyToMany(mappedBy = "authors")
   private List<Product> authoredProducts;
 
-  @Column(unique = true)
-  private String name;
+  private String firstName;
+  private String lastName;
 
   @Column(unique = true)
   private String email;
+
+  @Column private String address;
+  @Column private String phone;
+  @Column private LocalDate birthDate;
+  @Column private String fingersSizeLeftHand;
+  @Column private String fingersSizeRightHand;
+  @Column private String neckSize;
+  @Column private String favouriteColor;
+  @Column private String note;
 
   @Column private String password;
 
