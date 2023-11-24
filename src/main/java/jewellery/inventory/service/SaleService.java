@@ -59,6 +59,7 @@ public class SaleService {
     }
   }
 
+  @LogCreateEvent(eventType = EventType.SALE_RETURN_PRODUCT)
   public ProductReturnResponseDto returnProduct(UUID productId) {
     Product productToReturn = productService.getProduct(productId);
 
