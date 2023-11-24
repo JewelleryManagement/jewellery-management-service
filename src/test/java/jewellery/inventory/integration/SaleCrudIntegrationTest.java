@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +22,6 @@ import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.PreciousStone;
-import jewellery.inventory.repository.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
@@ -156,7 +155,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     SaleRequestDto saleRequestDto = new SaleRequestDto();
     saleRequestDto.setBuyerId(buyer.getId());
     saleRequestDto.setSellerId(seller.getId());
-    saleRequestDto.setDate(Instant.now());
+    saleRequestDto.setDate(LocalDate.now());
     ProductPriceDiscountRequestDto productPriceDiscountRequestDto =
         new ProductPriceDiscountRequestDto();
     productPriceDiscountRequestDto.setProductId(productResponse.getBody().getId());
