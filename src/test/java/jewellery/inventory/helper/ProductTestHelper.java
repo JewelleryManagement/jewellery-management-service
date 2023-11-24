@@ -80,8 +80,10 @@ public class ProductTestHelper {
     testProduct.setContentOf(null);
     return testProduct;
   }
-  public static ProductResponseDto getReturnedProductResponseDto(Product product, UserResponseDto owner){
-    ProductResponseDto productResponseDto=new ProductResponseDto();
+
+  public static ProductResponseDto getReturnedProductResponseDto(
+      Product product, UserResponseDto owner) {
+    ProductResponseDto productResponseDto = new ProductResponseDto();
     productResponseDto.setId(product.getId());
     productResponseDto.setAuthors(null);
     productResponseDto.setOwner(owner);
