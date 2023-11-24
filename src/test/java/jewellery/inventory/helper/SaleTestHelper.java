@@ -59,6 +59,14 @@ public class SaleTestHelper {
     return products;
   }
 
+  public static List<Product> getProductsList(Product product, Product otherProduct) {
+    List<Product> products = new ArrayList<>();
+    products.add(product);
+    otherProduct.setId(UUID.randomUUID());
+    products.add(otherProduct);
+    return products;
+  }
+
   public static SaleResponseDto getSaleResponseDto(Sale sale) {
     SaleResponseDto dto = new SaleResponseDto();
     UserResponseDto userResponseDtoSeller = new UserResponseDto();

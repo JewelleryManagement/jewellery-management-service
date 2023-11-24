@@ -48,12 +48,14 @@ class SaleServiceTest {
   private User buyer;
   private Product product;
   private Sale sale;
+  private Sale saleTwoProducts;
   private ProductReturnResponseDto productReturnResponseDto;
   private SaleRequestDto saleRequestDto;
   private SaleRequestDto saleRequestDtoSellerNotOwner;
   private SaleResponseDto saleResponseDto;
   private ProductPriceDiscountRequestDto productPriceDiscountRequestDto;
   private List<Product> productsForSale;
+  private List<Product> productsForSaleTwo;
   private ProductResponseDto productResponseDto;
 
   @BeforeEach
@@ -63,7 +65,9 @@ class SaleServiceTest {
     buyer = createSecondTestUser();
     product = getTestProduct(seller, new Resource());
     productsForSale = SaleTestHelper.getProductsList(product);
+    productsForSaleTwo = SaleTestHelper.getProductsList(product, product);
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSale);
+    saleTwoProducts = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSaleTwo);
     saleResponseDto = SaleTestHelper.getSaleResponseDto(sale);
     productResponseDto = getReturnedProductResponseDto(product, createTestUserResponseDto(buyer));
     productReturnResponseDto =
@@ -187,6 +191,29 @@ class SaleServiceTest {
     ProductReturnResponseDto productReturnResponseDto = saleService.returnProduct(product.getId());
 
     assertEquals(0, sale.getProducts().size());
+    assertNull(productReturnResponseDto.getSaleAfter().getId());
+    assertNotNull(productReturnResponseDto.getReturnedProduct());
+    assertNull(productReturnResponseDto.getReturnedProduct().getPartOfSale());
+    assertNotEquals(
+        productReturnResponseDto.getReturnedProduct().getOwner().getId(),
+        productBeforeReturn.getOwner().getId());
+  }
+
+  @Test
+  void testReturnProductSuccessfullyWithTwoProducts() {
+    product.setPartOfSale(saleTwoProducts);
+    Product productBeforeReturn = product;
+
+    assertEquals(2, saleTwoProducts.getProducts().size());
+    assertNotNull(productBeforeReturn.getPartOfSale());
+
+    when(productService.getProduct(any(UUID.class))).thenReturn(product);
+    when(saleRepository.findById(any(UUID.class))).thenReturn(Optional.of(saleTwoProducts));
+    when(saleService.returnProduct(product.getId())).thenReturn(productReturnResponseDto);
+
+    ProductReturnResponseDto productReturnResponseDto = saleService.returnProduct(product.getId());
+
+    assertEquals(1, productReturnResponseDto.getSaleAfter().getProducts().size());
     assertNull(productReturnResponseDto.getSaleAfter().getId());
     assertNotNull(productReturnResponseDto.getReturnedProduct());
     assertNull(productReturnResponseDto.getReturnedProduct().getPartOfSale());
