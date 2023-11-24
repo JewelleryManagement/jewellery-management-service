@@ -49,13 +49,13 @@ public class ImageService {
     checkContentType(multipartFile);
     checkFileSize(multipartFile, maxFileSize);
 
-    Path uploadPath = createDirectoryIfNotExists(productId);
-    Path filePath = createFilePath(multipartFile, uploadPath);
-
+    Path directoryPath = Path.of(folderPath + productId);
+    Path imagePath = createFileNamePath(multipartFile, directoryPath);
     Product product = getProduct(productId);
-    Image image = createImageData(multipartFile, filePath, product);
+
+    Image image = createImageData(multipartFile, product, imagePath);
     setProductImage(product, image);
-    Files.copy(multipartFile.getInputStream(), filePath);
+    saveImagetoFileSystem(multipartFile, directoryPath, imagePath);
 
     return imageDataMapper.toImageResponse(image);
   }
@@ -72,21 +72,25 @@ public class ImageService {
     removeImage(getProduct(productId));
   }
 
-  private Image createImageData(MultipartFile file, Path filePath, Product product) {
+  private void saveImagetoFileSystem(
+      MultipartFile multipartFile, Path directoryPath, Path imagePath) throws IOException {
+    createDirectoryIfNotExists(directoryPath);
+    Files.copy(multipartFile.getInputStream(), imagePath);
+  }
+
+  private Image createImageData(MultipartFile file, Product product, Path imagePath) {
     return imageRepository.save(
         Image.builder()
             .type(file.getContentType())
-            .filePath(filePath.toString())
+            .filePath(imagePath.toString())
             .product(product)
             .build());
   }
 
-  private Path createDirectoryIfNotExists(UUID productId) throws IOException {
-    Path directory = Path.of(folderPath + productId);
-    if (Files.notExists(directory)) {
-      Files.createDirectories(directory);
+  private void createDirectoryIfNotExists(Path directoryPath) throws IOException {
+    if (Files.notExists(directoryPath)) {
+      Files.createDirectories(directoryPath);
     }
-    return directory;
   }
 
   private Product getProduct(UUID productId) {
@@ -146,7 +150,7 @@ public class ImageService {
     }
   }
 
-  private static Path createFilePath(MultipartFile multipartFile, Path directory) {
+  private static Path createFileNamePath(MultipartFile multipartFile, Path directory) {
     StringBuilder sb = new StringBuilder();
     sb.append(directory).append("/");
 
