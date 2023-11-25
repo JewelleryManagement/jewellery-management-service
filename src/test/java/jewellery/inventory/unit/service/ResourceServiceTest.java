@@ -73,7 +73,7 @@ class ResourceServiceTest {
     when(resourceMapper.toResourceResponse(resourceFromDatabase)).thenReturn(expectedResponseDto);
 
     ResourceResponseDto actualResourceResponseDto =
-        resourceService.getResourceById(resourceFromDatabase.getId());
+        resourceService.getResource(resourceFromDatabase.getId());
 
     verify(resourceRepository, times(1)).findById(any());
     assertEquals(expectedResponseDto, actualResourceResponseDto);
@@ -97,7 +97,7 @@ class ResourceServiceTest {
     when(resourceMapper.toResourceResponse(resourceFromDatabase)).thenReturn(expectedResponseDto);
 
     ResourceResponseDto actualResourceResponseDto =
-        resourceService.updateResource(resourceFromDatabase.getId(), expectedDto);
+        resourceService.updateResource(expectedDto, resourceFromDatabase.getId());
 
     verify(resourceRepository, times(1)).findById(any());
     verify(resourceRepository, times(1)).save(any());
@@ -132,7 +132,7 @@ class ResourceServiceTest {
         ResourceNotFoundException.class,
         () ->
             resourceService.updateResource(
-                UUID.randomUUID(), ResourceRequestDto.builder().build()));
+                ResourceRequestDto.builder().build(), UUID.randomUUID()));
   }
 
   @Test
@@ -140,6 +140,6 @@ class ResourceServiceTest {
     when(resourceRepository.findById(any())).thenReturn(Optional.empty());
 
     assertThrows(
-        ResourceNotFoundException.class, () -> resourceService.getResourceById(UUID.randomUUID()));
+        ResourceNotFoundException.class, () -> resourceService.getResource(UUID.randomUUID()));
   }
 }

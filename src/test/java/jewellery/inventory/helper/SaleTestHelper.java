@@ -1,7 +1,7 @@
 package jewellery.inventory.helper;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
@@ -20,7 +20,7 @@ public class SaleTestHelper {
     sale.setSeller(seller);
     sale.setBuyer(buyer);
     sale.setProducts(products);
-    sale.setDate(new Date());
+    sale.setDate(LocalDate.now());
     return sale;
   }
 

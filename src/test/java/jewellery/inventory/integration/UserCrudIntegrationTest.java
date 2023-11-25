@@ -1,23 +1,25 @@
 package jewellery.inventory.integration;
 
+import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
+import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
 import static jewellery.inventory.helper.UserTestHelper.createInvalidUserRequest;
 import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
+import static jewellery.inventory.model.EventType.USER_CREATE;
+import static jewellery.inventory.model.EventType.USER_DELETE;
+import static jewellery.inventory.model.EventType.USER_UPDATE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.repository.ProductRepository;
-import jewellery.inventory.repository.SaleRepository;
-import jewellery.inventory.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -25,19 +27,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
-  @Autowired UserRepository userRepository;
-  @Autowired SaleRepository saleRepository;
-  @Autowired ProductRepository productRepository;
 
   private String getBaseUserUrl() {
-    return BASE_URL_PATH + port + "/users";
-  }
-
-  @BeforeEach
-  void cleanUp() {
-    productRepository.deleteAll();
-    saleRepository.deleteAll();
-    userRepository.deleteAll();
+    return "/users";
   }
 
   @Test
@@ -56,6 +48,10 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertNotNull(userResponse.getId());
     assertEquals(userRequest.getName(), userResponse.getName());
     assertEquals(userRequest.getEmail(), userResponse.getEmail());
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(userResponse, objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(USER_CREATE, expectedEventPayload);
   }
 
   @Test
@@ -146,14 +142,15 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void updateUserSuccessfully() {
+  void updateUserSuccessfully() throws JsonProcessingException {
     UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
     UserResponseDto createdUser = userResponseEntity.getBody();
 
-    UserRequestDto updatedUserRequest = createTestUserRequest();
+    UserRequestDto updatedUserRequest = createDifferentUserRequest();
     HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(updatedUserRequest);
+
     ResponseEntity<UserResponseDto> response =
         this.testRestTemplate.exchange(
             getBaseUserUrl() + "/" + createdUser.getId(),
@@ -168,6 +165,11 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(createdUser.getId(), updatedUser.getId());
     assertEquals(updatedUserRequest.getName(), updatedUser.getName());
     assertEquals(updatedUserRequest.getEmail(), updatedUser.getEmail());
+
+    Map<String, Object> expectedEventPayload =
+        getUpdateEventPayload(createdUser, updatedUser, objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(USER_UPDATE, expectedEventPayload);
   }
 
   @Test
@@ -226,7 +228,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void deleteUserSuccessfully() {
+  void deleteUserSuccessfully() throws JsonProcessingException {
     UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
@@ -245,6 +247,11 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         this.testRestTemplate.getForEntity(
             getBaseUserUrl() + "/" + createdUser.getId(), String.class);
     assertEquals(HttpStatus.NOT_FOUND, getUserResponse.getStatusCode());
+
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(createdUser, objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(USER_DELETE, expectedEventPayload);
   }
 
   @Test

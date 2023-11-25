@@ -1,40 +1,55 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ProductTestHelper.*;
+import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
 import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
+import static jewellery.inventory.model.EventType.PRODUCT_CREATE;
+import static jewellery.inventory.model.EventType.PRODUCT_DISASSEMBLY;
+import static jewellery.inventory.model.EventType.PRODUCT_TRANSFER;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
+import jewellery.inventory.dto.response.ImageResponseDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.PreciousStone;
 import jewellery.inventory.repository.*;
+import jewellery.inventory.service.ImageService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
-  @Autowired private UserRepository userRepository;
+  private static final String IMAGE_FILE = "/static/img/pearl.jpg";
+  private static final String TEXT_FILE = "/static/img/test.txt";
+  private static final String BIG_IMAGE_FILE = "/static/img/Sample-jpg-image-10mb.jpg";
 
-  @Autowired private SaleRepository saleRepository;
-  @Autowired private ProductRepository productRepository;
-  @Autowired private ResourceRepository resourceRepository;
-  @Autowired private ResourceInUserRepository resourceInUserRepository;
-  @Autowired private ResourceInProductRepository resourceInProductRepository;
+  @Value(value = "${image.folder.path}")
+  private String PATH_TO_IMAGES;
+
   private User user;
   private PreciousStone preciousStone;
   private User differentUser;
@@ -44,12 +59,11 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private ProductRequestDto productRequestDto2;
   private ProductResponseDto productResponseDto;
 
-  private String getBaseUrl() {
-    return BASE_URL_PATH + port;
-  }
+  @Autowired private ImageRepository imageRepository;
+  @Autowired private ImageService imageService;
 
   private String buildUrl(String... paths) {
-    return getBaseUrl() + "/" + String.join("/", paths);
+    return "/" + String.join("/", paths);
   }
 
   private String getBaseResourceAvailabilityUrl() {
@@ -57,25 +71,27 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   private String getBaseResourceUrl() {
-    return getBaseUrl() + "/resources";
+    return "/resources";
   }
 
   private String getBaseUserUrl() {
-    return getBaseUrl() + "/users";
+    return "/users";
   }
 
   private String getBaseProductUrl() {
-    return getBaseUrl() + "/products";
+    return "/products";
   }
 
   private String getProductUrl(UUID id) {
-    return getBaseUrl() + "/products/" + id;
+    return "/products/" + id;
+  }
+
+  private String getBaseProductImageUrl(UUID productId) {
+    return getBaseProductUrl() + "/" + productId + "/picture";
   }
 
   @BeforeEach
   void setUp() {
-    cleanAllRepositories();
-
     user = createUserInDatabase(createTestUserRequest());
     preciousStone = createPreciousStoneInDatabase();
     resourceInUserRequestDto =
@@ -86,6 +102,95 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), user);
     productRequestDto2 =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), user);
+  }
+
+  @Test
+  void imageUploadShouldThrowWhenFileSizeLargerThan8MB() {
+    productResponseDto = createProductWithRequest(productRequestDto);
+    ResponseEntity<ImageResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()),
+            createMultipartRequest(BIG_IMAGE_FILE),
+            ImageResponseDto.class);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
+
+  @Test
+  void imageUploadShouldThrowWhenRequestFileIsNotImage() {
+    productResponseDto = createProductWithRequest(productRequestDto);
+    ResponseEntity<ImageResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()),
+            createMultipartRequest(TEXT_FILE),
+            ImageResponseDto.class);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
+
+  @Test
+  void imageDownloadShouldThrowWhenProductImageNotAttached() {
+    productResponseDto = createProductWithRequest(productRequestDto);
+    ResponseEntity<byte[]> response =
+        this.testRestTemplate.getForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()), byte[].class);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+  }
+
+  @Test
+  void removeImageShouldThrowWhenProductImageNotAttached() {
+    productResponseDto = createProductWithRequest(productRequestDto);
+    ResponseEntity<byte[]> response =
+        this.testRestTemplate.getForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()), byte[].class);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+  }
+
+  @Test
+  void imageUploadSuccessfullyAndAttachToProduct() {
+    ProductResponseDto productResponse = createProductWithRequest(productRequestDto);
+    uploadImageAndAssertSuccessfulResponse(productResponse);
+  }
+
+  @Test
+  void imageAttachedToProducOverrideSuccessfully() {
+    ProductResponseDto productResponse = createProductWithRequest(productRequestDto);
+
+    uploadImageAndAssertSuccessfulResponse(productResponse);
+    uploadImageAndAssertSuccessfulResponse(productResponse);
+  }
+
+  @Test
+  void downloadImageSuccessfully() {
+    ProductResponseDto productResponse = createProductWithRequest(productRequestDto);
+    ImageResponseDto imageResponseDto = createImageResponse(productResponse);
+    ResponseEntity<byte[]> response =
+        this.testRestTemplate.getForEntity(
+            getBaseProductImageUrl(imageResponseDto.getProductId()), byte[].class);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+  }
+
+  @Test
+  void deleteImageFromFileSystem() {
+    productResponseDto = createProductWithRequest(productRequestDto);
+    ImageResponseDto imageResponseDto = createImageResponse(productResponseDto);
+    ResponseEntity<HttpStatus> response =
+        this.testRestTemplate.exchange(
+            getBaseProductImageUrl(imageResponseDto.getProductId()),
+            HttpMethod.DELETE,
+            null,
+            HttpStatus.class);
+
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+    ResponseEntity<byte[]> responseEntity =
+        this.testRestTemplate.getForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()), byte[].class);
+
+    assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
   }
 
   @Test
@@ -103,7 +208,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void transferProductSuccessfully() {
+  void transferProductSuccessfully() throws JsonProcessingException {
     ResponseEntity<ProductResponseDto> productResponse =
         this.testRestTemplate.postForEntity(
             getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
@@ -132,10 +237,15 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertNotNull(resultResponse.getBody());
     assertEquals(differentUser.getId(), resultResponse.getBody().getOwner().getId());
     assertEquals(HttpStatus.OK, resultResponse.getStatusCode());
+
+    Map<String, Object> expectedEventPayload =
+        getUpdateEventPayload(productResponse2.getBody(), resultResponse.getBody(), objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_TRANSFER, expectedEventPayload);
   }
 
   @Test
-  void createProductSuccessfully() {
+  void createProductSuccessfully() throws JsonProcessingException {
 
     ResponseEntity<ProductResponseDto> response =
         this.testRestTemplate.postForEntity(
@@ -149,6 +259,11 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(productRequestDto.getOwnerId(), productResponseDto.getOwner().getId());
     assertEquals(productRequestDto.getProductionNumber(), productResponseDto.getProductionNumber());
     assertEquals(productRequestDto.getCatalogNumber(), productResponseDto.getCatalogNumber());
+
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(productResponseDto, objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_CREATE, expectedEventPayload);
   }
 
   @Test
@@ -195,7 +310,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void deleteProductSuccessfully() {
+  void deleteProductSuccessfully() throws JsonProcessingException {
     productResponseDto = createProductWithRequest(productRequestDto);
 
     ResponseEntity<HttpStatus> response =
@@ -213,6 +328,55 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             ProductResponseDto.class);
 
     assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(productResponseDto, objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_DISASSEMBLY, expectedEventPayload);
+  }
+
+  @Test
+  void deleteProductWithAttachedPicture() {
+    productResponseDto = createProductWithRequest(productRequestDto);
+    ImageResponseDto imageResponseDto = createImageResponse(productResponseDto);
+
+    assertEquals(imageResponseDto.getProductId(), productResponseDto.getId());
+    assertTrue(Files.exists(Path.of(PATH_TO_IMAGES + productResponseDto.getId().toString())));
+
+    ResponseEntity<HttpStatus> response =
+        this.testRestTemplate.exchange(
+            getProductUrl(Objects.requireNonNull(productResponseDto).getId()),
+            HttpMethod.DELETE,
+            null,
+            HttpStatus.class);
+
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+    ResponseEntity<ProductResponseDto> newResponse =
+        this.testRestTemplate.getForEntity(
+            getProductUrl(Objects.requireNonNull(productResponseDto).getId()),
+            ProductResponseDto.class);
+
+    assertEquals(HttpStatus.NOT_FOUND, newResponse.getStatusCode());
+
+    ResponseEntity<byte[]> byteResponse =
+        this.testRestTemplate.getForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()), byte[].class);
+
+    assertFalse(Files.exists(Path.of(PATH_TO_IMAGES + productResponseDto.getId().toString())));
+    assertEquals(HttpStatus.NOT_FOUND, byteResponse.getStatusCode());
+  }
+
+  private void uploadImageAndAssertSuccessfulResponse(ProductResponseDto productResponse) {
+    ResponseEntity<ImageResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseProductImageUrl(productResponse.getId()),
+            createMultipartRequest(IMAGE_FILE),
+            ImageResponseDto.class);
+    ImageResponseDto imageResponseDto = response.getBody();
+
+    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    assertNotNull(imageResponseDto);
+    assertEquals(imageResponseDto.getProductId(), productResponse.getId());
   }
 
   @NotNull
@@ -274,12 +438,25 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return createUser.getBody();
   }
 
-  private void cleanAllRepositories() {
-    productRepository.deleteAll();
-    saleRepository.deleteAll();
-    userRepository.deleteAll();
-    resourceRepository.deleteAll();
-    resourceInUserRepository.deleteAll();
-    resourceInProductRepository.deleteAll();
+  private FileSystemResource createFileSystemResource(String path) {
+    return new FileSystemResource(
+        new File(Objects.requireNonNull(getClass().getResource(path)).getFile()));
+  }
+
+  private HttpEntity<MultiValueMap<String, Object>> createMultipartRequest(String path) {
+    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+    body.add("image", createFileSystemResource(path));
+    return new HttpEntity<>(body, headers);
+  }
+
+  private ImageResponseDto createImageResponse(ProductResponseDto productResponseDto) {
+
+    ResponseEntity<ImageResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()),
+            createMultipartRequest(IMAGE_FILE),
+            ImageResponseDto.class);
+
+    return response.getBody();
   }
 }

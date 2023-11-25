@@ -1,7 +1,11 @@
 package jewellery.inventory.service;
 
+import static jewellery.inventory.model.EventType.RESOURCE_REMOVE_QUANTITY;
+
 import java.util.Optional;
 import java.util.UUID;
+import jewellery.inventory.aspect.EntityFetcher;
+import jewellery.inventory.aspect.annotation.*;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
@@ -16,6 +20,7 @@ import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.mapper.ResourcesInUserMapper;
 import jewellery.inventory.mapper.UserMapper;
+import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
@@ -28,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class ResourceInUserService {
+public class ResourceInUserService implements EntityFetcher {
   private final UserRepository userRepository;
   private final ResourceRepository resourceRepository;
   private final ResourceInUserRepository resourceInUserRepository;
@@ -38,6 +43,7 @@ public class ResourceInUserService {
   private static final double EPSILON = 1e-10;
 
   @Transactional
+  @LogCreateEvent(eventType = EventType.RESOURCE_TRANSFER)
   public TransferResourceResponseDto transferResources(
       TransferResourceRequestDto transferResourceRequestDto) {
 
@@ -59,13 +65,18 @@ public class ResourceInUserService {
   }
 
   @Transactional
+  @LogUpdateEvent(eventType = EventType.RESOURCE_ADD_QUANTITY)
   public ResourcesInUserResponseDto addResourceToUser(ResourceInUserRequestDto resourceUserDto) {
+    return addResourceToUserNoLog(resourceUserDto);
+  }
+
+  public ResourcesInUserResponseDto addResourceToUserNoLog(
+      ResourceInUserRequestDto resourceUserDto) {
     User user = findUserById(resourceUserDto.getUserId());
     Resource resource = findResourceById(resourceUserDto.getResourceId());
 
-    addResourceToUser(user, resource, resourceUserDto.getQuantity());
-
-    return resourcesInUserMapper.toResourcesInUserResponseDto(user);
+    return resourcesInUserMapper.toResourcesInUserResponseDto(
+        addResourceToUser(user, resource, resourceUserDto.getQuantity()));
   }
 
   public ResourcesInUserResponseDto getAllResourcesFromUser(UUID userId) {
@@ -74,14 +85,23 @@ public class ResourceInUserService {
   }
 
   @Transactional
-  public void removeQuantityFromResource(UUID userId, UUID resourceId, double quantity) {
+  @LogUpdateEvent(eventType = RESOURCE_REMOVE_QUANTITY)
+  public ResourcesInUserResponseDto removeQuantityFromResource(
+      UUID userId, UUID resourceId, double quantity) {
+    return removeQuantityFromResourceNoLog(userId, resourceId, quantity);
+  }
+
+  public ResourcesInUserResponseDto removeQuantityFromResourceNoLog(
+      UUID userId, UUID resourceId, double quantity) {
     User user = findUserById(userId);
     ResourceInUser resourceInUser = findResourceInUserOrThrow(user, resourceId);
 
-    removeQuantityFromResource(resourceInUser, quantity);
+    return resourcesInUserMapper.toResourcesInUserResponseDto(
+        removeQuantityFromResource(resourceInUser, quantity));
   }
 
   @Transactional
+  @LogUpdateEvent(eventType = RESOURCE_REMOVE_QUANTITY)
   public void removeResourceFromUser(UUID userId, UUID resourceId) {
     User user = findUserById(userId);
     ResourceInUser resourceToRemove = findResourceInUserOrThrow(user, resourceId);
@@ -95,17 +115,30 @@ public class ResourceInUserService {
     return resourcesInUserMapper.toResourcesOwnedByUsersResponseDto(resource);
   }
 
-  private User addResourceToUser(User user, Resource resource, Double quantity) {
+  private ResourceInUser getResourceInUser(UUID userId, UUID resourceId) {
+    User user = findUserById(userId);
+    return findResourceInUser(user, resourceId).orElse(null);
+  }
+
+  private ResourcesInUserResponseDto getResourceInUserResponse(UUID userId, UUID resourceId) {
+    ResourceInUser resourceInUser = getResourceInUser(userId, resourceId);
+    if (resourceInUser != null) {
+      return resourcesInUserMapper.toResourcesInUserResponseDto(resourceInUser);
+    }
+    return null;
+  }
+
+  private ResourceInUser addResourceToUser(User user, Resource resource, Double quantity) {
     ResourceInUser resourceInUser =
         findResourceInUser(user, resource.getId())
             .orElseGet(() -> createAndAddNewResourceInUser(user, resource, 0));
 
     resourceInUser.setQuantity(resourceInUser.getQuantity() + quantity);
-    resourceInUserRepository.save(resourceInUser);
-    return user;
+    return resourceInUserRepository.save(resourceInUser);
   }
 
-  private User removeQuantityFromResource(ResourceInUser resourceInUser, double quantityToRemove) {
+  private ResourceInUser removeQuantityFromResource(
+      ResourceInUser resourceInUser, double quantityToRemove) {
     if (quantityToRemove < 0) {
       throw new NegativeResourceQuantityException(quantityToRemove);
     }
@@ -121,9 +154,10 @@ public class ResourceInUserService {
     User owner = resourceInUser.getOwner();
     if (Math.abs(newQuantity) < EPSILON) {
       owner.getResourcesOwned().remove(resourceInUser);
+      resourceInUser = null;
     }
     userRepository.save(owner);
-    return owner;
+    return resourceInUser;
   }
 
   private ResourceInUser findResourceInUserOrThrow(User previousOwner, UUID resourceId) {
@@ -168,5 +202,19 @@ public class ResourceInUserService {
                 .quantity(quantity)
                 .build())
         .build();
+  }
+
+  @Override
+  public Object fetchEntity(Object... ids) {
+    if (ids != null && ids.length > 0) {
+      if (ids[0] instanceof ResourceInUserRequestDto resourceInUserRequestDto) {
+
+        return getResourceInUserResponse(
+            resourceInUserRequestDto.getUserId(), resourceInUserRequestDto.getResourceId());
+      } else {
+        return getResourceInUserResponse((UUID) ids[0], (UUID) ids[1]);
+      }
+    }
+    return null;
   }
 }
