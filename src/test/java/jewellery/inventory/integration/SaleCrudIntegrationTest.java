@@ -88,15 +88,11 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void returnProductSuccessfully() {
-    ResponseEntity<ProductResponseDto> productResponse =
-        this.testRestTemplate.postForEntity(
-            getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+    ResponseEntity<ProductResponseDto> productResponse = createProduct(productRequestDto);
 
     SaleRequestDto saleRequestDto = getSaleRequestDto(seller, buyer, productResponse);
 
-    ResponseEntity<SaleResponseDto> saleResponse =
-        this.testRestTemplate.postForEntity(
-            getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
+    ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
 
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(), productResponse.getBody().getId());
@@ -105,11 +101,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         productResponse.getBody().getOwner());
 
     ResponseEntity<ProductReturnResponseDto> response =
-        this.testRestTemplate.exchange(
-            getSaleReturnProductUrl(productResponse.getBody().getId()),
-            HttpMethod.PUT,
-            null,
-            new ParameterizedTypeReference<>() {});
+        returnProductFromSale(productResponse.getBody().getId());
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
@@ -122,16 +114,11 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void returnProductWillThrowsProductNotSoldException() {
-    ResponseEntity<ProductResponseDto> productResponse =
-        this.testRestTemplate.postForEntity(
-            getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+    ResponseEntity<ProductResponseDto> productResponse = createProduct(productRequestDto);
 
     ResponseEntity<ProductReturnResponseDto> response =
-        this.testRestTemplate.exchange(
-            getSaleReturnProductUrl(productResponse.getBody().getId()),
-            HttpMethod.PUT,
-            null,
-            new ParameterizedTypeReference<>() {});
+        returnProductFromSale(productResponse.getBody().getId());
+
     assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     assertNull((productResponse.getBody()).getPartOfSale());
     assertNull((response.getBody()).getReturnedProduct());
@@ -139,15 +126,12 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getAllSalesSuccessfully() {
-    ResponseEntity<ProductResponseDto> productResponse =
-        this.testRestTemplate.postForEntity(
-            getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+    ResponseEntity<ProductResponseDto> productResponse = createProduct(productRequestDto);
 
-    SaleRequestDto saleRequestDto = getSaleRequestDto(seller, buyer, productResponse);
+    SaleRequestDto saleRequestDto =
+        getSaleRequestDto(seller, buyer, createProduct(productRequestDto));
 
-    ResponseEntity<SaleResponseDto> saleResponse =
-        this.testRestTemplate.postForEntity(
-            getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
+    ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
 
     ResponseEntity<List<SaleResponseDto>> response =
         this.testRestTemplate.exchange(
@@ -166,21 +150,14 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void createSaleSuccessfully() throws JsonProcessingException {
-
-    ResponseEntity<ProductResponseDto> productResponse =
-        this.testRestTemplate.postForEntity(
-            getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+    ResponseEntity<ProductResponseDto> productResponse = createProduct(productRequestDto);
 
     productRequestDto2.setProductsContent(List.of(productResponse.getBody().getId()));
-    ResponseEntity<ProductResponseDto> productResponse2 =
-        this.testRestTemplate.postForEntity(
-            getBaseProductUrl(), productRequestDto2, ProductResponseDto.class);
+    ResponseEntity<ProductResponseDto> productResponse2 = createProduct(productRequestDto2);
 
     SaleRequestDto saleRequestDto = getSaleRequestDto(seller, buyer, productResponse2);
 
-    ResponseEntity<SaleResponseDto> saleResponse =
-        this.testRestTemplate.postForEntity(
-            getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
+    ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
 
     assertEquals(
         buyer.getId(),
@@ -201,6 +178,27 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(SALE_CREATE, expectedEventPayload);
+  }
+
+  @Nullable
+  private ResponseEntity<ProductResponseDto> createProduct(ProductRequestDto productRequestDto) {
+    return this.testRestTemplate.postForEntity(
+        getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+  }
+
+  @Nullable
+  private ResponseEntity<SaleResponseDto> createSale(SaleRequestDto saleRequestDto) {
+    return this.testRestTemplate.postForEntity(
+        getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
+  }
+
+  @Nullable
+  private ResponseEntity<ProductReturnResponseDto> returnProductFromSale(UUID productId) {
+    return this.testRestTemplate.exchange(
+        getSaleReturnProductUrl(productId),
+        HttpMethod.PUT,
+        null,
+        new ParameterizedTypeReference<>() {});
   }
 
   @NotNull
