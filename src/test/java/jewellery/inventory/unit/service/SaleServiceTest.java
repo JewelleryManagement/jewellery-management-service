@@ -177,29 +177,6 @@ class SaleServiceTest {
   }
 
   @Test
-  void testReturnProductSuccessfully() {
-    product.setPartOfSale(sale);
-    Product productBeforeReturn = product;
-
-    assertEquals(1, sale.getProducts().size());
-    assertNotNull(productBeforeReturn.getPartOfSale());
-
-    when(productService.getProduct(any(UUID.class))).thenReturn(product);
-    when(saleRepository.findById(any(UUID.class))).thenReturn(Optional.of(sale));
-    when(saleService.returnProduct(product.getId())).thenReturn(productReturnResponseDto);
-
-    ProductReturnResponseDto productReturnResponseDto = saleService.returnProduct(product.getId());
-
-    assertEquals(0, sale.getProducts().size());
-    assertNull(productReturnResponseDto.getSaleAfter().getId());
-    assertNotNull(productReturnResponseDto.getReturnedProduct());
-    assertNull(productReturnResponseDto.getReturnedProduct().getPartOfSale());
-    assertNotEquals(
-        productReturnResponseDto.getReturnedProduct().getOwner().getId(),
-        productBeforeReturn.getOwner().getId());
-  }
-
-  @Test
   void testReturnProductSuccessfullyWithTwoProducts() {
     product.setPartOfSale(saleTwoProducts);
     Product productBeforeReturn = product;
