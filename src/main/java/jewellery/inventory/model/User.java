@@ -37,9 +37,6 @@ public class User implements UserDetails {
   @Column private String address;
   @Column private String phone;
   @Column private LocalDate birthDate;
-  @Column private String fingersSizeLeftHand;
-  @Column private String fingersSizeRightHand;
-  @Column private String neckSize;
   @Column private String favouriteColor;
   @Column private String note;
 
