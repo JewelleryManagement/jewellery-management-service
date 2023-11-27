@@ -2,7 +2,9 @@ package jewellery.inventory.helper;
 
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
+import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
@@ -77,6 +79,24 @@ public class ProductTestHelper {
     testProduct.setProductsContent(null);
     testProduct.setContentOf(null);
     return testProduct;
+  }
+
+  public static ProductResponseDto getReturnedProductResponseDto(
+      Product product, UserResponseDto owner) {
+    ProductResponseDto productResponseDto = new ProductResponseDto();
+    productResponseDto.setId(product.getId());
+    productResponseDto.setAuthors(null);
+    productResponseDto.setOwner(owner);
+    productResponseDto.setResourcesContent(null);
+    productResponseDto.setProductsContent(null);
+    productResponseDto.setContentOf(null);
+    productResponseDto.setDescription("description");
+    productResponseDto.setSalePrice(1000);
+    productResponseDto.setPartOfSale(null);
+    productResponseDto.setCatalogNumber("Catalog Number");
+    productResponseDto.setProductionNumber("Production Number");
+    productResponseDto.setDiscount(0);
+    return productResponseDto;
   }
 
   @NotNull
