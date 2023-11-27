@@ -4,11 +4,11 @@ import static jewellery.inventory.helper.ProductTestHelper.getProductRequestDto;
 import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.model.EventType.SALE_CREATE;
+import static jewellery.inventory.model.EventType.SALE_RETURN_PRODUCT;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.LocalDate;
 import java.util.*;
@@ -87,7 +87,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void returnProductSuccessfully() {
+  void returnProductSuccessfully() throws JsonProcessingException {
     ResponseEntity<ProductResponseDto> productResponse = createProduct(productRequestDto);
 
     SaleRequestDto saleRequestDto = getSaleRequestDto(seller, buyer, productResponse);
@@ -110,6 +110,11 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(
         productResponse.getBody().getOwner(), response.getBody().getReturnedProduct().getOwner());
     assertEquals(response.getBody().getDate(), LocalDate.now());
+
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(SALE_RETURN_PRODUCT, expectedEventPayload);
   }
 
   @Test
@@ -170,9 +175,9 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(),
         saleResponse.getBody().getProducts().get(0).getId());
-    assertEquals(SALE_TOTAL_PRICE, saleResponse.getBody().getTotalPrice());
-    assertEquals(SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount());
-    assertEquals(SALE_DISCOUNTED_PRICE, saleResponse.getBody().getTotalDiscountedPrice());
+    assertEquals((double) SALE_TOTAL_PRICE, saleResponse.getBody().getTotalPrice());
+    assertEquals((double) SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount());
+    assertEquals((double) SALE_DISCOUNTED_PRICE, saleResponse.getBody().getTotalDiscountedPrice());
 
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
