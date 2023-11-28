@@ -1,0 +1,12 @@
+<Configuration>
+    <Appenders>
+        <Console name="Console" target="SYSTEM.OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} %c{1}:%L - %msg%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <ApenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>
