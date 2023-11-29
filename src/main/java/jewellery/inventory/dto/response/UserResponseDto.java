@@ -12,10 +12,7 @@ public class UserResponseDto {
   private String email;
   private String address;
   private String phone;
+  private String phone2;
   private LocalDate birthDate;
-  private String fingersSizeLeftHand;
-  private String fingersSizeRightHand;
-  private String neckSize;
-  private String favouriteColor;
   private String note;
 }
