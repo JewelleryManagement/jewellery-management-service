@@ -1,21 +1,25 @@
 package jewellery.inventory.integration;
 
+import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
+import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
 import static jewellery.inventory.helper.UserTestHelper.createInvalidUserRequest;
 import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
+import static jewellery.inventory.model.EventType.USER_CREATE;
+import static jewellery.inventory.model.EventType.USER_DELETE;
+import static jewellery.inventory.model.EventType.USER_UPDATE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -23,19 +27,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
-  @Autowired UserRepository userRepository;
 
   private String getBaseUserUrl() {
-    return BASE_URL_PATH + port + "/users";
+    return "/users";
   }
 
-    @BeforeEach
-    void cleanUp() {
-        userRepository.deleteAll();
-    }
-
-    @Test
-    void createUserSuccessfully() throws Exception {
+  @Test
+  void createUserSuccessfully() throws Exception {
 
     UserRequestDto userRequest = createTestUserRequest();
 
@@ -50,214 +48,228 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertNotNull(userResponse.getId());
     assertEquals(userRequest.getName(), userResponse.getName());
     assertEquals(userRequest.getEmail(), userResponse.getEmail());
-    }
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(userResponse, objectMapper);
 
-    @Test
-    void createUserFailsWhenNameInvalid() {
-        assertTrue(
-                this.testRestTemplate
-                        .postForEntity(getBaseUserUrl(), createInvalidUserRequest(), UserResponseDto.class)
-                        .getStatusCode()
-                        .is4xxClientError());
-    }
+    systemEventTestHelper.assertEventWasLogged(USER_CREATE, expectedEventPayload);
+  }
 
-    @Test
-    void createUserFailsWhenEmailDuplicate() {
-        UserRequestDto userRequest = createTestUserRequest();
+  @Test
+  void createUserFailsWhenNameInvalid() {
+    assertTrue(
+        this.testRestTemplate
+            .postForEntity(getBaseUserUrl(), createInvalidUserRequest(), UserResponseDto.class)
+            .getStatusCode()
+            .is4xxClientError());
+  }
 
+  @Test
+  void createUserFailsWhenEmailDuplicate() {
+    UserRequestDto userRequest = createTestUserRequest();
+
+    this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
+
+    ResponseEntity<UserResponseDto> response =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
 
-        ResponseEntity<UserResponseDto> response =
-                this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    }
+  @Test
+  void createUserFailsWhenNameDuplicate() {
+    UserRequestDto userRequest = createTestUserRequest();
 
-    @Test
-    void createUserFailsWhenNameDuplicate() {
-        UserRequestDto userRequest = createTestUserRequest();
+    this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
 
+    UserRequestDto duplicateNameUserRequest = new UserRequestDto();
+    duplicateNameUserRequest.setName(userRequest.getName());
+    duplicateNameUserRequest.setEmail("differentEmail@example.com");
+
+    ResponseEntity<UserResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseUserUrl(), duplicateNameUserRequest, UserResponseDto.class);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
+
+  @Test
+  void getAllUsersSuccessfully() {
+    UserRequestDto userRequest = createTestUserRequest();
+
+    ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
+    assertNotNull(userResponseEntity.getBody());
 
-        UserRequestDto duplicateNameUserRequest = new UserRequestDto();
-        duplicateNameUserRequest.setName(userRequest.getName());
-        duplicateNameUserRequest.setEmail("differentEmail@example.com");
+    ResponseEntity<List<UserResponseDto>> response =
+        this.testRestTemplate.exchange(
+            getBaseUserUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
 
-        ResponseEntity<UserResponseDto> response =
-                this.testRestTemplate.postForEntity(
-                        getBaseUserUrl(), duplicateNameUserRequest, UserResponseDto.class);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    }
+    List<UserResponseDto> users = response.getBody();
+    assertNotNull(users);
+    assertFalse(users.isEmpty());
+    assertEquals(userRequest.getName(), users.get(0).getName());
+    assertEquals(userRequest.getEmail(), users.get(0).getEmail());
+  }
 
-    @Test
-    void getAllUsersSuccessfully() {
-        UserRequestDto userRequest = createTestUserRequest();
+  @Test
+  void getSpecificUserSuccessfully() {
+    UserRequestDto userRequest = createTestUserRequest();
+    ResponseEntity<UserResponseDto> userResponseEntity =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
+    UserResponseDto createdUser = userResponseEntity.getBody();
 
-        ResponseEntity<UserResponseDto> userResponseEntity =
-                this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
-        assertNotNull(userResponseEntity.getBody());
+    ResponseEntity<UserResponseDto> response =
+        this.testRestTemplate.getForEntity(
+            getBaseUserUrl() + "/" + createdUser.getId(), UserResponseDto.class);
 
-        ResponseEntity<List<UserResponseDto>> response =
-                this.testRestTemplate.exchange(
-                        getBaseUserUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {
-                        });
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    UserResponseDto fetchedUser = response.getBody();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(fetchedUser);
+    assertEquals(createdUser.getId(), fetchedUser.getId());
+    assertEquals(userRequest.getName(), fetchedUser.getName());
+    assertEquals(userRequest.getEmail(), fetchedUser.getEmail());
+  }
 
-        List<UserResponseDto> users = response.getBody();
-        assertNotNull(users);
-        assertFalse(users.isEmpty());
-        assertEquals(userRequest.getName(), users.get(0).getName());
-        assertEquals(userRequest.getEmail(), users.get(0).getEmail());
-    }
+  @Test
+  void getUserFailsWhenUserNotFound() {
+    UUID randomId = UUID.randomUUID();
+    ResponseEntity<String> response =
+        this.testRestTemplate.getForEntity(getBaseUserUrl() + "/" + randomId, String.class);
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+  }
 
-    @Test
-    void getSpecificUserSuccessfully() {
-        UserRequestDto userRequest = createTestUserRequest();
-        ResponseEntity<UserResponseDto> userResponseEntity =
-                this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
-        UserResponseDto createdUser = userResponseEntity.getBody();
+  @Test
+  void updateUserSuccessfully() throws JsonProcessingException {
+    UserRequestDto userRequest = createTestUserRequest();
+    ResponseEntity<UserResponseDto> userResponseEntity =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
+    UserResponseDto createdUser = userResponseEntity.getBody();
 
-        ResponseEntity<UserResponseDto> response =
-                this.testRestTemplate.getForEntity(
-                        getBaseUserUrl() + "/" + createdUser.getId(), UserResponseDto.class);
+    UserRequestDto updatedUserRequest = createDifferentUserRequest();
+    HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(updatedUserRequest);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        UserResponseDto fetchedUser = response.getBody();
+    ResponseEntity<UserResponseDto> response =
+        this.testRestTemplate.exchange(
+            getBaseUserUrl() + "/" + createdUser.getId(),
+            HttpMethod.PUT,
+            requestUpdate,
+            UserResponseDto.class);
 
-        assertNotNull(fetchedUser);
-        assertEquals(createdUser.getId(), fetchedUser.getId());
-        assertEquals(userRequest.getName(), fetchedUser.getName());
-        assertEquals(userRequest.getEmail(), fetchedUser.getEmail());
-    }
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    UserResponseDto updatedUser = response.getBody();
 
-    @Test
-    void getUserFailsWhenUserNotFound() {
-        UUID randomId = UUID.randomUUID();
-        ResponseEntity<String> response =
-                this.testRestTemplate.getForEntity(getBaseUserUrl() + "/" + randomId, String.class);
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
+    assertNotNull(updatedUser);
+    assertEquals(createdUser.getId(), updatedUser.getId());
+    assertEquals(updatedUserRequest.getName(), updatedUser.getName());
+    assertEquals(updatedUserRequest.getEmail(), updatedUser.getEmail());
 
-    @Test
-    void updateUserSuccessfully() {
-        UserRequestDto userRequest = createTestUserRequest();
-        ResponseEntity<UserResponseDto> userResponseEntity =
-                this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
-        UserResponseDto createdUser = userResponseEntity.getBody();
+    Map<String, Object> expectedEventPayload =
+        getUpdateEventPayload(createdUser, updatedUser, objectMapper);
 
-        UserRequestDto updatedUserRequest = createTestUserRequest();
-        HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(updatedUserRequest);
-        ResponseEntity<UserResponseDto> response =
-                this.testRestTemplate.exchange(
-                        getBaseUserUrl() + "/" + createdUser.getId(),
-                        HttpMethod.PUT,
-                        requestUpdate,
-                        UserResponseDto.class);
+    systemEventTestHelper.assertEventWasLogged(USER_UPDATE, expectedEventPayload);
+  }
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        UserResponseDto updatedUser = response.getBody();
+  @Test
+  void updateUserFailsWhenEmailDuplicate() {
 
-        assertNotNull(updatedUser);
-        assertEquals(createdUser.getId(), updatedUser.getId());
-        assertEquals(updatedUserRequest.getName(), updatedUser.getName());
-        assertEquals(updatedUserRequest.getEmail(), updatedUser.getEmail());
-    }
+    UserResponseDto firstUser = sendUserCreateRequest(createTestUserRequest());
 
-    @Test
-    void updateUserFailsWhenEmailDuplicate() {
+    UserResponseDto secondUser = sendUserCreateRequest(createDifferentUserRequest());
 
-        UserResponseDto firstUser = sendUserCreateRequest(createTestUserRequest());
+    UserRequestDto secondUserRequest = new UserRequestDto();
+    secondUserRequest.setName(secondUser.getName());
+    secondUserRequest.setEmail(firstUser.getEmail());
 
-        UserResponseDto secondUser = sendUserCreateRequest(createDifferentUserRequest());
+    HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(secondUserRequest);
+    ResponseEntity<UserResponseDto> responseEntity =
+        this.testRestTemplate.exchange(
+            getBaseUserUrl() + "/" + secondUser.getId(),
+            HttpMethod.PUT,
+            requestUpdate,
+            UserResponseDto.class);
 
-        UserRequestDto secondUserRequest = new UserRequestDto();
-        secondUserRequest.setName(secondUser.getName());
-        secondUserRequest.setEmail(firstUser.getEmail());
+    assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+  }
 
-        HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(secondUserRequest);
-        ResponseEntity<UserResponseDto> responseEntity =
-                this.testRestTemplate.exchange(
-                        getBaseUserUrl() + "/" + secondUser.getId(),
-                        HttpMethod.PUT,
-                        requestUpdate,
-                        UserResponseDto.class);
+  @Test
+  void updateUserFailsWhenNameDuplicate() {
+    UserResponseDto firstUser = sendUserCreateRequest(createTestUserRequest());
+    UserResponseDto secondUser = sendUserCreateRequest(createDifferentUserRequest());
 
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-    }
+    UserRequestDto firstUserRequest = createTestUserRequest();
+    UserRequestDto secondUserRequest = createDifferentUserRequest();
 
-    @Test
-    void updateUserFailsWhenNameDuplicate() {
-        UserResponseDto firstUser = sendUserCreateRequest(createTestUserRequest());
-        UserResponseDto secondUser = sendUserCreateRequest(createDifferentUserRequest());
+    secondUserRequest.setName(firstUserRequest.getName());
+    HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(secondUserRequest);
+    ResponseEntity<UserResponseDto> responseEntity =
+        this.testRestTemplate.exchange(
+            getBaseUserUrl() + "/" + secondUser.getId(),
+            HttpMethod.PUT,
+            requestUpdate,
+            UserResponseDto.class);
 
-        UserRequestDto firstUserRequest = createTestUserRequest();
-        UserRequestDto secondUserRequest = createDifferentUserRequest();
+    assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+  }
 
-        secondUserRequest.setName(firstUserRequest.getName());
-        HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(secondUserRequest);
-        ResponseEntity<UserResponseDto> responseEntity =
-                this.testRestTemplate.exchange(
-                        getBaseUserUrl() + "/" + secondUser.getId(),
-                        HttpMethod.PUT,
-                        requestUpdate,
-                        UserResponseDto.class);
+  @Test
+  void updateUserFailsWhenUserNotFound() {
+    UserRequestDto userRequest = createTestUserRequest();
+    UUID fakeId = UUID.randomUUID();
+    HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(userRequest);
 
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-    }
+    ResponseEntity<UserResponseDto> response =
+        this.testRestTemplate.exchange(
+            getBaseUserUrl() + "/" + fakeId, HttpMethod.PUT, requestUpdate, UserResponseDto.class);
 
-    @Test
-    void updateUserFailsWhenUserNotFound() {
-        UserRequestDto userRequest = createTestUserRequest();
-        UUID fakeId = UUID.randomUUID();
-        HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(userRequest);
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+  }
 
-        ResponseEntity<UserResponseDto> response =
-                this.testRestTemplate.exchange(
-                        getBaseUserUrl() + "/" + fakeId, HttpMethod.PUT, requestUpdate, UserResponseDto.class);
+  @Test
+  void deleteUserSuccessfully() throws JsonProcessingException {
+    UserRequestDto userRequest = createTestUserRequest();
+    ResponseEntity<UserResponseDto> userResponseEntity =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
+    UserResponseDto createdUser = userResponseEntity.getBody();
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
+    ResponseEntity<HttpStatus> response =
+        this.testRestTemplate.exchange(
+            getBaseUserUrl() + "/" + createdUser.getId(),
+            HttpMethod.DELETE,
+            null,
+            HttpStatus.class);
 
-    @Test
-    void deleteUserSuccessfully() {
-        UserRequestDto userRequest = createTestUserRequest();
-        ResponseEntity<UserResponseDto> userResponseEntity =
-                this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
-        UserResponseDto createdUser = userResponseEntity.getBody();
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
 
-        ResponseEntity<HttpStatus> response =
-                this.testRestTemplate.exchange(
-                        getBaseUserUrl() + "/" + createdUser.getId(),
-                        HttpMethod.DELETE,
-                        null,
-                        HttpStatus.class);
+    ResponseEntity<String> getUserResponse =
+        this.testRestTemplate.getForEntity(
+            getBaseUserUrl() + "/" + createdUser.getId(), String.class);
+    assertEquals(HttpStatus.NOT_FOUND, getUserResponse.getStatusCode());
 
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(createdUser, objectMapper);
 
-        ResponseEntity<String> getUserResponse =
-                this.testRestTemplate.getForEntity(
-                        getBaseUserUrl() + "/" + createdUser.getId(), String.class);
-        assertEquals(HttpStatus.NOT_FOUND, getUserResponse.getStatusCode());
-    }
+    systemEventTestHelper.assertEventWasLogged(USER_DELETE, expectedEventPayload);
+  }
 
-    @Test
-    void deleteUserFailsWhenUserNotFound() {
-        UUID fakeId = UUID.randomUUID();
+  @Test
+  void deleteUserFailsWhenUserNotFound() {
+    UUID fakeId = UUID.randomUUID();
 
-        ResponseEntity<Void> response =
-                this.testRestTemplate.exchange(
-                        getBaseUserUrl() + "/" + fakeId, HttpMethod.DELETE, null, Void.class);
+    ResponseEntity<Void> response =
+        this.testRestTemplate.exchange(
+            getBaseUserUrl() + "/" + fakeId, HttpMethod.DELETE, null, Void.class);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+  }
 
-    private UserResponseDto sendUserCreateRequest(UserRequestDto userRequest) {
-        ResponseEntity<UserResponseDto> userResponseEntity =
-                this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
-        UserResponseDto createdUser = userResponseEntity.getBody();
-        assertNotNull(createdUser);
-        return createdUser;
-    }
+  private UserResponseDto sendUserCreateRequest(UserRequestDto userRequest) {
+    ResponseEntity<UserResponseDto> userResponseEntity =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
+    UserResponseDto createdUser = userResponseEntity.getBody();
+    assertNotNull(createdUser);
+    return createdUser;
+  }
 }

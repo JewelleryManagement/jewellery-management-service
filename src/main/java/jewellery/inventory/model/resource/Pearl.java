@@ -13,7 +13,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public class Pearl extends Resource {
     private String type;
-    private double size;
+    private Double size;
     private String quality;
     private String color;
     private String shape;

@@ -9,9 +9,10 @@ import lombok.experimental.SuperBuilder;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "clazz", visible = true, include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = PearlRequestDto.class, name = "Pearl"),
-        @JsonSubTypes.Type(value = GemstoneRequestDto.class, name = "Gemstone"),
-        @JsonSubTypes.Type(value = PreciousMetalRequestDto.class, name = "PreciousMetal"),
-        @JsonSubTypes.Type(value = LinkingPartRequestDto.class, name = "LinkingPart")
+        @JsonSubTypes.Type(value = PreciousStoneRequestDto.class, name = "PreciousStone"),
+        @JsonSubTypes.Type(value = MetalRequestDto.class, name = "Metal"),
+        @JsonSubTypes.Type(value = ElementRequestDto.class, name = "Element"),
+        @JsonSubTypes.Type(value = SemiPreciousStoneRequestDto.class, name = "SemiPreciousStone")
 })
 @SuperBuilder
 @Data
@@ -19,4 +20,6 @@ import lombok.experimental.SuperBuilder;
 public class ResourceRequestDto {
     private String clazz;
     private String quantityType;
+    private double pricePerQuantity;
+    private String note;
 }

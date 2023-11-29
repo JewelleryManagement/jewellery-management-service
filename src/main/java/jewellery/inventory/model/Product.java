@@ -1,10 +1,8 @@
 package jewellery.inventory.model;
 
 import jakarta.persistence.*;
-
 import java.util.List;
 import java.util.UUID;
-
 import jewellery.inventory.model.resource.ResourceInProduct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -36,9 +34,14 @@ public class Product {
   @OneToMany(mappedBy = "contentOf", cascade = CascadeType.ALL)
   private List<Product> productsContent;
 
+  @OneToOne(cascade = CascadeType.ALL)
+  @JoinColumn(name = "image_id", referencedColumnName = "id")
+  private Image image;
+
   private String catalogNumber;
   private String productionNumber;
   private String description;
   private double salePrice;
-  private boolean isSold;
+  private double discount;
+  @ManyToOne private Sale partOfSale;
 }

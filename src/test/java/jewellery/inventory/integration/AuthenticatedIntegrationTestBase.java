@@ -1,17 +1,22 @@
 package jewellery.inventory.integration;
 
-import static jewellery.inventory.helper.UserTestHelper.createTestUser;
+import static jewellery.inventory.helper.UserTestHelper.createTestUserWithId;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.util.Collections;
+import jewellery.inventory.helper.SystemEventTestHelper;
+import jewellery.inventory.model.Image;
 import jewellery.inventory.model.User;
+import jewellery.inventory.repository.*;
+import jewellery.inventory.service.ImageService;
 import jewellery.inventory.service.security.JwtTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -23,24 +28,50 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 abstract class AuthenticatedIntegrationTestBase {
 
-  protected static final String BASE_URL_PATH = "http://localhost:";
+  @Autowired protected ObjectMapper objectMapper;
 
   @Autowired protected TestRestTemplate testRestTemplate;
-
+  @Autowired protected SystemEventTestHelper systemEventTestHelper;
   @Autowired private JwtTokenService jwtService;
-
   @MockBean protected UserDetailsService userDetailsService;
+  @Autowired private UserRepository userRepository;
+  @Autowired private SystemEventRepository systemEventRepository;
+  @Autowired private SaleRepository saleRepository;
+  @Autowired private ProductRepository productRepository;
+  @Autowired private ResourceRepository resourceRepository;
+  @Autowired private ResourceInUserRepository resourceInUserRepository;
+  @Autowired private ResourceInProductRepository resourceInProductRepository;
 
-  @Value(value = "${local.server.port}")
-  protected int port;
+  @Autowired private ImageService imageService;
+  @Autowired private ImageRepository imageRepository;
 
   protected HttpHeaders headers;
 
   @BeforeEach
   void setup() {
-    User adminUser = createTestUser();
+    deleteAllImages();
+    productRepository.deleteAll();
+    saleRepository.deleteAll();
+    userRepository.deleteAll();
+    resourceRepository.deleteAll();
+    resourceInUserRepository.deleteAll();
+    resourceInProductRepository.deleteAll();
+    systemEventRepository.deleteAll();
+    User adminUser = createTestUserWithId();
     setupMockSecurityContext(adminUser);
     setupTestRestTemplateWithAuthHeaders();
+  }
+
+  private void deleteAllImages() {
+    imageRepository.findAll().forEach(this::deleteImage);
+  }
+
+  private void deleteImage(Image image) {
+    try {
+      imageService.deleteImage(image.getProduct().getId());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   protected String generateTokenForUser(User user) {

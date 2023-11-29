@@ -38,7 +38,7 @@ public class UserController {
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")
   public UserResponseDto getUser(@PathVariable UUID id) {
-    return userService.getUser(id);
+    return userService.getUserResponse(id);
   }
 
   @Operation(summary = "Create new user")

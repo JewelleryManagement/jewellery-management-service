@@ -58,11 +58,11 @@ public class ResourceInUserController {
   }
 
   @Operation(summary = "Delete specific amount of resource from user by userId, resourceId and quantity")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @ResponseStatus(HttpStatus.OK)
   @DeleteMapping("/{userId}/{resourceId}/{quantity}")
-  public void removeQuantityFromUserResource(
+  public ResourcesInUserResponseDto removeQuantityFromUserResource(
       @PathVariable UUID userId, @PathVariable UUID resourceId, @PathVariable double quantity) {
-    resourceAvailabilityService.removeQuantityFromResource(userId, resourceId, quantity);
+    return resourceAvailabilityService.removeQuantityFromResource(userId, resourceId, quantity);
   }
 
   @Operation(summary = "Get all resources quantities by resourceId")

@@ -1,18 +1,24 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ResourceTestHelper.*;
+import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
+import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
+import static jewellery.inventory.model.EventType.RESOURCE_CREATE;
+import static jewellery.inventory.model.EventType.RESOURCE_DELETE;
+import static jewellery.inventory.model.EventType.RESOURCE_UPDATE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
+import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ResourceMapper;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -26,11 +32,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
-  private final ObjectMapper objectMapper = new ObjectMapper();
   @Autowired private ResourceMapper resourceMapper;
 
+  @NotNull
+  private static List<UUID> getIds(List<ResourceResponseDto> dtos) {
+    return dtos.stream().map(ResourceResponseDto::getId).toList();
+  }
+
   private String getBaseResourceUrl() {
-    return BASE_URL_PATH + port + "/resources";
+    return "/resources";
   }
 
   @AfterEach
@@ -44,9 +54,26 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void willAddResourceToDatabase() throws JsonProcessingException {
     List<ResourceRequestDto> inputDtos = provideResourceRequestDtos().toList();
 
-    sendCreateRequestsFor(inputDtos);
+    List<ResourceResponseDto> createdResources = sendCreateRequestsFor(inputDtos);
 
     assertInputMatchesFetchedFromServer(inputDtos);
+
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(createdResources.get(0), objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(RESOURCE_CREATE, expectedEventPayload);
+  }
+
+  @Test
+  void willGetAResourceFromDatabase() throws JsonProcessingException {
+    sendCreateRequestsFor(List.of(ResourceTestHelper.getPreciousStoneRequestDto()));
+    List<ResourceResponseDto> createdDtos = getResourcesWithRequest();
+
+    testRestTemplate.getForEntity(
+        getBaseResourceUrl() + "/" + createdDtos.get(0).getId(), ResourceResponseDto.class);
+
+    List<ResourceResponseDto> resourcesList = getResourcesWithRequest();
+    assertEquals(1, resourcesList.size());
   }
 
   @Test
@@ -54,7 +81,8 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     List<ResourceResponseDto> createdResources =
         sendCreateRequestsFor(provideResourceRequestDtos().toList());
 
-    List<ResourceQuantityResponseDto> resourceQuantityResponseDtos = getResourceQuantitiesWithRequest();
+    List<ResourceQuantityResponseDto> resourceQuantityResponseDtos =
+        getResourceQuantitiesWithRequest();
 
     resourceQuantityResponseDtos.forEach(
         resourceQuantityDto -> {
@@ -62,13 +90,15 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         });
     assertEquals(
         createdResources,
-        resourceQuantityResponseDtos.stream().map(ResourceQuantityResponseDto::getResource).toList());
+        resourceQuantityResponseDtos.stream()
+            .map(ResourceQuantityResponseDto::getResource)
+            .toList());
   }
 
   @Test
   void willGetSingleResourceQuantity() throws JsonProcessingException {
     List<ResourceResponseDto> createdResources =
-        sendCreateRequestsFor(List.of(getGemstoneRequestDto()));
+        sendCreateRequestsFor(List.of(ResourceTestHelper.getPreciousStoneRequestDto()));
 
     ResourceQuantityResponseDto fetchedResourceQuantity =
         getResourceQuantityWithRequest(createdResources.get(0).getId());
@@ -84,19 +114,29 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     List<ResourceRequestDto> updatedInputDtos = provideUpdatedResourceRequestDtos().toList();
 
     sendUpdateRequestsFor(updatedInputDtos, getIds(createdDtos));
-
+    List<ResourceResponseDto> updatedDtos = getResourcesWithRequest();
     assertInputMatchesFetchedFromServer(updatedInputDtos);
+
+    Map<String, Object> expectedEventPayload =
+        getUpdateEventPayload(createdDtos.get(0), updatedDtos.get(0), objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(RESOURCE_UPDATE, expectedEventPayload);
   }
 
   @Test
   void willDeleteAResourceFromDatabase() throws JsonProcessingException {
-    sendCreateRequestsFor(List.of(getGemstoneRequestDto()));
+    sendCreateRequestsFor(List.of(ResourceTestHelper.getPreciousStoneRequestDto()));
     List<ResourceResponseDto> createdDtos = getResourcesWithRequest();
 
     testRestTemplate.delete(getBaseResourceUrl() + "/" + createdDtos.get(0).getId());
 
     List<ResourceResponseDto> afterDeleteDtos = getResourcesWithRequest();
     assertEquals(0, afterDeleteDtos.size());
+
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(createdDtos.get(0), objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(RESOURCE_DELETE, expectedEventPayload);
   }
 
   @Test
@@ -113,7 +153,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         testRestTemplate.exchange(
             getBaseResourceUrl() + "/" + UUID.randomUUID(),
             HttpMethod.PUT,
-            new HttpEntity<>(getGemstoneResponseDto()),
+            new HttpEntity<>(getPreciousStoneResponseDto()),
             String.class);
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
@@ -127,11 +167,6 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             HttpEntity.EMPTY,
             String.class);
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-  }
-
-  @NotNull
-  private static List<UUID> getIds(List<ResourceResponseDto> dtos) {
-    return dtos.stream().map(ResourceResponseDto::getId).toList();
   }
 
   @NotNull

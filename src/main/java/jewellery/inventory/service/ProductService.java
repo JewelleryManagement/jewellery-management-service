@@ -1,20 +1,24 @@
 package jewellery.inventory.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.aspect.EntityFetcher;
+import jewellery.inventory.aspect.annotation.LogCreateEvent;
+import jewellery.inventory.aspect.annotation.LogDeleteEvent;
+import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.not_found.*;
-import jewellery.inventory.exception.product.ProductIsContentException;
-import jewellery.inventory.exception.product.ProductIsSoldException;
-import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
-import jewellery.inventory.exception.product.UserNotOwnerException;
+import jewellery.inventory.exception.product.*;
 import jewellery.inventory.mapper.ProductMapper;
+import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInUser;
+import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInProduct;
@@ -25,18 +29,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class ProductService {
+public class ProductService implements EntityFetcher {
 
   private final ProductRepository productRepository;
   private final UserRepository userRepository;
   private final ResourceInUserRepository resourceInUserRepository;
+  private final ImageService imageService;
   private final ResourceInUserService resourceInUserService;
   private final ProductMapper productMapper;
 
   @Transactional
+  @LogCreateEvent(eventType = EventType.PRODUCT_CREATE)
   public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
     User owner = getUser(productRequestDto.getOwnerId());
-    Product product = createProductWithoutResourcesAndProducts(productRequestDto, owner);
+    Product product = persistProductWithoutResourcesAndProducts(productRequestDto, owner);
     addProductsContentToProduct(productRequestDto, product);
     addResourcesToProduct(productRequestDto, owner, product);
     return productMapper.mapToProductResponseDto(product);
@@ -52,33 +58,58 @@ public class ProductService {
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
-  public ProductResponseDto getProduct(UUID id) {
-    Product product =
-        productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+  public Product getProduct(UUID id) {
+    return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+  }
 
-    return productMapper.mapToProductResponseDto(product);
+  public ProductResponseDto getProductResponse(UUID id) {
+    return productMapper.mapToProductResponseDto(getProduct(id));
+  }
+
+  public void updateProductOwnerAndSale(Product product, User newOwner, Sale sale) {
+    updateProductOwnerRecursively(product, newOwner);
+    product.setPartOfSale(sale);
+    productRepository.save(product);
+  }
+
+  private void updateProductOwnerRecursively(Product product, User newOwner) {
+    product.setOwner(newOwner);
+    if (product.getProductsContent() != null) {
+      List<Product> subProducts = product.getProductsContent();
+      for (Product subProduct : subProducts) {
+        updateProductOwnerRecursively(subProduct, newOwner);
+      }
+    }
   }
 
   @Transactional
-  public void deleteProduct(UUID id) {
+  @LogDeleteEvent(eventType = EventType.PRODUCT_DISASSEMBLY)
+  public void deleteProduct(UUID id) throws IOException {
 
-    Product product =
-        productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+    Product product = getProduct(id);
 
     throwExceptionIfProductIsSold(id, product);
     throwExceptionIfProductIsPartOfAnotherProduct(id, product);
 
     moveResourceInProductToResourceInUser(product);
     disassembleProductContent(product);
+    deleteImageWhenAttached(id, product);
 
     productRepository.deleteById(id);
   }
 
-  public ProductResponseDto transferProduct(UUID recipientId, UUID productId) {
+  @LogUpdateEvent(eventType = EventType.PRODUCT_TRANSFER)
+  public ProductResponseDto transferProduct(UUID productId, UUID recipientId) {
     Product productForChangeOwner = getProductForTransfer(recipientId, productId);
-    productForChangeOwner.setOwner(getUser(recipientId));
+    updateProductOwnerRecursively(productForChangeOwner, getUser(recipientId));
     productRepository.save(productForChangeOwner);
     return productMapper.mapToProductResponseDto(productForChangeOwner);
+  }
+
+  private void deleteImageWhenAttached(UUID id, Product product) throws IOException {
+    if (product.getImage() != null) {
+      imageService.deleteImage(id);
+    }
   }
 
   private void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
@@ -94,7 +125,7 @@ public class ProductService {
   }
 
   private void throwExceptionIfProductIsSold(UUID id, Product product) {
-    if (product.isSold()) {
+    if (product.getPartOfSale() != null) {
       throw new ProductIsSoldException(id);
     }
   }
@@ -120,7 +151,7 @@ public class ProductService {
 
     resourcesInProduct.forEach(
         resourceInProduct ->
-            resourceInUserService.addResourceToUser(
+            resourceInUserService.addResourceToUserNoLog(
                 getResourceInUserRequest(owner, resourceInProduct)));
   }
 
@@ -182,22 +213,25 @@ public class ProductService {
     return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
   }
 
-  private Product createProductWithoutResourcesAndProducts(
+  private Product persistProductWithoutResourcesAndProducts(
       ProductRequestDto productRequestDto, User user) {
-    Product product = getProduct(productRequestDto, user);
+    Product product = getProductWithoutResourcesAndProduct(productRequestDto, user);
     productRepository.save(product);
     return product;
   }
 
-  private Product getProduct(ProductRequestDto productRequestDto, User user) {
+  private Product getProductWithoutResourcesAndProduct(
+      ProductRequestDto productRequestDto, User user) {
     Product product = new Product();
     product.setOwner(user);
     product.setAuthors(getAuthors(productRequestDto));
-    product.setSold(false);
+    product.setPartOfSale(null);
     product.setDescription(productRequestDto.getDescription());
     product.setSalePrice(productRequestDto.getSalePrice());
     product.setProductionNumber(productRequestDto.getProductionNumber());
     product.setCatalogNumber(productRequestDto.getCatalogNumber());
+    product.setProductsContent(new ArrayList<>());
+    product.setResourcesContent(new ArrayList<>());
     return product;
   }
 
@@ -243,7 +277,7 @@ public class ProductService {
   private ResourceInProduct transferSingleResourceQuantityFromUserToProduct(
       User owner, ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
     ResourceInUser resourceInUser = getResourceInUser(owner, incomingResourceInProduct.getId());
-    resourceInUserService.removeQuantityFromResource(
+    resourceInUserService.removeQuantityFromResourceNoLog(
         owner.getId(),
         resourceInUser.getResource().getId(),
         incomingResourceInProduct.getQuantity());
@@ -258,5 +292,14 @@ public class ProductService {
     resourceInProduct.setQuantity(incomingResourceInProduct.getQuantity());
     resourceInProduct.setProduct(product);
     return resourceInProduct;
+  }
+
+  @Override
+  public Object fetchEntity(Object... ids) {
+    Product product = productRepository.findById((UUID) ids[0]).orElse(null);
+    if (product == null) {
+      return null;
+    }
+    return productMapper.mapToProductResponseDto(product);
   }
 }

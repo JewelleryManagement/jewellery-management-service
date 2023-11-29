@@ -5,23 +5,23 @@ import static jewellery.inventory.helper.UserTestHelper.createTestUserWithRandom
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.io.IOException;
 import java.util.*;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.not_found.*;
-import jewellery.inventory.exception.product.ProductIsContentException;
-import jewellery.inventory.exception.product.ProductIsSoldException;
-import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
-import jewellery.inventory.exception.product.UserNotOwnerException;
+import jewellery.inventory.exception.product.*;
 import jewellery.inventory.helper.ProductTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInUser;
+import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.*;
+import jewellery.inventory.service.ImageService;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.ResourceInUserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +43,7 @@ class ProductServiceTest {
   @Mock private ResourceInUserRepository resourceInUserRepository;
   @Mock private ResourceInProductRepository resourceInProductRepository;
   @Mock private ResourceInUserService resourceInUserService;
+  @Mock private ImageService imageService;
 
   private User user;
   private Product product;
@@ -61,6 +62,19 @@ class ProductServiceTest {
   }
 
   @Test
+  void testCreateProductShouldThrowWhenProductOwnerIsNotTheSameAsContentProductOwner() {
+    when(userRepository.findById(productRequestDto.getOwnerId())).thenReturn(Optional.of(user));
+    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+
+    User anotherUser = createTestUserWithRandomId();
+    product.setOwner(anotherUser);
+    productRequestDto.setProductsContent(List.of(product.getId()));
+
+    assertThrows(
+            UserNotOwnerException.class, () -> productService.createProduct(productRequestDto));
+  }
+
+  @Test
   void testTransferProductThrowsExceptionWhenProductIsContent() {
     Product contentProduct = getTestProduct(user, pearl);
     contentProduct.setContentOf(product);
@@ -69,21 +83,21 @@ class ProductServiceTest {
 
     assertThrows(
         ProductIsContentException.class,
-        () -> productService.transferProduct(user.getId(), contentProduct.getId()));
+        () -> productService.transferProduct(contentProduct.getId(), user.getId()));
 
     assertNotNull(contentProduct.getContentOf());
   }
 
   @Test
   void testTransferProductThrowsExceptionWhenProductIsSold() {
-    product.setSold(true);
+    product.setPartOfSale(new Sale());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
     assertThrows(
         ProductIsSoldException.class,
-        () -> productService.transferProduct(user.getId(), product.getId()));
+        () -> productService.transferProduct(product.getId(), user.getId()));
 
-    assertTrue(product.isSold());
+    assertNotNull(product.getPartOfSale());
   }
 
   @Test
@@ -92,7 +106,7 @@ class ProductServiceTest {
 
     assertThrows(
         ProductOwnerEqualsRecipientException.class,
-        () -> productService.transferProduct(user.getId(), product.getId()));
+        () -> productService.transferProduct(product.getId(), user.getId()));
 
     assertEquals(product.getOwner().getId(), user.getId());
   }
@@ -104,10 +118,10 @@ class ProductServiceTest {
     when(userRepository.findById(recipient.getId())).thenReturn(Optional.of(recipient));
     assertEquals(product.getOwner().getId(), user.getId());
 
-    productService.transferProduct(recipient.getId(), product.getId());
+    productService.transferProduct(product.getId(), recipient.getId());
 
     assertNotEquals(recipient.getId(), user.getId());
-    assertFalse(product.isSold());
+    assertNull(product.getPartOfSale());
     assertNull(product.getContentOf());
   }
 
@@ -137,19 +151,6 @@ class ProductServiceTest {
 
     assertThrows(
         ProductNotFoundException.class, () -> productService.createProduct(productRequestDto));
-  }
-
-  @Test
-  void testCreateProductShouldThrowWhenProductOwnerIsNotTheSameAsContentProductOwner() {
-    when(userRepository.findById(productRequestDto.getOwnerId())).thenReturn(Optional.of(user));
-    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-
-    User anotherUser = createTestUserWithRandomId();
-    product.setOwner(anotherUser);
-    productRequestDto.setProductsContent(List.of(product.getId()));
-
-    assertThrows(
-        UserNotOwnerException.class, () -> productService.createProduct(productRequestDto));
   }
 
   @Test
@@ -191,7 +192,9 @@ class ProductServiceTest {
   @Test
   void testGetProductShouldThrowWhenProductNotFound() {
     UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
-    assertThrows(ProductNotFoundException.class, () -> productService.getProduct(fakeId));
+    assertThrows(
+        ProductNotFoundException.class,
+        () -> productService.getProductResponse(fakeId));
   }
 
   @Test
@@ -202,7 +205,8 @@ class ProductServiceTest {
     ProductResponseDto response = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
 
-    ProductResponseDto actual = productService.getProduct(product.getId());
+    ProductResponseDto actual =
+        productService.getProductResponse(product.getId());
 
     assertEquals(response, actual);
     assertEquals(response.getId(), actual.getId());
@@ -223,7 +227,7 @@ class ProductServiceTest {
   }
 
   @Test
-  void testDeleteProductSuccessfully() {
+  void testDeleteProductSuccessfully() throws IOException {
 
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
@@ -234,7 +238,7 @@ class ProductServiceTest {
   }
 
   @Test
-  void testDeleteProductDisassembleContentProduct() {
+  void testDeleteProductDisassembleContentProduct() throws IOException {
     Product content1 = getTestProduct(user, pearl);
     Product content2 = getTestProduct(user, pearl);
 
@@ -258,7 +262,7 @@ class ProductServiceTest {
 
   @Test
   void testDeleteProductShouldThrowExceptionWhenProductIsSold() {
-    product.setSold(true);
+    product.setPartOfSale(new Sale());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
     assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
@@ -282,7 +286,7 @@ class ProductServiceTest {
 
   @Test
   void deleteProductShouldThrowExceptionWhenProductIsSold() {
-    product.setSold(true);
+    product.setPartOfSale(new Sale());
 
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
