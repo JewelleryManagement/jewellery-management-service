@@ -42,7 +42,7 @@ public class UserService implements EntityFetcher {
   @LogCreateEvent(eventType = EventType.USER_CREATE)
   public UserResponseDto createUser(UserRequestDto user) {
     User userToCreate = userMapper.toUserEntity(user);
-    validateUserEmailAndName(userToCreate);
+    validateUserEmail(userToCreate);
     userToCreate.setPassword(passwordEncoder.encode(userToCreate.getPassword()));
     return userMapper.toUserResponse(userRepository.save(userToCreate));
   }
@@ -56,7 +56,7 @@ public class UserService implements EntityFetcher {
     User userToUpdate = userMapper.toUserEntity(userRequest);
     userToUpdate.setId(id);
 
-    validateUserEmailAndName(userToUpdate);
+    validateUserEmail(userToUpdate);
 
     return userMapper.toUserResponse(userRepository.save(userToUpdate));
   }
@@ -69,11 +69,7 @@ public class UserService implements EntityFetcher {
     userRepository.deleteById(id);
   }
 
-  private void validateUserEmailAndName(User user) {
-    //    if (isNameUsedByOtherUser(user.getName(), user.getId())) {
-    //      throw new DuplicateNameException(user.getName());
-    //    }
-
+  private void validateUserEmail(User user) {
     if (isEmailUsedByOtherUser(user.getEmail(), user.getId())) {
       throw new DuplicateEmailException(user.getEmail());
     }
@@ -83,11 +79,6 @@ public class UserService implements EntityFetcher {
     Optional<User> existingUser = userRepository.findByEmail(email);
     return existingUser.isPresent() && (id == null || !existingUser.get().getId().equals(id));
   }
-
-  //  private boolean isNameUsedByOtherUser(String name, UUID id) {
-  //    Optional<User> existingUser = userRepository.findByName(name);
-  //    return existingUser.isPresent() && (id == null || !existingUser.get().getId().equals(id));
-  //  }
 
   @Override
   public Object fetchEntity(Object... ids) {

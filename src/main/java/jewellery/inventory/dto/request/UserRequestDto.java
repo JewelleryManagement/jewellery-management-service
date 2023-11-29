@@ -1,5 +1,6 @@
 package jewellery.inventory.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
@@ -20,10 +21,15 @@ public class UserRequestDto {
   private static final String ADDRESS_PATTERN_VALIDATION_MSG =
       "Address format should be [City name], [Street name  and number]";
 
-  @NotBlank(message = "Name must not be blank, empty or null")
-  @Size(min = 3, max = 64, message = "Name size must be between 3 and 64")
+  @NotBlank(message = "First name must not be blank, empty or null")
+  @Size(min = 3, max = 64, message = "First name must size must be between 3 and 64")
   @Pattern(regexp = "^(?!.*__)[A-Za-z0-9_]*$", message = NAME_PATTERN_VALIDATION_MSG)
   private String firstName;
+
+  @NotBlank(message = "Last name must not be blank, empty or null")
+  @Size(min = 3, max = 64, message = "Last name size must be between 3 and 64")
+  @Pattern(regexp = "^(?!.*__)[A-Za-z0-9_]*$", message = NAME_PATTERN_VALIDATION_MSG)
+  private String lastName;
 
   @NotBlank(message = "Email must not be blank, empty or null")
   @Pattern(
@@ -48,6 +54,7 @@ public class UserRequestDto {
   private String phone2;
 
   @DateTimeFormat(pattern = "dd/MM/yyyy")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
   @PastOrPresent(message = "Birth date must be a past or present date")
   private LocalDate birthDate;
 

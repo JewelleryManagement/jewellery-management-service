@@ -211,7 +211,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             requestUpdate,
             UserResponseDto.class);
 
-    assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
   }
 
   @Test

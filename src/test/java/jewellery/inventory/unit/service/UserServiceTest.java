@@ -1,7 +1,6 @@
 package jewellery.inventory.unit.service;
 
 import static jewellery.inventory.helper.UserTestHelper.USER_EMAIL;
-import static jewellery.inventory.helper.UserTestHelper.USER_NAME;
 import static jewellery.inventory.helper.UserTestHelper.createSecondTestUser;
 import static jewellery.inventory.helper.UserTestHelper.createTestUser;
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,7 +13,6 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.duplicate.DuplicateEmailException;
-import jewellery.inventory.exception.duplicate.DuplicateNameException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
@@ -100,25 +98,11 @@ class UserServiceTest {
   }
 
   @Test
-  @DisplayName("Should throw a DuplicateNameException when the name is already taken")
-  void createUserWhenNameIsAlreadyTakenThenThrowDuplicateNameException() {
-    UserRequestDto userRequest = userMapper.toUserRequest(user);
-
-    when(userRepository.findByFirstName(user.getFirstName())).thenReturn(Optional.of(user));
-    when(userMapper.toUserEntity(userRequest)).thenReturn(user);
-
-    assertThrows(DuplicateNameException.class, () -> userService.createUser(userRequest));
-
-    verify(userRepository, never()).save(any(User.class));
-  }
-
-  @Test
   @DisplayName("Should create a new user when the email and name are not taken")
   void createUserWhenEmailAndNameAreNotTaken() {
     UserRequestDto userRequest = userMapper.toUserRequest(user);
 
     when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
-    when(userRepository.findByFirstName(user.getFirstName())).thenReturn(Optional.empty());
     when(userRepository.save(any(User.class))).thenReturn(user);
     when(userMapper.toUserEntity(userRequest)).thenReturn(user);
     when(userMapper.toUserResponse(user)).thenReturn(userResponse);
@@ -129,7 +113,6 @@ class UserServiceTest {
 
     assertEquals(userResponse, createdUser);
     verify(userRepository, times(1)).findByEmail(user.getEmail());
-    verify(userRepository, times(1)).findByFirstName(user.getFirstName());
     verify(userRepository, times(1)).save(any(User.class));
   }
 
@@ -163,30 +146,6 @@ class UserServiceTest {
     assertEquals(userMapper.toUserResponse(user), updatedUser);
     verify(userRepository, times(1)).existsById(userId);
     verify(userRepository, times(1)).save(any(User.class));
-  }
-
-  @Test
-  void shouldThrowDuplicateNameExceptionWhenUpdatingWithDuplicateName() {
-    UUID existingUserId = UUID.randomUUID();
-    User existingUser = createTestUser();
-    existingUser.setId(existingUserId);
-
-    UUID updatingUserId = UUID.randomUUID();
-    User updatingUser = createSecondTestUser();
-    updatingUser.setId(updatingUserId);
-
-    updatingUser.setFirstName(USER_NAME);
-    updatingUser.setEmail("different@mail.com");
-
-    UserRequestDto updatingUserRequest = userMapper.toUserRequest(updatingUser);
-
-    when(userRepository.existsById(updatingUserId)).thenReturn(true);
-    when(userRepository.findByFirstName(USER_NAME)).thenReturn(Optional.of(existingUser));
-    when(userMapper.toUserEntity(updatingUserRequest)).thenReturn(updatingUser);
-
-    assertThrows(
-        DuplicateNameException.class,
-        () -> userService.updateUser(updatingUserRequest, updatingUserId));
   }
 
   @Test
