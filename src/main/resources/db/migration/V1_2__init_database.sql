@@ -1,3 +1,10 @@
+INSERT INTO users
+(id, name, email, password, role)
+SELECT '88596531-7f0f-407d-b502-31833b8c8e8d', 'root', 'root@gmail.com', '$2a$12$fGuoN79WFwHPUmirHOlxIO9kdmMTBrlNGKob0ay4muxXNDePg38ri', 'ADMIN'
+WHERE
+NOT EXISTS (
+SELECT id FROM users WHERE id = '88596531-7f0f-407d-b502-31833b8c8e8d'
+);
 INSERT INTO public.users
 (id, email, name, password, role)
 SELECT 'beb48c43-cb43-4238-9442-74cda523ed81', 'testUser1@gmail.com', 'testUser1', '$2a$10$n08gsRFh4ifnR0icGNFbsuEhwslkyp01yKAI6NrfScvvRREys79dm', 'USER'
