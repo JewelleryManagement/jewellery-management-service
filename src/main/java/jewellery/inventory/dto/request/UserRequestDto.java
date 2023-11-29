@@ -19,16 +19,14 @@ public class UserRequestDto {
       "Phone number should be valid bulgarian mobile number";
   private static final String NAME_REGEX = "^(?!.*__)[\\w]*$";
   private static final String PHONE_REGEX = "^(\\+359|0)8[789]\\d(-)?\\d{3}(-)?\\d{3}$";
-  private static final String ADDRESS_PATTERN_VALIDATION_MSG =
-      "Address format should be [City name], [Street name  and number]";
 
   @NotBlank(message = "First name must not be blank, empty or null")
-  @Size(min = 3, max = 64, message = "First name must size must be between 3 and 64")
+  @Size(min = 3, max = 50, message = "First name must size must be between 3 and 64")
   @Pattern(regexp = NAME_REGEX, message = NAME_PATTERN_VALIDATION_MSG)
   private String firstName;
 
   @NotBlank(message = "Last name must not be blank, empty or null")
-  @Size(min = 3, max = 64, message = "Last name size must be between 3 and 64")
+  @Size(min = 3, max = 50, message = "Last name size must be between 3 and 64")
   @Pattern(regexp = NAME_REGEX, message = NAME_PATTERN_VALIDATION_MSG)
   private String lastName;
 
@@ -45,7 +43,7 @@ public class UserRequestDto {
       message = PWD_PATTERN_VALIDATION_MSG)
   private String password;
 
-  @Pattern(regexp = "^[A-Za-z]+, [A-Za-z0-9\\s]+$", message = ADDRESS_PATTERN_VALIDATION_MSG)
+  @Size(min = 3, max = 100, message = "Address length must be between 3 and 100")
   private String address;
 
   @Pattern(regexp = PHONE_REGEX, message = PHONE_PATTERN_VALIDATION_MSG)
@@ -60,5 +58,7 @@ public class UserRequestDto {
   private LocalDate birthDate;
 
   private String favouriteColor;
+
+  @Size(min = 3, max = 500, message = "Last name size must be between 3 and 64")
   private String note;
 }
