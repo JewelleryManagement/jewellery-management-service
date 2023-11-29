@@ -7,6 +7,7 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.Product;
@@ -14,6 +15,16 @@ import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 
 public class SaleTestHelper {
+
+  public static ProductReturnResponseDto getProductReturnResponseDto(
+      SaleResponseDto sale, ProductResponseDto product) {
+    ProductReturnResponseDto productReturn = new ProductReturnResponseDto();
+    productReturn.setSaleAfter(sale);
+    productReturn.setReturnedProduct(product);
+    productReturn.setDate(LocalDate.now());
+    return productReturn;
+  }
+
   public static Sale createSaleWithTodayDate(User seller, User buyer, List<Product> products) {
     Sale sale = new Sale();
     sale.setId(UUID.randomUUID());
@@ -45,6 +56,14 @@ public class SaleTestHelper {
   public static List<Product> getProductsList(Product product) {
     List<Product> products = new ArrayList<>();
     products.add(product);
+    return products;
+  }
+
+  public static List<Product> getProductsList(Product product, Product otherProduct) {
+    List<Product> products = new ArrayList<>();
+    products.add(product);
+    otherProduct.setId(UUID.randomUUID());
+    products.add(otherProduct);
     return products;
   }
 

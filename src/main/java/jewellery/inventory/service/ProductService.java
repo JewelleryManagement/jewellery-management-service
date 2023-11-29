@@ -12,6 +12,8 @@ import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.ProductReturnResponseDto;
+import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.*;
 import jewellery.inventory.mapper.ProductMapper;
@@ -46,6 +48,11 @@ public class ProductService implements EntityFetcher {
     addProductsContentToProduct(productRequestDto, product);
     addResourcesToProduct(productRequestDto, owner, product);
     return productMapper.mapToProductResponseDto(product);
+  }
+
+  public ProductReturnResponseDto getProductReturnResponseDto(
+      SaleResponseDto sale, Product product) {
+    return productMapper.mapToProductReturnResponseDto(sale, product);
   }
 
   public List<ProductResponseDto> getAllProducts() {
