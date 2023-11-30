@@ -98,7 +98,7 @@ class UserServiceTest {
   }
 
   @Test
-  @DisplayName("Should create a new user when the email and name are not taken")
+  @DisplayName("Should create a new user when the email is not taken")
   void createUserWhenEmailIsNotTaken() {
     UserRequestDto userRequest = userMapper.toUserRequest(user);
 

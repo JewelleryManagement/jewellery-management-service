@@ -126,7 +126,7 @@ class JwtTokenServiceTest {
   @Test
   void generateTokenWithNullUserDetailsThrowsIllegalArgumentException() {
     lenient().when(jwtUtils.getSigningKey()).thenReturn(key);
-    lenient().when(userDetails.getUsername()).thenReturn(FIRST_NAME);
+    lenient().when(userDetails.getUsername()).thenReturn(null);
 
     assertThatThrownBy(() -> jwtTokenService.generateToken(null))
         .isInstanceOf(BadCredentialsException.class)
