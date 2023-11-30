@@ -18,6 +18,7 @@ import jewellery.inventory.model.Image;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @RequiredArgsConstructor(onConstructor_ = {@Lazy})
 public class ImageService {
+  private static final Logger logger = Logger.getLogger(ImageService.class);
 
   @Value("${image.folder.path}")
   private String folderPath;
@@ -56,7 +58,7 @@ public class ImageService {
     Image image = createImageData(multipartFile, product, imagePath);
     setProductImage(product, image);
     saveImagetoFileSystem(multipartFile, directoryPath, imagePath);
-
+    logger.info("Uploaded image for product id - {" + productId + "}. Path: {" + imagePath + "}");
     return imageDataMapper.toImageResponse(image);
   }
 
@@ -64,11 +66,18 @@ public class ImageService {
   public byte[] downloadImage(UUID productId) throws IOException {
     Product product = getProduct(productId);
     checkForAttachedPicture(product);
+    logger.info(
+        "Downloaded image for product id - {"
+            + productId
+            + "}. File path: {"
+            + product.getImage().getFilePath()
+            + "}");
     return Files.readAllBytes(new File(product.getImage().getFilePath()).toPath());
   }
 
   @Transactional
   public void deleteImage(UUID productId) throws IOException {
+    logger.info("Deleted image for product id - {" + productId + "}");
     removeImage(getProduct(productId));
   }
 
@@ -89,6 +98,7 @@ public class ImageService {
 
   private void createDirectoryIfNotExists(Path directoryPath) throws IOException {
     if (Files.notExists(directoryPath)) {
+      logger.info("Creating directory: {" + directoryPath + "}");
       Files.createDirectories(directoryPath);
     }
   }
@@ -122,6 +132,7 @@ public class ImageService {
 
   private static void checkForAttachedPicture(Product product) {
     if (product.getImage() == null) {
+      logger.error("No image attached for product id - {" + product.getId() + "}");
       throw new ImageNotFoundException(product.getId());
     }
   }
@@ -134,18 +145,26 @@ public class ImageService {
 
   private void checkContentType(MultipartFile file) {
     if (!isSupportedContentType(Objects.requireNonNull(file.getContentType()))) {
+      logger.error("Unsupported content type for file: {" + file.getOriginalFilename() + "}");
       throw new MultipartFileContentTypeException();
     }
   }
 
   private static void checkFileIsSelected(MultipartFile file) {
     if (file.isEmpty()) {
+      logger.error("No file selected.");
       throw new MultipartFileNotSelectedException();
     }
   }
 
   private static void checkFileSize(MultipartFile multipartFile, Integer fileSize) {
     if (multipartFile.getSize() > (long) fileSize * MB) {
+      logger.error(
+          "File size exceeds the allowed limit. File size: {"
+              + multipartFile.getSize()
+              + "} bytes, Allowed size: {"
+              + fileSize
+              + "} MB");
       throw new MultipartFileSizeException(fileSize);
     }
   }
@@ -158,9 +177,11 @@ public class ImageService {
       case "image/png" -> sb.append(FILE_NAME + ".png");
       case "image/jpg" -> sb.append(FILE_NAME + ".jpg");
       case "image/jpeg" -> sb.append(FILE_NAME + ".jpeg");
-      default -> throw new MultipartFileContentTypeException();
+      default -> {
+        logger.error("Unsupported content type: {" + multipartFile.getContentType() + "}");
+        throw new MultipartFileContentTypeException();
+      }
     }
-
     return Path.of(sb.toString());
   }
 }
