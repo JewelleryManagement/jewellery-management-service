@@ -28,8 +28,11 @@ public class User implements UserDetails {
   @ManyToMany(mappedBy = "authors")
   private List<Product> authoredProducts;
 
-  @Column private String firstName;
-  @Column private String lastName;
+  @Column(nullable = false)
+  private String firstName;
+
+  @Column(nullable = false)
+  private String lastName;
 
   @Column(unique = true)
   private String email;
@@ -38,7 +41,6 @@ public class User implements UserDetails {
   @Column private String phone;
   @Column private String phone2;
   @Column private LocalDate birthDate;
-  @Column private String favouriteColor;
   @Column private String note;
   @Column private String password;
 

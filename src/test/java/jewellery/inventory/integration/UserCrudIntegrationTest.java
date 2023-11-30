@@ -195,26 +195,6 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void updateUserFailsWhenNameDuplicate() {
-    UserResponseDto firstUser = sendUserCreateRequest(createTestUserRequest());
-    UserResponseDto secondUser = sendUserCreateRequest(createDifferentUserRequest());
-
-    UserRequestDto firstUserRequest = createTestUserRequest();
-    UserRequestDto secondUserRequest = createDifferentUserRequest();
-
-    secondUserRequest.setFirstName(firstUserRequest.getFirstName());
-    HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(secondUserRequest);
-    ResponseEntity<UserResponseDto> responseEntity =
-        this.testRestTemplate.exchange(
-            getBaseUserUrl() + "/" + secondUser.getId(),
-            HttpMethod.PUT,
-            requestUpdate,
-            UserResponseDto.class);
-
-    assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-  }
-
-  @Test
   void updateUserFailsWhenUserNotFound() {
     UserRequestDto userRequest = createTestUserRequest();
     UUID fakeId = UUID.randomUUID();

@@ -99,7 +99,7 @@ class UserServiceTest {
 
   @Test
   @DisplayName("Should create a new user when the email and name are not taken")
-  void createUserWhenEmailAndNameAreNotTaken() {
+  void createUserWhenEmailIsNotTaken() {
     UserRequestDto userRequest = userMapper.toUserRequest(user);
 
     when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
