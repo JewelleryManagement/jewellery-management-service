@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SaleService {
   private static final Logger logger = Logger.getLogger(SaleService.class);
+  private static final String PRODUCT_ID="Product with ID {";
 
   private final SaleRepository saleRepository;
   private final SaleMapper saleMapper;
@@ -94,6 +95,7 @@ public class SaleService {
   private void throwExceptionIfProductIsPartOfAnotherProduct(List<Product> products) {
     for (Product product : products) {
       if (product.getContentOf() != null) {
+        logger.error(PRODUCT_ID + product.getId() + "} is part of another product.");
         throw new ProductIsContentException(product.getId());
       }
     }
@@ -101,12 +103,14 @@ public class SaleService {
 
   private void throwExceptionIfProductIsPartOfAnotherProduct(Product product) {
     if (product.getContentOf() != null) {
+      logger.error(PRODUCT_ID + product.getId() + "} is part of another product.");
       throw new ProductIsContentException(product.getId());
     }
   }
 
   private void throwExceptionIfProductNotSold(Product product) {
     if (product.getPartOfSale() == null) {
+      logger.error(PRODUCT_ID + product.getId() + "} is not sold.");
       throw new ProductNotSoldException(product.getId());
     }
   }
@@ -114,6 +118,7 @@ public class SaleService {
   private void throwExceptionIfProductIsSold(List<Product> products) {
     for (Product product : products) {
       if (product.getPartOfSale() != null) {
+        logger.error(PRODUCT_ID + product.getId() + "} is already sold.");
         throw new ProductIsSoldException(product.getId());
       }
     }
