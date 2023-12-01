@@ -12,7 +12,7 @@ public class FlywayMigrationConfig {
   private static final String LOCATION = "db/migration/dev";
 
   @Autowired
-  public FlywayMigrationConfig(DataSource dataSource) {
+  FlywayMigrationConfig(DataSource dataSource) {
     Flyway.configure()
         .baselineOnMigrate(true)
         .validateMigrationNaming(true)
