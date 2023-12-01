@@ -7,21 +7,21 @@ import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.service.SystemEventService;
 import lombok.RequiredArgsConstructor;
+import org.apache.log4j.Logger;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Aspect
 @Component
 @RequiredArgsConstructor
 public class EventAspect {
-  private static final Logger logger = LoggerFactory.getLogger(EventAspect.class);
+  private static final Logger logger = Logger.getLogger(EventAspect.class);
+
   private final SystemEventService eventService;
 
   @AfterReturning(pointcut = "@annotation(logCreateEvent)", returning = "result")
@@ -56,7 +56,9 @@ public class EventAspect {
 
     if (!(service instanceof EntityFetcher entityFetcher)) {
       logger.error(
-          "Service: {} does not implement EntityFetcher for deletion logging", service.getClass());
+          "Service: {"
+              + service.getClass()
+              + "} does not implement EntityFetcher for deletion logging");
       return;
     }
 
@@ -65,7 +67,7 @@ public class EventAspect {
     if (entityBeforeDeletion != null) {
       eventService.logEvent(eventType, entityBeforeDeletion);
     } else {
-      logger.error("Entity with id: {} not found for deletion logging", id);
+      logger.error("Entity with id: {" + id + "} not found for deletion logging");
     }
   }
 }

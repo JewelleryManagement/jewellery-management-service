@@ -66,7 +66,7 @@ public class ImageService {
   public byte[] downloadImage(UUID productId) throws IOException {
     Product product = getProduct(productId);
     checkForAttachedPicture(product);
-    logger.info(
+    logger.debug(
         "Downloaded image for product id - {"
             + productId
             + "}. File path: {"
@@ -98,7 +98,7 @@ public class ImageService {
 
   private void createDirectoryIfNotExists(Path directoryPath) throws IOException {
     if (Files.notExists(directoryPath)) {
-      logger.info("Creating directory: {" + directoryPath + "}");
+      logger.debug("Creating directory: {" + directoryPath + "}");
       Files.createDirectories(directoryPath);
     }
   }

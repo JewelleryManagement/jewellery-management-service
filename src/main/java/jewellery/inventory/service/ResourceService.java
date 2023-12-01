@@ -69,7 +69,7 @@ public class ResourceService implements EntityFetcher {
   }
 
   public ResourceQuantityResponseDto getResourceQuantity(UUID id) {
-    logger.info("Fetching resource quantity by ID: {" + id + "}");
+    logger.debug("Fetching resource quantity by ID: {" + id + "}");
     return ResourceQuantityResponseDto.builder()
         .quantity(resourceInUserRepository.sumQuantityByResource(id))
         .resource(
@@ -81,7 +81,7 @@ public class ResourceService implements EntityFetcher {
   }
 
   public List<ResourceQuantityResponseDto> getAllResourceQuantities() {
-    logger.info("Fetching all resource quantities.");
+    logger.debug("Fetching all resource quantities.");
     return resourceRepository.findAll().stream()
         .map(
             resource ->

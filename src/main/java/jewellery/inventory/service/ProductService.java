@@ -86,7 +86,7 @@ public class ProductService implements EntityFetcher {
     updateProductOwnerRecursively(product, newOwner);
     if (sale != null) {
       product.setPartOfSale(sale);
-      logger.info(
+      logger.debug(
           "Updated product owner and sale for product with ID: {"
               + product.getId()
               + NEW_OWNER_ID
@@ -96,7 +96,7 @@ public class ProductService implements EntityFetcher {
               + "}");
     } else {
       product.setPartOfSale(null);
-      logger.info(
+      logger.debug(
           "Updated product owner without sale for product with ID: {"
               + product.getId()
               + NEW_OWNER_ID
@@ -192,7 +192,7 @@ public class ProductService implements EntityFetcher {
 
   private void disassembleProductContent(Product product) {
     if (product.getProductsContent() != null) {
-      logger.info("Disassembling product content for product with ID: {" + product.getId() + "}");
+      logger.debug("Disassembling product content for product with ID: {" + product.getId() + "}");
 
       product
           .getProductsContent()
@@ -211,7 +211,7 @@ public class ProductService implements EntityFetcher {
     List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
     User owner = product.getOwner();
 
-    logger.info(
+    logger.debug(
         "Moving resources from product with ID {"
             + product.getId()
             + "} to owner with ID {"

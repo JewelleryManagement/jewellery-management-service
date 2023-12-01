@@ -260,7 +260,7 @@ public class ResourceInUserService implements EntityFetcher {
 
   private TransferResourceResponseDto getTransferResourceResponseDto(
       User previousOwner, User newOwner, Resource resource, Double quantity) {
-    logger.info(
+    logger.debug(
         "Creating TransferResourceResponseDto. Previous Owner ID: {"
             + previousOwner.getId()
             + "}, New Owner ID: {"
