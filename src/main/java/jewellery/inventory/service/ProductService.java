@@ -330,7 +330,6 @@ public class ProductService implements EntityFetcher {
     product.setCatalogNumber(productRequestDto.getCatalogNumber());
     product.setProductsContent(new ArrayList<>());
     product.setResourcesContent(new ArrayList<>());
-    logger.debug("Product created successfully. Product ID: {" + product.getId() + "}");
 
     return product;
   }
