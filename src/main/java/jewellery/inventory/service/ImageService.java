@@ -145,7 +145,7 @@ public class ImageService {
 
   private void checkContentType(MultipartFile file) {
     if (!isSupportedContentType(Objects.requireNonNull(file.getContentType()))) {
-      logger.error("Unsupported content type for file: {" + file.getOriginalFilename() + "}");
+      logger.error("Unsupported content type for file: {" + file.getContentType() + "}");
       throw new MultipartFileContentTypeException();
     }
   }
