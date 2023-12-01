@@ -34,6 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ProductService implements EntityFetcher {
   private static final Logger logger = Logger.getLogger(ProductService.class);
+  private static final String NEW_OWNER_ID = "}. New owner with ID: {";
+  private static final String PRODUCT_ID = "}, Product ID: {";
 
   private final ProductRepository productRepository;
   private final UserRepository userRepository;
@@ -87,7 +89,7 @@ public class ProductService implements EntityFetcher {
       logger.info(
           "Updated product owner and sale for product with ID: {"
               + product.getId()
-              + "}. New owner with ID: {"
+              + NEW_OWNER_ID
               + newOwner.getId()
               + "}, Sale with ID: {"
               + sale.getId()
@@ -97,7 +99,7 @@ public class ProductService implements EntityFetcher {
       logger.info(
           "Updated product owner without sale for product with ID: {"
               + product.getId()
-              + "}. New owner with ID: {"
+              + NEW_OWNER_ID
               + newOwner.getId()
               + "}, Sale set to null");
     }
@@ -110,7 +112,7 @@ public class ProductService implements EntityFetcher {
     logger.info(
         "Updated owner for product with ID: {"
             + product.getId()
-            + "}. New owner with ID: {"
+            + NEW_OWNER_ID
             + newOwner.getId()
             + "}");
     if (product.getProductsContent() != null) {
@@ -381,7 +383,7 @@ public class ProductService implements EntityFetcher {
     logger.debug(
         "Transferring resources quantities from user to product. User ID: {"
             + owner.getId()
-            + "}, Product ID: {"
+            + PRODUCT_ID
             + product.getId()
             + "}");
 
@@ -398,7 +400,7 @@ public class ProductService implements EntityFetcher {
     logger.debug(
         "Transferring single resource quantity from user to product. User ID: {"
             + owner.getId()
-            + "}, Product ID: {"
+            + PRODUCT_ID
             + product.getId()
             + "}");
 
@@ -420,7 +422,7 @@ public class ProductService implements EntityFetcher {
     logger.debug(
         "Resource in product created successfully. Resource ID: {"
             + resourceInProduct.getResource().getId()
-            + "}, Product ID: {"
+            + PRODUCT_ID
             + resourceInProduct.getProduct().getId()
             + "}");
 
