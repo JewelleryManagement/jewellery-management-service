@@ -25,6 +25,6 @@ public class SaleRequestDto {
 
   @NotNull
   @PastOrPresent(message = "Date must be in the past or present")
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
   private LocalDate date;
 }
