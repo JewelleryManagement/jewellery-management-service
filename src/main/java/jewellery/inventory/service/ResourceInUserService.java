@@ -161,13 +161,12 @@ public class ResourceInUserService implements EntityFetcher {
   private ResourcesInUserResponseDto getResourceInUserResponse(UUID userId, UUID resourceId) {
     ResourceInUser resourceInUser = getResourceInUser(userId, resourceId);
     if (resourceInUser != null) {
-      logger.info(
+      logger.debug(
           "Retrieved resource in user response successfully. User ID: {"
               + userId
               + RESOURCE_ID
               + resourceId
               + "}");
-
       return resourcesInUserMapper.toResourcesInUserResponseDto(resourceInUser);
     }
     logger.info("Resource in user not found.User ID: {" + userId + RESOURCE_ID + resourceId + "}");
@@ -233,7 +232,7 @@ public class ResourceInUserService implements EntityFetcher {
   }
 
   private Optional<ResourceInUser> findResourceInUser(User user, UUID resourceId) {
-    logger.info(
+    logger.debug(
         "Finding resource in user. User ID: {" + user.getId() + RESOURCE_ID + resourceId + "}");
     return user.getResourcesOwned().stream()
         .filter(r -> r.getResource().getId().equals(resourceId))
@@ -247,7 +246,7 @@ public class ResourceInUserService implements EntityFetcher {
     resourceInUser.setResource(resource);
     resourceInUser.setQuantity(quantity);
     user.getResourcesOwned().add(resourceInUser);
-    logger.info(
+    logger.debug(
         "New resource created and added successfully in user. User ID: {"
             + user.getId()
             + RESOURCE_ID

@@ -73,7 +73,7 @@ public class ProductService implements EntityFetcher {
   }
 
   public Product getProduct(UUID id) {
-    logger.debug("Get product by ID: {" + id + "}");
+    logger.info("Get product by ID: {" + id + "}");
     return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
   }
 
@@ -109,7 +109,7 @@ public class ProductService implements EntityFetcher {
 
   private void updateProductOwnerRecursively(Product product, User newOwner) {
     product.setOwner(newOwner);
-    logger.info(
+    logger.debug(
         "Updated owner for product with ID: {"
             + product.getId()
             + NEW_OWNER_ID
@@ -156,7 +156,7 @@ public class ProductService implements EntityFetcher {
 
   private void deleteImageWhenAttached(UUID id, Product product) throws IOException {
     if (product.getImage() != null) {
-      logger.info("Deleted image for product with ID: {" + product.getId() + "}");
+      logger.debug("Deleted image for product with ID: {" + product.getId() + "}");
       imageService.deleteImage(id);
     }
   }
@@ -343,7 +343,6 @@ public class ProductService implements EntityFetcher {
     authorsIds.forEach(
         id -> {
           logger.debug("Processing author with ID: {" + id + "}");
-
           User author =
               userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
           authors.add(author);
