@@ -13,6 +13,7 @@ import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
@@ -28,6 +29,7 @@ import jewellery.inventory.repository.*;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.SaleService;
 import jewellery.inventory.service.UserService;
+import jewellery.inventory.service.security.AuthService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +46,7 @@ class SaleServiceTest {
   @Mock private ProductService productService;
   @Mock private ProductRepository productRepository;
   @Mock private SaleMapper saleMapper;
+  @Mock private AuthService authService;
   private User seller;
   private User buyer;
   private Product product;
@@ -90,6 +93,7 @@ class SaleServiceTest {
     List<Sale> sales = Arrays.asList(sale, new Sale(), new Sale());
 
     when(saleRepository.findAll()).thenReturn(sales);
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     List<SaleResponseDto> responses = saleService.getAllSales();
 
@@ -103,6 +107,7 @@ class SaleServiceTest {
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(saleRepository.save(sale)).thenReturn(sale);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     when(saleMapper.mapEntityToResponseDto(sale)).thenReturn(saleResponseDto);
 
@@ -125,6 +130,7 @@ class SaleServiceTest {
         .thenReturn(sale);
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     assertThrows(
         UserNotOwnerException.class, () -> saleService.createSale(saleRequestDtoSellerNotOwner));
@@ -137,6 +143,7 @@ class SaleServiceTest {
     sale.getProducts().get(0).setPartOfSale(new Sale());
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     assertThrows(ProductIsSoldException.class, () -> saleService.createSale(saleRequestDto));
   }
@@ -148,6 +155,8 @@ class SaleServiceTest {
     sale.getProducts().get(0).setContentOf(new Product());
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
+
 
     assertThrows(ProductIsContentException.class, () -> saleService.createSale(saleRequestDto));
   }
@@ -184,6 +193,7 @@ class SaleServiceTest {
     assertEquals(2, saleTwoProducts.getProducts().size());
     assertNotNull(productBeforeReturn.getPartOfSale());
 
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
     when(saleRepository.findById(any(UUID.class))).thenReturn(Optional.of(saleTwoProducts));
     when(saleService.returnProduct(product.getId())).thenReturn(productReturnResponseDto);

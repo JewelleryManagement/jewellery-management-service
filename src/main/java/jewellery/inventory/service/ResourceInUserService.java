@@ -27,6 +27,7 @@ import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
+import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,7 @@ public class ResourceInUserService implements EntityFetcher {
   private static final Logger logger = Logger.getLogger(ResourceInUserService.class);
   private static final String RESOURCE_ID = "}, Resource ID: {";
   private static final String QUANTITY = "}, Quantity: {";
-
+  private final AuthService authService;
   private final UserRepository userRepository;
   private final ResourceRepository resourceRepository;
   private final ResourceInUserRepository resourceInUserRepository;
@@ -78,7 +79,8 @@ public class ResourceInUserService implements EntityFetcher {
             + transferResourceRequestDto.getNewOwnerId()
             + "} Quantity: {"
             + transferResourceRequestDto.getQuantity()
-            + "}");
+            + "}"
+            + getCurrentUserId());
 
     return responseDto;
   }
@@ -103,7 +105,7 @@ public class ResourceInUserService implements EntityFetcher {
 
   public ResourcesInUserResponseDto getAllResourcesFromUser(UUID userId) {
     User user = findUserById(userId);
-    logger.info("Getting all resources from user. User ID: {" + userId + "}");
+    logger.info("Getting all resources from user. User ID: {" + userId + "}" + getCurrentUserId());
     return resourcesInUserMapper.toResourcesInUserResponseDto(user);
   }
 
@@ -125,7 +127,8 @@ public class ResourceInUserService implements EntityFetcher {
             + resourceId
             + QUANTITY
             + quantity
-            + "}");
+            + "}"
+            + getCurrentUserId());
 
     return resourcesInUserMapper.toResourcesInUserResponseDto(
         removeQuantityFromResource(resourceInUser, quantity));
@@ -143,7 +146,8 @@ public class ResourceInUserService implements EntityFetcher {
             + userId
             + RESOURCE_ID
             + resourceId
-            + "}");
+            + "}"
+            + getCurrentUserId());
 
     userRepository.save(user);
   }
@@ -169,7 +173,7 @@ public class ResourceInUserService implements EntityFetcher {
               + "}");
       return resourcesInUserMapper.toResourcesInUserResponseDto(resourceInUser);
     }
-    logger.info("Resource in user not found.User ID: {" + userId + RESOURCE_ID + resourceId + "}");
+    logger.debug("Resource in user not found.User ID: {" + userId + RESOURCE_ID + resourceId + "}");
     return null;
   }
 
@@ -181,7 +185,8 @@ public class ResourceInUserService implements EntityFetcher {
             + resource.getId()
             + QUANTITY
             + quantity
-            + "}");
+            + "}"
+            + getCurrentUserId());
     ResourceInUser resourceInUser =
         findResourceInUser(user, resource.getId())
             .orElseGet(() -> createAndAddNewResourceInUser(user, resource, 0));
@@ -210,7 +215,11 @@ public class ResourceInUserService implements EntityFetcher {
       resourceInUser = null;
     }
     userRepository.save(owner);
-    logger.info("Quantity removed successfully from resource New Quantity: {" + newQuantity + "}");
+    logger.info(
+        "Quantity removed successfully from resource New Quantity: {"
+            + newQuantity
+            + "}"
+            + getCurrentUserId());
     return resourceInUser;
   }
 
@@ -224,7 +233,7 @@ public class ResourceInUserService implements EntityFetcher {
   }
 
   private Resource findResourceById(UUID resourceId) {
-    logger.info("Finding Resource by ID: {" + resourceId + "}");
+    logger.info("Finding Resource by ID: {" + resourceId + "}" + getCurrentUserId());
 
     return resourceRepository
         .findById(resourceId)
@@ -288,7 +297,12 @@ public class ResourceInUserService implements EntityFetcher {
         + resourceUserDto.getResourceId()
         + QUANTITY
         + resourceUserDto.getQuantity()
-        + "}";
+        + "}"
+        + getCurrentUserId();
+  }
+
+  private String getCurrentUserId() {
+    return ", requested by User ID: {" + authService.getCurrentUser().getId() + "}";
   }
 
   @Override

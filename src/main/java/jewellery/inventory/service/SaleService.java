@@ -17,6 +17,7 @@ import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.SaleRepository;
+import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
@@ -25,15 +26,15 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SaleService {
   private static final Logger logger = Logger.getLogger(SaleService.class);
-  private static final String PRODUCT_ID="Product with ID {";
-
+  private static final String PRODUCT_ID = "Product with ID {";
+  private final AuthService authService;
   private final SaleRepository saleRepository;
   private final SaleMapper saleMapper;
   private final ProductService productService;
   private final UserService userService;
 
   public List<SaleResponseDto> getAllSales() {
-    logger.info("Get all sales");
+    logger.info("Get all sales" + getCurrentUserId());
     List<Sale> sales = saleRepository.findAll();
     return sales.stream().map(saleMapper::mapEntityToResponseDto).toList();
   }
@@ -53,7 +54,7 @@ public class SaleService {
 
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
-    logger.info("Sale created successfully. Sale ID: {" + createdSale.getId() + "}");
+    logger.info("Sale created successfully. Sale ID: {" + createdSale.getId() + "}"+ getCurrentUserId());
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
 
@@ -84,7 +85,7 @@ public class SaleService {
     productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
 
     deleteSaleIfProductsIsEmpty(sale);
-    logger.info("Product returned successfully. Product ID: {" + productId + "}");
+    logger.info("Product returned successfully. Product ID: {" + productId + "}"+ getCurrentUserId());
     return validateSaleAfterReturnProduct(sale, productToReturn);
   }
 
@@ -132,7 +133,7 @@ public class SaleService {
   }
 
   private List<Product> getProductsFromSaleRequestDto(SaleRequestDto saleRequestDto) {
-    logger.info("Getting products from sale request.");
+    logger.info("Getting products from sale request."+ getCurrentUserId());
     return saleRequestDto.getProducts().stream()
         .map(
             productPriceDiscountRequestDto ->
@@ -143,10 +144,10 @@ public class SaleService {
   private void deleteSaleIfProductsIsEmpty(Sale sale) {
     if (sale.getProducts().isEmpty()) {
       logger.info(
-          "Deleting sale with ID: {" + sale.getId() + "} since the products list is empty.");
+          "Deleting sale with ID: {" + sale.getId() + "} since the products list is empty."+ getCurrentUserId());
       saleRepository.deleteById(sale.getId());
       logger.info(
-          "Saving sale with ID: {" + sale.getId() + "} since the products list is not empty.");
+          "Saving sale with ID: {" + sale.getId() + "} since the products list is not empty."+ getCurrentUserId());
     } else saleRepository.save(sale);
   }
 
@@ -157,6 +158,10 @@ public class SaleService {
     }
     return productService.getProductReturnResponseDto(
         saleMapper.mapEntityToResponseDto(sale), productToReturn);
+  }
+
+  private String getCurrentUserId() {
+    return ", requested by User ID: {" + authService.getCurrentUser().getId() + "}";
   }
 
   private List<Product> removeProductFromSale(List<Product> products, Product productToRemove) {

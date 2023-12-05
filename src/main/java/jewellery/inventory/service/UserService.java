@@ -17,6 +17,7 @@ import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
+import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.apache.log4j.Logger;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,9 +31,10 @@ public class UserService implements EntityFetcher {
   private final UserRepository userRepository;
   private final UserMapper userMapper;
   private final PasswordEncoder passwordEncoder;
+  private final AuthService authService;
 
   public List<UserResponseDto> getAllUsers() {
-    logger.info("Fetching all users.");
+    logger.info("Fetching all users." + getCurrentUserId());
     return userMapper.toUserResponseList(userRepository.findAll());
   }
 
@@ -41,7 +43,7 @@ public class UserService implements EntityFetcher {
   }
 
   public User getUser(UUID id) {
-    logger.info("Fetching user with ID: {" + id + "}");
+    logger.info("Fetching user with ID: {" + id + "}" + getCurrentUserId());
     return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
   }
 
@@ -50,13 +52,13 @@ public class UserService implements EntityFetcher {
     User userToCreate = userMapper.toUserEntity(user);
     validateUserEmailAndName(userToCreate);
     userToCreate.setPassword(passwordEncoder.encode(userToCreate.getPassword()));
-    logger.info("Create new User");
+    logger.info("Create new User" + getCurrentUserId());
     return userMapper.toUserResponse(userRepository.save(userToCreate));
   }
 
   @LogUpdateEvent(eventType = EventType.USER_UPDATE)
   public UserResponseDto updateUser(UserRequestDto userRequest, UUID id) {
-    logger.info("Updating user with ID: {" + id + "}");
+    logger.info("Updating user with ID: {" + id + "}" + getCurrentUserId());
     if (!userRepository.existsById(id)) {
       throw new UserNotFoundException(id);
     }
@@ -65,7 +67,7 @@ public class UserService implements EntityFetcher {
     userToUpdate.setId(id);
 
     validateUserEmailAndName(userToUpdate);
-    logger.info("User with ID: {" + id + "} updated successfully.");
+    logger.info("User with ID: {" + id + "} updated successfully." + getCurrentUserId());
 
     return userMapper.toUserResponse(userRepository.save(userToUpdate));
   }
@@ -75,7 +77,7 @@ public class UserService implements EntityFetcher {
     if (!userRepository.existsById(id)) {
       throw new UserNotFoundException(id);
     }
-    logger.info("Deleting user with ID: {" + id + "}");
+    logger.info("Deleting user with ID: {" + id + "}" + getCurrentUserId());
     userRepository.deleteById(id);
   }
 
@@ -99,6 +101,10 @@ public class UserService implements EntityFetcher {
   private boolean isNameUsedByOtherUser(String name, UUID id) {
     Optional<User> existingUser = userRepository.findByName(name);
     return existingUser.isPresent() && (id == null || !existingUser.get().getId().equals(id));
+  }
+
+  private String getCurrentUserId() {
+    return ", requested by User ID: {" + authService.getCurrentUser().getId() + "}";
   }
 
   @Override

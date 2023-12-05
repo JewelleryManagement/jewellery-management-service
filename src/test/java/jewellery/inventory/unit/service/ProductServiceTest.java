@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.*;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.*;
 import jewellery.inventory.helper.ProductTestHelper;
@@ -24,6 +25,7 @@ import jewellery.inventory.repository.*;
 import jewellery.inventory.service.ImageService;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.ResourceInUserService;
+import jewellery.inventory.service.security.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,6 +42,7 @@ class ProductServiceTest {
   @Mock private ProductMapper productMapper;
   @Mock private UserRepository userRepository;
   @Mock private ResourceRepository resourceRepository;
+  @Mock private AuthService authService;
   @Mock private ResourceInUserRepository resourceInUserRepository;
   @Mock private ResourceInProductRepository resourceInProductRepository;
   @Mock private ResourceInUserService resourceInUserService;
@@ -71,7 +74,7 @@ class ProductServiceTest {
     productRequestDto.setProductsContent(List.of(product.getId()));
 
     assertThrows(
-            UserNotOwnerException.class, () -> productService.createProduct(productRequestDto));
+        UserNotOwnerException.class, () -> productService.createProduct(productRequestDto));
   }
 
   @Test
@@ -117,6 +120,8 @@ class ProductServiceTest {
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     when(userRepository.findById(recipient.getId())).thenReturn(Optional.of(recipient));
     assertEquals(product.getOwner().getId(), user.getId());
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
+
 
     productService.transferProduct(product.getId(), recipient.getId());
 
@@ -132,6 +137,8 @@ class ProductServiceTest {
     when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId()))
         .thenReturn(Optional.of(resourceInUser));
     user.setResourcesOwned(List.of(resourceInUser));
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
+
 
     ProductResponseDto response = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
@@ -163,6 +170,8 @@ class ProductServiceTest {
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
     productRequestDto.setProductsContent(List.of(product.getId()));
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
+
 
     ProductResponseDto response = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
@@ -192,21 +201,21 @@ class ProductServiceTest {
   @Test
   void testGetProductShouldThrowWhenProductNotFound() {
     UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
-    assertThrows(
-        ProductNotFoundException.class,
-        () -> productService.getProductResponse(fakeId));
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
+
+    assertThrows(ProductNotFoundException.class, () -> productService.getProductResponse(fakeId));
   }
 
   @Test
   void testGetProductWhenProductFound() {
 
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     ProductResponseDto response = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
 
-    ProductResponseDto actual =
-        productService.getProductResponse(product.getId());
+    ProductResponseDto actual = productService.getProductResponse(product.getId());
 
     assertEquals(response, actual);
     assertEquals(response.getId(), actual.getId());
@@ -220,6 +229,7 @@ class ProductServiceTest {
     List<Product> products = Arrays.asList(product, new Product(), new Product());
 
     when(productRepository.findAll()).thenReturn(products);
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     List<ProductResponseDto> responses = productService.getAllProducts();
 
@@ -228,8 +238,9 @@ class ProductServiceTest {
 
   @Test
   void testDeleteProductSuccessfully() throws IOException {
-
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     productService.deleteProduct(product.getId());
 
@@ -244,6 +255,7 @@ class ProductServiceTest {
 
     product.setProductsContent(List.of(content1, content2));
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     productService.deleteProduct(product.getId());
 
@@ -257,6 +269,8 @@ class ProductServiceTest {
     product.setContentOf(new Product());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
+
     assertThrows(ProductIsContentException.class, () -> productService.deleteProduct(productId));
   }
 
@@ -265,19 +279,23 @@ class ProductServiceTest {
     product.setPartOfSale(new Sale());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
+
     assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
   }
 
   @Test
   void testDeleteProductGetProductShouldThrowExceptionWhenProductNotExist() {
     UUID fakeId = UUID.randomUUID();
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
+
     assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(fakeId));
   }
 
   @Test
   void deleteProductShouldThrowExceptionWhenProductIsPartOfProduct() {
-
     product.setContentOf(new Product());
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
@@ -287,7 +305,7 @@ class ProductServiceTest {
   @Test
   void deleteProductShouldThrowExceptionWhenProductIsSold() {
     product.setPartOfSale(new Sale());
-
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
     assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
@@ -296,6 +314,7 @@ class ProductServiceTest {
   @Test
   void deleteProductShouldThrowExceptionWhenProductIdDoesNotExist() {
     UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
+    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
     assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(fakeId));
   }
 }
