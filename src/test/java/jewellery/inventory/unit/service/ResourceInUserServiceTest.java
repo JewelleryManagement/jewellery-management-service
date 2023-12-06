@@ -50,6 +50,7 @@ class ResourceInUserServiceTest {
   private UUID resourceId;
   private ResourceInUser resourceInUser;
   private static final double INITIAL_QUANTITY = 5;
+  private static final double TEST_DEAL_PRICE = 555.55;
 
   @BeforeEach
   void setUp() {
@@ -77,7 +78,7 @@ class ResourceInUserServiceTest {
   void willAddResourceToUser() {
     user.setResourcesOwned(new ArrayList<>());
     ResourceInUserRequestDto resourceUserDto =
-        createResourceInUserRequestDto(userId, resourceId, 10);
+            createResourceInUserRequestDto(userId, resourceId, 10, TEST_DEAL_PRICE);
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(resourceRepository.findById(resourceId)).thenReturn(Optional.of(resource));
 
@@ -91,7 +92,7 @@ class ResourceInUserServiceTest {
   @Test
   void willThrowUserNotFoundExceptionWhenAddResourceToUserAndUserNonexistent() {
     ResourceInUserRequestDto resourceInUserRequestDto =
-        createResourceInUserRequestDto(userId, resourceId, 10);
+        createResourceInUserRequestDto(userId, resourceId, 10, TEST_DEAL_PRICE);
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
     assertThrows(
@@ -106,7 +107,7 @@ class ResourceInUserServiceTest {
   @Test
   void willThrowResourceNotFoundExceptionWhenAddResourceToUserAndResourceNotFound() {
     ResourceInUserRequestDto resourceUserDto =
-        createResourceInUserRequestDto(userId, resourceId, 10);
+        createResourceInUserRequestDto(userId, resourceId, 10, TEST_DEAL_PRICE);
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(resourceRepository.findById(resourceId)).thenReturn(Optional.empty());
 

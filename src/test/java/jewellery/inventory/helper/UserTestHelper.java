@@ -76,7 +76,17 @@ public class UserTestHelper {
   }
 
   public static @NotNull ResourceInUserRequestDto createResourceInUserRequestDto(
-      UUID userId, UUID resourceId, double quantity) {
+      UUID userId, UUID resourceId, double quantity, Double price) {
+    ResourceInUserRequestDto requestDto = new ResourceInUserRequestDto();
+    requestDto.setUserId(userId);
+    requestDto.setResourceId(resourceId);
+    requestDto.setQuantity(quantity);
+    requestDto.setDealPrice(price);
+    return requestDto;
+  }
+
+  public static @NotNull ResourceInUserRequestDto createResourceInUserRequestDtoWithoutPrice(
+          UUID userId, UUID resourceId, double quantity) {
     ResourceInUserRequestDto requestDto = new ResourceInUserRequestDto();
     requestDto.setUserId(userId);
     requestDto.setResourceId(resourceId);

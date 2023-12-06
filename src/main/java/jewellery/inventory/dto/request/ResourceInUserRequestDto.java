@@ -1,8 +1,7 @@
 package jewellery.inventory.dto.request;
 
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
+
 import java.util.UUID;
 
 import lombok.AllArgsConstructor;
@@ -25,4 +24,6 @@ public class ResourceInUserRequestDto {
   @Min(value = 0, message = QUANTITY_MIN_VALUE_MSG)
   @Digits(integer = 10, fraction = 2, message = QUANTITY_DECIMAL_PLACES_MSG)
   private double quantity;
+  @NotNull
+  private double dealPrice;
 }

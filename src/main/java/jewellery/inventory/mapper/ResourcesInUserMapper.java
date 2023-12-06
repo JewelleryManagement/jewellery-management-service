@@ -22,6 +22,7 @@ public class ResourcesInUserMapper {
     ResourcesInUserResponseDto responseDto = new ResourcesInUserResponseDto();
     responseDto.setOwner(userMapper.toUserResponse(resourceInUser.getOwner()));
     responseDto.setResourcesAndQuantities(getSingleResourceQuantityResponse(resourceInUser));
+    responseDto.setDealPrice(resourceInUser.getDealPrice());
     return responseDto;
   }
 

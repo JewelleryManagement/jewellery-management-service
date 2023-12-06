@@ -54,7 +54,7 @@ public class ResourceInUserService implements EntityFetcher {
             previousOwner, transferResourceRequestDto.getTransferredResourceId());
 
     removeQuantityFromResource(resourceInPreviousOwner, transferResourceRequestDto.getQuantity());
-    addResourceToUser(
+    addResourceToUserToTransfer(
         newOwner, resourceInPreviousOwner.getResource(), transferResourceRequestDto.getQuantity());
 
     return getTransferResourceResponseDto(
@@ -76,7 +76,8 @@ public class ResourceInUserService implements EntityFetcher {
     Resource resource = findResourceById(resourceUserDto.getResourceId());
 
     return resourcesInUserMapper.toResourcesInUserResponseDto(
-        addResourceToUser(user, resource, resourceUserDto.getQuantity()));
+        addResourceToUser(
+            user, resource, resourceUserDto.getQuantity(), resourceUserDto.getDealPrice()));
   }
 
   public ResourcesInUserResponseDto getAllResourcesFromUser(UUID userId) {
@@ -128,12 +129,23 @@ public class ResourceInUserService implements EntityFetcher {
     return null;
   }
 
-  private ResourceInUser addResourceToUser(User user, Resource resource, Double quantity) {
-    ResourceInUser resourceInUser =
-        findResourceInUser(user, resource.getId())
-            .orElseGet(() -> createAndAddNewResourceInUser(user, resource, 0));
+  private void addResourceToUserToTransfer(User user, Resource resource, Double quantity) {
+    ResourceInUser resourceInUser = getResourceInUser(user, resource);
+    resourceInUser.setQuantity(resourceInUser.getQuantity() + quantity);
+    resourceInUserRepository.save(resourceInUser);
+  }
+
+  private ResourceInUser getResourceInUser(User user, Resource resource) {
+    return findResourceInUser(user, resource.getId())
+        .orElseGet(() -> createAndAddNewResourceInUser(user, resource, 0, 0));
+  }
+
+  private ResourceInUser addResourceToUser(
+      User user, Resource resource, Double quantity, double price) {
+    ResourceInUser resourceInUser = getResourceInUser(user, resource);
 
     resourceInUser.setQuantity(resourceInUser.getQuantity() + quantity);
+    resourceInUser.setDealPrice(price);
     return resourceInUserRepository.save(resourceInUser);
   }
 
@@ -182,11 +194,12 @@ public class ResourceInUserService implements EntityFetcher {
   }
 
   private ResourceInUser createAndAddNewResourceInUser(
-      User user, Resource resource, double quantity) {
+      User user, Resource resource, double quantity, double price) {
     ResourceInUser resourceInUser = new ResourceInUser();
     resourceInUser.setOwner(user);
     resourceInUser.setResource(resource);
     resourceInUser.setQuantity(quantity);
+    resourceInUser.setDealPrice(price);
     user.getResourcesOwned().add(resourceInUser);
     return resourceInUser;
   }

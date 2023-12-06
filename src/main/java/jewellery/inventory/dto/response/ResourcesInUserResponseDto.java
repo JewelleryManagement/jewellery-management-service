@@ -15,4 +15,5 @@ import lombok.experimental.SuperBuilder;
 public class ResourcesInUserResponseDto {
   private UserResponseDto owner;
   private List<ResourceQuantityResponseDto> resourcesAndQuantities;
+  private double dealPrice;
 }
