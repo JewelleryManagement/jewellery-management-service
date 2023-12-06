@@ -25,7 +25,6 @@ import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInProduct;
 import jewellery.inventory.repository.*;
-import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
@@ -38,7 +37,6 @@ public class ProductService implements EntityFetcher {
   private static final String NEW_OWNER_ID = "}. New owner with ID: {";
   private static final String PRODUCT_ID = "}, Product ID: {";
 
-  private final AuthService authService;
   private final ProductRepository productRepository;
   private final UserRepository userRepository;
   private final ResourceInUserRepository resourceInUserRepository;
@@ -53,12 +51,7 @@ public class ProductService implements EntityFetcher {
     Product product = persistProductWithoutResourcesAndProducts(productRequestDto, owner);
     addProductsContentToProduct(productRequestDto, product);
     addResourcesToProduct(productRequestDto, owner, product);
-    logger.info(
-        "Product created by User ID: {"
-            + authService.getCurrentUser().getId()
-            + "}, with Product ID: {"
-            + product.getId()
-            + "}");
+    logger.info("Product created with ID: {" + product.getId() + "}");
     return productMapper.mapToProductResponseDto(product);
   }
 
@@ -69,24 +62,23 @@ public class ProductService implements EntityFetcher {
 
   public List<ProductResponseDto> getAllProducts() {
     List<Product> products = productRepository.findAll();
-    logger.info(
-        "Get all products requested by User ID: {" + authService.getCurrentUser().getId() + "}");
+    logger.info("Get all products");
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
   public List<ProductResponseDto> getByOwner(UUID ownerId) {
     List<Product> products = productRepository.findAllByOwnerId(ownerId);
-    logger.info("Get product by owner with ID: {" + ownerId + "}" + getCurrentUserId());
+    logger.info("Get product by owner with ID: {" + ownerId + "}");
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
   public Product getProduct(UUID id) {
-    logger.info("Get product by ID: {" + id + "}" + getCurrentUserId());
+    logger.info("Get product by ID: {" + id + "}");
     return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
   }
 
   public ProductResponseDto getProductResponse(UUID id) {
-    logger.info("Get productResponse by ID: {" + id + "}" + getCurrentUserId());
+    logger.info("Get productResponse by ID: {" + id + "}");
     return productMapper.mapToProductResponseDto(getProduct(id));
   }
 
@@ -144,7 +136,7 @@ public class ProductService implements EntityFetcher {
     disassembleProductContent(product);
     deleteImageWhenAttached(id, product);
 
-    logger.info("Delete product by ID: {" + id + "}" + getCurrentUserId());
+    logger.info("Delete product by ID: {" + id + "}");
     productRepository.deleteById(id);
   }
 
@@ -157,8 +149,7 @@ public class ProductService implements EntityFetcher {
             + productId
             + "} to new owner with ID {"
             + recipientId
-            + "}"
-            + getCurrentUserId());
+            + "}");
     productRepository.save(productForChangeOwner);
     return productMapper.mapToProductResponseDto(productForChangeOwner);
   }
@@ -176,10 +167,6 @@ public class ProductService implements EntityFetcher {
           "Product with ID {" + id + "} is part of another product and cannot be deleted.");
       throw new ProductIsContentException(id);
     }
-  }
-
-  private String getCurrentUserId() {
-    return ", requested by User ID: {" + authService.getCurrentUser().getId() + "}";
   }
 
   private void throwExceptionIfProductOwnerEqualsRecipient(Product product, UUID recipientId) {

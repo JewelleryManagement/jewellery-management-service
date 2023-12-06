@@ -34,7 +34,7 @@ public class SaleService {
   private final UserService userService;
 
   public List<SaleResponseDto> getAllSales() {
-    logger.info("Get all sales" + getCurrentUserId());
+    logger.info("Get all sales");
     List<Sale> sales = saleRepository.findAll();
     return sales.stream().map(saleMapper::mapEntityToResponseDto).toList();
   }
@@ -54,7 +54,7 @@ public class SaleService {
 
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
-    logger.info("Sale created successfully. Sale ID: {" + createdSale.getId() + "}"+ getCurrentUserId());
+    logger.info("Sale created successfully. Sale ID: {" + createdSale.getId() + "}");
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
 
@@ -85,7 +85,7 @@ public class SaleService {
     productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
 
     deleteSaleIfProductsIsEmpty(sale);
-    logger.info("Product returned successfully. Product ID: {" + productId + "}"+ getCurrentUserId());
+    logger.info("Product returned successfully. Product ID: {" + productId + "}");
     return validateSaleAfterReturnProduct(sale, productToReturn);
   }
 
@@ -133,7 +133,7 @@ public class SaleService {
   }
 
   private List<Product> getProductsFromSaleRequestDto(SaleRequestDto saleRequestDto) {
-    logger.info("Getting products from sale request."+ getCurrentUserId());
+    logger.info("Getting products from sale request.");
     return saleRequestDto.getProducts().stream()
         .map(
             productPriceDiscountRequestDto ->
@@ -144,10 +144,10 @@ public class SaleService {
   private void deleteSaleIfProductsIsEmpty(Sale sale) {
     if (sale.getProducts().isEmpty()) {
       logger.info(
-          "Deleting sale with ID: {" + sale.getId() + "} since the products list is empty."+ getCurrentUserId());
+          "Deleting sale with ID: {" + sale.getId() + "} since the products list is empty.");
       saleRepository.deleteById(sale.getId());
       logger.info(
-          "Saving sale with ID: {" + sale.getId() + "} since the products list is not empty."+ getCurrentUserId());
+          "Saving sale with ID: {" + sale.getId() + "} since the products list is not empty.");
     } else saleRepository.save(sale);
   }
 
@@ -158,10 +158,6 @@ public class SaleService {
     }
     return productService.getProductReturnResponseDto(
         saleMapper.mapEntityToResponseDto(sale), productToReturn);
-  }
-
-  private String getCurrentUserId() {
-    return ", requested by User ID: {" + authService.getCurrentUser().getId() + "}";
   }
 
   private List<Product> removeProductFromSale(List<Product> products, Product productToRemove) {

@@ -42,7 +42,6 @@ public class ImageService {
 
   private final ImageRepository imageRepository;
   private final ImageDataMapper imageDataMapper;
-  private final AuthService authService;
   @Lazy private final ProductService productService;
 
   @Transactional
@@ -60,14 +59,7 @@ public class ImageService {
     Image image = createImageData(multipartFile, product, imagePath);
     setProductImage(product, image);
     saveImagetoFileSystem(multipartFile, directoryPath, imagePath);
-    logger.info(
-        "Uploaded image for product id - {"
-            + productId
-            + "}. Path: {"
-            + imagePath
-            + "}, requested by User ID: {"
-            + authService.getCurrentUser().getId()
-            + "}");
+    logger.info("Uploaded image for product id - {" + productId + "}. Path: {" + imagePath + "}");
     return imageDataMapper.toImageResponse(image);
   }
 
@@ -86,12 +78,7 @@ public class ImageService {
 
   @Transactional
   public void deleteImage(UUID productId) throws IOException {
-    logger.info(
-        "Deleted image for product id - {"
-            + productId
-            + "}, requested by User ID: {"
-            + authService.getCurrentUser().getId()
-            + "}");
+    logger.info("Deleted image for product id - {" + productId + "}");
     removeImage(getProduct(productId));
   }
 

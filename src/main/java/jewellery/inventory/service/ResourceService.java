@@ -16,7 +16,6 @@ import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
-import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
@@ -25,13 +24,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ResourceService implements EntityFetcher {
   private static final Logger logger = Logger.getLogger(ResourceService.class);
-  private final AuthService authService;
   private final ResourceRepository resourceRepository;
   private final ResourceInUserRepository resourceInUserRepository;
   private final ResourceMapper resourceMapper;
 
   public List<ResourceResponseDto> getAllResources() {
-    logger.info("Get all Resources" + getCurrentUserId());
+    logger.info("Get all Resources");
     List<Resource> resources = resourceRepository.findAll();
     return resources.stream().map(resourceMapper::toResourceResponse).toList();
   }
@@ -40,22 +38,14 @@ public class ResourceService implements EntityFetcher {
   public ResourceResponseDto createResource(ResourceRequestDto resourceRequestDto) {
     Resource savedResource =
         resourceRepository.save(resourceMapper.toResourceEntity(resourceRequestDto));
-    logger.info(
-        "Resource created successfully. Resource ID: {"
-            + savedResource.getId()
-            + "}"
-            + getCurrentUserId());
+    logger.info("Resource created successfully. Resource ID: {" + savedResource.getId() + "}");
     return resourceMapper.toResourceResponse(savedResource);
   }
 
   public ResourceResponseDto getResource(UUID id) {
     Resource resource =
         resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
-    logger.info(
-        "Resource fetched successfully. Resource ID: {"
-            + resource.getId()
-            + "}"
-            + getCurrentUserId());
+    logger.info("Resource fetched successfully. Resource ID: {" + resource.getId() + "}");
     return resourceMapper.toResourceResponse(resource);
   }
 
@@ -63,7 +53,7 @@ public class ResourceService implements EntityFetcher {
   public void deleteResourceById(UUID id) {
     Resource resource =
         resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
-    logger.info("Resource deleted successfully. Resource ID: {" + id + "}" + getCurrentUserId());
+    logger.info("Resource deleted successfully. Resource ID: {" + id + "}");
     resourceRepository.delete(resource);
   }
 
@@ -73,11 +63,7 @@ public class ResourceService implements EntityFetcher {
     Resource toUpdate = resourceMapper.toResourceEntity(resourceRequestDto);
     toUpdate.setId(id);
     Resource updatedResource = resourceRepository.save(toUpdate);
-    logger.info(
-        "Resource updated successfully. Resource ID: {"
-            + updatedResource.getId()
-            + "}"
-            + getCurrentUserId());
+    logger.info("Resource updated successfully. Resource ID: {" + updatedResource.getId() + "}");
     return resourceMapper.toResourceResponse(updatedResource);
   }
 
@@ -103,10 +89,6 @@ public class ResourceService implements EntityFetcher {
                     .quantity(resourceInUserRepository.sumQuantityByResource(resource.getId()))
                     .build())
         .toList();
-  }
-
-  private String getCurrentUserId() {
-    return ", requested by User ID: {" + authService.getCurrentUser().getId() + "}";
   }
 
   @Override

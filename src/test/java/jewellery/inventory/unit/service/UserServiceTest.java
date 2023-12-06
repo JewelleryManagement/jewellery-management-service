@@ -20,7 +20,6 @@ import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
 import jewellery.inventory.service.UserService;
-import jewellery.inventory.service.security.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,7 +34,6 @@ class UserServiceTest {
   @Mock private UserRepository userRepository;
   @InjectMocks private UserService userService;
   @Mock private UserMapper userMapper;
-  @Mock private AuthService authService;
   @Mock  private PasswordEncoder passwordEncoder;
 
   private User user;
@@ -56,7 +54,6 @@ class UserServiceTest {
   void getAllUsers() {
     List<User> users = Arrays.asList(user, new User(), new User());
 
-    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
     when(userRepository.findAll()).thenReturn(users);
     when(userMapper.toUserResponseList(users))
         .thenReturn(
@@ -75,7 +72,6 @@ class UserServiceTest {
   @DisplayName("Should throw UserNotFoundException when the user id does not exist")
   void getUserWhenUserIdDoesNotExistThenThrowException() {
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
-    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     assertThrows(UserNotFoundException.class, () -> userService.getUserResponse(userId));
 
@@ -86,7 +82,6 @@ class UserServiceTest {
   @DisplayName("Should return the user when the user id exists")
   void getUserWhenUserIdExists() {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     UserResponseDto result = userService.getUserResponse(userId);
 
@@ -131,7 +126,6 @@ class UserServiceTest {
     when(userMapper.toUserEntity(userRequest)).thenReturn(user);
     when(userMapper.toUserResponse(user)).thenReturn(userResponse);
     when(passwordEncoder.encode(any())).thenReturn("$2a$10$WIgDfys.uGK53Q3V13l8AOYCH7M1cVHulX8klIq0PLB/KweY/Onhi");
-    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     UserResponseDto createdUser = userService.createUser(userMapper.toUserRequest(user));
 
@@ -147,7 +141,6 @@ class UserServiceTest {
     user.setId(userId);
     UserRequestDto userRequest = userMapper.toUserRequest(user);
     when(userRepository.existsById(userId)).thenReturn(false);
-    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     assertThrows(UserNotFoundException.class, () -> userService.updateUser(userRequest, userId));
 
@@ -166,7 +159,6 @@ class UserServiceTest {
     UserRequestDto userRequestDto = new UserRequestDto();
     when(userMapper.toUserRequest(user)).thenReturn(userRequestDto);
     when(userMapper.toUserEntity(userRequestDto)).thenReturn(user);
-    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     UserResponseDto updatedUser = userService.updateUser(userMapper.toUserRequest(user), userId);
 
@@ -193,7 +185,6 @@ class UserServiceTest {
     when(userRepository.existsById(updatingUserId)).thenReturn(true);
     when(userRepository.findByName(USER_NAME)).thenReturn(Optional.of(existingUser));
     when(userMapper.toUserEntity(updatingUserRequest)).thenReturn(updatingUser);
-    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     assertThrows(
         DuplicateNameException.class,
@@ -220,7 +211,6 @@ class UserServiceTest {
     when(userRepository.existsById(updatingUserId)).thenReturn(true);
     when(userRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(existingUser));
     when(userMapper.toUserEntity(updatingUserRequest)).thenReturn(updatingUser);
-    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     assertThrows(
         DuplicateEmailException.class,
@@ -232,7 +222,6 @@ class UserServiceTest {
   void deleteUserWhenUserIdExists() {
     user.setId(userId);
     when(userRepository.existsById(userId)).thenReturn(true);
-    when(authService.getCurrentUser()).thenReturn(new UserResponseDto());
 
     assertDoesNotThrow(() -> userService.deleteUser(userId));
 
