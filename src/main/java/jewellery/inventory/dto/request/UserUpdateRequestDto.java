@@ -1,11 +1,14 @@
 package jewellery.inventory.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
+import jewellery.inventory.model.Role;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -32,7 +35,8 @@ public class UserUpdateRequestDto {
       message = "Email must be valid")
   private String email;
 
-
+  @Enumerated(EnumType.STRING)
+  private Role role;
 
   @Size(min = 3, max = 100, message = "Address must be between 3 and 100 characters")
   private String address;

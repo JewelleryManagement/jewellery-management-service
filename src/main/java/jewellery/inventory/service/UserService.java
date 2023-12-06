@@ -50,11 +50,11 @@ public class UserService implements EntityFetcher {
 
   @LogUpdateEvent(eventType = EventType.USER_UPDATE)
   public UserResponseDto updateUser(UserUpdateRequestDto userRequest, UUID id) {
-    if (!userRepository.existsById(id)) {
-      throw new UserNotFoundException(id);
-    }
+    User oldUser = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
 
     User userToUpdate = userMapper.toUserEntity(userRequest);
+    userToUpdate.setPassword(oldUser.getPassword());
+    userToUpdate.setRole(oldUser.getRole());
     userToUpdate.setId(id);
 
     validateUserEmail(userToUpdate);
