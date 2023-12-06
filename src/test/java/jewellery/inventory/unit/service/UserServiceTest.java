@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.request.UserUpdateRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.duplicate.DuplicateEmailException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
@@ -37,14 +38,12 @@ class UserServiceTest {
   private User user;
   private UserResponseDto userResponse;
   private UUID userId;
-  private UUID resourceId;
 
   @BeforeEach
   void setUp() {
     user = createTestUser();
     userResponse = userMapper.toUserResponse(user);
     userId = UUID.randomUUID();
-    resourceId = UUID.randomUUID();
   }
 
   @Test
@@ -137,11 +136,11 @@ class UserServiceTest {
     when(userRepository.existsById(userId)).thenReturn(true);
     when(userRepository.save(any(User.class))).thenReturn(user);
 
-    UserRequestDto userRequestDto = new UserRequestDto();
-    when(userMapper.toUserRequest(user)).thenReturn(userRequestDto);
+    UserUpdateRequestDto userRequestDto = new UserRequestDto();
+    when(userMapper.toUserUpdateRequest(user)).thenReturn(userRequestDto);
     when(userMapper.toUserEntity(userRequestDto)).thenReturn(user);
 
-    UserResponseDto updatedUser = userService.updateUser(userMapper.toUserRequest(user), userId);
+    UserResponseDto updatedUser = userService.updateUser(userMapper.toUserUpdateRequest(user), userId);
 
     assertEquals(userMapper.toUserResponse(user), updatedUser);
     verify(userRepository, times(1)).existsById(userId);
@@ -161,7 +160,7 @@ class UserServiceTest {
     updatingUser.setFirstName("not duplicate name");
     updatingUser.setEmail(USER_EMAIL);
 
-    UserRequestDto updatingUserRequest = new UserRequestDto();
+    UserUpdateRequestDto updatingUserRequest = new UserRequestDto();
     updatingUserRequest.setFirstName(updatingUser.getFirstName());
     updatingUserRequest.setEmail(updatingUser.getEmail());
 

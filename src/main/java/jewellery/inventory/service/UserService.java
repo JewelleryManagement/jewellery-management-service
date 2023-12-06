@@ -9,6 +9,7 @@ import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.request.UserUpdateRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.duplicate.DuplicateEmailException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
@@ -48,7 +49,7 @@ public class UserService implements EntityFetcher {
   }
 
   @LogUpdateEvent(eventType = EventType.USER_UPDATE)
-  public UserResponseDto updateUser(UserRequestDto userRequest, UUID id) {
+  public UserResponseDto updateUser(UserUpdateRequestDto userRequest, UUID id) {
     if (!userRepository.existsById(id)) {
       throw new UserNotFoundException(id);
     }
