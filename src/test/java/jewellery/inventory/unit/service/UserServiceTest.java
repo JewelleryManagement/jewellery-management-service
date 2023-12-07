@@ -120,11 +120,11 @@ class UserServiceTest {
   void updateUserWhenUserIdDoesNotExistThenThrowException() {
     user.setId(userId);
     UserRequestDto userRequest = userMapper.toUserRequest(user);
-    when(userRepository.existsById(userId)).thenReturn(false);
+    when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
     assertThrows(UserNotFoundException.class, () -> userService.updateUser(userRequest, userId));
 
-    verify(userRepository, times(1)).existsById(userId);
+    verify(userRepository, times(1)).findById(userId);
     verify(userRepository, never()).save(user);
   }
 
@@ -133,7 +133,7 @@ class UserServiceTest {
   void updateUserWhenUserIdExists() {
     user.setId(userId);
 
-    when(userRepository.existsById(userId)).thenReturn(true);
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(userRepository.save(any(User.class))).thenReturn(user);
 
     UserUpdateRequestDto userRequestDto = new UserRequestDto();
@@ -143,7 +143,7 @@ class UserServiceTest {
     UserResponseDto updatedUser = userService.updateUser(userMapper.toUserUpdateRequest(user), userId);
 
     assertEquals(userMapper.toUserResponse(user), updatedUser);
-    verify(userRepository, times(1)).existsById(userId);
+    verify(userRepository, times(1)).findById(userId);
     verify(userRepository, times(1)).save(any(User.class));
   }
 
@@ -164,7 +164,7 @@ class UserServiceTest {
     updatingUserRequest.setFirstName(updatingUser.getFirstName());
     updatingUserRequest.setEmail(updatingUser.getEmail());
 
-    when(userRepository.existsById(updatingUserId)).thenReturn(true);
+    when(userRepository.findById(updatingUserId)).thenReturn(Optional.of(updatingUser));
     when(userRepository.findByEmail(USER_EMAIL)).thenReturn(Optional.of(existingUser));
     when(userMapper.toUserEntity(updatingUserRequest)).thenReturn(updatingUser);
 
