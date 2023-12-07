@@ -54,7 +54,6 @@ public class UserService implements EntityFetcher {
 
     User userToUpdate = userMapper.toUserEntity(userRequest);
     userToUpdate.setPassword(oldUser.getPassword());
-    userToUpdate.setRole(oldUser.getRole());
     userToUpdate.setId(id);
 
     validateUserEmail(userToUpdate);
