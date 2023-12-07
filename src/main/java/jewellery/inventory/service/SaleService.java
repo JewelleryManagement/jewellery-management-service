@@ -4,9 +4,12 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.dto.request.SaleRequestDto;
+import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
+import jewellery.inventory.exception.product.ProductNotSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.EventType;
@@ -56,11 +59,43 @@ public class SaleService {
     }
   }
 
+  @LogCreateEvent(eventType = EventType.SALE_RETURN_PRODUCT)
+  public ProductReturnResponseDto returnProduct(UUID productId) {
+    Product productToReturn = productService.getProduct(productId);
+
+    throwExceptionIfProductIsPartOfAnotherProduct(productToReturn);
+    throwExceptionIfProductNotSold(productToReturn);
+
+    Sale sale = getSale(productToReturn.getPartOfSale().getId());
+    sale.setProducts(removeProductFromSale(sale.getProducts(), productToReturn));
+
+    productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
+
+    deleteSaleIfProductsIsEmpty(sale);
+    return validateSaleAfterReturnProduct(sale, productToReturn);
+  }
+
+  private Sale getSale(UUID saleId) {
+    return saleRepository.findById(saleId).orElseThrow(() -> new SaleNotFoundException(saleId));
+  }
+
   private void throwExceptionIfProductIsPartOfAnotherProduct(List<Product> products) {
     for (Product product : products) {
       if (product.getContentOf() != null) {
         throw new ProductIsContentException(product.getId());
       }
+    }
+  }
+
+  private void throwExceptionIfProductIsPartOfAnotherProduct(Product product) {
+    if (product.getContentOf() != null) {
+      throw new ProductIsContentException(product.getId());
+    }
+  }
+
+  private void throwExceptionIfProductNotSold(Product product) {
+    if (product.getPartOfSale() == null) {
+      throw new ProductNotSoldException(product.getId());
     }
   }
 
@@ -85,5 +120,25 @@ public class SaleService {
             productPriceDiscountRequestDto ->
                 productService.getProduct(productPriceDiscountRequestDto.getProductId()))
         .toList();
+  }
+
+  private void deleteSaleIfProductsIsEmpty(Sale sale) {
+    if (sale.getProducts().isEmpty()) {
+      saleRepository.deleteById(sale.getId());
+    } else saleRepository.save(sale);
+  }
+
+  private ProductReturnResponseDto validateSaleAfterReturnProduct(
+      Sale sale, Product productToReturn) {
+    if (sale.getProducts().isEmpty()) {
+      return productService.getProductReturnResponseDto(null, productToReturn);
+    }
+    return productService.getProductReturnResponseDto(
+        saleMapper.mapEntityToResponseDto(sale), productToReturn);
+  }
+
+  private List<Product> removeProductFromSale(List<Product> products, Product productToRemove) {
+    products.remove(productToRemove);
+    return products;
   }
 }
