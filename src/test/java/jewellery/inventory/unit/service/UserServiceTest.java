@@ -138,7 +138,7 @@ class UserServiceTest {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(userRepository.save(any(User.class))).thenReturn(user);
 
-    UserUpdateRequestDto userRequestDto = new UserRequestDto();
+    UserUpdateRequestDto userRequestDto = new UserUpdateRequestDto();
     userRequestDto.setFirstName("changedFirstName");
     userRequestDto.setLastName("changedLastName");
     userRequestDto.setEmail("change@gmail.com");
