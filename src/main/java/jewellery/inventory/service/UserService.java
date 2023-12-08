@@ -18,14 +18,15 @@ import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class UserService implements EntityFetcher {
-  private static final Logger logger = Logger.getLogger(UserService.class);
+  private static final Logger logger = LogManager.getLogger(UserService.class);
 
   private final UserRepository userRepository;
   private final UserMapper userMapper;

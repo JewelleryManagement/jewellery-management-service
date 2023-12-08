@@ -26,14 +26,15 @@ import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInProduct;
 import jewellery.inventory.repository.*;
 import lombok.RequiredArgsConstructor;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class ProductService implements EntityFetcher {
-  private static final Logger logger = Logger.getLogger(ProductService.class);
+  private static final Logger logger = LogManager.getLogger(ProductService.class);
   private static final String NEW_OWNER_ID = "}. New owner with ID: {";
   private static final String PRODUCT_ID = "}, Product ID: {";
 

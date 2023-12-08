@@ -19,7 +19,8 @@ import jewellery.inventory.model.Product;
 import jewellery.inventory.repository.ImageRepository;
 import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @RequiredArgsConstructor(onConstructor_ = {@Lazy})
 public class ImageService {
-  private static final Logger logger = Logger.getLogger(ImageService.class);
+  private static final Logger logger = LogManager.getLogger(ImageService.class);
 
   @Value("${image.folder.path}")
   private String folderPath;

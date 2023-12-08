@@ -19,13 +19,14 @@ import jewellery.inventory.model.User;
 import jewellery.inventory.repository.SaleRepository;
 import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class SaleService {
-  private static final Logger logger = Logger.getLogger(SaleService.class);
+  private static final Logger logger = LogManager.getLogger(SaleService.class);
   private static final String PRODUCT_ID = "Product with ID {";
   private final AuthService authService;
   private final SaleRepository saleRepository;
@@ -85,7 +86,7 @@ public class SaleService {
     productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
 
     deleteSaleIfProductsIsEmpty(sale);
-    logger.info("Product returned successfully. Product ID: {" + productId + "}");
+    logger.info("Product returned successfully. Product ID: {}",productId);
     return validateSaleAfterReturnProduct(sale, productToReturn);
   }
 

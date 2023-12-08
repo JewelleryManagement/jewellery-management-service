@@ -17,13 +17,14 @@ import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class ResourceService implements EntityFetcher {
-  private static final Logger logger = Logger.getLogger(ResourceService.class);
+  private static final Logger logger = LogManager.getLogger(ResourceService.class);
   private final ResourceRepository resourceRepository;
   private final ResourceInUserRepository resourceInUserRepository;
   private final ResourceMapper resourceMapper;

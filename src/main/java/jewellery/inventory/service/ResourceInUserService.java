@@ -28,14 +28,15 @@ import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class ResourceInUserService implements EntityFetcher {
-  private static final Logger logger = Logger.getLogger(ResourceInUserService.class);
+  private static final Logger logger = LogManager.getLogger(ResourceInUserService.class);
   private static final String RESOURCE_ID = "}, Resource ID: {";
   private static final String QUANTITY = "}, Quantity: {";
   private final UserRepository userRepository;

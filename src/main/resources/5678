@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration >
+    <Appenders>
+        <File name="File" fileName="/private/tmp/jms/logs/logging.log">
+            <PatternLayout>
+                <Pattern>%d{dd-MM-yyyy HH:mm:ss} %p %c{1.} [%t] %m (%L) %n</Pattern>
+            </PatternLayout>
+        </File>
+    </Appenders>
+    <Loggers>
+        <Root level="debug">
+            <AppenderRef ref="File"/>
+        </Root>
+    </Loggers>
+</Configuration>
+
+
+
+
+
+
+
