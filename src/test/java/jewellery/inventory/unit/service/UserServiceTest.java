@@ -23,6 +23,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -132,17 +133,28 @@ class UserServiceTest {
   @DisplayName("Should update the user when the user id exists")
   void updateUserWhenUserIdExists() {
     user.setId(userId);
+    String originalPassword = user.getPassword();
 
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(userRepository.save(any(User.class))).thenReturn(user);
 
     UserUpdateRequestDto userRequestDto = new UserRequestDto();
+    userRequestDto.setFirstName("changedFirstName");
+    userRequestDto.setLastName("changedLastName");
+    userRequestDto.setEmail("change@gmail.com");
+    userRequestDto.setNote("changedNote");
+
     when(userMapper.toUserUpdateRequest(user)).thenReturn(userRequestDto);
     when(userMapper.toUserEntity(userRequestDto)).thenReturn(user);
 
     UserResponseDto updatedUser = userService.updateUser(userMapper.toUserUpdateRequest(user), userId);
 
+    ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+    verify(userRepository).save(userCaptor.capture());
+    User savedUser = userCaptor.getValue();
+
     assertEquals(userMapper.toUserResponse(user), updatedUser);
+    assertEquals(originalPassword, savedUser.getPassword(), "Password should remain unchanged after update");
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, times(1)).save(any(User.class));
   }
