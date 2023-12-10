@@ -30,7 +30,7 @@ public class ResourceService implements EntityFetcher {
   private final ResourceMapper resourceMapper;
 
   public List<ResourceResponseDto> getAllResources() {
-    logger.info("Get all Resources");
+    logger.debug("Fetching all Resources");
     List<Resource> resources = resourceRepository.findAll();
     return resources.stream().map(resourceMapper::toResourceResponse).toList();
   }
@@ -39,14 +39,14 @@ public class ResourceService implements EntityFetcher {
   public ResourceResponseDto createResource(ResourceRequestDto resourceRequestDto) {
     Resource savedResource =
         resourceRepository.save(resourceMapper.toResourceEntity(resourceRequestDto));
-    logger.info("Resource created successfully. Resource ID: {" + savedResource.getId() + "}");
+    logger.info("Resource created successfully. Resource ID: {}", savedResource.getId());
     return resourceMapper.toResourceResponse(savedResource);
   }
 
   public ResourceResponseDto getResource(UUID id) {
     Resource resource =
         resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
-    logger.info("Resource fetched successfully. Resource ID: {" + resource.getId() + "}");
+    logger.info("Resource fetched successfully. Resource ID: {}", resource.getId());
     return resourceMapper.toResourceResponse(resource);
   }
 
@@ -54,8 +54,8 @@ public class ResourceService implements EntityFetcher {
   public void deleteResourceById(UUID id) {
     Resource resource =
         resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
-    logger.info("Resource deleted successfully. Resource ID: {" + id + "}");
     resourceRepository.delete(resource);
+    logger.info("Resource deleted successfully. Resource ID: {}", id);
   }
 
   @LogUpdateEvent(eventType = EventType.RESOURCE_UPDATE)
@@ -64,12 +64,12 @@ public class ResourceService implements EntityFetcher {
     Resource toUpdate = resourceMapper.toResourceEntity(resourceRequestDto);
     toUpdate.setId(id);
     Resource updatedResource = resourceRepository.save(toUpdate);
-    logger.info("Resource updated successfully. Resource ID: {" + updatedResource.getId() + "}");
+    logger.info("Resource updated successfully. Resource ID: {}", updatedResource.getId());
     return resourceMapper.toResourceResponse(updatedResource);
   }
 
   public ResourceQuantityResponseDto getResourceQuantity(UUID id) {
-    logger.debug("Fetching resource quantity by ID: {" + id + "}");
+    logger.debug("Fetching resource quantity by ID: {}", id);
     return ResourceQuantityResponseDto.builder()
         .quantity(resourceInUserRepository.sumQuantityByResource(id))
         .resource(

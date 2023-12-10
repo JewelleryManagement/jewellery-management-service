@@ -57,9 +57,7 @@ public class EventAspect {
 
     if (!(service instanceof EntityFetcher entityFetcher)) {
       logger.error(
-          "Service: {"
-              + service.getClass()
-              + "} does not implement EntityFetcher for deletion logging");
+          "Service: {} does not implement EntityFetcher for deletion logging", service.getClass());
       return;
     }
 
@@ -68,7 +66,7 @@ public class EventAspect {
     if (entityBeforeDeletion != null) {
       eventService.logEvent(eventType, entityBeforeDeletion);
     } else {
-      logger.error("Entity with id: {" + id + "} not found for deletion logging");
+      logger.error("Entity with id: {} not found for deletion logging", id);
     }
   }
 }

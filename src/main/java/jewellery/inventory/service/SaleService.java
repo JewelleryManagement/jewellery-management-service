@@ -17,7 +17,6 @@ import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.SaleRepository;
-import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,14 +27,13 @@ import org.springframework.stereotype.Service;
 public class SaleService {
   private static final Logger logger = LogManager.getLogger(SaleService.class);
   private static final String PRODUCT_ID = "Product with ID {";
-  private final AuthService authService;
   private final SaleRepository saleRepository;
   private final SaleMapper saleMapper;
   private final ProductService productService;
   private final UserService userService;
 
   public List<SaleResponseDto> getAllSales() {
-    logger.info("Get all sales");
+    logger.debug("Fetching all Sales");
     List<Sale> sales = saleRepository.findAll();
     return sales.stream().map(saleMapper::mapEntityToResponseDto).toList();
   }
@@ -55,7 +53,7 @@ public class SaleService {
 
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
-    logger.info("Sale created successfully. Sale ID: {" + createdSale.getId() + "}");
+    logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
 
@@ -63,11 +61,7 @@ public class SaleService {
     for (Product product : products) {
       if (!product.getOwner().getId().equals(sellerId)) {
         logger.error(
-            "Seller with ID {"
-                + sellerId
-                + "} is not the owner of product with ID {"
-                + product.getId()
-                + "}");
+            "Seller with ID {} is not the owner of product with ID {}", sellerId, product.getId());
         throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
       }
     }
@@ -86,7 +80,7 @@ public class SaleService {
     productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
 
     deleteSaleIfProductsIsEmpty(sale);
-    logger.info("Product returned successfully. Product ID: {}",productId);
+    logger.info("Product returned successfully. Product ID: {}", productId);
     return validateSaleAfterReturnProduct(sale, productToReturn);
   }
 
@@ -97,7 +91,7 @@ public class SaleService {
   private void throwExceptionIfProductIsPartOfAnotherProduct(List<Product> products) {
     for (Product product : products) {
       if (product.getContentOf() != null) {
-        logger.error(PRODUCT_ID + product.getId() + "} is part of another product.");
+        logger.error(PRODUCT_ID + "} is part of another product.", product.getId());
         throw new ProductIsContentException(product.getId());
       }
     }
@@ -105,14 +99,14 @@ public class SaleService {
 
   private void throwExceptionIfProductIsPartOfAnotherProduct(Product product) {
     if (product.getContentOf() != null) {
-      logger.error(PRODUCT_ID + product.getId() + "} is part of another product.");
+      logger.error(PRODUCT_ID + "} is part of another product.", product.getId());
       throw new ProductIsContentException(product.getId());
     }
   }
 
   private void throwExceptionIfProductNotSold(Product product) {
     if (product.getPartOfSale() == null) {
-      logger.error(PRODUCT_ID + product.getId() + "} is not sold.");
+      logger.error(PRODUCT_ID + "} is not sold.", product.getId());
       throw new ProductNotSoldException(product.getId());
     }
   }
@@ -120,7 +114,7 @@ public class SaleService {
   private void throwExceptionIfProductIsSold(List<Product> products) {
     for (Product product : products) {
       if (product.getPartOfSale() != null) {
-        logger.error(PRODUCT_ID + product.getId() + "} is already sold.");
+        logger.error(PRODUCT_ID + "} is already sold.", product.getId());
         throw new ProductIsSoldException(product.getId());
       }
     }
@@ -144,12 +138,10 @@ public class SaleService {
 
   private void deleteSaleIfProductsIsEmpty(Sale sale) {
     if (sale.getProducts().isEmpty()) {
-      logger.info(
-          "Deleting sale with ID: {" + sale.getId() + "} since the products list is empty.");
+      logger.info("Deleting sale with ID: {} since the products list is empty.", sale.getId());
       saleRepository.deleteById(sale.getId());
-      logger.info(
-          "Saving sale with ID: {" + sale.getId() + "} since the products list is not empty.");
     } else saleRepository.save(sale);
+    logger.info("Saving sale with ID: {} since the products list is not empty.", sale.getId());
   }
 
   private ProductReturnResponseDto validateSaleAfterReturnProduct(
@@ -162,7 +154,7 @@ public class SaleService {
   }
 
   private List<Product> removeProductFromSale(List<Product> products, Product productToRemove) {
-    logger.info("Removing product with ID: {" + productToRemove.getId() + "} from sale.");
+    logger.info("Removing product with ID: {} from sale.", productToRemove.getId());
     products.remove(productToRemove);
     return products;
   }

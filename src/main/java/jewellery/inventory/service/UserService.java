@@ -33,7 +33,7 @@ public class UserService implements EntityFetcher {
   private final PasswordEncoder passwordEncoder;
 
   public List<UserResponseDto> getAllUsers() {
-    logger.info("Fetching all users.");
+    logger.debug("Fetching all users.");
     return userMapper.toUserResponseList(userRepository.findAll());
   }
 
@@ -42,7 +42,7 @@ public class UserService implements EntityFetcher {
   }
 
   public User getUser(UUID id) {
-    logger.info("Fetching user with ID: {" + id + "}");
+    logger.info("Fetching user with ID: {}", id);
     return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
   }
 
@@ -57,7 +57,7 @@ public class UserService implements EntityFetcher {
 
   @LogUpdateEvent(eventType = EventType.USER_UPDATE)
   public UserResponseDto updateUser(UserRequestDto userRequest, UUID id) {
-    logger.info("Updating user with ID: {" + id + "}");
+    logger.info("Updating user with ID: {}", id);
     if (!userRepository.existsById(id)) {
       throw new UserNotFoundException(id);
     }
@@ -66,7 +66,7 @@ public class UserService implements EntityFetcher {
     userToUpdate.setId(id);
 
     validateUserEmailAndName(userToUpdate);
-    logger.info("User with ID: {" + id + "} updated successfully.");
+    logger.info("User with ID: {} updated successfully.", id);
 
     return userMapper.toUserResponse(userRepository.save(userToUpdate));
   }
@@ -76,18 +76,18 @@ public class UserService implements EntityFetcher {
     if (!userRepository.existsById(id)) {
       throw new UserNotFoundException(id);
     }
-    logger.info("Deleting user with ID: {" + id + "}");
+    logger.info("Deleting user with ID: {}", id);
     userRepository.deleteById(id);
   }
 
   private void validateUserEmailAndName(User user) {
     if (isNameUsedByOtherUser(user.getName(), user.getId())) {
-      logger.error("Duplicate name detected: {" + user.getName() + "}");
+      logger.error("Duplicate name detected: {}", user.getName());
       throw new DuplicateNameException(user.getName());
     }
 
     if (isEmailUsedByOtherUser(user.getEmail(), user.getId())) {
-      logger.error("Duplicate email detected: {" + user.getEmail() + "}");
+      logger.error("Duplicate email detected: {}", user.getEmail());
       throw new DuplicateEmailException(user.getEmail());
     }
   }
