@@ -212,10 +212,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void transferProductSuccessfully() throws JsonProcessingException {
-    AuthenticationRequestDto dto = new AuthenticationRequestDto("root@gmail.com", "p@s5W07d");
-    ResponseEntity<UserAuthDetailsDto> Response =
-        this.testRestTemplate.postForEntity("/login", dto, UserAuthDetailsDto.class);
-
     ResponseEntity<ProductResponseDto> productResponse =
         this.testRestTemplate.postForEntity(
             getBaseProductUrl(), productRequestDto, ProductResponseDto.class);

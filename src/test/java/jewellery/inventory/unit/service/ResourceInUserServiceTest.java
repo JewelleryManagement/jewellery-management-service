@@ -81,7 +81,6 @@ class ResourceInUserServiceTest {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(resourceRepository.findById(resourceId)).thenReturn(Optional.of(resource));
 
-
     resourceInUserService.addResourceToUser(resourceUserDto);
 
     verify(userRepository, times(1)).findById(userId);

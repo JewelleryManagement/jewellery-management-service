@@ -71,7 +71,7 @@ class ProductServiceTest {
     productRequestDto.setProductsContent(List.of(product.getId()));
 
     assertThrows(
-        UserNotOwnerException.class, () -> productService.createProduct(productRequestDto));
+            UserNotOwnerException.class, () -> productService.createProduct(productRequestDto));
   }
 
   @Test
@@ -118,7 +118,6 @@ class ProductServiceTest {
     when(userRepository.findById(recipient.getId())).thenReturn(Optional.of(recipient));
     assertEquals(product.getOwner().getId(), user.getId());
 
-
     productService.transferProduct(product.getId(), recipient.getId());
 
     assertNotEquals(recipient.getId(), user.getId());
@@ -133,7 +132,6 @@ class ProductServiceTest {
     when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId()))
         .thenReturn(Optional.of(resourceInUser));
     user.setResourcesOwned(List.of(resourceInUser));
-
 
     ProductResponseDto response = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
@@ -166,7 +164,6 @@ class ProductServiceTest {
 
     productRequestDto.setProductsContent(List.of(product.getId()));
 
-
     ProductResponseDto response = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
 
@@ -195,8 +192,9 @@ class ProductServiceTest {
   @Test
   void testGetProductShouldThrowWhenProductNotFound() {
     UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
-
-    assertThrows(ProductNotFoundException.class, () -> productService.getProductResponse(fakeId));
+    assertThrows(
+        ProductNotFoundException.class,
+        () -> productService.getProductResponse(fakeId));
   }
 
   @Test
@@ -207,7 +205,8 @@ class ProductServiceTest {
     ProductResponseDto response = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
 
-    ProductResponseDto actual = productService.getProductResponse(product.getId());
+    ProductResponseDto actual =
+        productService.getProductResponse(product.getId());
 
     assertEquals(response, actual);
     assertEquals(response.getId(), actual.getId());
@@ -229,6 +228,7 @@ class ProductServiceTest {
 
   @Test
   void testDeleteProductSuccessfully() throws IOException {
+
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
     productService.deleteProduct(product.getId());
@@ -257,7 +257,6 @@ class ProductServiceTest {
     product.setContentOf(new Product());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
-
     assertThrows(ProductIsContentException.class, () -> productService.deleteProduct(productId));
   }
 
@@ -266,19 +265,18 @@ class ProductServiceTest {
     product.setPartOfSale(new Sale());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
-
     assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
   }
 
   @Test
   void testDeleteProductGetProductShouldThrowExceptionWhenProductNotExist() {
     UUID fakeId = UUID.randomUUID();
-
     assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(fakeId));
   }
 
   @Test
   void deleteProductShouldThrowExceptionWhenProductIsPartOfProduct() {
+
     product.setContentOf(new Product());
 
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
@@ -289,6 +287,7 @@ class ProductServiceTest {
   @Test
   void deleteProductShouldThrowExceptionWhenProductIsSold() {
     product.setPartOfSale(new Sale());
+
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
     assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
