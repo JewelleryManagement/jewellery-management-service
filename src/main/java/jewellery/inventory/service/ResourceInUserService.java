@@ -142,7 +142,7 @@ public class ResourceInUserService implements EntityFetcher {
 
   private ResourceInUser getResourceInUser(User user, Resource resource) {
     return findResourceInUser(user, resource.getId())
-        .orElseGet(() -> createAndAddNewResourceInUser(user, resource, 0, 0));
+        .orElseGet(() -> createAndAddNewResourceInUser(user, resource, 0));
   }
 
   private ResourceInUser addResourceToUser(User user, Resource resource, Double quantity) {
@@ -205,7 +205,7 @@ public class ResourceInUserService implements EntityFetcher {
   }
 
   private ResourceInUser createAndAddNewResourceInUser(
-      User user, Resource resource, double quantity, double price) {
+      User user, Resource resource, double quantity) {
     ResourceInUser resourceInUser = new ResourceInUser();
     resourceInUser.setOwner(user);
     resourceInUser.setResource(resource);
