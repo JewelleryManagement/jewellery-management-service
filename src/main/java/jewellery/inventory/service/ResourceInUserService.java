@@ -7,8 +7,10 @@ import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.*;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
+import jewellery.inventory.dto.response.ResourcePurchaseResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
@@ -54,7 +56,7 @@ public class ResourceInUserService implements EntityFetcher {
             previousOwner, transferResourceRequestDto.getTransferredResourceId());
 
     removeQuantityFromResource(resourceInPreviousOwner, transferResourceRequestDto.getQuantity());
-    addResourceToUserToTransfer(
+    addResourceToUser(
         newOwner, resourceInPreviousOwner.getResource(), transferResourceRequestDto.getQuantity());
 
     return getTransferResourceResponseDto(
@@ -66,18 +68,16 @@ public class ResourceInUserService implements EntityFetcher {
 
   @Transactional
   @LogUpdateEvent(eventType = EventType.RESOURCE_ADD_QUANTITY)
-  public ResourcesInUserResponseDto addResourceToUser(ResourceInUserRequestDto resourceUserDto) {
-    return addResourceToUserNoLog(resourceUserDto);
+  public ResourcePurchaseResponseDto addResourceToUser(ResourcePurchaseRequestDto requestDto) {
+    return purchaseResource(requestDto);
   }
 
-  public ResourcesInUserResponseDto addResourceToUserNoLog(
-      ResourceInUserRequestDto resourceUserDto) {
+  public void addResourceToUserNoLog(ResourceInUserRequestDto resourceUserDto) {
     User user = findUserById(resourceUserDto.getUserId());
     Resource resource = findResourceById(resourceUserDto.getResourceId());
 
-    return resourcesInUserMapper.toResourcesInUserResponseDto(
-        addResourceToUser(
-            user, resource, resourceUserDto.getQuantity(), resourceUserDto.getDealPrice()));
+    resourcesInUserMapper.toResourcesInUserResponseDto(
+        addResourceToUser(user, resource, resourceUserDto.getQuantity()));
   }
 
   public ResourcesInUserResponseDto getAllResourcesFromUser(UUID userId) {
@@ -97,8 +97,12 @@ public class ResourceInUserService implements EntityFetcher {
     User user = findUserById(userId);
     ResourceInUser resourceInUser = findResourceInUserOrThrow(user, resourceId);
 
-    return resourcesInUserMapper.toResourcesInUserResponseDto(
-        removeQuantityFromResource(resourceInUser, quantity));
+    resourceInUser = removeQuantityFromResource(resourceInUser, quantity);
+    if (resourceInUser != null) {
+      return resourcesInUserMapper.toResourcesInUserResponseDto(
+          removeQuantityFromResource(resourceInUser, quantity));
+    }
+    return new ResourcesInUserResponseDto();
   }
 
   @Transactional
@@ -121,6 +125,14 @@ public class ResourceInUserService implements EntityFetcher {
     return findResourceInUser(user, resourceId).orElse(null);
   }
 
+  private ResourcePurchaseResponseDto getResourcePurchaseResponse(UUID userId, UUID resourceId) {
+    ResourceInUser resourceInUser = getResourceInUser(userId, resourceId);
+    if (resourceInUser != null) {
+      return resourcesInUserMapper.toResourcePurchaseResponse(resourceInUser);
+    }
+    return null;
+  }
+
   private ResourcesInUserResponseDto getResourceInUserResponse(UUID userId, UUID resourceId) {
     ResourceInUser resourceInUser = getResourceInUser(userId, resourceId);
     if (resourceInUser != null) {
@@ -129,21 +141,21 @@ public class ResourceInUserService implements EntityFetcher {
     return null;
   }
 
-  private void addResourceToUserToTransfer(User user, Resource resource, Double quantity) {
-    ResourceInUser resourceInUser = getResourceInUser(user, resource);
-    resourceInUser.setQuantity(resourceInUser.getQuantity() + quantity);
-    resourceInUserRepository.save(resourceInUser);
-  }
-
   private ResourceInUser getResourceInUser(User user, Resource resource) {
     return findResourceInUser(user, resource.getId())
         .orElseGet(() -> createAndAddNewResourceInUser(user, resource, 0, 0));
   }
 
-  private ResourceInUser addResourceToUser(
-      User user, Resource resource, Double quantity, double price) {
+  private ResourceInUser addResourceToUser(User user, Resource resource, Double quantity) {
     ResourceInUser resourceInUser = getResourceInUser(user, resource);
 
+    resourceInUser.setQuantity(resourceInUser.getQuantity() + quantity);
+    return resourceInUserRepository.save(resourceInUser);
+  }
+
+  private ResourceInUser purchaseResource(
+      User user, Resource resource, Double quantity, Double price) {
+    ResourceInUser resourceInUser = getResourceInUser(user, resource);
     resourceInUser.setQuantity(resourceInUser.getQuantity() + quantity);
     resourceInUser.setDealPrice(price);
     return resourceInUserRepository.save(resourceInUser);
@@ -199,7 +211,6 @@ public class ResourceInUserService implements EntityFetcher {
     resourceInUser.setOwner(user);
     resourceInUser.setResource(resource);
     resourceInUser.setQuantity(quantity);
-    resourceInUser.setDealPrice(price);
     user.getResourcesOwned().add(resourceInUser);
     return resourceInUser;
   }
@@ -224,10 +235,21 @@ public class ResourceInUserService implements EntityFetcher {
 
         return getResourceInUserResponse(
             resourceInUserRequestDto.getUserId(), resourceInUserRequestDto.getResourceId());
+      } else if (ids[0] instanceof ResourcePurchaseRequestDto resourcePurchaseRequestDto) {
+        return getResourcePurchaseResponse(
+            resourcePurchaseRequestDto.getUserId(), resourcePurchaseRequestDto.getResourceId());
       } else {
         return getResourceInUserResponse((UUID) ids[0], (UUID) ids[1]);
       }
     }
     return null;
+  }
+
+  private ResourcePurchaseResponseDto purchaseResource(ResourcePurchaseRequestDto requestDto) {
+    User user = findUserById(requestDto.getUserId());
+    Resource resource = findResourceById(requestDto.getResourceId());
+    ResourceInUser resourceInUser =
+        purchaseResource(user, resource, requestDto.getQuantity(), requestDto.getDealPrice());
+    return resourcesInUserMapper.toResourcePurchaseResponse(resourceInUser);
   }
 }

@@ -3,9 +3,11 @@ package jewellery.inventory.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.UUID;
-import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+
+import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
+import jewellery.inventory.dto.response.ResourcePurchaseResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.service.ResourceInUserService;
@@ -38,8 +40,8 @@ public class ResourceInUserController {
   @Operation(summary = "Add resource to user")
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
-  public ResourcesInUserResponseDto addResourceToUser(
-      @RequestBody @Valid ResourceInUserRequestDto resourceUserDto) {
+  public ResourcePurchaseResponseDto addResourceToUser(
+      @RequestBody @Valid ResourcePurchaseRequestDto resourceUserDto) {
     return resourceAvailabilityService.addResourceToUser(resourceUserDto);
   }
 

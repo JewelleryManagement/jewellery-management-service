@@ -17,13 +17,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
-import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
-import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
-import jewellery.inventory.dto.response.TransferResourceResponseDto;
-import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.PreciousStoneResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +31,6 @@ import org.springframework.http.*;
 class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private static final double RESOURCE_QUANTITY = 5.00;
-  private static final double TEST_DEAL_PRICE = 555.55;
 
   private String buildUrl(String... paths) {
     return "/" + String.join("/", paths);
@@ -64,16 +61,16 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     UserResponseDto createdUser = sendCreateUserRequest();
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
 
-    ResponseEntity<ResourcesInUserResponseDto> response =
-        sendAddResourceInUserRequest(
-            createResourceInUserRequestDto(
-                createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, TEST_DEAL_PRICE));
+    ResponseEntity<ResourcePurchaseResponseDto> response =
+        sendPurchaseResourceRequest(
+            createResourcePurchaseRequest(
+                createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, 555.55));
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     assertNotNull(response.getBody());
     assertEquals(1, response.getBody().getResourcesAndQuantities().size());
     assertEquals(createdUser, response.getBody().getOwner());
-    ResourcesInUserResponseDto result = response.getBody();
+    ResourcePurchaseResponseDto result = response.getBody();
 
     Map<String, Object> expectedEventPayload = getUpdateEventPayload(null, result, objectMapper);
 
@@ -88,7 +85,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendAddResourceInUserRequest(
             createResourceInUserRequestDto(
-                nonExistentUserId, createdResource.getId(), RESOURCE_QUANTITY, TEST_DEAL_PRICE));
+                nonExistentUserId, createdResource.getId(), RESOURCE_QUANTITY));
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
@@ -101,7 +98,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendAddResourceInUserRequest(
             createResourceInUserRequestDto(
-                createdUser.getId(), nonExistentResourceId, RESOURCE_QUANTITY, TEST_DEAL_PRICE));
+                createdUser.getId(), nonExistentResourceId, RESOURCE_QUANTITY));
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
@@ -113,7 +110,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendAddResourceInUserRequest(
-            createResourceInUserRequestDto(createdUser.getId(), createdResource.getId(), -5, TEST_DEAL_PRICE));
+            createResourceInUserRequestDto(createdUser.getId(), createdResource.getId(), -5));
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
@@ -124,7 +121,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     ResourceInUserRequestDto resourceInUserRequestDto =
         createResourceInUserRequestDto(
-            createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, TEST_DEAL_PRICE);
+            createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY);
 
     sendAddResourceInUserRequest(resourceInUserRequestDto);
     sendAddResourceInUserRequest(resourceInUserRequestDto);
@@ -145,9 +142,9 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     PreciousStoneResponseDto firstCreatedResource = sendCreatePreciousStoneRequest();
     PreciousStoneResponseDto secondCreatedResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
-        createResourceInUserRequestDto(createdUser.getId(), firstCreatedResource.getId(), 5.00, TEST_DEAL_PRICE));
+        createResourceInUserRequestDto(createdUser.getId(), firstCreatedResource.getId(), 5.00));
     sendAddResourceInUserRequest(
-        createResourceInUserRequestDto(createdUser.getId(), secondCreatedResource.getId(), 3.00, TEST_DEAL_PRICE));
+        createResourceInUserRequestDto(createdUser.getId(), secondCreatedResource.getId(), 3.00));
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendGetResourcesInUserRequest(createdUser.getId());
@@ -165,9 +162,9 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     UserResponseDto secondCreatedUser = sendCreateUserRequest(createDifferentUserRequest());
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
-        createResourceInUserRequestDto(firstCreatedUser.getId(), createdResource.getId(), 5.00, TEST_DEAL_PRICE));
+        createResourceInUserRequestDto(firstCreatedUser.getId(), createdResource.getId(), 5.00));
     sendAddResourceInUserRequest(
-        createResourceInUserRequestDto(secondCreatedUser.getId(), createdResource.getId(), 3.00, TEST_DEAL_PRICE));
+        createResourceInUserRequestDto(secondCreatedUser.getId(), createdResource.getId(), 3.00));
 
     ResponseEntity<ResourceOwnedByUsersResponseDto> response =
         sendGetUsersAndQuantitiesForResourceRequest(createdResource.getId());
@@ -196,7 +193,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     ResponseEntity<ResourcesInUserResponseDto> entity =
         sendAddResourceInUserRequest(
-            createResourceInUserRequestDtoWithoutPrice(
+            createResourceInUserRequestDto(
                 createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY));
 
     sendDeleteResourceInUserRequest(createdUser.getId(), createdResource.getId());
@@ -240,7 +237,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendAddResourceInUserRequest(
-            createResourceInUserRequestDtoWithoutPrice(
+            createResourceInUserRequestDto(
                 createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY));
 
     ResponseEntity<ResourcesInUserResponseDto> deleteQuantityResponse =
@@ -289,7 +286,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
         createResourceInUserRequestDto(
-            createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, TEST_DEAL_PRICE));
+            createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY));
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
@@ -304,7 +301,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
         createResourceInUserRequestDto(
-            createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, TEST_DEAL_PRICE));
+            createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY));
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
@@ -318,7 +315,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     UserResponseDto sender = sendCreateUserRequest();
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
-        createResourceInUserRequestDto(sender.getId(), createdResource.getId(), RESOURCE_QUANTITY, TEST_DEAL_PRICE));
+        createResourceInUserRequestDto(sender.getId(), createdResource.getId(), RESOURCE_QUANTITY));
 
     UserResponseDto receiver = sendCreateUserRequest(createDifferentUserRequest());
 
@@ -412,6 +409,14 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         getBaseResourceAvailabilityUrl(),
         resourceInUserRequestDto,
         ResourcesInUserResponseDto.class);
+  }
+
+  private ResponseEntity<ResourcePurchaseResponseDto> sendPurchaseResourceRequest(
+      ResourcePurchaseRequestDto resourcePurchaseRequestDto) {
+    return testRestTemplate.postForEntity(
+        getBaseResourceAvailabilityUrl(),
+        resourcePurchaseRequestDto,
+        ResourcePurchaseResponseDto.class);
   }
 
   private ResponseEntity<ResourcesInUserResponseDto> sendGetResourcesInUserRequest(UUID userId) {
