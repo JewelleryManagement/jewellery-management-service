@@ -97,7 +97,6 @@ public class ResourceInUserService implements EntityFetcher {
     User user = findUserById(userId);
     ResourceInUser resourceInUser = findResourceInUserOrThrow(user, resourceId);
 
-    resourceInUser = removeQuantityFromResource(resourceInUser, quantity);
     if (resourceInUser != null) {
       return resourcesInUserMapper.toResourcesInUserResponseDto(
           removeQuantityFromResource(resourceInUser, quantity));
