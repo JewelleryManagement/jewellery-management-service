@@ -19,7 +19,7 @@ public class ResourcesInUserMapper {
 
   private final ResourceMapper resourceMapper;
 
-  public ResourcePurchaseResponseDto toResourcePurchaseResponse(ResourceInUser resourceInUser) {
+  public ResourcesInUserResponseDto toResourcePurchaseResponse(ResourceInUser resourceInUser) {
     ResourcePurchaseResponseDto responseDto = new ResourcePurchaseResponseDto();
     responseDto.setOwner(userMapper.toUserResponse(resourceInUser.getOwner()));
     responseDto.setResourcesAndQuantities(getSingleResourceQuantityResponse(resourceInUser));

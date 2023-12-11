@@ -10,7 +10,6 @@ import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
-import jewellery.inventory.dto.response.ResourcePurchaseResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
@@ -68,7 +67,7 @@ public class ResourceInUserService implements EntityFetcher {
 
   @Transactional
   @LogUpdateEvent(eventType = EventType.RESOURCE_ADD_QUANTITY)
-  public ResourcePurchaseResponseDto addResourceToUser(ResourcePurchaseRequestDto requestDto) {
+  public ResourcesInUserResponseDto addResourceToUser(ResourcePurchaseRequestDto requestDto) {
     return purchaseResource(requestDto);
   }
 
@@ -122,14 +121,6 @@ public class ResourceInUserService implements EntityFetcher {
   private ResourceInUser getResourceInUser(UUID userId, UUID resourceId) {
     User user = findUserById(userId);
     return findResourceInUser(user, resourceId).orElse(null);
-  }
-
-  private ResourcePurchaseResponseDto getResourcePurchaseResponse(UUID userId, UUID resourceId) {
-    ResourceInUser resourceInUser = getResourceInUser(userId, resourceId);
-    if (resourceInUser != null) {
-      return resourcesInUserMapper.toResourcePurchaseResponse(resourceInUser);
-    }
-    return null;
   }
 
   private ResourcesInUserResponseDto getResourceInUserResponse(UUID userId, UUID resourceId) {
@@ -234,7 +225,7 @@ public class ResourceInUserService implements EntityFetcher {
     return null;
   }
 
-  private ResourcePurchaseResponseDto purchaseResource(ResourcePurchaseRequestDto requestDto) {
+  private ResourcesInUserResponseDto purchaseResource(ResourcePurchaseRequestDto requestDto) {
     User user = findUserById(requestDto.getUserId());
     Resource resource = findResourceById(requestDto.getResourceId());
     ResourceInUser resourceInUser = addResourceToUser(user, resource, requestDto.getQuantity());

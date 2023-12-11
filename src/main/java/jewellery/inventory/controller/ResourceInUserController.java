@@ -40,7 +40,7 @@ public class ResourceInUserController {
   @Operation(summary = "Add resource to user")
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
-  public ResourcePurchaseResponseDto addResourceToUser(
+  public ResourcesInUserResponseDto addResourceToUser(
       @RequestBody @Valid ResourcePurchaseRequestDto resourceUserDto) {
     return resourceAvailabilityService.addResourceToUser(resourceUserDto);
   }
