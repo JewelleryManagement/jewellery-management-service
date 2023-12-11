@@ -3,6 +3,7 @@ package jewellery.inventory.helper;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.request.UserUpdateRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.Role;
 import jewellery.inventory.model.User;
@@ -27,6 +28,15 @@ public class UserTestHelper {
     user.setEmail(USER_EMAIL);
     user.setPassword(USER_PASSWORD);
     user.setRole(Role.ADMIN);
+    return user;
+  }
+
+  public static User createUserFromUserUpdateRequestDto(UserUpdateRequestDto userUpdateRequestDto) {
+    User user = new User();
+    user.setFirstName(userUpdateRequestDto.getFirstName());
+    user.setLastName(userUpdateRequestDto.getLastName());
+    user.setEmail(userUpdateRequestDto.getEmail());
+    user.setNote(userUpdateRequestDto.getNote());
     return user;
   }
 
@@ -71,6 +81,15 @@ public class UserTestHelper {
     userRequest.setLastName("different_last_name");
     userRequest.setEmail("user@example.com");
     userRequest.setPassword(USER_PASSWORD);
+    return userRequest;
+  }
+
+  public static UserUpdateRequestDto createUpdateUserRequest() {
+    UserRequestDto userRequest = new UserRequestDto();
+    userRequest.setFirstName("changed_firstName");
+    userRequest.setLastName("changed_lastName");
+    userRequest.setEmail("changed@mail.com");
+    userRequest.setNote("Some note for the update");
     return userRequest;
   }
 

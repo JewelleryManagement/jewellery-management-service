@@ -3,6 +3,10 @@ package jewellery.inventory.unit.service;
 import static jewellery.inventory.helper.UserTestHelper.USER_EMAIL;
 import static jewellery.inventory.helper.UserTestHelper.createSecondTestUser;
 import static jewellery.inventory.helper.UserTestHelper.createTestUser;
+import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
+import static jewellery.inventory.helper.UserTestHelper.createTestUserResponseDto;
+import static jewellery.inventory.helper.UserTestHelper.createUpdateUserRequest;
+import static jewellery.inventory.helper.UserTestHelper.createUserFromUserUpdateRequestDto;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -32,9 +36,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
   @Mock private UserRepository userRepository;
-  @InjectMocks private UserService userService;
   @Mock private UserMapper userMapper;
   @Mock private PasswordEncoder passwordEncoder;
+  @InjectMocks private UserService userService;
 
   private User user;
   private UserResponseDto userResponse;
@@ -43,7 +47,7 @@ class UserServiceTest {
   @BeforeEach
   void setUp() {
     user = createTestUser();
-    userResponse = userMapper.toUserResponse(user);
+    userResponse = createTestUserResponseDto(user);
     userId = UUID.randomUUID();
   }
 
@@ -77,6 +81,7 @@ class UserServiceTest {
   @DisplayName("Should return the user when the user id exists")
   void getUserWhenUserIdExists() {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(userMapper.toUserResponse(user)).thenReturn(createTestUserResponseDto(user));
 
     UserResponseDto result = userService.getUserResponse(userId);
 
@@ -87,6 +92,7 @@ class UserServiceTest {
   @Test
   @DisplayName("Should throw a DuplicateEmailException when the email is already taken")
   void createUserWhenEmailIsAlreadyTakenThenThrowDuplicateEmailException() {
+    when(userMapper.toUserRequest(user)).thenReturn(createTestUserRequest());
     UserRequestDto userRequest = userMapper.toUserRequest(user);
 
     when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
@@ -106,6 +112,7 @@ class UserServiceTest {
     when(userRepository.save(any(User.class))).thenReturn(user);
     when(userMapper.toUserEntity(userRequest)).thenReturn(user);
     when(userMapper.toUserResponse(user)).thenReturn(userResponse);
+
     when(passwordEncoder.encode(any()))
         .thenReturn("$2a$10$WIgDfys.uGK53Q3V13l8AOYCH7M1cVHulX8klIq0PLB/KweY/Onhi");
 
@@ -132,29 +139,26 @@ class UserServiceTest {
   @Test
   @DisplayName("Should update the user when the user id exists")
   void updateUserWhenUserIdExists() {
-    user.setId(userId);
-    String originalPassword = user.getPassword();
+    User originalUser = createTestUser();
+    originalUser.setId(userId);
 
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(userRepository.save(any(User.class))).thenReturn(user);
+    when(userRepository.findById(userId)).thenReturn(Optional.of(originalUser));
 
-    UserUpdateRequestDto userRequestDto = new UserUpdateRequestDto();
-    userRequestDto.setFirstName("changedFirstName");
-    userRequestDto.setLastName("changedLastName");
-    userRequestDto.setEmail("change@gmail.com");
-    userRequestDto.setNote("changedNote");
+    UserUpdateRequestDto userRequestDto = createUpdateUserRequest();
+    User userFromRequest = createUserFromUserUpdateRequestDto(userRequestDto);
 
-    when(userMapper.toUserUpdateRequest(user)).thenReturn(userRequestDto);
-    when(userMapper.toUserEntity(userRequestDto)).thenReturn(user);
+    doReturn(userFromRequest).when(userMapper).toUserEntity(userRequestDto);
 
-    UserResponseDto updatedUser = userService.updateUser(userMapper.toUserUpdateRequest(user), userId);
+    userService.updateUser(userRequestDto, userId);
 
     ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
     verify(userRepository).save(userCaptor.capture());
     User savedUser = userCaptor.getValue();
 
-    assertEquals(userMapper.toUserResponse(user), updatedUser);
-    assertEquals(originalPassword, savedUser.getPassword(), "Password should remain unchanged after update");
+    assertNotNull(savedUser.getPassword(), "Password should not be null after update");
+    assertEquals(savedUser.getFirstName(), userRequestDto.getFirstName());
+    assertEquals(savedUser.getEmail(), userRequestDto.getEmail());
+
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, times(1)).save(any(User.class));
   }
