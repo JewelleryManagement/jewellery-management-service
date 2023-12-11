@@ -38,7 +38,6 @@ public class UserUpdateRequestDto {
   @Enumerated(EnumType.STRING)
   private Role role;
 
-  @Size(min = 3, max = 100, message = "Address must be between 3 and 100 characters")
   private String address;
 
   private String phone;
@@ -50,6 +49,5 @@ public class UserUpdateRequestDto {
   @PastOrPresent(message = "Birth date must be a past or present date")
   private LocalDate birthDate;
 
-  @Size(min = 3, max = 500, message = "Note must be between 3 and 500 characters")
   private String note;
 }
