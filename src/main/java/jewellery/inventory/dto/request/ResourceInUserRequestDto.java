@@ -8,11 +8,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 public class ResourceInUserRequestDto {
   private static final String QUANTITY_MIN_VALUE_MSG = "Quantity should not be less than 1.";
   private static final String QUANTITY_DECIMAL_PLACES_MSG =

@@ -149,15 +149,8 @@ public class ResourceInUserService implements EntityFetcher {
     ResourceInUser resourceInUser = getResourceInUser(user, resource);
 
     resourceInUser.setQuantity(resourceInUser.getQuantity() + quantity);
-    return resourceInUserRepository.save(resourceInUser);
-  }
-
-  private ResourceInUser purchaseResource(
-      User user, Resource resource, Double quantity, Double price) {
-    ResourceInUser resourceInUser = getResourceInUser(user, resource);
-    resourceInUser.setQuantity(resourceInUser.getQuantity() + quantity);
-    resourceInUser.setDealPrice(price);
-    return resourceInUserRepository.save(resourceInUser);
+    resourceInUserRepository.save(resourceInUser);
+    return resourceInUser;
   }
 
   private ResourceInUser removeQuantityFromResource(
@@ -234,11 +227,8 @@ public class ResourceInUserService implements EntityFetcher {
 
         return getResourceInUserResponse(
             resourceInUserRequestDto.getUserId(), resourceInUserRequestDto.getResourceId());
-      } else if (ids[0] instanceof ResourcePurchaseRequestDto resourcePurchaseRequestDto) {
-        return getResourcePurchaseResponse(
-            resourcePurchaseRequestDto.getUserId(), resourcePurchaseRequestDto.getResourceId());
       } else {
-        return getResourceInUserResponse((UUID) ids[0], (UUID) ids[1]);
+          return getResourceInUserResponse((UUID) ids[0], (UUID) ids[1]);
       }
     }
     return null;
@@ -247,8 +237,8 @@ public class ResourceInUserService implements EntityFetcher {
   private ResourcePurchaseResponseDto purchaseResource(ResourcePurchaseRequestDto requestDto) {
     User user = findUserById(requestDto.getUserId());
     Resource resource = findResourceById(requestDto.getResourceId());
-    ResourceInUser resourceInUser =
-        purchaseResource(user, resource, requestDto.getQuantity(), requestDto.getDealPrice());
+    ResourceInUser resourceInUser = addResourceToUser(user, resource, requestDto.getQuantity());
+    resourceInUser.setDealPrice(requestDto.getDealPrice());
     return resourcesInUserMapper.toResourcePurchaseResponse(resourceInUser);
   }
 }
