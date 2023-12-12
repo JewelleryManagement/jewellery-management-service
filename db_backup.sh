@@ -24,5 +24,9 @@ FILE_NAME="db_backup_${DATE}.sql"
 
 export PGPASSWORD="$DB_PASSWORD"
 
-pg_dump -U "$DB_USER" -h localhost "$DB_NAME" > "$BACKUP_DIR/$FILE_NAME"
-echo "Database backup saved to $BACKUP_DIR/$FILE_NAME"
+if pg_dump -U "$DB_USER" -h localhost "$DB_NAME" > "$BACKUP_DIR/$FILE_NAME"; then
+    echo "Database backup saved to $BACKUP_DIR/$FILE_NAME"
+else
+    echo "Backup failed"
+    rm -f "$BACKUP_DIR/$FILE_NAME"
+fi
