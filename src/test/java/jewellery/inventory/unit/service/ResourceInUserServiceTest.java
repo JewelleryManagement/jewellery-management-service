@@ -10,7 +10,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.*;
-import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+
+import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
@@ -50,6 +51,7 @@ class ResourceInUserServiceTest {
   private UUID resourceId;
   private ResourceInUser resourceInUser;
   private static final double INITIAL_QUANTITY = 5;
+  private static final double TEST_DEAL_PRICE = 555.55;
 
   @BeforeEach
   void setUp() {
@@ -76,12 +78,13 @@ class ResourceInUserServiceTest {
   @Test
   void willAddResourceToUser() {
     user.setResourcesOwned(new ArrayList<>());
-    ResourceInUserRequestDto resourceUserDto =
-        createResourceInUserRequestDto(userId, resourceId, 10);
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(resourceRepository.findById(resourceId)).thenReturn(Optional.of(resource));
 
-    resourceInUserService.addResourceToUser(resourceUserDto);
+    ResourcePurchaseRequestDto purchaseRequestDto =
+        createResourcePurchaseRequest(userId, resourceId, 16, TEST_DEAL_PRICE);
+
+    resourceInUserService.addResourceToUser(purchaseRequestDto);
 
     verify(userRepository, times(1)).findById(userId);
     verify(resourceRepository, times(1)).findById(resourceId);
@@ -90,13 +93,12 @@ class ResourceInUserServiceTest {
 
   @Test
   void willThrowUserNotFoundExceptionWhenAddResourceToUserAndUserNonexistent() {
-    ResourceInUserRequestDto resourceInUserRequestDto =
-        createResourceInUserRequestDto(userId, resourceId, 10);
+    ResourcePurchaseRequestDto requestDto =
+        createResourcePurchaseRequest(userId, resourceId, 10, TEST_DEAL_PRICE);
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
     assertThrows(
-        UserNotFoundException.class,
-        () -> resourceInUserService.addResourceToUser(resourceInUserRequestDto));
+        UserNotFoundException.class, () -> resourceInUserService.addResourceToUser(requestDto));
 
     verify(userRepository, times(1)).findById(userId);
     verify(resourceRepository, never()).findById(resourceId);
@@ -105,14 +107,13 @@ class ResourceInUserServiceTest {
 
   @Test
   void willThrowResourceNotFoundExceptionWhenAddResourceToUserAndResourceNotFound() {
-    ResourceInUserRequestDto resourceUserDto =
-        createResourceInUserRequestDto(userId, resourceId, 10);
+    ResourcePurchaseRequestDto requestDto =
+        createResourcePurchaseRequest(userId, resourceId, 10, TEST_DEAL_PRICE);
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(resourceRepository.findById(resourceId)).thenReturn(Optional.empty());
 
     assertThrows(
-        ResourceNotFoundException.class,
-        () -> resourceInUserService.addResourceToUser(resourceUserDto));
+        ResourceNotFoundException.class, () -> resourceInUserService.addResourceToUser(requestDto));
 
     verify(userRepository, times(1)).findById(userId);
     verify(resourceRepository, times(1)).findById(resourceId);
@@ -246,15 +247,16 @@ class ResourceInUserServiceTest {
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
     assertThrows(
-            UserNotFoundException.class,
-            () -> resourceInUserService.transferResources(getTransferResourceRequestDto()));
+        UserNotFoundException.class,
+        () -> resourceInUserService.transferResources(getTransferResourceRequestDto()));
 
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, never()).save(any(User.class));
   }
 
   @Test
-  void willThrowInsufficientResourceQuantityExceptionWhenTransferResourceIsLessThanResourceInUser() {
+  void
+      willThrowInsufficientResourceQuantityExceptionWhenTransferResourceIsLessThanResourceInUser() {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(userRepository.findById(secondUserId)).thenReturn(Optional.of(secondUser));
 
@@ -275,8 +277,8 @@ class ResourceInUserServiceTest {
     transferResourceRequestDto.setTransferredResourceId(UUID.randomUUID());
 
     assertThrows(
-            ResourceInUserNotFoundException.class,
-            () -> resourceInUserService.transferResources(transferResourceRequestDto));
+        ResourceInUserNotFoundException.class,
+        () -> resourceInUserService.transferResources(transferResourceRequestDto));
 
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, never()).save(any(User.class));
