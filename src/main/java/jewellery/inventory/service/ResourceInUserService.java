@@ -95,10 +95,11 @@ public class ResourceInUserService implements EntityFetcher {
       UUID userId, UUID resourceId, double quantity) {
     User user = findUserById(userId);
     ResourceInUser resourceInUser = findResourceInUserOrThrow(user, resourceId);
+    removeQuantityFromResource(resourceInUser, quantity);
 
     if (resourceInUser != null) {
       return resourcesInUserMapper.toResourcesInUserResponseDto(
-          removeQuantityFromResource(resourceInUser, quantity));
+          resourceInUser);
     }
     return new ResourcesInUserResponseDto();
   }
