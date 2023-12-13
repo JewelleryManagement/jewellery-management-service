@@ -2,6 +2,7 @@ package jewellery.inventory.helper;
 
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.UserUpdateRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
@@ -107,5 +108,15 @@ public class UserTestHelper {
     requestDto.setResourceId(resourceId);
     requestDto.setQuantity(quantity);
     return requestDto;
+  }
+
+  public static ResourcePurchaseRequestDto createResourcePurchaseRequest(
+      UUID userId, UUID resourceId, double quantity, double price) {
+    return ResourcePurchaseRequestDto.builder()
+        .userId(userId)
+        .resourceId(resourceId)
+        .quantity(quantity)
+        .dealPrice(price)
+        .build();
   }
 }
