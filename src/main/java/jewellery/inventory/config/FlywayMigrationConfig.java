@@ -13,11 +13,11 @@ public class FlywayMigrationConfig {
   @Autowired
   FlywayMigrationConfig(DataSource dataSource) {
     Flyway.configure()
-            .baselineOnMigrate(true)
-            .validateMigrationNaming(true)
-            .dataSource(dataSource)
-            .locations(LOCATION)
-            .load()
-            .migrate();
+        .baselineOnMigrate(true)
+        .validateMigrationNaming(true)
+        .dataSource(dataSource)
+        .locations(LOCATION)
+        .load()
+        .migrate();
   }
 }
