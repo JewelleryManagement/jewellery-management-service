@@ -1,19 +1,16 @@
 package jewellery.inventory.dto.request;
 
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import java.util.UUID;
-
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 public class ResourceInUserRequestDto {
   private static final String QUANTITY_MIN_VALUE_MSG = "Quantity should not be less than 1.";
   private static final String QUANTITY_DECIMAL_PLACES_MSG =

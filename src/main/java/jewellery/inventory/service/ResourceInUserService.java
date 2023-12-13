@@ -29,17 +29,12 @@ import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class ResourceInUserService implements EntityFetcher {
-  private static final Logger logger = LogManager.getLogger(ResourceInUserService.class);
-  private static final String RESOURCE_ID = "}, Resource ID: {";
-  private static final String QUANTITY = "}, Quantity: {";
   private final UserRepository userRepository;
   private final ResourceRepository resourceRepository;
   private final ResourceInUserRepository resourceInUserRepository;
@@ -51,23 +46,23 @@ public class ResourceInUserService implements EntityFetcher {
   @Transactional
   @LogCreateEvent(eventType = EventType.RESOURCE_TRANSFER)
   public TransferResourceResponseDto transferResources(
-          TransferResourceRequestDto transferResourceRequestDto) {
+      TransferResourceRequestDto transferResourceRequestDto) {
 
     User previousOwner = findUserById(transferResourceRequestDto.getPreviousOwnerId());
     User newOwner = findUserById(transferResourceRequestDto.getNewOwnerId());
     ResourceInUser resourceInPreviousOwner =
-            findResourceInUserOrThrow(
-                    previousOwner, transferResourceRequestDto.getTransferredResourceId());
+        findResourceInUserOrThrow(
+            previousOwner, transferResourceRequestDto.getTransferredResourceId());
 
     removeQuantityFromResource(resourceInPreviousOwner, transferResourceRequestDto.getQuantity());
     addResourceToUser(
-            newOwner, resourceInPreviousOwner.getResource(), transferResourceRequestDto.getQuantity());
+        newOwner, resourceInPreviousOwner.getResource(), transferResourceRequestDto.getQuantity());
 
     return getTransferResourceResponseDto(
-            previousOwner,
-            newOwner,
-            resourceInPreviousOwner.getResource(),
-            transferResourceRequestDto.getQuantity());
+        previousOwner,
+        newOwner,
+        resourceInPreviousOwner.getResource(),
+        transferResourceRequestDto.getQuantity());
   }
 
   @Transactional
@@ -81,31 +76,30 @@ public class ResourceInUserService implements EntityFetcher {
     Resource resource = findResourceById(resourceUserDto.getResourceId());
 
     resourcesInUserMapper.toResourcesInUserResponseDto(
-            addResourceToUser(user, resource, resourceUserDto.getQuantity()));
+        addResourceToUser(user, resource, resourceUserDto.getQuantity()));
   }
 
   public ResourcesInUserResponseDto getAllResourcesFromUser(UUID userId) {
     User user = findUserById(userId);
-    logger.info("Getting all resources from user. User ID: {}", userId);
     return resourcesInUserMapper.toResourcesInUserResponseDto(user);
   }
 
   @Transactional
   @LogUpdateEvent(eventType = RESOURCE_REMOVE_QUANTITY)
   public ResourcesInUserResponseDto removeQuantityFromResource(
-          UUID userId, UUID resourceId, double quantity) {
+      UUID userId, UUID resourceId, double quantity) {
     return removeQuantityFromResourceNoLog(userId, resourceId, quantity);
   }
 
   public ResourcesInUserResponseDto removeQuantityFromResourceNoLog(
-          UUID userId, UUID resourceId, double quantity) {
+      UUID userId, UUID resourceId, double quantity) {
     User user = findUserById(userId);
     ResourceInUser resourceInUser = findResourceInUserOrThrow(user, resourceId);
     removeQuantityFromResource(resourceInUser, quantity);
 
     if (resourceInUser != null) {
       return resourcesInUserMapper.toResourcesInUserResponseDto(
-              resourceInUser);
+          resourceInUser);
     }
     return new ResourcesInUserResponseDto();
   }
@@ -117,11 +111,6 @@ public class ResourceInUserService implements EntityFetcher {
     ResourceInUser resourceToRemove = findResourceInUserOrThrow(user, resourceId);
 
     user.getResourcesOwned().remove(resourceToRemove);
-    logger.info(
-            "Resource removed successfully from user. User ID: {" + RESOURCE_ID + "}",
-            userId,
-            resourceId);
-
     userRepository.save(user);
   }
 
@@ -138,19 +127,14 @@ public class ResourceInUserService implements EntityFetcher {
   private ResourcesInUserResponseDto getResourceInUserResponse(UUID userId, UUID resourceId) {
     ResourceInUser resourceInUser = getResourceInUser(userId, resourceId);
     if (resourceInUser != null) {
-      logger.debug(
-              "Retrieved resource in user response successfully. User ID: {" + RESOURCE_ID + "}",
-              userId,
-              resourceId);
       return resourcesInUserMapper.toResourcesInUserResponseDto(resourceInUser);
     }
-    logger.debug("Resource in user not found.User ID: {" + RESOURCE_ID + "}", userId, resourceId);
     return null;
   }
 
   private ResourceInUser getResourceInUser(User user, Resource resource) {
     return findResourceInUser(user, resource.getId())
-            .orElseGet(() -> createAndAddNewResourceInUser(user, resource, 0));
+        .orElseGet(() -> createAndAddNewResourceInUser(user, resource, 0));
   }
 
   private ResourceInUser addResourceToUser(User user, Resource resource, Double quantity) {
@@ -162,7 +146,7 @@ public class ResourceInUserService implements EntityFetcher {
   }
 
   private ResourceInUser removeQuantityFromResource(
-          ResourceInUser resourceInUser, double quantityToRemove) {
+      ResourceInUser resourceInUser, double quantityToRemove) {
     if (quantityToRemove < 0) {
       throw new NegativeResourceQuantityException(quantityToRemove);
     }
@@ -181,13 +165,12 @@ public class ResourceInUserService implements EntityFetcher {
       resourceInUser = null;
     }
     userRepository.save(owner);
-    logger.info("Quantity removed successfully from resource New Quantity: {}", newQuantity);
     return resourceInUser;
   }
 
   private ResourceInUser findResourceInUserOrThrow(User previousOwner, UUID resourceId) {
     return findResourceInUser(previousOwner, resourceId)
-            .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, previousOwner.getId()));
+        .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, previousOwner.getId()));
   }
 
   private User findUserById(UUID userId) {
@@ -195,61 +178,38 @@ public class ResourceInUserService implements EntityFetcher {
   }
 
   private Resource findResourceById(UUID resourceId) {
-    logger.info("Finding Resource by ID: {}", resourceId);
-
     return resourceRepository
-            .findById(resourceId)
-            .orElseThrow(() -> new ResourceNotFoundException(resourceId));
+        .findById(resourceId)
+        .orElseThrow(() -> new ResourceNotFoundException(resourceId));
   }
 
   private Optional<ResourceInUser> findResourceInUser(User user, UUID resourceId) {
-    logger.debug(
-            "Finding resource in user. User ID: {" + RESOURCE_ID + "}", user.getId(), resourceId);
     return user.getResourcesOwned().stream()
-            .filter(r -> r.getResource().getId().equals(resourceId))
-            .findFirst();
+        .filter(r -> r.getResource().getId().equals(resourceId))
+        .findFirst();
   }
 
   private ResourceInUser createAndAddNewResourceInUser(
-          User user, Resource resource, double quantity) {
+      User user, Resource resource, double quantity) {
     ResourceInUser resourceInUser = new ResourceInUser();
     resourceInUser.setOwner(user);
     resourceInUser.setResource(resource);
     resourceInUser.setQuantity(quantity);
     user.getResourcesOwned().add(resourceInUser);
-    logger.debug(
-            "New resource created and added successfully in user. User ID: {"
-                    + RESOURCE_ID
-                    + QUANTITY
-                    + "}",
-            user.getId(),
-            resource.getId(),
-            quantity);
     return resourceInUser;
   }
 
   private TransferResourceResponseDto getTransferResourceResponseDto(
-          User previousOwner, User newOwner, Resource resource, Double quantity) {
-    logger.debug(
-            "Creating TransferResourceResponseDto. Previous Owner ID: {"
-                    + "}, New Owner ID: {"
-                    + RESOURCE_ID
-                    + QUANTITY
-                    + "}",
-            previousOwner.getId(),
-            newOwner.getId(),
-            resource.getId(),
-            quantity);
-
+      User previousOwner, User newOwner, Resource resource, Double quantity) {
     return TransferResourceResponseDto.builder()
-            .previousOwner(userMapper.toUserResponse(previousOwner))
-            .newOwner(userMapper.toUserResponse(newOwner))
-            .transferredResource(
-                    ResourceQuantityResponseDto.builder()
-                            .resource(resourceMapper.toResourceResponse(resource))
-                            .quantity(quantity)
-                            .build())
-            .build();
+        .previousOwner(userMapper.toUserResponse(previousOwner))
+        .newOwner(userMapper.toUserResponse(newOwner))
+        .transferredResource(
+            ResourceQuantityResponseDto.builder()
+                .resource(resourceMapper.toResourceResponse(resource))
+                .quantity(quantity)
+                .build())
+        .build();
   }
 
   @Override
@@ -258,13 +218,14 @@ public class ResourceInUserService implements EntityFetcher {
       if (ids[0] instanceof ResourceInUserRequestDto resourceInUserRequestDto) {
 
         return getResourceInUserResponse(
-                resourceInUserRequestDto.getUserId(), resourceInUserRequestDto.getResourceId());
+            resourceInUserRequestDto.getUserId(), resourceInUserRequestDto.getResourceId());
       } else {
-        return getResourceInUserResponse((UUID) ids[0], (UUID) ids[1]);
+          return getResourceInUserResponse((UUID) ids[0], (UUID) ids[1]);
       }
     }
     return null;
   }
+
   private ResourcesInUserResponseDto purchaseResource(ResourcePurchaseRequestDto requestDto) {
     User user = findUserById(requestDto.getUserId());
     Resource resource = findResourceById(requestDto.getResourceId());

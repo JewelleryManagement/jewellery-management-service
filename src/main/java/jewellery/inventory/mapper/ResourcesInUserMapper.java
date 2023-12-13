@@ -3,6 +3,7 @@ package jewellery.inventory.mapper;
 import java.util.List;
 import jewellery.inventory.dto.UserQuantityDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
+import jewellery.inventory.dto.response.ResourcePurchaseResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.model.ResourceInUser;
@@ -18,11 +19,19 @@ public class ResourcesInUserMapper {
 
   private final ResourceMapper resourceMapper;
 
-  public ResourcesInUserResponseDto toResourcesInUserResponseDto(ResourceInUser resourceInUser) {
-    ResourcesInUserResponseDto responseDto = new ResourcesInUserResponseDto();
+  public ResourcesInUserResponseDto toResourcePurchaseResponse(ResourceInUser resourceInUser) {
+    ResourcePurchaseResponseDto responseDto = new ResourcePurchaseResponseDto();
     responseDto.setOwner(userMapper.toUserResponse(resourceInUser.getOwner()));
     responseDto.setResourcesAndQuantities(getSingleResourceQuantityResponse(resourceInUser));
+    responseDto.setDealPrice(resourceInUser.getDealPrice());
     return responseDto;
+  }
+
+  public ResourcesInUserResponseDto toResourcesInUserResponseDto(ResourceInUser resourceInUser) {
+      ResourcesInUserResponseDto responseDto = new ResourcesInUserResponseDto();
+      responseDto.setOwner(userMapper.toUserResponse(resourceInUser.getOwner()));
+      responseDto.setResourcesAndQuantities(getSingleResourceQuantityResponse(resourceInUser));
+      return responseDto;
   }
 
   public ResourcesInUserResponseDto toResourcesInUserResponseDto(User user) {

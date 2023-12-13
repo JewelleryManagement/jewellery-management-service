@@ -3,7 +3,7 @@ package jewellery.inventory.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.UUID;
-import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
@@ -39,7 +39,7 @@ public class ResourceInUserController {
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
   public ResourcesInUserResponseDto addResourceToUser(
-      @RequestBody @Valid ResourceInUserRequestDto resourceUserDto) {
+      @RequestBody @Valid ResourcePurchaseRequestDto resourceUserDto) {
     return resourceAvailabilityService.addResourceToUser(resourceUserDto);
   }
 

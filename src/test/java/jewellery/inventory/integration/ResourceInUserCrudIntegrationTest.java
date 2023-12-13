@@ -17,13 +17,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
-import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
-import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
-import jewellery.inventory.dto.response.TransferResourceResponseDto;
-import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.PreciousStoneResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import org.jetbrains.annotations.NotNull;
@@ -63,16 +61,16 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     UserResponseDto createdUser = sendCreateUserRequest();
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
 
-    ResponseEntity<ResourcesInUserResponseDto> response =
-        sendAddResourceInUserRequest(
-            createResourceInUserRequestDto(
-                createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY));
+    ResponseEntity<ResourcePurchaseResponseDto> response =
+        sendPurchaseResourceRequest(
+            createResourcePurchaseRequest(
+                createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, 555.55));
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     assertNotNull(response.getBody());
     assertEquals(1, response.getBody().getResourcesAndQuantities().size());
     assertEquals(createdUser, response.getBody().getOwner());
-    ResourcesInUserResponseDto result = response.getBody();
+    ResourcePurchaseResponseDto result = response.getBody();
 
     Map<String, Object> expectedEventPayload = getUpdateEventPayload(null, result, objectMapper);
 
@@ -411,6 +409,14 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         getBaseResourceAvailabilityUrl(),
         resourceInUserRequestDto,
         ResourcesInUserResponseDto.class);
+  }
+
+  private ResponseEntity<ResourcePurchaseResponseDto> sendPurchaseResourceRequest(
+      ResourcePurchaseRequestDto resourcePurchaseRequestDto) {
+    return testRestTemplate.postForEntity(
+        getBaseResourceAvailabilityUrl(),
+        resourcePurchaseRequestDto,
+        ResourcePurchaseResponseDto.class);
   }
 
   private ResponseEntity<ResourcesInUserResponseDto> sendGetResourcesInUserRequest(UUID userId) {
