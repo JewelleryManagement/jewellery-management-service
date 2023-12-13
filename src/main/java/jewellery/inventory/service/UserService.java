@@ -42,7 +42,7 @@ public class UserService implements EntityFetcher {
   }
 
   public User getUser(UUID id) {
-    logger.info("Fetching user with ID: {}", id);
+    logger.debug("Fetching user with ID: {}", id);
     return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
   }
 

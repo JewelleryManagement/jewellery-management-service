@@ -35,9 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ProductService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(ProductService.class);
-  private static final String NEW_OWNER_ID = "}. New owner with ID: {";
-  private static final String PRODUCT_ID = "}, Product ID: {";
-
   private final ProductRepository productRepository;
   private final UserRepository userRepository;
   private final ResourceInUserRepository resourceInUserRepository;
@@ -88,18 +85,14 @@ public class ProductService implements EntityFetcher {
     if (sale != null) {
       product.setPartOfSale(sale);
       logger.debug(
-          "Updated product owner and sale for product with ID: {"
-              + NEW_OWNER_ID
-              + "}, Sale with ID: {}",
+          "Updated product owner and sale for product with ID: {}. New owner with ID: {}, Sale with ID: {}",
           product.getId(),
           newOwner.getId(),
           sale.getId());
     } else {
       product.setPartOfSale(null);
       logger.debug(
-          "Updated product owner without sale for product with ID: {"
-              + NEW_OWNER_ID
-              + "}, Sale set to null",
+          "Updated product owner without sale for product with ID: {}. New owner with ID: {}, Sale set to null",
           product.getId(),
           newOwner.getId());
     }
@@ -110,7 +103,7 @@ public class ProductService implements EntityFetcher {
   private void updateProductOwnerRecursively(Product product, User newOwner) {
     product.setOwner(newOwner);
     logger.debug(
-        "Updated owner for product with ID: {" + NEW_OWNER_ID + "}",
+        "Updated owner for product with ID: {}. New owner with ID: {}",
         product.getId(),
         newOwner.getId());
     if (product.getProductsContent() != null) {
@@ -354,7 +347,7 @@ public class ProductService implements EntityFetcher {
       User owner, List<ResourceQuantityRequestDto> incomingResourceInProductList, Product product) {
     logger.debug("incomingResourceInProduct List: {}", incomingResourceInProductList);
     logger.debug(
-        "Transferring resources quantities from user to product. User ID: {" + PRODUCT_ID + "}",
+        "Transferring resources quantities from user to product. User ID: {}, Product ID: {}",
         owner.getId(),
         product.getId());
 
@@ -369,7 +362,7 @@ public class ProductService implements EntityFetcher {
   private ResourceInProduct transferSingleResourceQuantityFromUserToProduct(
       User owner, ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
     logger.debug(
-        "Transferring single resource quantity from user to product. User ID: {" + PRODUCT_ID + "}",
+        "Transferring single resource quantity from user to product. User ID: {}, Product ID: {}",
         owner.getId(),
         product.getId());
 
@@ -389,7 +382,7 @@ public class ProductService implements EntityFetcher {
     resourceInProduct.setQuantity(incomingResourceInProduct.getQuantity());
     resourceInProduct.setProduct(product);
     logger.debug(
-        "Resource in product created successfully. Resource ID: {" + PRODUCT_ID + "}",
+        "Resource in product created successfully. Resource ID: {}, Product ID: {}",
         resourceInProduct.getResource().getId(),
         resourceInProduct.getProduct().getId());
 

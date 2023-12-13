@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SaleService {
   private static final Logger logger = LogManager.getLogger(SaleService.class);
-  private static final String PRODUCT_ID = "Product with ID {";
   private final SaleRepository saleRepository;
   private final SaleMapper saleMapper;
   private final ProductService productService;
@@ -91,7 +90,7 @@ public class SaleService {
   private void throwExceptionIfProductIsPartOfAnotherProduct(List<Product> products) {
     for (Product product : products) {
       if (product.getContentOf() != null) {
-        logger.error(PRODUCT_ID + "} is part of another product.", product.getId());
+        logger.error("Product with ID {} is part of another product.", product.getId());
         throw new ProductIsContentException(product.getId());
       }
     }
@@ -99,14 +98,14 @@ public class SaleService {
 
   private void throwExceptionIfProductIsPartOfAnotherProduct(Product product) {
     if (product.getContentOf() != null) {
-      logger.error(PRODUCT_ID + "} is part of another product.", product.getId());
+      logger.error("Product with ID {} is part of another product.", product.getId());
       throw new ProductIsContentException(product.getId());
     }
   }
 
   private void throwExceptionIfProductNotSold(Product product) {
     if (product.getPartOfSale() == null) {
-      logger.error(PRODUCT_ID + "} is not sold.", product.getId());
+      logger.error("Product with ID {} is not sold.", product.getId());
       throw new ProductNotSoldException(product.getId());
     }
   }
@@ -114,7 +113,7 @@ public class SaleService {
   private void throwExceptionIfProductIsSold(List<Product> products) {
     for (Product product : products) {
       if (product.getPartOfSale() != null) {
-        logger.error(PRODUCT_ID + "} is already sold.", product.getId());
+        logger.error("Product with ID {} is already sold.", product.getId());
         throw new ProductIsSoldException(product.getId());
       }
     }
