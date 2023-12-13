@@ -25,3 +25,8 @@ ADD COLUMN birth_date DATE;
 -- Add 'note' column
 ALTER TABLE users
 ADD COLUMN note VARCHAR(500);
+
+UPDATE users
+SET last_name = 'test'
+WHERE id IN ('88596531-7f0f-407d-b502-31833b8c8e8d', 'beb48c43-cb43-4238-9442-74cda523ed81', '97230978-ac6f-4153-964d-b027e791cb7f', '87230978-ac6f-4153-964d-b027e791cb7f');
+
