@@ -37,12 +37,12 @@ public class User implements UserDetails {
   @Column(unique = true)
   private String email;
 
+  @Column(unique = true) private String password;
   @Column private String address;
   @Column private String phone;
   @Column private String phone2;
   @Column private LocalDate birthDate;
   @Column private String note;
-  @Column private String password;
 
   @Column
   @Enumerated(EnumType.STRING)
