@@ -10,9 +10,13 @@ import static org.mockito.Mockito.when;
 import java.util.*;
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
+import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
+import jewellery.inventory.exception.product.ProductNotSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.mapper.SaleMapper;
@@ -44,11 +48,15 @@ class SaleServiceTest {
   private User buyer;
   private Product product;
   private Sale sale;
+  private Sale saleTwoProducts;
+  private ProductReturnResponseDto productReturnResponseDto;
   private SaleRequestDto saleRequestDto;
   private SaleRequestDto saleRequestDtoSellerNotOwner;
   private SaleResponseDto saleResponseDto;
   private ProductPriceDiscountRequestDto productPriceDiscountRequestDto;
   private List<Product> productsForSale;
+  private List<Product> productsForSaleTwo;
+  private ProductResponseDto productResponseDto;
 
   @BeforeEach
   void setUp() {
@@ -57,8 +65,13 @@ class SaleServiceTest {
     buyer = createSecondTestUser();
     product = getTestProduct(seller, new Resource());
     productsForSale = SaleTestHelper.getProductsList(product);
+    productsForSaleTwo = SaleTestHelper.getProductsList(product, product);
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSale);
+    saleTwoProducts = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSaleTwo);
     saleResponseDto = SaleTestHelper.getSaleResponseDto(sale);
+    productResponseDto = getReturnedProductResponseDto(product, createTestUserResponseDto(buyer));
+    productReturnResponseDto =
+        SaleTestHelper.getProductReturnResponseDto(saleResponseDto, productResponseDto);
     productPriceDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(product.getId(), 1000, 10);
     List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
@@ -120,14 +133,13 @@ class SaleServiceTest {
   @Test
   void testCreateSaleProductWillThrowsProductIsSold() {
     when(saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product)))
-            .thenReturn(sale);
+        .thenReturn(sale);
     sale.getProducts().get(0).setPartOfSale(new Sale());
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
 
     assertThrows(ProductIsSoldException.class, () -> saleService.createSale(saleRequestDto));
   }
-
 
   @Test
   void testCreateSaleProductWillThrowsProductIsPartOfAnotherProduct() {
@@ -138,5 +150,52 @@ class SaleServiceTest {
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
 
     assertThrows(ProductIsContentException.class, () -> saleService.createSale(saleRequestDto));
+  }
+
+  @Test
+  void testReturnProductWillThrowsProductNotSoldException() {
+    UUID productId = product.getId();
+    when(productService.getProduct(any(UUID.class))).thenReturn(product);
+    assertThrows(ProductNotSoldException.class, () -> saleService.returnProduct(productId));
+  }
+
+  @Test
+  void testReturnProductWillThrowsProductIsContentException() {
+    product.setPartOfSale(new Sale());
+    product.setContentOf(new Product());
+    UUID productId = product.getId();
+    when(productService.getProduct(any(UUID.class))).thenReturn(product);
+    assertThrows(ProductIsContentException.class, () -> saleService.returnProduct(productId));
+  }
+
+  @Test
+  void testReturnProductWillThrowsSaleNotFoundException() {
+    product.setPartOfSale(new Sale());
+    UUID productId = product.getId();
+    when(productService.getProduct(any(UUID.class))).thenReturn(product);
+    assertThrows(SaleNotFoundException.class, () -> saleService.returnProduct(productId));
+  }
+
+  @Test
+  void testReturnProductSuccessfullyWithTwoProducts() {
+    product.setPartOfSale(saleTwoProducts);
+    Product productBeforeReturn = product;
+
+    assertEquals(2, saleTwoProducts.getProducts().size());
+    assertNotNull(productBeforeReturn.getPartOfSale());
+
+    when(productService.getProduct(any(UUID.class))).thenReturn(product);
+    when(saleRepository.findById(any(UUID.class))).thenReturn(Optional.of(saleTwoProducts));
+    when(saleService.returnProduct(product.getId())).thenReturn(productReturnResponseDto);
+
+    ProductReturnResponseDto productReturnResponseDto = saleService.returnProduct(product.getId());
+
+    assertEquals(1, productReturnResponseDto.getSaleAfter().getProducts().size());
+    assertNull(productReturnResponseDto.getSaleAfter().getId());
+    assertNotNull(productReturnResponseDto.getReturnedProduct());
+    assertNull(productReturnResponseDto.getReturnedProduct().getPartOfSale());
+    assertNotEquals(
+        productReturnResponseDto.getReturnedProduct().getOwner().getId(),
+        productBeforeReturn.getOwner().getId());
   }
 }

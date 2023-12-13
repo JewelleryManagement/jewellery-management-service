@@ -8,6 +8,7 @@ import javax.sql.DataSource;
 
 @Configuration
 public class FlywayMigrationConfig {
+
   private static final String LOCATION = "db/migration/dev";
 
   @Autowired
