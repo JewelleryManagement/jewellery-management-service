@@ -14,7 +14,6 @@ import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
-import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
@@ -147,9 +146,6 @@ public class ResourceInUserService implements EntityFetcher {
 
   private ResourceInUser removeQuantityFromResource(
       ResourceInUser resourceInUser, double quantityToRemove) {
-    if (quantityToRemove < 0) {
-      throw new NegativeResourceQuantityException(quantityToRemove);
-    }
 
     double totalQuantity = resourceInUser.getQuantity();
     double newQuantity = totalQuantity - quantityToRemove;

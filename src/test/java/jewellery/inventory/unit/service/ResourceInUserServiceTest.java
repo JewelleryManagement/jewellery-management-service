@@ -10,12 +10,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.*;
-
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
-import jewellery.inventory.exception.invalid_resource_quantity.NegativeResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
@@ -162,14 +160,6 @@ class ResourceInUserServiceTest {
         () -> resourceInUserService.removeQuantityFromResource(userId, resourceId, 10));
 
     verify(userRepository, times(1)).findById(userId);
-  }
-
-  @Test
-  void willThrowNegativeResourceQuantityExceptionWhenRemoveWithNegativeQuantity() {
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    assertThrows(
-        NegativeResourceQuantityException.class,
-        () -> resourceInUserService.removeQuantityFromResource(userId, resourceId, -10));
   }
 
   @Test
