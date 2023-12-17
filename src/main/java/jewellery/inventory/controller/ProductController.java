@@ -2,11 +2,9 @@ package jewellery.inventory.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
-
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ImageResponseDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -72,9 +70,9 @@ public class ProductController {
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping(value = "/{productId}/picture")
   public ImageResponseDto uploadImage(
-          @PathVariable("productId") @Valid UUID productId,
-          @RequestParam("image") @Valid MultipartFile image)
-          throws IOException {
+      @PathVariable("productId") @Valid UUID productId,
+      @RequestParam("image") @Valid MultipartFile image)
+      throws IOException {
     return imageService.uploadImage(image, productId);
   }
 
@@ -90,5 +88,14 @@ public class ProductController {
   @DeleteMapping("/{productId}/picture")
   public void deleteImage(@PathVariable("productId") @Valid UUID productId) throws IOException {
     imageService.deleteImage(productId);
+  }
+
+  @Operation(summary = "Edit product")
+  @ResponseStatus(HttpStatus.OK)
+  @PutMapping("/{productId}")
+  public ProductResponseDto updateProduct(
+      @PathVariable("productId") @Valid UUID productId,
+      @RequestBody @Valid ProductRequestDto request) {
+    return productService.updateProduct(productId, request);
   }
 }

@@ -14,6 +14,7 @@ import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.exception.invalid_resource_quantity.MinimalResourceQuantityException;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.*;
 import jewellery.inventory.mapper.ProductMapper;
@@ -33,12 +34,30 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ProductService implements EntityFetcher {
 
+  private static final double MINIMAL_RESOURCE_QUANTITY = 0.01;
+
   private final ProductRepository productRepository;
   private final UserRepository userRepository;
   private final ResourceInUserRepository resourceInUserRepository;
+  private final ResourceInProductRepository resourceInProductRepository;
   private final ImageService imageService;
   private final ResourceInUserService resourceInUserService;
   private final ProductMapper productMapper;
+
+  @Transactional
+  @LogUpdateEvent(eventType = EventType.PRODUCT_CREATE)
+  public ProductResponseDto updateProduct(UUID id, ProductRequestDto productUpdateRequestDto) {
+    Product product = getProduct(id);
+    throwExceptionIfProductIsSold(product);
+    moveResourceInProductToResourceInUser(product);
+
+    persistProductWithoutResourcesAndProducts(
+        productUpdateRequestDto, getUser(productUpdateRequestDto.getOwnerId()));
+    addProductsContentToProduct(productUpdateRequestDto, product);
+    addResourcesToProduct(
+        productUpdateRequestDto, getUser(productUpdateRequestDto.getOwnerId()), product);
+    return productMapper.mapToProductResponseDto(product);
+  }
 
   @Transactional
   @LogCreateEvent(eventType = EventType.PRODUCT_CREATE)
@@ -95,7 +114,7 @@ public class ProductService implements EntityFetcher {
 
     Product product = getProduct(id);
 
-    throwExceptionIfProductIsSold(id, product);
+    throwExceptionIfProductIsSold(product);
     throwExceptionIfProductIsPartOfAnotherProduct(id, product);
 
     moveResourceInProductToResourceInUser(product);
@@ -131,9 +150,9 @@ public class ProductService implements EntityFetcher {
     }
   }
 
-  private void throwExceptionIfProductIsSold(UUID id, Product product) {
+  private void throwExceptionIfProductIsSold(Product product) {
     if (product.getPartOfSale() != null) {
-      throw new ProductIsSoldException(id);
+      throw new ProductIsSoldException(product.getId());
     }
   }
 
@@ -155,11 +174,17 @@ public class ProductService implements EntityFetcher {
   private void moveResourceInProductToResourceInUser(Product product) {
     List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
     User owner = product.getOwner();
+    moveQuantityFromResourcesInProductToResourcesInUser(resourcesInProduct, owner);
+  }
 
+  private void moveQuantityFromResourcesInProductToResourcesInUser(
+      List<ResourceInProduct> resourcesInProduct, User owner) {
     resourcesInProduct.forEach(
-        resourceInProduct ->
-            resourceInUserService.addResourceToUserNoLog(
-                getResourceInUserRequest(owner, resourceInProduct)));
+        resourceInProduct -> {
+          resourceInUserService.addResourceToUserNoLog(
+              getResourceInUserRequest(owner, resourceInProduct));
+          resourceInProduct.setQuantity(0);
+        });
   }
 
   private ResourceInUserRequestDto getResourceInUserRequest(
@@ -190,7 +215,7 @@ public class ProductService implements EntityFetcher {
   private void validateProductForChangeOwner(UUID recipientId, Product productForChangeOwner) {
     throwExceptionIfProductIsPartOfAnotherProduct(
         productForChangeOwner.getId(), productForChangeOwner);
-    throwExceptionIfProductIsSold(productForChangeOwner.getId(), productForChangeOwner);
+    throwExceptionIfProductIsSold(productForChangeOwner);
     throwExceptionIfProductOwnerEqualsRecipient(productForChangeOwner, recipientId);
   }
 
@@ -272,7 +297,6 @@ public class ProductService implements EntityFetcher {
 
   private List<ResourceInProduct> transferResourcesQuantitiesFromUserToProduct(
       User owner, List<ResourceQuantityRequestDto> incomingResourceInProductList, Product product) {
-
     return incomingResourceInProductList.stream()
         .map(
             incomingResourceInProduct ->
@@ -284,12 +308,32 @@ public class ProductService implements EntityFetcher {
   private ResourceInProduct transferSingleResourceQuantityFromUserToProduct(
       User owner, ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
     ResourceInUser resourceInUser = getResourceInUser(owner, incomingResourceInProduct.getId());
+    throwWhenIncomingResourceQuantityIsLessThanMinimum(incomingResourceInProduct);
     resourceInUserService.removeQuantityFromResourceNoLog(
         owner.getId(),
         resourceInUser.getResource().getId(),
         incomingResourceInProduct.getQuantity());
+    ResourceInProduct resourceInProduct = getResourceInProduct(incomingResourceInProduct, product);
+    if (resourceInProduct != null) {
+      resourceInProduct.setQuantity(incomingResourceInProduct.getQuantity());
+      return resourceInProduct;
+    }
     return createResourceInProduct(
         incomingResourceInProduct, resourceInUser.getResource(), product);
+  }
+
+  private static void throwWhenIncomingResourceQuantityIsLessThanMinimum(
+      ResourceQuantityRequestDto incomingResourceInProduct) {
+    if (incomingResourceInProduct.getQuantity() < MINIMAL_RESOURCE_QUANTITY) {
+      throw new MinimalResourceQuantityException();
+    }
+  }
+
+  private ResourceInProduct getResourceInProduct(
+      ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
+    return resourceInProductRepository
+        .findByResourceIdAndProductId(incomingResourceInProduct.getId(), product.getId())
+        .orElse(null);
   }
 
   private ResourceInProduct createResourceInProduct(

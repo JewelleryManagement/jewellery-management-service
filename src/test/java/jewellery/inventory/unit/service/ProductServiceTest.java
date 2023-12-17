@@ -8,7 +8,9 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.util.*;
 import jewellery.inventory.dto.request.ProductRequestDto;
+import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.exception.invalid_resource_quantity.MinimalResourceQuantityException;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.*;
 import jewellery.inventory.helper.ProductTestHelper;
@@ -297,5 +299,30 @@ class ProductServiceTest {
   void deleteProductShouldThrowExceptionWhenProductIdDoesNotExist() {
     UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
     assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(fakeId));
+  }
+
+  @Test
+  void updateProductShouldThrowWhenProductNotFound() {
+    assertThrows(ProductNotFoundException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
+  }
+
+  @Test
+  void updateProductShouldThrowWhenProductIsSold() {
+    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+    product.setPartOfSale(new Sale());
+    assertThrows(ProductIsSoldException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
+  }
+
+  @Test
+  void updateProductShouldThrowWhenResourceQuantityIsZero() {
+    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+    when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId())).thenReturn(Optional.of(resourceInUser));
+
+    ResourceQuantityRequestDto resourceQuantityRequestDto = ProductTestHelper.getResourceQuantityRequestDto(pearl);
+    resourceQuantityRequestDto.setQuantity(0);
+    productRequestDto.setResourcesContent(List.of(resourceQuantityRequestDto));
+
+    assertThrows(MinimalResourceQuantityException.class,() -> productService.updateProduct(product.getId(), productRequestDto));
   }
 }
