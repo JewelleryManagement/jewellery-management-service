@@ -7,6 +7,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import jewellery.inventory.exception.duplicate.DuplicateException;
 import jewellery.inventory.exception.image.MultipartFileContentTypeException;
 import jewellery.inventory.exception.image.MultipartFileNotSelectedException;
@@ -53,10 +57,17 @@ public class GlobalExceptionHandler {
     DuplicateException.class,
     MultipartFileContentTypeException.class,
     MultipartFileNotSelectedException.class,
-    MultipartFileSizeException.class
+    MultipartFileSizeException.class,
+    ConstraintViolationException.class
   })
   public ResponseEntity<Object> handleBadDataExceptions(RuntimeException ex) {
-    return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    String errorMessage = ex.getMessage();
+    if (ex instanceof ConstraintViolationException cve) {
+      errorMessage = cve.getConstraintViolations().stream()
+              .map(ConstraintViolation::getMessage)
+              .collect(Collectors.joining("; "));
+    }
+    return createErrorResponse(HttpStatus.BAD_REQUEST, errorMessage);
   }
 
   @ExceptionHandler({

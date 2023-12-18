@@ -94,8 +94,8 @@ public class ProductController {
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{productId}")
   public ProductResponseDto updateProduct(
-      @PathVariable("productId") @Valid UUID productId,
-      @RequestBody @Valid ProductRequestDto request) {
+      @PathVariable("productId") UUID productId,
+      @Valid @RequestBody ProductRequestDto request) {
     return productService.updateProduct(productId, request);
   }
 }

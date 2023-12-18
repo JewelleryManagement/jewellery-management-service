@@ -1,5 +1,6 @@
 package jewellery.inventory.dto.request;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -17,6 +18,7 @@ public class ProductRequestDto {
   @NotNull
   private UUID ownerId;
   @NotEmpty
+  @Valid
   List<ResourceQuantityRequestDto> resourcesContent;
   private List<UUID> productsContent;
   private String description;

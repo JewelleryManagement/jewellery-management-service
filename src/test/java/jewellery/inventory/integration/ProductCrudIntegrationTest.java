@@ -3,9 +3,7 @@ package jewellery.inventory.integration;
 import static jewellery.inventory.helper.ProductTestHelper.*;
 import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
-import static jewellery.inventory.model.EventType.PRODUCT_CREATE;
-import static jewellery.inventory.model.EventType.PRODUCT_DISASSEMBLY;
-import static jewellery.inventory.model.EventType.PRODUCT_TRANSFER;
+import static jewellery.inventory.model.EventType.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -366,7 +364,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void updateProductSuccessfully() {
+  void updateProductSuccessfully() throws JsonProcessingException {
     ProductResponseDto product = createProductWithRequest(productRequestDto);
     UUID productId = product.getId();
 
@@ -380,6 +378,11 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.OK, response.getStatusCode());
 
     ProductResponseDto productResponseDto = response.getBody();
+
+    Map<String, Object> expectedEventPayload =
+            getUpdateEventPayload(product, productResponseDto, objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_UPDATE, expectedEventPayload);
 
     assertEquals(
         productRequestDto.getResourcesContent().get(0).getQuantity(),

@@ -14,7 +14,6 @@ import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
-import jewellery.inventory.exception.invalid_resource_quantity.MinimalResourceQuantityException;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.*;
 import jewellery.inventory.mapper.ProductMapper;
@@ -34,8 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ProductService implements EntityFetcher {
 
-  private static final double MINIMAL_RESOURCE_QUANTITY = 0.01;
-
   private final ProductRepository productRepository;
   private final UserRepository userRepository;
   private final ResourceInUserRepository resourceInUserRepository;
@@ -45,11 +42,12 @@ public class ProductService implements EntityFetcher {
   private final ProductMapper productMapper;
 
   @Transactional
-  @LogUpdateEvent(eventType = EventType.PRODUCT_CREATE)
+  @LogUpdateEvent(eventType = EventType.PRODUCT_UPDATE)
   public ProductResponseDto updateProduct(UUID id, ProductRequestDto productUpdateRequestDto) {
     Product product = getProduct(id);
     throwExceptionIfProductIsSold(product);
     moveResourceInProductToResourceInUser(product);
+    disassembleProductContent(product);
 
     persistProductWithoutResourcesAndProducts(
         productUpdateRequestDto, getUser(productUpdateRequestDto.getOwnerId()));
@@ -308,7 +306,6 @@ public class ProductService implements EntityFetcher {
   private ResourceInProduct transferSingleResourceQuantityFromUserToProduct(
       User owner, ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
     ResourceInUser resourceInUser = getResourceInUser(owner, incomingResourceInProduct.getId());
-    throwWhenIncomingResourceQuantityIsLessThanMinimum(incomingResourceInProduct);
     resourceInUserService.removeQuantityFromResourceNoLog(
         owner.getId(),
         resourceInUser.getResource().getId(),
@@ -320,13 +317,6 @@ public class ProductService implements EntityFetcher {
     }
     return createResourceInProduct(
         incomingResourceInProduct, resourceInUser.getResource(), product);
-  }
-
-  private static void throwWhenIncomingResourceQuantityIsLessThanMinimum(
-      ResourceQuantityRequestDto incomingResourceInProduct) {
-    if (incomingResourceInProduct.getQuantity() < MINIMAL_RESOURCE_QUANTITY) {
-      throw new MinimalResourceQuantityException();
-    }
   }
 
   private ResourceInProduct getResourceInProduct(
