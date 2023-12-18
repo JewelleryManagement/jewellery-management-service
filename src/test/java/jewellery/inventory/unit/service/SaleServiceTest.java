@@ -149,7 +149,6 @@ class SaleServiceTest {
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
 
-
     assertThrows(ProductIsContentException.class, () -> saleService.createSale(saleRequestDto));
   }
 

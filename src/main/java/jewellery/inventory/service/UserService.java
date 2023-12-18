@@ -9,9 +9,9 @@ import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.request.UserUpdateRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.duplicate.DuplicateEmailException;
-import jewellery.inventory.exception.duplicate.DuplicateNameException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.EventType;
@@ -64,10 +64,8 @@ public class UserService implements EntityFetcher {
     userToUpdate.setId(id);
 
     validateUserEmail(userToUpdate);
-      logger.info("User with ID: {} updated successfully.", id);
-
-
-      return userMapper.toUserResponse(userRepository.save(userToUpdate));
+    logger.info("User with ID: {} updated successfully.", id);
+    return userMapper.toUserResponse(userRepository.save(userToUpdate));
   }
 
   @LogDeleteEvent(eventType = EventType.USER_DELETE)
@@ -75,8 +73,8 @@ public class UserService implements EntityFetcher {
     if (!userRepository.existsById(id)) {
       throw new UserNotFoundException(id);
     }
-      logger.info("Deleting user with ID: {}", id);
-      userRepository.deleteById(id);
+    logger.info("Deleting user with ID: {}", id);
+    userRepository.deleteById(id);
   }
 
   private void validateUserEmail(User user) {
