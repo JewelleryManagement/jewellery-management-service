@@ -49,26 +49,25 @@ public class UserService implements EntityFetcher {
   @LogCreateEvent(eventType = EventType.USER_CREATE)
   public UserResponseDto createUser(UserRequestDto user) {
     User userToCreate = userMapper.toUserEntity(user);
-    validateUserEmailAndName(userToCreate);
+    validateUserEmail(userToCreate);
     userToCreate.setPassword(passwordEncoder.encode(userToCreate.getPassword()));
     logger.info("Create new User");
     return userMapper.toUserResponse(userRepository.save(userToCreate));
   }
 
   @LogUpdateEvent(eventType = EventType.USER_UPDATE)
-  public UserResponseDto updateUser(UserRequestDto userRequest, UUID id) {
-    logger.info("Updating user with ID: {}", id);
-    if (!userRepository.existsById(id)) {
-      throw new UserNotFoundException(id);
-    }
+  public UserResponseDto updateUser(UserUpdateRequestDto userRequest, UUID id) {
+    User oldUser = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
 
     User userToUpdate = userMapper.toUserEntity(userRequest);
+    userToUpdate.setPassword(oldUser.getPassword());
     userToUpdate.setId(id);
 
-    validateUserEmailAndName(userToUpdate);
-    logger.info("User with ID: {} updated successfully.", id);
+    validateUserEmail(userToUpdate);
+      logger.info("User with ID: {} updated successfully.", id);
 
-    return userMapper.toUserResponse(userRepository.save(userToUpdate));
+
+      return userMapper.toUserResponse(userRepository.save(userToUpdate));
   }
 
   @LogDeleteEvent(eventType = EventType.USER_DELETE)
@@ -76,16 +75,11 @@ public class UserService implements EntityFetcher {
     if (!userRepository.existsById(id)) {
       throw new UserNotFoundException(id);
     }
-    logger.info("Deleting user with ID: {}", id);
-    userRepository.deleteById(id);
+      logger.info("Deleting user with ID: {}", id);
+      userRepository.deleteById(id);
   }
 
-  private void validateUserEmailAndName(User user) {
-    if (isNameUsedByOtherUser(user.getName(), user.getId())) {
-      logger.error("Duplicate name detected: {}", user.getName());
-      throw new DuplicateNameException(user.getName());
-    }
-
+  private void validateUserEmail(User user) {
     if (isEmailUsedByOtherUser(user.getEmail(), user.getId())) {
       logger.error("Duplicate email detected: {}", user.getEmail());
       throw new DuplicateEmailException(user.getEmail());
@@ -94,11 +88,6 @@ public class UserService implements EntityFetcher {
 
   private boolean isEmailUsedByOtherUser(String email, UUID id) {
     Optional<User> existingUser = userRepository.findByEmail(email);
-    return existingUser.isPresent() && (id == null || !existingUser.get().getId().equals(id));
-  }
-
-  private boolean isNameUsedByOtherUser(String name, UUID id) {
-    Optional<User> existingUser = userRepository.findByName(name);
     return existingUser.isPresent() && (id == null || !existingUser.get().getId().equals(id));
   }
 
