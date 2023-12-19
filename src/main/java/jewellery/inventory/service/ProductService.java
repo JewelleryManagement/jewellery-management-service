@@ -82,15 +82,11 @@ public class ProductService implements EntityFetcher {
 
   public void updateProductOwnerAndSale(Product product, User newOwner, Sale sale) {
     updateProductOwnerRecursively(product, newOwner);
-    if (sale != null) {
-      product.setPartOfSale(sale);
-    } else {
-      product.setPartOfSale(null);
-    }
+    product.setPartOfSale(sale);
     logger.debug(
         "Updated product owner and sale for product with ID: {}. New owner with ID: {}, Sale with ID: {}",
         product.getId(),
-        product.getOwner(),
+        product.getOwner().getId(),
         product.getPartOfSale() != null ? product.getPartOfSale().getId() : null);
     productRepository.save(product);
   }
