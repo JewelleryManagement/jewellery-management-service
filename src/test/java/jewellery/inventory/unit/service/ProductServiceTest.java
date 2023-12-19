@@ -8,7 +8,6 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.util.*;
 import jewellery.inventory.dto.request.ProductRequestDto;
-import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.*;
@@ -308,6 +307,7 @@ class ProductServiceTest {
   @Test
   void updateProductShouldThrowWhenProductIsSold() {
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
     product.setPartOfSale(new Sale());
     assertThrows(ProductIsSoldException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
   }

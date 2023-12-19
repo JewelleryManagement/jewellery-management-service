@@ -45,15 +45,16 @@ public class ProductService implements EntityFetcher {
   @LogUpdateEvent(eventType = EventType.PRODUCT_UPDATE)
   public ProductResponseDto updateProduct(UUID id, ProductRequestDto productUpdateRequestDto) {
     Product product = getProduct(id);
+    User user = getUser(productUpdateRequestDto.getOwnerId());
     throwExceptionIfProductIsSold(product);
     moveResourceInProductToResourceInUser(product);
     disassembleProductContent(product);
 
-    persistProductWithoutResourcesAndProducts(
-        productUpdateRequestDto, getUser(productUpdateRequestDto.getOwnerId()));
+    setProductFields(productUpdateRequestDto, user, product);
+    productRepository.save(product);
     addProductsContentToProduct(productUpdateRequestDto, product);
-    addResourcesToProduct(
-        productUpdateRequestDto, getUser(productUpdateRequestDto.getOwnerId()), product);
+    addResourcesToProduct(productUpdateRequestDto, user, product);
+
     return productMapper.mapToProductResponseDto(product);
   }
 
@@ -253,6 +254,11 @@ public class ProductService implements EntityFetcher {
   private Product getProductWithoutResourcesAndProduct(
       ProductRequestDto productRequestDto, User user) {
     Product product = new Product();
+    setProductFields(productRequestDto, user, product);
+    return product;
+  }
+
+  private void setProductFields(ProductRequestDto productRequestDto, User user, Product product) {
     product.setOwner(user);
     product.setAuthors(getAuthors(productRequestDto));
     product.setPartOfSale(null);
@@ -262,7 +268,6 @@ public class ProductService implements EntityFetcher {
     product.setCatalogNumber(productRequestDto.getCatalogNumber());
     product.setProductsContent(new ArrayList<>());
     product.setResourcesContent(new ArrayList<>());
-    return product;
   }
 
   private List<User> getAuthors(ProductRequestDto productRequestDto) {
