@@ -56,7 +56,7 @@ public class ProductService implements EntityFetcher {
     productRepository.save(product);
     addProductsContentToProduct(productUpdateRequestDto, product);
     addResourcesToProduct(productUpdateRequestDto, user, product);
-
+    logger.info("Product with ID: {} updated", product.getId());
     return productMapper.mapToProductResponseDto(product);
   }
 
@@ -262,10 +262,8 @@ public class ProductService implements EntityFetcher {
       productsIdInRequest.forEach(
           productId -> {
             logger.debug("Processing product with ID: {}", productId);
-            Product product =
-                productRepository
-                    .findById(productId)
-                    .orElseThrow(() -> new ProductNotFoundException(productId));
+            Product product = getProduct(productId);
+            throwExceptionIfProductIsSold(product);
             if (product.getOwner().getId().equals(parentProduct.getOwner().getId())) {
               product.setContentOf(parentProduct);
               products.add(product);
