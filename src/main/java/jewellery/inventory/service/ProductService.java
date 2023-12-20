@@ -26,13 +26,15 @@ import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInProduct;
 import jewellery.inventory.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class ProductService implements EntityFetcher {
-
+  private static final Logger logger = LogManager.getLogger(ProductService.class);
   private final ProductRepository productRepository;
   private final UserRepository userRepository;
   private final ResourceInUserRepository resourceInUserRepository;
@@ -47,6 +49,7 @@ public class ProductService implements EntityFetcher {
     Product product = persistProductWithoutResourcesAndProducts(productRequestDto, owner);
     addProductsContentToProduct(productRequestDto, product);
     addResourcesToProduct(productRequestDto, owner, product);
+    logger.info("Product created with ID: {}", product.getId());
     return productMapper.mapToProductResponseDto(product);
   }
 
@@ -57,30 +60,43 @@ public class ProductService implements EntityFetcher {
 
   public List<ProductResponseDto> getAllProducts() {
     List<Product> products = productRepository.findAll();
+    logger.debug("Fetching all products");
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
   public List<ProductResponseDto> getByOwner(UUID ownerId) {
     List<Product> products = productRepository.findAllByOwnerId(ownerId);
+    logger.info("Get product by owner with ID: {}", ownerId);
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
   public Product getProduct(UUID id) {
+    logger.info("Get product by ID: {}", id);
     return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
   }
 
   public ProductResponseDto getProductResponse(UUID id) {
+    logger.info("Get productResponse by ID: {}", id);
     return productMapper.mapToProductResponseDto(getProduct(id));
   }
 
   public void updateProductOwnerAndSale(Product product, User newOwner, Sale sale) {
     updateProductOwnerRecursively(product, newOwner);
     product.setPartOfSale(sale);
+    logger.debug(
+        "Updated product owner and sale for product with ID: {}. New owner with ID: {}, Sale with ID: {}",
+        product.getId(),
+        product.getOwner().getId(),
+        product.getPartOfSale() != null ? product.getPartOfSale().getId() : null);
     productRepository.save(product);
   }
 
   private void updateProductOwnerRecursively(Product product, User newOwner) {
     product.setOwner(newOwner);
+    logger.debug(
+        "Updated owner for product with ID: {}. New owner with ID: {}",
+        product.getId(),
+        newOwner.getId());
     if (product.getProductsContent() != null) {
       List<Product> subProducts = product.getProductsContent();
       for (Product subProduct : subProducts) {
@@ -103,12 +119,14 @@ public class ProductService implements EntityFetcher {
     deleteImageWhenAttached(id, product);
 
     productRepository.deleteById(id);
+    logger.info("Deleted product by ID: {}", id);
   }
 
   @LogUpdateEvent(eventType = EventType.PRODUCT_TRANSFER)
   public ProductResponseDto transferProduct(UUID productId, UUID recipientId) {
     Product productForChangeOwner = getProductForTransfer(recipientId, productId);
     updateProductOwnerRecursively(productForChangeOwner, getUser(recipientId));
+    logger.info("Transferred product with ID {} to new owner with ID {}", productId, recipientId);
     productRepository.save(productForChangeOwner);
     return productMapper.mapToProductResponseDto(productForChangeOwner);
   }
@@ -116,29 +134,39 @@ public class ProductService implements EntityFetcher {
   private void deleteImageWhenAttached(UUID id, Product product) throws IOException {
     if (product.getImage() != null) {
       imageService.deleteImage(id);
+      logger.debug("Deleted image for product with ID: {}", product.getId());
     }
   }
 
   private void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
     if (product.getContentOf() != null) {
+      logger.error("Product with ID {} is part of another product and cannot be deleted.", id);
       throw new ProductIsContentException(id);
     }
   }
 
   private void throwExceptionIfProductOwnerEqualsRecipient(Product product, UUID recipientId) {
     if (product.getOwner().getId().equals(recipientId)) {
+      logger.error(
+          "Product owner is the same as the recipient. Product ID: {}, Owner ID: {}, Recipient ID: {}",
+          product.getId(),
+          product.getOwner().getId(),
+          recipientId);
       throw new ProductOwnerEqualsRecipientException(recipientId);
     }
   }
 
   private void throwExceptionIfProductIsSold(UUID id, Product product) {
     if (product.getPartOfSale() != null) {
+      logger.error("Product with ID {} is part of a sale", id);
       throw new ProductIsSoldException(id);
     }
   }
 
   private void disassembleProductContent(Product product) {
     if (product.getProductsContent() != null) {
+      logger.debug("Disassembling product content for product with ID: {}", product.getId());
+
       product
           .getProductsContent()
           .forEach(
@@ -156,6 +184,11 @@ public class ProductService implements EntityFetcher {
     List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
     User owner = product.getOwner();
 
+    logger.debug(
+        "Moving resources from product with ID {} to owner with ID {}",
+        product.getId(),
+        owner.getId());
+
     resourcesInProduct.forEach(
         resourceInProduct ->
             resourceInUserService.addResourceToUserNoLog(
@@ -164,7 +197,7 @@ public class ProductService implements EntityFetcher {
 
   private ResourceInUserRequestDto getResourceInUserRequest(
       User owner, ResourceInProduct resourceInProduct) {
-
+    logger.debug("Getting resourceInUserRequest for user with Id: {}", owner.getId());
     return ResourceInUserRequestDto.builder()
         .userId(owner.getId())
         .resourceId(resourceInProduct.getResource().getId())
@@ -179,27 +212,37 @@ public class ProductService implements EntityFetcher {
   }
 
   private Product getProductForTransfer(UUID recipientId, UUID productId) {
+    logger.debug(
+        "Getting product for transfer with ID: {}, recipient ID: {}", productId, recipientId);
     Product product =
         productRepository
             .findById(productId)
             .orElseThrow(() -> new ProductNotFoundException(productId));
     validateProductForChangeOwner(recipientId, product);
+    logger.debug("Product for transfer retrieved successfully.");
     return product;
   }
 
   private void validateProductForChangeOwner(UUID recipientId, Product productForChangeOwner) {
+    logger.debug(
+        "Validating product for change owner. Product ID: {}, Recipient ID: {}",
+        productForChangeOwner.getId(),
+        recipientId);
     throwExceptionIfProductIsPartOfAnotherProduct(
         productForChangeOwner.getId(), productForChangeOwner);
     throwExceptionIfProductIsSold(productForChangeOwner.getId(), productForChangeOwner);
     throwExceptionIfProductOwnerEqualsRecipient(productForChangeOwner, recipientId);
+    logger.debug("Product validation for change owner successful.");
   }
 
   private List<Product> getProductsInProduct(
       List<UUID> productsIdInRequest, Product parentProduct) {
+    logger.debug("Getting products in product. Parent Product ID: {}", parentProduct.getId());
     List<Product> products = new ArrayList<>();
     if (productsIdInRequest != null) {
       productsIdInRequest.forEach(
           productId -> {
+            logger.debug("Processing product with ID: {}", productId);
             Product product =
                 productRepository
                     .findById(productId)
@@ -207,23 +250,32 @@ public class ProductService implements EntityFetcher {
             if (product.getOwner().getId().equals(parentProduct.getOwner().getId())) {
               product.setContentOf(parentProduct);
               products.add(product);
+              logger.debug("Added product with ID {} to the list.", productId);
             } else {
+              logger.error(
+                  "User with ID {} is not the owner of the product with ID {}.",
+                  parentProduct.getOwner().getId(),
+                  productId);
               throw new UserNotOwnerException(parentProduct.getOwner().getId(), product.getId());
             }
           });
     }
-
     return products;
   }
 
   private User getUser(UUID userId) {
+    logger.debug("Getting user with ID: {}", userId);
     return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
   }
 
   private Product persistProductWithoutResourcesAndProducts(
       ProductRequestDto productRequestDto, User user) {
+    logger.debug(
+        "Persisting product without resources and products for user with ID: {}", user.getId());
     Product product = getProductWithoutResourcesAndProduct(productRequestDto, user);
     productRepository.save(product);
+    logger.debug("Product persisted successfully. Product ID: {}", product.getId());
+
     return product;
   }
 
@@ -239,39 +291,56 @@ public class ProductService implements EntityFetcher {
     product.setCatalogNumber(productRequestDto.getCatalogNumber());
     product.setProductsContent(new ArrayList<>());
     product.setResourcesContent(new ArrayList<>());
+
     return product;
   }
 
   private List<User> getAuthors(ProductRequestDto productRequestDto) {
+    logger.debug("Getting authors for product.");
     List<UUID> authorsIds = productRequestDto.getAuthors();
     List<User> authors = new ArrayList<>();
     authorsIds.forEach(
         id -> {
+          logger.debug("Processing author with ID: {}", id);
           User author =
               userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
           authors.add(author);
+          logger.debug("Author with ID {} added to the list.", id);
         });
     return authors;
   }
 
   private void addProductsContentToProduct(ProductRequestDto productRequestDto, Product product) {
+    logger.debug("Adding products content to product. Product ID: {}", product.getId());
+
     if (productRequestDto.getProductsContent() != null) {
       product.setProductsContent(
           getProductsInProduct(productRequestDto.getProductsContent(), product));
       productRepository.save(product);
+      logger.debug(
+          "Products content added successfully to product. Count: {}",
+          productRequestDto.getProductsContent().size());
     }
   }
 
   private void addResourcesToProduct(
       ProductRequestDto productRequestDto, User user, Product product) {
+    logger.debug("Adding resources to product. Product ID: {}", product.getId());
+
     List<ResourceInProduct> resourcesInProducts =
         transferResourcesQuantitiesFromUserToProduct(
             user, productRequestDto.getResourcesContent(), product);
     product.setResourcesContent(resourcesInProducts);
+    logger.debug("Resources added successfully to product. Count: {}", resourcesInProducts.size());
   }
 
   private List<ResourceInProduct> transferResourcesQuantitiesFromUserToProduct(
       User owner, List<ResourceQuantityRequestDto> incomingResourceInProductList, Product product) {
+    logger.debug("incomingResourceInProduct List: {}", incomingResourceInProductList);
+    logger.debug(
+        "Transferring resources quantities from user to product. User ID: {}, Product ID: {}",
+        owner.getId(),
+        product.getId());
 
     return incomingResourceInProductList.stream()
         .map(
@@ -283,6 +352,11 @@ public class ProductService implements EntityFetcher {
 
   private ResourceInProduct transferSingleResourceQuantityFromUserToProduct(
       User owner, ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
+    logger.debug(
+        "Transferring single resource quantity from user to product. User ID: {}, Product ID: {}",
+        owner.getId(),
+        product.getId());
+
     ResourceInUser resourceInUser = getResourceInUser(owner, incomingResourceInProduct.getId());
     resourceInUserService.removeQuantityFromResourceNoLog(
         owner.getId(),
@@ -298,6 +372,11 @@ public class ProductService implements EntityFetcher {
     resourceInProduct.setResource(resource);
     resourceInProduct.setQuantity(incomingResourceInProduct.getQuantity());
     resourceInProduct.setProduct(product);
+    logger.debug(
+        "Resource in product created successfully. Resource ID: {}, Product ID: {}",
+        resourceInProduct.getResource().getId(),
+        resourceInProduct.getProduct().getId());
+
     return resourceInProduct;
   }
 
