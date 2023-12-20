@@ -18,17 +18,22 @@ import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class UserService implements EntityFetcher {
+  private static final Logger logger = LogManager.getLogger(UserService.class);
+
   private final UserRepository userRepository;
   private final UserMapper userMapper;
   private final PasswordEncoder passwordEncoder;
 
   public List<UserResponseDto> getAllUsers() {
+    logger.debug("Fetching all users.");
     return userMapper.toUserResponseList(userRepository.findAll());
   }
 
@@ -37,6 +42,7 @@ public class UserService implements EntityFetcher {
   }
 
   public User getUser(UUID id) {
+    logger.debug("Fetching user with ID: {}", id);
     return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
   }
 
@@ -45,6 +51,7 @@ public class UserService implements EntityFetcher {
     User userToCreate = userMapper.toUserEntity(user);
     validateUserEmail(userToCreate);
     userToCreate.setPassword(passwordEncoder.encode(userToCreate.getPassword()));
+    logger.info("Create new User");
     return userMapper.toUserResponse(userRepository.save(userToCreate));
   }
 
@@ -57,7 +64,7 @@ public class UserService implements EntityFetcher {
     userToUpdate.setId(id);
 
     validateUserEmail(userToUpdate);
-
+    logger.info("User with ID: {} updated successfully.", id);
     return userMapper.toUserResponse(userRepository.save(userToUpdate));
   }
 
@@ -66,11 +73,13 @@ public class UserService implements EntityFetcher {
     if (!userRepository.existsById(id)) {
       throw new UserNotFoundException(id);
     }
+    logger.info("Deleting user with ID: {}", id);
     userRepository.deleteById(id);
   }
 
   private void validateUserEmail(User user) {
     if (isEmailUsedByOtherUser(user.getEmail(), user.getId())) {
+      logger.error("Duplicate email detected: {}", user.getEmail());
       throw new DuplicateEmailException(user.getEmail());
     }
   }
