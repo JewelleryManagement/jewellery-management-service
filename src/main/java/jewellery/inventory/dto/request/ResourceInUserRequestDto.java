@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 public class ResourceInUserRequestDto {
-  private static final String QUANTITY_MIN_VALUE_MSG = "Quantity should not be less than 1.";
+  private static final String QUANTITY_MIN_VALUE_MSG = "Quantity should not be less than 0.";
   private static final String QUANTITY_DECIMAL_PLACES_MSG =
       "Quantity should not have more than 2 decimal places.";
 

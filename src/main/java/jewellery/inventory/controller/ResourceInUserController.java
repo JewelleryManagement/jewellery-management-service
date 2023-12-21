@@ -2,6 +2,7 @@ package jewellery.inventory.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
@@ -11,6 +12,7 @@ import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.service.ResourceInUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,8 +25,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/resources/availability")
 @RequiredArgsConstructor
+@Validated
 public class ResourceInUserController {
   private final ResourceInUserService resourceAvailabilityService;
+  private static final String QUANTITY_MIN_VALUE_MSG = "Quantity should not be less than 0.";
 
   @Operation(summary = "Transfer resource from user to another user")
   @ResponseStatus(HttpStatus.OK)
@@ -33,7 +37,6 @@ public class ResourceInUserController {
       @RequestBody @Valid TransferResourceRequestDto transferResourceRequestDto) {
     return resourceAvailabilityService.transferResources(transferResourceRequestDto);
   }
-
 
   @Operation(summary = "Add resource to user")
   @ResponseStatus(HttpStatus.CREATED)
@@ -57,11 +60,14 @@ public class ResourceInUserController {
     resourceAvailabilityService.removeResourceFromUser(userId, resourceId);
   }
 
-  @Operation(summary = "Delete specific amount of resource from user by userId, resourceId and quantity")
+  @Operation(
+      summary = "Delete specific amount of resource from user by userId, resourceId and quantity")
   @ResponseStatus(HttpStatus.OK)
   @DeleteMapping("/{userId}/{resourceId}/{quantity}")
   public ResourcesInUserResponseDto removeQuantityFromUserResource(
-      @PathVariable UUID userId, @PathVariable UUID resourceId, @PathVariable double quantity) {
+      @PathVariable UUID userId,
+      @PathVariable UUID resourceId,
+      @PathVariable("quantity") @PositiveOrZero(message = QUANTITY_MIN_VALUE_MSG) double quantity) {
     return resourceAvailabilityService.removeQuantityFromResource(userId, resourceId, quantity);
   }
 

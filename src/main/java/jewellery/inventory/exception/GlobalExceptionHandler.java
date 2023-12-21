@@ -1,7 +1,7 @@
 package jewellery.inventory.exception;
 
 import io.jsonwebtoken.security.SignatureException;
-
+import jakarta.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -54,10 +54,15 @@ public class GlobalExceptionHandler {
     DuplicateException.class,
     MultipartFileContentTypeException.class,
     MultipartFileNotSelectedException.class,
-    MultipartFileSizeException.class
+    MultipartFileSizeException.class,
+    ConstraintViolationException.class
   })
   public ResponseEntity<Object> handleBadDataExceptions(RuntimeException ex) {
-    return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    String errorMessage = ex.getMessage();
+    if (ex instanceof ConstraintViolationException cve) {
+      errorMessage = cve.getConstraintViolations().iterator().next().getMessage();
+    }
+    return createErrorResponse(HttpStatus.BAD_REQUEST, errorMessage);
   }
 
   @ExceptionHandler({
