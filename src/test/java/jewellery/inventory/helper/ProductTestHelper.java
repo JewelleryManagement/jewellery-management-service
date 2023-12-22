@@ -1,5 +1,6 @@
 package jewellery.inventory.helper;
 
+import java.math.BigDecimal;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -23,7 +24,7 @@ public class ProductTestHelper {
     resourceInUser.setId(UUID.randomUUID());
     resourceInUser.setOwner(user);
     resourceInUser.setResource(pearl);
-    resourceInUser.setQuantity(20);
+    resourceInUser.setQuantity(BigDecimal.valueOf(20));
     return resourceInUser;
   }
 
@@ -36,7 +37,7 @@ public class ProductTestHelper {
     productRequestDto.setOwnerId(user.getId());
     productRequestDto.setDescription("This is test product");
     productRequestDto.setResourcesContent(List.of(resourceQuantityRequestDto));
-    productRequestDto.setSalePrice(10000);
+    productRequestDto.setSalePrice(BigDecimal.valueOf(10000));
     return productRequestDto;
   }
 
@@ -53,7 +54,7 @@ public class ProductTestHelper {
     productRequestDto.setDescription("Test");
     productRequestDto.setOwnerId(user.getId());
     productRequestDto.setAuthors(List.of(user.getId()));
-    productRequestDto.setSalePrice(50);
+    productRequestDto.setSalePrice(BigDecimal.valueOf(50));
     productRequestDto.setResourcesContent(listOfResourcesInProduct);
 
     return productRequestDto;
@@ -62,7 +63,7 @@ public class ProductTestHelper {
   public static ResourceQuantityRequestDto getResourceQuantityRequestDto(Resource pearl) {
     ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
     resourceQuantityRequestDto.setId(pearl.getId());
-    resourceQuantityRequestDto.setQuantity(5);
+    resourceQuantityRequestDto.setQuantity(BigDecimal.valueOf(5));
     return resourceQuantityRequestDto;
   }
 
@@ -74,7 +75,7 @@ public class ProductTestHelper {
     testProduct.setCatalogNumber("2");
     testProduct.setOwner(user);
     testProduct.setDescription("This is Test Product");
-    testProduct.setSalePrice(1000);
+    testProduct.setSalePrice(BigDecimal.valueOf(1000));
     testProduct.setResourcesContent(List.of(getResourceInProduct(pearl)));
     testProduct.setProductsContent(null);
     testProduct.setContentOf(null);
@@ -91,11 +92,11 @@ public class ProductTestHelper {
     productResponseDto.setProductsContent(null);
     productResponseDto.setContentOf(null);
     productResponseDto.setDescription("description");
-    productResponseDto.setSalePrice(1000);
+    productResponseDto.setSalePrice(BigDecimal.valueOf(1000));
     productResponseDto.setPartOfSale(null);
     productResponseDto.setCatalogNumber("Catalog Number");
     productResponseDto.setProductionNumber("Production Number");
-    productResponseDto.setDiscount(0);
+    productResponseDto.setDiscount(BigDecimal.valueOf(0));
     return productResponseDto;
   }
 
@@ -103,7 +104,7 @@ public class ProductTestHelper {
   private static ResourceInProduct getResourceInProduct(Resource pearl) {
     ResourceInProduct resourceInProduct = new ResourceInProduct();
     resourceInProduct.setResource(pearl);
-    resourceInProduct.setQuantity(5);
+    resourceInProduct.setQuantity(BigDecimal.valueOf(5));
     return resourceInProduct;
   }
 
@@ -117,7 +118,7 @@ public class ProductTestHelper {
         .forEach(
             r -> {
               resourceQuantityRequestDto.setId(r.getResource().getId());
-              resourceQuantityRequestDto.setQuantity(5);
+              resourceQuantityRequestDto.setQuantity(BigDecimal.valueOf(5));
               listOfResourcesInProduct.add(resourceQuantityRequestDto);
             });
     return listOfResourcesInProduct;

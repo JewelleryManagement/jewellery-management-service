@@ -2,6 +2,7 @@ package jewellery.inventory.service;
 
 import static jewellery.inventory.model.EventType.RESOURCE_REMOVE_QUANTITY;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
@@ -43,7 +44,7 @@ public class ResourceInUserService implements EntityFetcher {
   private final ResourcesInUserMapper resourcesInUserMapper;
   private final UserMapper userMapper;
   private final ResourceMapper resourceMapper;
-  private static final double EPSILON = 1e-10;
+  private static final BigDecimal EPSILON = new BigDecimal("1e-10");
 
   @Transactional
   @LogCreateEvent(eventType = EventType.RESOURCE_TRANSFER)
@@ -92,12 +93,12 @@ public class ResourceInUserService implements EntityFetcher {
   @Transactional
   @LogUpdateEvent(eventType = RESOURCE_REMOVE_QUANTITY)
   public ResourcesInUserResponseDto removeQuantityFromResource(
-      UUID userId, UUID resourceId, double quantity) {
+      UUID userId, UUID resourceId, BigDecimal quantity) {
     return removeQuantityFromResourceNoLog(userId, resourceId, quantity);
   }
 
   public ResourcesInUserResponseDto removeQuantityFromResourceNoLog(
-      UUID userId, UUID resourceId, double quantity) {
+      UUID userId, UUID resourceId, BigDecimal quantity) {
     User user = findUserById(userId);
     ResourceInUser resourceInUser = findResourceInUserOrThrow(user, resourceId);
     removeQuantityFromResource(resourceInUser, quantity);
@@ -142,32 +143,32 @@ public class ResourceInUserService implements EntityFetcher {
   private ResourceInUser getResourceInUser(User user, Resource resource) {
     logger.debug("Getting resource in user. User: {}, Resource: {}", user, resource);
     return findResourceInUser(user, resource.getId())
-        .orElseGet(() -> createAndAddNewResourceInUser(user, resource, 0));
+        .orElseGet(() -> createAndAddNewResourceInUser(user, resource, BigDecimal.valueOf(0)));
   }
 
-  private ResourceInUser addResourceToUser(User user, Resource resource, Double quantity) {
+  private ResourceInUser addResourceToUser(User user, Resource resource, BigDecimal quantity) {
     logger.info(
         "Adding resource to user. User: {}, Resource: {}, Quantity: {}", user, resource, quantity);
     ResourceInUser resourceInUser = getResourceInUser(user, resource);
-    resourceInUser.setQuantity(resourceInUser.getQuantity() + quantity);
+    resourceInUser.setQuantity(resourceInUser.getQuantity().add(quantity));
     resourceInUserRepository.save(resourceInUser);
     logger.debug("ResourceInUser after addition: {}", resourceInUser);
     return resourceInUser;
   }
 
   private ResourceInUser removeQuantityFromResource(
-      ResourceInUser resourceInUser, double quantityToRemove) {
+      ResourceInUser resourceInUser, BigDecimal quantityToRemove) {
 
-    double totalQuantity = resourceInUser.getQuantity();
-    double newQuantity = totalQuantity - quantityToRemove;
+    BigDecimal totalQuantity = resourceInUser.getQuantity();
+    BigDecimal newQuantity = totalQuantity.subtract(quantityToRemove);
 
-    if (newQuantity < 0) {
+    if (newQuantity.compareTo(BigDecimal.ZERO) < 0) {
       throw new InsufficientResourceQuantityException(quantityToRemove, totalQuantity);
     }
 
     resourceInUser.setQuantity(newQuantity);
     User owner = resourceInUser.getOwner();
-    if (Math.abs(newQuantity) < EPSILON) {
+    if (newQuantity.abs().compareTo(EPSILON) < 0) {
       owner.getResourcesOwned().remove(resourceInUser);
       resourceInUser = null;
     }
@@ -201,7 +202,7 @@ public class ResourceInUserService implements EntityFetcher {
   }
 
   private ResourceInUser createAndAddNewResourceInUser(
-      User user, Resource resource, double quantity) {
+      User user, Resource resource, BigDecimal quantity) {
     ResourceInUser resourceInUser = new ResourceInUser();
     resourceInUser.setOwner(user);
     resourceInUser.setResource(resource);
@@ -212,7 +213,7 @@ public class ResourceInUserService implements EntityFetcher {
   }
 
   private TransferResourceResponseDto getTransferResourceResponseDto(
-      User previousOwner, User newOwner, Resource resource, Double quantity) {
+      User previousOwner, User newOwner, Resource resource, BigDecimal quantity) {
 
     TransferResourceResponseDto responseDto =
         TransferResourceResponseDto.builder()

@@ -1,5 +1,6 @@
 package jewellery.inventory.mapper;
 
+import java.math.BigDecimal;
 import java.util.*;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -50,28 +51,29 @@ public class SaleMapper {
     return productResponseDtos;
   }
 
-  private double getTotalPriceFromEntity(List<Product> products) {
-    double totalPrice = 0;
+  private BigDecimal getTotalPriceFromEntity(List<Product> products) {
+    BigDecimal totalPrice = BigDecimal.valueOf(0);
     for (Product product : products) {
-      totalPrice += product.getSalePrice();
+      totalPrice = totalPrice.add(product.getSalePrice());
     }
     return totalPrice;
   }
 
-  private double calculateDiscount(List<Product> products, String calculationType) {
-    double totalDiscountAmount = 0;
-    double totalPrice = 0;
+  private BigDecimal calculateDiscount(List<Product> products, String calculationType) {
+    BigDecimal totalDiscountAmount = BigDecimal.valueOf(0);
+    BigDecimal totalPrice = BigDecimal.valueOf(0);
 
     for (Product product : products) {
-      double discountAmount = product.getSalePrice() * (product.getDiscount() / 100);
-      totalDiscountAmount += discountAmount;
-      totalPrice += product.getSalePrice();
+      BigDecimal discountAmount =
+          product.getSalePrice().multiply(product.getDiscount().divide(BigDecimal.valueOf(100)));
+      totalDiscountAmount = totalDiscountAmount.add(discountAmount);
+      totalPrice = totalPrice.add(product.getSalePrice());
     }
 
-    if (PERCENTAGE.equals(calculationType) && totalPrice != 0) {
-      return (totalDiscountAmount / totalPrice) * 100;
+    if (PERCENTAGE.equals(calculationType) && totalPrice.compareTo(BigDecimal.ZERO) != 0) {
+      return (totalDiscountAmount.divide(totalPrice)).multiply(BigDecimal.valueOf(100));
     } else if (AMOUNT.equals(calculationType)) {
-      return totalPrice - totalDiscountAmount;
+      return totalPrice.subtract(totalDiscountAmount);
     }
 
     throw new IllegalArgumentException("Invalid calculation type");

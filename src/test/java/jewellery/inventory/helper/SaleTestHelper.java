@@ -1,5 +1,6 @@
 package jewellery.inventory.helper;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +46,7 @@ public class SaleTestHelper {
   }
 
   public static ProductPriceDiscountRequestDto createProductPriceDiscountRequest(
-      UUID productId, double salePrice, double discount) {
+      UUID productId, BigDecimal salePrice, BigDecimal discount) {
     ProductPriceDiscountRequestDto productRequest = new ProductPriceDiscountRequestDto();
     productRequest.setProductId(productId);
     productRequest.setSalePrice(salePrice);
@@ -77,8 +78,9 @@ public class SaleTestHelper {
     dto.setBuyer(userResponseDtoBuyer);
     for (int i = 0; i < sale.getProducts().size(); i++) {
       dto.setTotalDiscountedPrice(
-          dto.getTotalDiscountedPrice() + sale.getProducts().get(i).getSalePrice());
-      dto.setTotalDiscount(dto.getTotalDiscount() + sale.getProducts().get(i).getDiscount());
+          dto.getTotalDiscountedPrice().add(sale.getProducts().get(i).getSalePrice()));
+      dto.setTotalDiscount(
+          dto.getTotalDiscount().add(sale.getProducts().get(i).getDiscount()));
     }
     List<ProductResponseDto> list = new ArrayList<>();
     for (int i = 0; i < sale.getProducts().size(); i++) {

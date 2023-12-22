@@ -1,5 +1,6 @@
 package jewellery.inventory.dto.request.resource;
 
+import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -12,5 +13,5 @@ import java.util.UUID;
 public class ResourceQuantityRequestDto {
 
     private UUID id;
-    private double quantity;
+    private BigDecimal quantity;
 }

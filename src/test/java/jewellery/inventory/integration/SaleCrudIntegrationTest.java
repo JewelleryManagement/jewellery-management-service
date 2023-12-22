@@ -7,6 +7,7 @@ import static jewellery.inventory.model.EventType.SALE_CREATE;
 import static jewellery.inventory.model.EventType.SALE_RETURN_PRODUCT;
 import static org.junit.jupiter.api.Assertions.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 import jewellery.inventory.dto.request.*;
@@ -30,9 +31,9 @@ import org.springframework.http.ResponseEntity;
 
 class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
-  private static final Double SALE_TOTAL_PRICE = 10000.0;
-  private static final Double SALE_DISCOUNT = 10.0;
-  private static final Double SALE_DISCOUNTED_PRICE = 9000.0;
+  private static final BigDecimal SALE_TOTAL_PRICE = BigDecimal.valueOf(10000.0);
+  private static final BigDecimal SALE_DISCOUNT = BigDecimal.valueOf(10.0);
+  private static final BigDecimal SALE_DISCOUNTED_PRICE = BigDecimal.valueOf(9000.0);
   private User seller;
   private User buyer;
   private PreciousStone preciousStone;
@@ -172,9 +173,9 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(),
         saleResponse.getBody().getProducts().get(0).getId());
-    assertEquals(SALE_TOTAL_PRICE, saleResponse.getBody().getTotalPrice(), 0.001);
-    assertEquals(SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount(), 0.001);
-    assertEquals(SALE_DISCOUNTED_PRICE, saleResponse.getBody().getTotalDiscountedPrice(), 0.001);
+    assertEquals(SALE_TOTAL_PRICE, saleResponse.getBody().getTotalPrice(), String.valueOf(0.001));
+    assertEquals(SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount(), String.valueOf(0.001));
+    assertEquals(SALE_DISCOUNTED_PRICE, saleResponse.getBody().getTotalDiscountedPrice(), String.valueOf(0.001));
 
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
@@ -227,7 +228,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
     resourceInUserRequestDto.setUserId(user.getId());
     resourceInUserRequestDto.setResourceId(preciousStone.getId());
-    resourceInUserRequestDto.setQuantity(20);
+    resourceInUserRequestDto.setQuantity(BigDecimal.valueOf(20));
     return resourceInUserRequestDto;
   }
 

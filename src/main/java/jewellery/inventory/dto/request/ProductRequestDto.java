@@ -2,6 +2,7 @@ package jewellery.inventory.dto.request;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import lombok.*;
 
@@ -23,7 +24,7 @@ public class ProductRequestDto {
   private List<UUID> productsContent;
   private String description;
   @NotNull
-  private double salePrice;
+  private BigDecimal salePrice;
   @NotNull
   private String catalogNumber;
   @NotNull

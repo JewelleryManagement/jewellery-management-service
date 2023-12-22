@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.util.*;
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
@@ -73,7 +74,8 @@ class SaleServiceTest {
     productReturnResponseDto =
         SaleTestHelper.getProductReturnResponseDto(saleResponseDto, productResponseDto);
     productPriceDiscountRequestDto =
-        SaleTestHelper.createProductPriceDiscountRequest(product.getId(), 1000, 10);
+        SaleTestHelper.createProductPriceDiscountRequest(
+            product.getId(), BigDecimal.valueOf(1000), BigDecimal.valueOf(10));
     List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
     productPriceDiscountRequestDtoList.add(productPriceDiscountRequestDto);
     saleRequestDto =

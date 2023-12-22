@@ -3,6 +3,7 @@ package jewellery.inventory.dto.request;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -20,5 +21,5 @@ public class ResourcePurchaseRequestDto extends ResourceInUserRequestDto {
   @NotNull
   @Min(value = 0, message = DEAL_PRICE_MIN_VALUE_MSG)
   @Digits(integer = 10, fraction = 2, message = DEAL_PRICE_DECIMAL_PLACES_MSG)
-  private double dealPrice;
+  private BigDecimal dealPrice;
 }

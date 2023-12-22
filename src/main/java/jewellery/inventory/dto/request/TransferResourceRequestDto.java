@@ -3,6 +3,7 @@ package jewellery.inventory.dto.request;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -29,5 +30,5 @@ public class TransferResourceRequestDto {
 
     @Min(value = 0, message = QUANTITY_MIN_VALUE_MSG)
     @Digits(integer = 10, fraction = 2, message = QUANTITY_DECIMAL_PLACES_MSG)
-    private double quantity;
+    private BigDecimal quantity;
 }

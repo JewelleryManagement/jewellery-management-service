@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.File;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -385,7 +386,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
     resourceInUserRequestDto.setUserId(user.getId());
     resourceInUserRequestDto.setResourceId(preciousStone.getId());
-    resourceInUserRequestDto.setQuantity(20);
+    resourceInUserRequestDto.setQuantity(BigDecimal.valueOf(20));
     return resourceInUserRequestDto;
   }
 

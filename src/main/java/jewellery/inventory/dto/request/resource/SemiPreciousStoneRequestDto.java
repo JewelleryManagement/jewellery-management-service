@@ -1,5 +1,6 @@
 package jewellery.inventory.dto.request.resource;
 
+import java.math.BigDecimal;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -14,5 +15,5 @@ public class SemiPreciousStoneRequestDto extends ResourceRequestDto{
     private String cut;
     private String clarity;
     private String shape;
-    private Double size;
+    private BigDecimal size;
 }

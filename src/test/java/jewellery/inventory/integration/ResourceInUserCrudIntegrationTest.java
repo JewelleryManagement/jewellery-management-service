@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,7 +31,7 @@ import org.springframework.http.*;
 
 class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
-  private static final double RESOURCE_QUANTITY = 5.00;
+  private static final BigDecimal RESOURCE_QUANTITY = BigDecimal.valueOf(5);
 
   private String buildUrl(String... paths) {
     return "/" + String.join("/", paths);
@@ -64,7 +65,10 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     ResponseEntity<ResourcePurchaseResponseDto> response =
         sendPurchaseResourceRequest(
             createResourcePurchaseRequest(
-                createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, 555.55));
+                createdUser.getId(),
+                createdResource.getId(),
+                RESOURCE_QUANTITY,
+                BigDecimal.valueOf(555.55)));
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     assertNotNull(response.getBody());
@@ -110,7 +114,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendAddResourceInUserRequest(
-            createResourceInUserRequestDto(createdUser.getId(), createdResource.getId(), -5));
+            createResourceInUserRequestDto(
+                createdUser.getId(), createdResource.getId(), BigDecimal.valueOf(-5)));
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
@@ -133,7 +138,10 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         response.getBody().getResourcesAndQuantities();
     assertNotNull(resourceQuantities);
     assertEquals(1, resourceQuantities.size());
-    assertEquals(RESOURCE_QUANTITY * 2, resourceQuantities.get(0).getQuantity(), 0.001);
+    assertEquals(
+        RESOURCE_QUANTITY.multiply(BigDecimal.valueOf(2)),
+        resourceQuantities.get(0).getQuantity(),
+        String.valueOf(0.001));
   }
 
   @Test
@@ -142,9 +150,11 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     PreciousStoneResponseDto firstCreatedResource = sendCreatePreciousStoneRequest();
     PreciousStoneResponseDto secondCreatedResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
-        createResourceInUserRequestDto(createdUser.getId(), firstCreatedResource.getId(), 5.00));
+        createResourceInUserRequestDto(
+            createdUser.getId(), firstCreatedResource.getId(), BigDecimal.valueOf(5.00)));
     sendAddResourceInUserRequest(
-        createResourceInUserRequestDto(createdUser.getId(), secondCreatedResource.getId(), 3.00));
+        createResourceInUserRequestDto(
+            createdUser.getId(), secondCreatedResource.getId(), BigDecimal.valueOf(3.00)));
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendGetResourcesInUserRequest(createdUser.getId());
@@ -162,9 +172,11 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     UserResponseDto secondCreatedUser = sendCreateUserRequest(createDifferentUserRequest());
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
-        createResourceInUserRequestDto(firstCreatedUser.getId(), createdResource.getId(), 5.00));
+        createResourceInUserRequestDto(
+            firstCreatedUser.getId(), createdResource.getId(), BigDecimal.valueOf(5.00)));
     sendAddResourceInUserRequest(
-        createResourceInUserRequestDto(secondCreatedUser.getId(), createdResource.getId(), 3.00));
+        createResourceInUserRequestDto(
+            secondCreatedUser.getId(), createdResource.getId(), BigDecimal.valueOf(3.00)));
 
     ResponseEntity<ResourceOwnedByUsersResponseDto> response =
         sendGetUsersAndQuantitiesForResourceRequest(createdResource.getId());
@@ -242,13 +254,16 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     ResponseEntity<ResourcesInUserResponseDto> deleteQuantityResponse =
         sendDeleteQuantityFromResourceInUserRequest(
-            createdUser.getId(), createdResource.getId(), 1.0);
+            createdUser.getId(), createdResource.getId(), BigDecimal.valueOf(1.0));
 
     ResponseEntity<ResourcesInUserResponseDto> resourcesInUserResponse =
         sendGetResourcesInUserRequest(createdUser.getId());
     ResourceQuantityResponseDto resourceQuantity =
         findResourceQuantityIn(createdResource.getId(), resourcesInUserResponse);
-    assertEquals(RESOURCE_QUANTITY - 1, resourceQuantity.getQuantity(), 0.01);
+    assertEquals(
+        RESOURCE_QUANTITY.subtract(BigDecimal.valueOf(1)),
+        resourceQuantity.getQuantity(),
+        String.valueOf(0.01));
 
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(response.getBody(), deleteQuantityResponse.getBody(), objectMapper);
@@ -263,7 +278,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
-            createdUser.getId(), nonExistentResourceId, 1.0);
+            createdUser.getId(), nonExistentResourceId, BigDecimal.valueOf(1.0));
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
@@ -275,7 +290,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
-            nonExistentUserId, createdResource.getId(), 1.8);
+            nonExistentUserId, createdResource.getId(), BigDecimal.valueOf(1.8));
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
@@ -290,7 +305,9 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
-            createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY + 1);
+            createdUser.getId(),
+            createdResource.getId(),
+            RESOURCE_QUANTITY.add(BigDecimal.valueOf(1)));
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
@@ -305,7 +322,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
-            createdUser.getId(), createdResource.getId(), -1.0);
+            createdUser.getId(), createdResource.getId(), BigDecimal.valueOf(-1.0));
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
@@ -354,7 +371,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     requestDto.setPreviousOwnerId(sender.getId());
     requestDto.setNewOwnerId(receiver.getId());
     requestDto.setTransferredResourceId(createdResource.getId());
-    requestDto.setQuantity(1);
+    requestDto.setQuantity(BigDecimal.valueOf(1));
     return requestDto;
   }
 
@@ -396,7 +413,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   }
 
   private ResponseEntity<ResourcesInUserResponseDto> sendDeleteQuantityFromResourceInUserRequest(
-      UUID userId, UUID resourceId, double quantity) {
+      UUID userId, UUID resourceId, BigDecimal quantity) {
     String removeResourceUrl =
         getBaseResourceAvailabilityUrl() + "/" + userId + "/" + resourceId + "/" + quantity;
     return testRestTemplate.exchange(

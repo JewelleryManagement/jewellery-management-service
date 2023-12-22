@@ -1,6 +1,7 @@
 package jewellery.inventory.dto.request;
 
 import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,5 +22,5 @@ public class ResourceInUserRequestDto {
 
   @Min(value = 0, message = QUANTITY_MIN_VALUE_MSG)
   @Digits(integer = 10, fraction = 2, message = QUANTITY_DECIMAL_PLACES_MSG)
-  private double quantity;
+  private BigDecimal quantity;
 }

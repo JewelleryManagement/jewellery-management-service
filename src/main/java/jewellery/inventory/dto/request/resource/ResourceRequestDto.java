@@ -2,6 +2,7 @@ package jewellery.inventory.dto.request.resource;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.math.BigDecimal;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -20,6 +21,6 @@ import lombok.experimental.SuperBuilder;
 public class ResourceRequestDto {
     private String clazz;
     private String quantityType;
-    private double pricePerQuantity;
+    private BigDecimal pricePerQuantity;
     private String note;
 }

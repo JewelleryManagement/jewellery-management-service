@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +87,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     resourceQuantityResponseDtos.forEach(
         resourceQuantityDto -> {
-          assertEquals(0.0, resourceQuantityDto.getQuantity());
+          assertEquals(BigDecimal.valueOf(0), resourceQuantityDto.getQuantity());
         });
     assertEquals(
         createdResources,
@@ -103,7 +104,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResourceQuantityResponseDto fetchedResourceQuantity =
         getResourceQuantityWithRequest(createdResources.get(0).getId());
 
-    assertEquals(0.0, fetchedResourceQuantity.getQuantity());
+    assertEquals(BigDecimal.valueOf(0), fetchedResourceQuantity.getQuantity());
     assertEquals(createdResources.get(0), fetchedResourceQuantity.getResource());
   }
 

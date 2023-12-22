@@ -1,5 +1,6 @@
 package jewellery.inventory.dto;
 
+import java.math.BigDecimal;
 import jewellery.inventory.dto.response.UserResponseDto;
 import lombok.*;
 
@@ -12,5 +13,5 @@ import lombok.*;
 @NoArgsConstructor
 public class UserQuantityDto {
   private UserResponseDto owner;
-  private double quantity;
+  private BigDecimal quantity;
 }
