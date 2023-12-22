@@ -177,13 +177,16 @@ class ResourceInUserServiceTest {
   @Test
   void willRemoveQuantityFromResourceInUserSuccessfully() {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    final BigDecimal initialQuantity = resourceInUser.getQuantity();
     final BigDecimal quantityToRemove = BigDecimal.valueOf(2);
 
     resourceInUserService.removeQuantityFromResource(userId, resourceId, quantityToRemove);
 
     verify(userRepository, times(1)).findById(userId);
     verify(userRepository, times(1)).save(any(User.class));
-    assertEquals(resourceInUser.getQuantity().subtract(quantityToRemove), resourceInUser.getQuantity());
+
+    BigDecimal expectedQuantity = initialQuantity.subtract(quantityToRemove);
+    assertEquals(expectedQuantity, resourceInUser.getQuantity());
   }
 
   @Test

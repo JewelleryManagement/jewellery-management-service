@@ -41,7 +41,7 @@ public class ResourceTestHelper {
   private static final Integer PURITY = 925;
   public static final int UPDATED_PURITY = PURITY + 1;
   private static final BigDecimal CARAT_PRECIOUS_STONE = BigDecimal.valueOf(5.1);
-  public static final BigDecimal UPDATED_CARAT_PRECIOUS_STONE = CARAT_PRECIOUS_STONE.add(BigDecimal.valueOf(2));
+  public static final BigDecimal UPDATED_CARAT_PRECIOUS_STONE = CARAT_PRECIOUS_STONE.add(BigDecimal.valueOf(2.1));
   private static final String CLARITY = "opaque";
   public static final String UPDATED_CLARITY = CLARITY + "ish";
   private static final String DESCRIPTION = "A linking part made of gold";

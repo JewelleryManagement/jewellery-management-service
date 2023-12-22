@@ -4,7 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -70,25 +72,44 @@ public class SaleTestHelper {
 
   public static SaleResponseDto getSaleResponseDto(Sale sale) {
     SaleResponseDto dto = new SaleResponseDto();
-    UserResponseDto userResponseDtoSeller = new UserResponseDto();
-    UserResponseDto userResponseDtoBuyer = new UserResponseDto();
-    userResponseDtoSeller.setId(sale.getSeller().getId());
+    UserResponseDto userResponseDtoSeller = createUserResponseDto(sale.getSeller());
+    UserResponseDto userResponseDtoBuyer = createUserResponseDto(sale.getBuyer());
+
     dto.setSeller(userResponseDtoSeller);
-    userResponseDtoBuyer.setId(sale.getBuyer().getId());
     dto.setBuyer(userResponseDtoBuyer);
-    for (int i = 0; i < sale.getProducts().size(); i++) {
-      dto.setTotalDiscountedPrice(
-          dto.getTotalDiscountedPrice().add(sale.getProducts().get(i).getSalePrice()));
-      dto.setTotalDiscount(
-          dto.getTotalDiscount().add(sale.getProducts().get(i).getDiscount()));
-    }
-    List<ProductResponseDto> list = new ArrayList<>();
-    for (int i = 0; i < sale.getProducts().size(); i++) {
-      ProductResponseDto productResponseDto = new ProductResponseDto();
-      productResponseDto.setOwner(dto.getBuyer());
-      list.add(productResponseDto);
-    }
-    dto.setProducts(list);
+    dto.setTotalDiscountedPrice(BigDecimal.ZERO);
+    dto.setTotalDiscount(BigDecimal.ZERO);
+
+    sale.getProducts()
+        .forEach(
+            product -> {
+              BigDecimal salePrice =
+                  Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
+              BigDecimal discount =
+                  Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
+              dto.setTotalDiscountedPrice(dto.getTotalDiscountedPrice().add(salePrice));
+              dto.setTotalDiscount(dto.getTotalDiscount().add(discount));
+            });
+
+    List<ProductResponseDto> productResponseDtos =
+        sale.getProducts().stream()
+            .map(product -> createProductResponseDto(dto.getBuyer()))
+            .collect(Collectors.toList());
+
+    dto.setProducts(productResponseDtos);
+
     return dto;
+  }
+
+  private static UserResponseDto createUserResponseDto(User user) {
+    UserResponseDto userResponseDto = new UserResponseDto();
+    userResponseDto.setId(user.getId());
+    return userResponseDto;
+  }
+
+  private static ProductResponseDto createProductResponseDto(UserResponseDto owner) {
+    ProductResponseDto productResponseDto = new ProductResponseDto();
+    productResponseDto.setOwner(owner);
+    return productResponseDto;
   }
 }

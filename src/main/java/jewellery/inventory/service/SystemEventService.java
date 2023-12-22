@@ -1,5 +1,6 @@
 package jewellery.inventory.service;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
@@ -21,6 +22,7 @@ public class SystemEventService {
   private final SystemEventRepository systemEventRepository;
   private final AuthService authService;
   private final ObjectMapper objectMapper;
+
 
   public List<SystemEvent> getAllEvents() {
     return systemEventRepository.findAll();
@@ -44,6 +46,7 @@ public class SystemEventService {
   }
 
   private <U> Object createMap(U entity) {
+    objectMapper.configure(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN, true);
     return objectMapper.convertValue(entity, new TypeReference<>() {});
   }
 
