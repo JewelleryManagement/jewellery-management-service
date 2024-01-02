@@ -2,7 +2,6 @@ package jewellery.inventory.helper;
 
 import java.math.BigDecimal;
 import java.util.UUID;
-import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.UserUpdateRequestDto;
@@ -102,12 +101,13 @@ public class UserTestHelper {
     return invalidUserRequest;
   }
 
-  public static @NotNull ResourceInUserRequestDto createResourceInUserRequestDto(
-      UUID userId, UUID resourceId, BigDecimal quantity) {
-    ResourceInUserRequestDto requestDto = new ResourceInUserRequestDto();
+  public static @NotNull ResourcePurchaseRequestDto createResourcePurchaseRequestDto(
+      UUID userId, UUID resourceId, BigDecimal quantity, BigDecimal price) {
+    ResourcePurchaseRequestDto requestDto = new ResourcePurchaseRequestDto();
     requestDto.setUserId(userId);
     requestDto.setResourceId(resourceId);
     requestDto.setQuantity(quantity);
+    requestDto.setDealPrice(price.setScale(2));
     return requestDto;
   }
 

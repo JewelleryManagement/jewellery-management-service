@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ProductRequestDto;
-import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ImageResponseDto;
@@ -54,7 +54,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private User user;
   private PreciousStone preciousStone;
   private User differentUser;
-  private ResourceInUserRequestDto resourceInUserRequestDto;
+  private ResourcePurchaseRequestDto resourcePurchaseRequestDto;
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
   private ProductRequestDto productRequestDto;
   private ProductRequestDto productRequestDto2;
@@ -95,10 +95,10 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void setUp() {
     user = createUserInDatabase(createTestUserRequest());
     preciousStone = createPreciousStoneInDatabase();
-    resourceInUserRequestDto =
+    resourcePurchaseRequestDto =
         getResourceInUserRequestDto(user, Objects.requireNonNull(preciousStone));
     differentUser = createUserInDatabase(createDifferentUserRequest());
-    resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
+    resourcesInUserResponseDto = getResourcesInUserResponseDto(resourcePurchaseRequestDto);
     productRequestDto =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), user);
     productRequestDto2 =
@@ -381,13 +381,14 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @NotNull
-  private static ResourceInUserRequestDto getResourceInUserRequestDto(
+  private static ResourcePurchaseRequestDto getResourceInUserRequestDto(
       User user, PreciousStone preciousStone) {
-    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
-    resourceInUserRequestDto.setUserId(user.getId());
-    resourceInUserRequestDto.setResourceId(preciousStone.getId());
-    resourceInUserRequestDto.setQuantity(BigDecimal.valueOf(20));
-    return resourceInUserRequestDto;
+    ResourcePurchaseRequestDto resourcePurchaseRequestDto = new ResourcePurchaseRequestDto();
+    resourcePurchaseRequestDto.setUserId(user.getId());
+    resourcePurchaseRequestDto.setResourceId(preciousStone.getId());
+    resourcePurchaseRequestDto.setQuantity(BigDecimal.valueOf(20).setScale(2));
+    resourcePurchaseRequestDto.setDealPrice(BigDecimal.valueOf(10).setScale(2));
+    return resourcePurchaseRequestDto;
   }
 
   private void assertResponseMatchesCreatedRequest(
@@ -411,7 +412,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Nullable
   private ResourcesInUserResponseDto getResourcesInUserResponseDto(
-      ResourceInUserRequestDto resourceInUserRequestDto) {
+      ResourcePurchaseRequestDto resourceInUserRequestDto) {
     ResponseEntity<ResourcesInUserResponseDto> createResourceInUser =
         this.testRestTemplate.postForEntity(
             getBaseResourceAvailabilityUrl(),

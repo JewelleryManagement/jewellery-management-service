@@ -34,19 +34,20 @@ public class ResourceTestHelper {
   public static final String UPDATED_PLATING = PLATING + "ish";
   private static final String CUT = "diamond";
   private static final String DIMENSION_SIZE = "4.50x4.90x2.50";
-  private static final BigDecimal DIMENSION_X = BigDecimal.valueOf(4.5);
-  private static final BigDecimal DIMENSION_Y = BigDecimal.valueOf(4.9);
-  private static final BigDecimal DIMENSION_Z = BigDecimal.valueOf(2.5);
-  private static final BigDecimal SIZE = BigDecimal.valueOf(0.55);
+  private static final BigDecimal DIMENSION_X = BigDecimal.valueOf(4.5).setScale(2);
+  private static final BigDecimal DIMENSION_Y = BigDecimal.valueOf(4.9).setScale(2);
+  private static final BigDecimal DIMENSION_Z = BigDecimal.valueOf(2.5).setScale(2);
+  private static final BigDecimal SIZE = BigDecimal.valueOf(0.55).setScale(2);
   private static final Integer PURITY = 925;
   public static final int UPDATED_PURITY = PURITY + 1;
-  private static final BigDecimal CARAT_PRECIOUS_STONE = BigDecimal.valueOf(5.1);
-  public static final BigDecimal UPDATED_CARAT_PRECIOUS_STONE = CARAT_PRECIOUS_STONE.add(BigDecimal.valueOf(2.1));
+  private static final BigDecimal CARAT_PRECIOUS_STONE = BigDecimal.valueOf(5.1).setScale(2);
+  public static final BigDecimal UPDATED_CARAT_PRECIOUS_STONE =
+      CARAT_PRECIOUS_STONE.add(BigDecimal.valueOf(2.1).setScale(2));
   private static final String CLARITY = "opaque";
   public static final String UPDATED_CLARITY = CLARITY + "ish";
   private static final String DESCRIPTION = "A linking part made of gold";
   public static final String UPDATED_DESCRIPTION = DESCRIPTION + " and \"real\" silver";
-  public static final BigDecimal PRICE_PER_QUANTITY = BigDecimal.valueOf(50.5);
+  public static final BigDecimal PRICE_PER_QUANTITY = BigDecimal.valueOf(50.5).setScale(2);
   public static final String NOTE = "Note";
 
   private ResourceTestHelper() {}

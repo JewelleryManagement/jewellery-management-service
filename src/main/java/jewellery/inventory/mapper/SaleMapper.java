@@ -54,7 +54,7 @@ public class SaleMapper {
   }
 
   private BigDecimal getTotalPriceFromEntity(List<Product> products) {
-    BigDecimal totalPrice = BigDecimal.valueOf(0);
+    BigDecimal totalPrice = BigDecimal.ZERO;
     for (Product product : products) {
       totalPrice = totalPrice.add(product.getSalePrice());
     }
