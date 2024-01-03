@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
@@ -75,7 +76,7 @@ class SaleServiceTest {
         SaleTestHelper.getProductReturnResponseDto(saleResponseDto, productResponseDto);
     productPriceDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(
-            product.getId(), BigDecimal.valueOf(1000), BigDecimal.valueOf(10));
+            product.getId(), new BigDecimal("1000").setScale(2, RoundingMode.HALF_UP), new BigDecimal("10").setScale(2, RoundingMode.HALF_UP));
     List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
     productPriceDiscountRequestDtoList.add(productPriceDiscountRequestDto);
     saleRequestDto =

@@ -33,7 +33,7 @@ import org.springframework.http.*;
 class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private static final BigDecimal RESOURCE_QUANTITY =
-      BigDecimal.valueOf(5).setScale(2, RoundingMode.HALF_UP);
+      new BigDecimal("5").setScale(2, RoundingMode.HALF_UP);
 
   private String buildUrl(String... paths) {
     return "/" + String.join("/", paths);
@@ -70,7 +70,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
                 createdUser.getId(),
                 createdResource.getId(),
                 RESOURCE_QUANTITY,
-                BigDecimal.valueOf(555.55)));
+                new BigDecimal("555.55").setScale(2, RoundingMode.HALF_UP)));
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     assertNotNull(response.getBody());
@@ -94,7 +94,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
                 nonExistentUserId,
                 createdResource.getId(),
                 RESOURCE_QUANTITY,
-                BigDecimal.valueOf(105.5)));
+                new BigDecimal("105.5").setScale(2, RoundingMode.HALF_UP)));
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
@@ -110,7 +110,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
                 createdUser.getId(),
                 nonExistentResourceId,
                 RESOURCE_QUANTITY,
-                BigDecimal.valueOf(105.5)));
+                new BigDecimal("105.5").setScale(2, RoundingMode.HALF_UP)));
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
@@ -140,7 +140,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
             createdUser.getId(),
             createdResource.getId(),
             RESOURCE_QUANTITY,
-            BigDecimal.valueOf(105.5));
+            new BigDecimal("105.5").setScale(2, RoundingMode.HALF_UP));
 
     sendAddResourceInUserRequest(resourceInUserRequestDto);
     sendAddResourceInUserRequest(resourceInUserRequestDto);
@@ -153,9 +153,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertNotNull(resourceQuantities);
     assertEquals(1, resourceQuantities.size());
     assertEquals(
-        RESOURCE_QUANTITY.multiply(BigDecimal.valueOf(2)),
-        resourceQuantities.get(0).getQuantity(),
-        String.valueOf(0.01));
+        RESOURCE_QUANTITY.multiply(new BigDecimal("2")).setScale(2, RoundingMode.HALF_UP),
+        resourceQuantities.get(0).getQuantity().setScale(2, RoundingMode.HALF_UP));
   }
 
   @Test
@@ -167,14 +166,14 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         createResourcePurchaseRequestDto(
             createdUser.getId(),
             firstCreatedResource.getId(),
-            BigDecimal.valueOf(5.00),
-            BigDecimal.valueOf(105.5)));
+            new BigDecimal("5.00").setScale(2, RoundingMode.HALF_UP),
+            new BigDecimal("105.5").setScale(2, RoundingMode.HALF_UP)));
     sendAddResourceInUserRequest(
         createResourcePurchaseRequestDto(
             createdUser.getId(),
             secondCreatedResource.getId(),
-            BigDecimal.valueOf(3.00),
-            BigDecimal.valueOf(105.5)));
+            new BigDecimal("3.00").setScale(2, RoundingMode.HALF_UP),
+            new BigDecimal("105.5").setScale(2, RoundingMode.HALF_UP)));
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendGetResourcesInUserRequest(createdUser.getId());
@@ -195,14 +194,14 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         createResourcePurchaseRequestDto(
             firstCreatedUser.getId(),
             createdResource.getId(),
-            BigDecimal.valueOf(5.00),
-            BigDecimal.valueOf(105.5)));
+            new BigDecimal("5.00").setScale(2, RoundingMode.HALF_UP),
+            new BigDecimal("105.5").setScale(2, RoundingMode.HALF_UP)));
     sendAddResourceInUserRequest(
         createResourcePurchaseRequestDto(
             secondCreatedUser.getId(),
             createdResource.getId(),
-            BigDecimal.valueOf(3.00),
-            BigDecimal.valueOf(105.5)));
+            new BigDecimal("3.00").setScale(2, RoundingMode.HALF_UP),
+            new BigDecimal("105.5").setScale(2, RoundingMode.HALF_UP)));
 
     ResponseEntity<ResourceOwnedByUsersResponseDto> response =
         sendGetUsersAndQuantitiesForResourceRequest(createdResource.getId());
@@ -235,7 +234,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
                 createdUser.getId(),
                 createdResource.getId(),
                 RESOURCE_QUANTITY,
-                BigDecimal.valueOf(105.5)));
+                new BigDecimal("105.5").setScale(2, RoundingMode.HALF_UP)));
 
     sendDeleteResourceInUserRequest(createdUser.getId(), createdResource.getId());
 
@@ -282,24 +281,23 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
                 createdUser.getId(),
                 createdResource.getId(),
                 RESOURCE_QUANTITY,
-                BigDecimal.valueOf(105.5)));
+                new BigDecimal("105.5").setScale(2, RoundingMode.HALF_UP)));
 
     ResponseEntity<ResourcesInUserResponseDto> deleteQuantityResponse =
         sendDeleteQuantityFromResourceInUserRequest(
-            createdUser.getId(), createdResource.getId(), BigDecimal.valueOf(1.0));
+            createdUser.getId(), createdResource.getId(), new BigDecimal("1").setScale(2, RoundingMode.HALF_UP));
 
     ResponseEntity<ResourcesInUserResponseDto> resourcesInUserResponse =
         sendGetResourcesInUserRequest(createdUser.getId());
     ResourceQuantityResponseDto resourceQuantity =
         findResourceQuantityIn(createdResource.getId(), resourcesInUserResponse);
-    assertEquals(
-        RESOURCE_QUANTITY.subtract(BigDecimal.valueOf(1).setScale(1, RoundingMode.HALF_UP)),
+    assertEquals(new BigDecimal("4").setScale(2, RoundingMode.HALF_UP),
         resourceQuantity.getQuantity());
 
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(response.getBody(), deleteQuantityResponse.getBody(), objectMapper);
 
-    systemEventTestHelper.assertEventWasLogged(RESOURCE_REMOVE_QUANTITY, expectedEventPayload);
+   systemEventTestHelper.assertEventWasLogged(RESOURCE_REMOVE_QUANTITY, expectedEventPayload);
   }
 
   @Test
@@ -309,7 +307,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
-            createdUser.getId(), nonExistentResourceId, BigDecimal.valueOf(1.0));
+            createdUser.getId(), nonExistentResourceId, new BigDecimal("1.0").setScale(2, RoundingMode.HALF_UP));
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
@@ -321,7 +319,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
-            nonExistentUserId, createdResource.getId(), BigDecimal.valueOf(1.8));
+            nonExistentUserId, createdResource.getId(), new BigDecimal("1.8").setScale(2, RoundingMode.HALF_UP));
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
@@ -335,13 +333,13 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
             createdUser.getId(),
             createdResource.getId(),
             RESOURCE_QUANTITY,
-            BigDecimal.valueOf(105.5)));
+            new BigDecimal("105.5").setScale(2, RoundingMode.HALF_UP)));
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
             createdUser.getId(),
             createdResource.getId(),
-            RESOURCE_QUANTITY.add(BigDecimal.valueOf(1)));
+            RESOURCE_QUANTITY.add(new BigDecimal("1").setScale(2, RoundingMode.HALF_UP)));
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
@@ -355,7 +353,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
             createdUser.getId(),
             createdResource.getId(),
             RESOURCE_QUANTITY,
-            BigDecimal.valueOf(105.5)));
+            new BigDecimal("105.5").setScale(2, RoundingMode.HALF_UP)));
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
@@ -370,7 +368,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
     sendAddResourceInUserRequest(
         createResourcePurchaseRequestDto(
-            sender.getId(), createdResource.getId(), RESOURCE_QUANTITY, BigDecimal.valueOf(105.5)));
+            sender.getId(), createdResource.getId(), RESOURCE_QUANTITY, new BigDecimal("105.5").setScale(2, RoundingMode.HALF_UP)));
 
     UserResponseDto receiver = sendCreateUserRequest(createDifferentUserRequest());
 
@@ -394,7 +392,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertEquals(
         response.getTransferredResource().getResource().getId(),
         requestDto.getTransferredResourceId());
-    assertEquals(BigDecimal.valueOf(1), response.getTransferredResource().getQuantity());
+    assertEquals(new BigDecimal("1").setScale(2, RoundingMode.HALF_UP), response.getTransferredResource().getQuantity());
 
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(response, objectMapper);
@@ -409,7 +407,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     requestDto.setPreviousOwnerId(sender.getId());
     requestDto.setNewOwnerId(receiver.getId());
     requestDto.setTransferredResourceId(createdResource.getId());
-    requestDto.setQuantity(BigDecimal.valueOf(1));
+    requestDto.setQuantity(new BigDecimal("1").setScale(2, RoundingMode.HALF_UP));
     return requestDto;
   }
 

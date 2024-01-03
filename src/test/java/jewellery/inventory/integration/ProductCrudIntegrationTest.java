@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.File;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -386,8 +387,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResourcePurchaseRequestDto resourcePurchaseRequestDto = new ResourcePurchaseRequestDto();
     resourcePurchaseRequestDto.setUserId(user.getId());
     resourcePurchaseRequestDto.setResourceId(preciousStone.getId());
-    resourcePurchaseRequestDto.setQuantity(BigDecimal.valueOf(20).setScale(2));
-    resourcePurchaseRequestDto.setDealPrice(BigDecimal.valueOf(10).setScale(2));
+    resourcePurchaseRequestDto.setQuantity(new BigDecimal("20").setScale(2, RoundingMode.HALF_UP));
+    resourcePurchaseRequestDto.setDealPrice(new BigDecimal("10").setScale(2, RoundingMode.HALF_UP));
     return resourcePurchaseRequestDto;
   }
 

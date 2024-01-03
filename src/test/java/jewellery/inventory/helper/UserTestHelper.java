@@ -107,7 +107,7 @@ public class UserTestHelper {
     requestDto.setUserId(userId);
     requestDto.setResourceId(resourceId);
     requestDto.setQuantity(quantity);
-    requestDto.setDealPrice(price.setScale(2));
+    requestDto.setDealPrice(price);
     return requestDto;
   }
 

@@ -54,7 +54,7 @@ public class SaleMapper {
   }
 
   private BigDecimal getTotalPriceFromEntity(List<Product> products) {
-    BigDecimal totalPrice = BigDecimal.ZERO;
+    BigDecimal totalPrice = new BigDecimal("0");
     for (Product product : products) {
       totalPrice = totalPrice.add(product.getSalePrice());
     }
@@ -62,19 +62,19 @@ public class SaleMapper {
   }
 
   private BigDecimal calculateDiscount(List<Product> products, String calculationType) {
-    BigDecimal totalDiscountAmount = BigDecimal.ZERO;
-    BigDecimal totalPrice = BigDecimal.ZERO;
+    BigDecimal totalDiscountAmount = new BigDecimal("0");
+    BigDecimal totalPrice = new BigDecimal("0");
 
     for (Product product : products) {
-      BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
-      BigDecimal discountRate = Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
-      BigDecimal discountAmount = salePrice.multiply(discountRate.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+      BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(new BigDecimal("0"));
+      BigDecimal discountRate = Optional.ofNullable(product.getDiscount()).orElse(new BigDecimal("0"));
+      BigDecimal discountAmount = salePrice.multiply(discountRate.divide(new BigDecimal("100").setScale(2, RoundingMode.HALF_UP)));
       totalDiscountAmount = totalDiscountAmount.add(discountAmount);
       totalPrice = totalPrice.add(salePrice);
     }
 
-    if (PERCENTAGE.equals(calculationType) && totalPrice.compareTo(BigDecimal.ZERO) != 0) {
-      return (totalDiscountAmount.divide(totalPrice, MathContext.DECIMAL128)).multiply(BigDecimal.valueOf(100));
+    if (PERCENTAGE.equals(calculationType) && totalPrice.compareTo(new BigDecimal("0")) != 0) {
+      return (totalDiscountAmount.divide(totalPrice, MathContext.DECIMAL128)).multiply(new BigDecimal("100").setScale(2, RoundingMode.HALF_UP));
     } else if (AMOUNT.equals(calculationType)) {
       return totalPrice.subtract(totalDiscountAmount);
     }
