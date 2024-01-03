@@ -293,7 +293,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     ResourceQuantityResponseDto resourceQuantity =
         findResourceQuantityIn(createdResource.getId(), resourcesInUserResponse);
     assertEquals(
-        RESOURCE_QUANTITY.subtract(BigDecimal.valueOf(1)),
+        RESOURCE_QUANTITY.subtract(BigDecimal.valueOf(1).setScale(1, RoundingMode.HALF_UP)),
         resourceQuantity.getQuantity());
 
     Map<String, Object> expectedEventPayload =
