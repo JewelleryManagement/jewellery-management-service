@@ -1,13 +1,15 @@
 package jewellery.inventory.exception;
 
 import io.jsonwebtoken.security.SignatureException;
-import jakarta.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import jewellery.inventory.exception.duplicate.DuplicateException;
 import jewellery.inventory.exception.image.MultipartFileContentTypeException;
 import jewellery.inventory.exception.image.MultipartFileNotSelectedException;
@@ -19,6 +21,7 @@ import jewellery.inventory.exception.product.*;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -55,12 +58,16 @@ public class GlobalExceptionHandler {
     MultipartFileContentTypeException.class,
     MultipartFileNotSelectedException.class,
     MultipartFileSizeException.class,
-    ConstraintViolationException.class
+    ConstraintViolationException.class,
+    HttpMessageNotReadableException.class
   })
   public ResponseEntity<Object> handleBadDataExceptions(RuntimeException ex) {
     String errorMessage = ex.getMessage();
     if (ex instanceof ConstraintViolationException cve) {
-      errorMessage = cve.getConstraintViolations().iterator().next().getMessage();
+      errorMessage =
+          cve.getConstraintViolations().stream()
+              .map(ConstraintViolation::getMessage)
+              .collect(Collectors.joining("; "));
     }
     return createErrorResponse(HttpStatus.BAD_REQUEST, errorMessage);
   }

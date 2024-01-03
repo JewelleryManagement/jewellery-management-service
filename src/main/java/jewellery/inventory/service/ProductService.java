@@ -38,9 +38,27 @@ public class ProductService implements EntityFetcher {
   private final ProductRepository productRepository;
   private final UserRepository userRepository;
   private final ResourceInUserRepository resourceInUserRepository;
+  private final ResourceInProductRepository resourceInProductRepository;
   private final ImageService imageService;
   private final ResourceInUserService resourceInUserService;
   private final ProductMapper productMapper;
+
+  @Transactional
+  @LogUpdateEvent(eventType = EventType.PRODUCT_UPDATE)
+  public ProductResponseDto updateProduct(UUID id, ProductRequestDto productUpdateRequestDto) {
+    Product product = getProduct(id);
+    User user = getUser(productUpdateRequestDto.getOwnerId());
+    throwExceptionIfProductIsSold(product);
+    moveResourceInProductToResourceInUser(product);
+    disassembleProductContent(product);
+
+    setProductFields(productUpdateRequestDto, user, product);
+    productRepository.save(product);
+    addProductsContentToProduct(productUpdateRequestDto, product);
+    addResourcesToProduct(productUpdateRequestDto, user, product);
+    logger.info("Product with ID: {} updated", product.getId());
+    return productMapper.mapToProductResponseDto(product);
+  }
 
   @Transactional
   @LogCreateEvent(eventType = EventType.PRODUCT_CREATE)
@@ -111,7 +129,7 @@ public class ProductService implements EntityFetcher {
 
     Product product = getProduct(id);
 
-    throwExceptionIfProductIsSold(id, product);
+    throwExceptionIfProductIsSold(product);
     throwExceptionIfProductIsPartOfAnotherProduct(id, product);
 
     moveResourceInProductToResourceInUser(product);
@@ -156,10 +174,10 @@ public class ProductService implements EntityFetcher {
     }
   }
 
-  private void throwExceptionIfProductIsSold(UUID id, Product product) {
+  private void throwExceptionIfProductIsSold(Product product) {
     if (product.getPartOfSale() != null) {
-      logger.error("Product with ID {} is part of a sale", id);
-      throw new ProductIsSoldException(id);
+      logger.error("Product with ID {} is part of a sale", product.getId());
+      throw new ProductIsSoldException(product.getId());
     }
   }
 
@@ -183,16 +201,17 @@ public class ProductService implements EntityFetcher {
   private void moveResourceInProductToResourceInUser(Product product) {
     List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
     User owner = product.getOwner();
+    moveQuantityFromResourcesInProductToResourcesInUser(resourcesInProduct, owner);
+  }
 
-    logger.debug(
-        "Moving resources from product with ID {} to owner with ID {}",
-        product.getId(),
-        owner.getId());
-
+  private void moveQuantityFromResourcesInProductToResourcesInUser(
+      List<ResourceInProduct> resourcesInProduct, User owner) {
     resourcesInProduct.forEach(
-        resourceInProduct ->
-            resourceInUserService.addResourceToUserNoLog(
-                getResourceInUserRequest(owner, resourceInProduct)));
+        resourceInProduct -> {
+          resourceInUserService.addResourceToUserNoLog(
+              getResourceInUserRequest(owner, resourceInProduct));
+          resourceInProduct.setQuantity(0);
+        });
   }
 
   private ResourceInUserRequestDto getResourceInUserRequest(
@@ -230,7 +249,7 @@ public class ProductService implements EntityFetcher {
         recipientId);
     throwExceptionIfProductIsPartOfAnotherProduct(
         productForChangeOwner.getId(), productForChangeOwner);
-    throwExceptionIfProductIsSold(productForChangeOwner.getId(), productForChangeOwner);
+    throwExceptionIfProductIsSold(productForChangeOwner);
     throwExceptionIfProductOwnerEqualsRecipient(productForChangeOwner, recipientId);
     logger.debug("Product validation for change owner successful.");
   }
@@ -243,10 +262,8 @@ public class ProductService implements EntityFetcher {
       productsIdInRequest.forEach(
           productId -> {
             logger.debug("Processing product with ID: {}", productId);
-            Product product =
-                productRepository
-                    .findById(productId)
-                    .orElseThrow(() -> new ProductNotFoundException(productId));
+            Product product = getProduct(productId);
+            throwExceptionIfProductIsSold(product);
             if (product.getOwner().getId().equals(parentProduct.getOwner().getId())) {
               product.setContentOf(parentProduct);
               products.add(product);
@@ -260,6 +277,7 @@ public class ProductService implements EntityFetcher {
             }
           });
     }
+
     return products;
   }
 
@@ -282,6 +300,11 @@ public class ProductService implements EntityFetcher {
   private Product getProductWithoutResourcesAndProduct(
       ProductRequestDto productRequestDto, User user) {
     Product product = new Product();
+    setProductFields(productRequestDto, user, product);
+    return product;
+  }
+
+  private void setProductFields(ProductRequestDto productRequestDto, User user, Product product) {
     product.setOwner(user);
     product.setAuthors(getAuthors(productRequestDto));
     product.setPartOfSale(null);
@@ -291,8 +314,6 @@ public class ProductService implements EntityFetcher {
     product.setCatalogNumber(productRequestDto.getCatalogNumber());
     product.setProductsContent(new ArrayList<>());
     product.setResourcesContent(new ArrayList<>());
-
-    return product;
   }
 
   private List<User> getAuthors(ProductRequestDto productRequestDto) {
@@ -362,8 +383,20 @@ public class ProductService implements EntityFetcher {
         owner.getId(),
         resourceInUser.getResource().getId(),
         incomingResourceInProduct.getQuantity());
+    ResourceInProduct resourceInProduct = getResourceInProduct(incomingResourceInProduct, product);
+    if (resourceInProduct != null) {
+      resourceInProduct.setQuantity(incomingResourceInProduct.getQuantity());
+      return resourceInProduct;
+    }
     return createResourceInProduct(
         incomingResourceInProduct, resourceInUser.getResource(), product);
+  }
+
+  private ResourceInProduct getResourceInProduct(
+      ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
+    return resourceInProductRepository
+        .findByResourceIdAndProductId(incomingResourceInProduct.getId(), product.getId())
+        .orElse(null);
   }
 
   private ResourceInProduct createResourceInProduct(

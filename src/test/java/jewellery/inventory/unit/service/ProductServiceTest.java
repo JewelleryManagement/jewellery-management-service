@@ -298,4 +298,17 @@ class ProductServiceTest {
     UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
     assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(fakeId));
   }
+
+  @Test
+  void updateProductShouldThrowWhenProductNotFound() {
+    assertThrows(ProductNotFoundException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
+  }
+
+  @Test
+  void updateProductShouldThrowWhenProductIsSold() {
+    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+    product.setPartOfSale(new Sale());
+    assertThrows(ProductIsSoldException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
+  }
 }

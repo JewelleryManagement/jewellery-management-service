@@ -2,11 +2,8 @@ package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ProductTestHelper.*;
 import static jewellery.inventory.helper.SystemEventTestHelper.*;
-import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
-import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
-import static jewellery.inventory.model.EventType.PRODUCT_CREATE;
-import static jewellery.inventory.model.EventType.PRODUCT_DISASSEMBLY;
-import static jewellery.inventory.model.EventType.PRODUCT_TRANSFER;
+import static jewellery.inventory.helper.UserTestHelper.*;
+import static jewellery.inventory.model.EventType.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -366,6 +363,32 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertFalse(Files.exists(Path.of(PATH_TO_IMAGES + productResponseDto.getId().toString())));
     assertEquals(HttpStatus.NOT_FOUND, byteResponse.getStatusCode());
+  }
+
+  @Test
+  void updateProductSuccessfully() throws JsonProcessingException {
+    ProductResponseDto product = createProductWithRequest(productRequestDto);
+    UUID productId = product.getId();
+
+    productRequestDto.setResourcesContent(productRequestDto2.getResourcesContent());
+    HttpEntity<ProductRequestDto> requestEntity = new HttpEntity<>(productRequestDto, headers);
+
+    ResponseEntity<ProductResponseDto> response =
+        this.testRestTemplate.exchange(
+            getProductUrl(productId), HttpMethod.PUT, requestEntity, ProductResponseDto.class);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+
+    ProductResponseDto productResponseDto = response.getBody();
+
+    Map<String, Object> expectedEventPayload =
+            getUpdateEventPayload(product, productResponseDto, objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_UPDATE, expectedEventPayload);
+
+    assertEquals(
+        productRequestDto.getResourcesContent().get(0).getQuantity(),
+        productResponseDto.getResourcesContent().get(0).getQuantity());
   }
 
   private void uploadImageAndAssertSuccessfulResponse(ProductResponseDto productResponse) {
