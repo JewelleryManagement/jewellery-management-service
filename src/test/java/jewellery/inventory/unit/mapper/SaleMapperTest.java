@@ -55,7 +55,10 @@ class SaleMapperTest {
     productsForSale = SaleTestHelper.getProductsList(product);
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSale);
     productPriceDiscountRequestDto =
-        SaleTestHelper.createProductPriceDiscountRequest(product.getId(), new BigDecimal("1000").setScale(2, RoundingMode.HALF_UP), new BigDecimal("10").setScale(2, RoundingMode.HALF_UP));
+        SaleTestHelper.createProductPriceDiscountRequest(
+            product.getId(),
+            new BigDecimal("1000").setScale(2, RoundingMode.HALF_UP),
+            new BigDecimal("10").setScale(2, RoundingMode.HALF_UP));
     List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
     productPriceDiscountRequestDtoList.add(productPriceDiscountRequestDto);
     saleRequestDto =
@@ -96,7 +99,6 @@ class SaleMapperTest {
 
     when(productMapper.mapToProductResponseDto(product)).thenReturn(new ProductResponseDto());
     sale.getProducts().get(0).setSalePrice(new BigDecimal("0"));
-    assertThrows(
-            IllegalArgumentException.class, () -> saleMapper.mapEntityToResponseDto(sale));
-   }
+    assertThrows(IllegalArgumentException.class, () -> saleMapper.mapEntityToResponseDto(sale));
+  }
 }

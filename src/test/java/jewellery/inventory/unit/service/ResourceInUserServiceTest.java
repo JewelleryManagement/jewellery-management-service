@@ -50,8 +50,10 @@ class ResourceInUserServiceTest {
   private UUID secondUserId;
   private UUID resourceId;
   private ResourceInUser resourceInUser;
-  private static final BigDecimal INITIAL_QUANTITY = new BigDecimal("5").setScale(2, RoundingMode.HALF_UP);
-  private static final BigDecimal TEST_DEAL_PRICE = new BigDecimal("555.55").setScale(2, RoundingMode.HALF_UP);
+  private static final BigDecimal INITIAL_QUANTITY =
+      new BigDecimal("5").setScale(2, RoundingMode.HALF_UP);
+  private static final BigDecimal TEST_DEAL_PRICE =
+      new BigDecimal("555.55").setScale(2, RoundingMode.HALF_UP);
 
   @BeforeEach
   void setUp() {
@@ -82,7 +84,11 @@ class ResourceInUserServiceTest {
     when(resourceRepository.findById(resourceId)).thenReturn(Optional.of(resource));
 
     ResourcePurchaseRequestDto purchaseRequestDto =
-        createResourcePurchaseRequest(userId, resourceId, new BigDecimal("16").setScale(2, RoundingMode.HALF_UP), TEST_DEAL_PRICE);
+        createResourcePurchaseRequest(
+            userId,
+            resourceId,
+            new BigDecimal("16").setScale(2, RoundingMode.HALF_UP),
+            TEST_DEAL_PRICE);
 
     resourceInUserService.addResourceToUser(purchaseRequestDto);
 
@@ -94,7 +100,11 @@ class ResourceInUserServiceTest {
   @Test
   void willThrowUserNotFoundExceptionWhenAddResourceToUserAndUserNonexistent() {
     ResourcePurchaseRequestDto requestDto =
-        createResourcePurchaseRequest(userId, resourceId, new BigDecimal("10").setScale(2, RoundingMode.HALF_UP), TEST_DEAL_PRICE);
+        createResourcePurchaseRequest(
+            userId,
+            resourceId,
+            new BigDecimal("10").setScale(2, RoundingMode.HALF_UP),
+            TEST_DEAL_PRICE);
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
     assertThrows(
@@ -108,7 +118,11 @@ class ResourceInUserServiceTest {
   @Test
   void willThrowResourceNotFoundExceptionWhenAddResourceToUserAndResourceNotFound() {
     ResourcePurchaseRequestDto requestDto =
-        createResourcePurchaseRequest(userId, resourceId, new BigDecimal("10").setScale(2, RoundingMode.HALF_UP), TEST_DEAL_PRICE);
+        createResourcePurchaseRequest(
+            userId,
+            resourceId,
+            new BigDecimal("10").setScale(2, RoundingMode.HALF_UP),
+            TEST_DEAL_PRICE);
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(resourceRepository.findById(resourceId)).thenReturn(Optional.empty());
 
@@ -147,7 +161,9 @@ class ResourceInUserServiceTest {
 
     assertThrows(
         UserNotFoundException.class,
-        () -> resourceInUserService.removeQuantityFromResource(userId, resourceId, new BigDecimal("10").setScale(2, RoundingMode.HALF_UP)));
+        () ->
+            resourceInUserService.removeQuantityFromResource(
+                userId, resourceId, new BigDecimal("10").setScale(2, RoundingMode.HALF_UP)));
 
     verify(userRepository, times(1)).findById(userId);
   }
@@ -159,7 +175,9 @@ class ResourceInUserServiceTest {
 
     assertThrows(
         ResourceInUserNotFoundException.class,
-        () -> resourceInUserService.removeQuantityFromResource(userId, resourceId, new BigDecimal("10").setScale(2, RoundingMode.HALF_UP)));
+        () ->
+            resourceInUserService.removeQuantityFromResource(
+                userId, resourceId, new BigDecimal("10").setScale(2, RoundingMode.HALF_UP)));
 
     verify(userRepository, times(1)).findById(userId);
   }
@@ -170,7 +188,9 @@ class ResourceInUserServiceTest {
 
     assertThrows(
         InsufficientResourceQuantityException.class,
-        () -> resourceInUserService.removeQuantityFromResource(userId, resourceId, new BigDecimal("10").setScale(2, RoundingMode.HALF_UP)));
+        () ->
+            resourceInUserService.removeQuantityFromResource(
+                userId, resourceId, new BigDecimal("10").setScale(2, RoundingMode.HALF_UP)));
 
     verify(userRepository, times(1)).findById(userId);
   }

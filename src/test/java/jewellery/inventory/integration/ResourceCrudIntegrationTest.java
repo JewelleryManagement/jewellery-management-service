@@ -88,7 +88,9 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     resourceQuantityResponseDtos.forEach(
         resourceQuantityDto -> {
-          assertEquals(new BigDecimal("0").setScale(2, RoundingMode.HALF_UP), resourceQuantityDto.getQuantity().setScale(2, RoundingMode.HALF_UP));
+          assertEquals(
+              new BigDecimal("0").setScale(2, RoundingMode.HALF_UP),
+              resourceQuantityDto.getQuantity().setScale(2, RoundingMode.HALF_UP));
         });
     assertEquals(
         createdResources,
@@ -110,10 +112,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         fetchedResourceQuantity.getQuantity().setScale(2, RoundingMode.HALF_UP));
     assertEquals(
         createdResources.get(0).getPricePerQuantity(),
-        fetchedResourceQuantity
-            .getResource()
-            .getPricePerQuantity()
-            );
+        fetchedResourceQuantity.getResource().getPricePerQuantity());
   }
 
   @Test

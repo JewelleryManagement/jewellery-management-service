@@ -23,7 +23,6 @@ public class SystemEventService {
   private final AuthService authService;
   private final ObjectMapper objectMapper;
 
-
   public List<SystemEvent> getAllEvents() {
     return systemEventRepository.findAll();
   }
