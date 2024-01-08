@@ -49,7 +49,8 @@ public class ProductService implements EntityFetcher {
     Product product = getProduct(id);
     User user = getUser(productUpdateRequestDto.getOwnerId());
     throwExceptionIfProductIsSold(product);
-    moveResourceInProductToResourceInUser(product);
+    throwExceptionIfProductIsPartOfAnotherProduct(id, product);
+    moveQuantityFromResourcesInProductToResourcesInUser(product);
     disassembleProductContent(product);
 
     setProductFields(productUpdateRequestDto, user, product);
@@ -132,7 +133,7 @@ public class ProductService implements EntityFetcher {
     throwExceptionIfProductIsSold(product);
     throwExceptionIfProductIsPartOfAnotherProduct(id, product);
 
-    moveResourceInProductToResourceInUser(product);
+    moveQuantityFromResourcesInProductToResourcesInUser(product);
     disassembleProductContent(product);
     deleteImageWhenAttached(id, product);
 
@@ -158,7 +159,8 @@ public class ProductService implements EntityFetcher {
 
   private void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
     if (product.getContentOf() != null) {
-      logger.error("Product with ID {} is part of another product and cannot be deleted.", id);
+      logger.error(
+          "Product with ID {} is part of another product and cannot be deleted or updated.", id);
       throw new ProductIsContentException(id);
     }
   }
@@ -198,20 +200,16 @@ public class ProductService implements EntityFetcher {
     }
   }
 
-  private void moveResourceInProductToResourceInUser(Product product) {
+  private void moveQuantityFromResourcesInProductToResourcesInUser(Product product) {
     List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
-    User owner = product.getOwner();
-    moveQuantityFromResourcesInProductToResourcesInUser(resourcesInProduct, owner);
-  }
-
-  private void moveQuantityFromResourcesInProductToResourcesInUser(
-      List<ResourceInProduct> resourcesInProduct, User owner) {
     resourcesInProduct.forEach(
         resourceInProduct -> {
           resourceInUserService.addResourceToUserNoLog(
-              getResourceInUserRequest(owner, resourceInProduct));
+              getResourceInUserRequest(product.getOwner(), resourceInProduct));
           resourceInProduct.setQuantity(0);
         });
+    product.setResourcesContent(null);
+    clearResourceInProductRepository();
   }
 
   private ResourceInUserRequestDto getResourceInUserRequest(
@@ -411,6 +409,16 @@ public class ProductService implements EntityFetcher {
         resourceInProduct.getProduct().getId());
 
     return resourceInProduct;
+  }
+
+  private void clearResourceInProductRepository() {
+    List<ResourceInProduct> allProducts = resourceInProductRepository.findAll();
+    allProducts.forEach(
+        resourceInProduct -> {
+          if (resourceInProduct.getQuantity() == 0) {
+            resourceInProductRepository.delete(resourceInProduct);
+          }
+        });
   }
 
   @Override
