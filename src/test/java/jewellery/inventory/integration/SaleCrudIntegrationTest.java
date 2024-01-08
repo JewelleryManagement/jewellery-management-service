@@ -33,9 +33,12 @@ import org.springframework.http.ResponseEntity;
 
 class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
-  private static final BigDecimal SALE_TOTAL_PRICE = new BigDecimal("10000").setScale(2, RoundingMode.HALF_UP);
-  private static final BigDecimal SALE_DISCOUNT = new BigDecimal("10").setScale(2, RoundingMode.HALF_UP);
-  private static final BigDecimal SALE_DISCOUNTED_PRICE = new BigDecimal("9000").setScale(2, RoundingMode.HALF_UP);
+  private static final BigDecimal SALE_TOTAL_PRICE =
+      new BigDecimal("10000").setScale(2, RoundingMode.HALF_UP);
+  private static final BigDecimal SALE_DISCOUNT =
+      new BigDecimal("10").setScale(2, RoundingMode.HALF_UP);
+  private static final BigDecimal SALE_DISCOUNTED_PRICE =
+      new BigDecimal("9000").setScale(2, RoundingMode.HALF_UP);
   private User seller;
   private User buyer;
   private PreciousStone preciousStone;
@@ -176,10 +179,11 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         saleRequestDto.getProducts().get(0).getProductId(),
         saleResponse.getBody().getProducts().get(0).getId());
     assertEquals(SALE_TOTAL_PRICE, saleResponse.getBody().getTotalPrice());
-    assertEquals(SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount().setScale(2,RoundingMode.HALF_UP));
+    assertEquals(
+        SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount().setScale(2, RoundingMode.HALF_UP));
     assertEquals(
         SALE_DISCOUNTED_PRICE,
-        saleResponse.getBody().getTotalDiscountedPrice().setScale(2,RoundingMode.HALF_UP));
+        saleResponse.getBody().getTotalDiscountedPrice().setScale(2, RoundingMode.HALF_UP));
 
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
@@ -229,12 +233,13 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @NotNull
   private static ResourcePurchaseRequestDto getResourceInUserRequestDto(
       User user, PreciousStone preciousStone) {
-    ResourcePurchaseRequestDto resourceInUserRequestDto = new ResourcePurchaseRequestDto();
-    resourceInUserRequestDto.setUserId(user.getId());
-    resourceInUserRequestDto.setResourceId(preciousStone.getId());
-    resourceInUserRequestDto.setQuantity(new BigDecimal("20").setScale(2, RoundingMode.HALF_UP));
-    resourceInUserRequestDto.setDealPrice(new BigDecimal("100").setScale(2, RoundingMode.HALF_UP));
-    return resourceInUserRequestDto;
+    ResourcePurchaseRequestDto resourcePurchaseRequestDto = new ResourcePurchaseRequestDto();
+    resourcePurchaseRequestDto.setUserId(user.getId());
+    resourcePurchaseRequestDto.setResourceId(preciousStone.getId());
+    resourcePurchaseRequestDto.setQuantity(new BigDecimal("20").setScale(2, RoundingMode.HALF_UP));
+    resourcePurchaseRequestDto.setDealPrice(
+        new BigDecimal("100").setScale(2, RoundingMode.HALF_UP));
+    return resourcePurchaseRequestDto;
   }
 
   @Nullable

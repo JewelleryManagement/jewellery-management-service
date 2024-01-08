@@ -1,5 +1,6 @@
 package jewellery.inventory.dto.request.resource;
 
+import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -12,11 +13,11 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public class PreciousStoneRequestDto extends ResourceRequestDto {
   private String color;
-  private BigDecimal carat;
+  @Positive private BigDecimal carat;
   private String cut;
   private String clarity;
-  private BigDecimal dimensionX;
-  private BigDecimal dimensionY;
-  private BigDecimal dimensionZ;
+  @Positive private BigDecimal dimensionX;
+  @Positive private BigDecimal dimensionY;
+  @Positive private BigDecimal dimensionZ;
   private String shape;
 }

@@ -1,7 +1,6 @@
-package jewellery.inventory.dto;
+package jewellery.inventory.dto.response;
 
 import java.math.BigDecimal;
-import jewellery.inventory.dto.response.UserResponseDto;
 import lombok.*;
 
 @Getter
@@ -11,7 +10,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserQuantityDto {
+public class UserQuantityResponseDto {
   private UserResponseDto owner;
   private BigDecimal quantity;
 }
