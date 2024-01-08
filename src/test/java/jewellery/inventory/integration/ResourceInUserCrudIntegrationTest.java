@@ -26,6 +26,7 @@ import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.PreciousStoneResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
+import jewellery.inventory.utils.BigDecimalUtil;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.*;
@@ -33,11 +34,11 @@ import org.springframework.http.*;
 class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private static final BigDecimal RESOURCE_QUANTITY =
-      new BigDecimal("5").setScale(2, RoundingMode.HALF_UP);
+      BigDecimalUtil.getBigDecimal("5");
   private static final BigDecimal RESOURCE_QUANTITY_TO_REMOVE =
-      new BigDecimal("1").setScale(2, RoundingMode.HALF_UP);
+      BigDecimalUtil.getBigDecimal("1");
   private static final BigDecimal RESOURCE_PRICE =
-      new BigDecimal("105.5").setScale(2, RoundingMode.HALF_UP);
+      BigDecimalUtil.getBigDecimal("105.5");
 
   private String buildUrl(String... paths) {
     return "/" + String.join("/", paths);
@@ -309,7 +310,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         sendDeleteQuantityFromResourceInUserRequest(
             createdUser.getId(),
             createdResource.getId(),
-            RESOURCE_QUANTITY.add(new BigDecimal("1").setScale(2, RoundingMode.HALF_UP)));
+            RESOURCE_QUANTITY.add(BigDecimalUtil.getBigDecimal("1")));
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }

@@ -10,7 +10,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.*;
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
@@ -27,6 +26,7 @@ import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
 import jewellery.inventory.service.ResourceInUserService;
+import jewellery.inventory.utils.BigDecimalUtil;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,9 +51,9 @@ class ResourceInUserServiceTest {
   private UUID resourceId;
   private ResourceInUser resourceInUser;
   private static final BigDecimal INITIAL_QUANTITY =
-      new BigDecimal("5").setScale(2, RoundingMode.HALF_UP);
+      BigDecimalUtil.getBigDecimal("5");
   private static final BigDecimal TEST_DEAL_PRICE =
-      new BigDecimal("555.55").setScale(2, RoundingMode.HALF_UP);
+      BigDecimalUtil.getBigDecimal("555.55");
 
   @BeforeEach
   void setUp() {
@@ -87,7 +87,7 @@ class ResourceInUserServiceTest {
         createResourcePurchaseRequest(
             userId,
             resourceId,
-            new BigDecimal("16").setScale(2, RoundingMode.HALF_UP),
+            BigDecimalUtil.getBigDecimal("16"),
             TEST_DEAL_PRICE);
 
     resourceInUserService.addResourceToUser(purchaseRequestDto);
@@ -103,7 +103,7 @@ class ResourceInUserServiceTest {
         createResourcePurchaseRequest(
             userId,
             resourceId,
-            new BigDecimal("10").setScale(2, RoundingMode.HALF_UP),
+            BigDecimalUtil.getBigDecimal("10"),
             TEST_DEAL_PRICE);
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
@@ -121,7 +121,7 @@ class ResourceInUserServiceTest {
         createResourcePurchaseRequest(
             userId,
             resourceId,
-            new BigDecimal("10").setScale(2, RoundingMode.HALF_UP),
+            BigDecimalUtil.getBigDecimal("10"),
             TEST_DEAL_PRICE);
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(resourceRepository.findById(resourceId)).thenReturn(Optional.empty());
@@ -163,7 +163,7 @@ class ResourceInUserServiceTest {
         UserNotFoundException.class,
         () ->
             resourceInUserService.removeQuantityFromResource(
-                userId, resourceId, new BigDecimal("10").setScale(2, RoundingMode.HALF_UP)));
+                userId, resourceId, BigDecimalUtil.getBigDecimal("10")));
 
     verify(userRepository, times(1)).findById(userId);
   }
@@ -177,7 +177,7 @@ class ResourceInUserServiceTest {
         ResourceInUserNotFoundException.class,
         () ->
             resourceInUserService.removeQuantityFromResource(
-                userId, resourceId, new BigDecimal("10").setScale(2, RoundingMode.HALF_UP)));
+                userId, resourceId, BigDecimalUtil.getBigDecimal("10")));
 
     verify(userRepository, times(1)).findById(userId);
   }
@@ -190,7 +190,7 @@ class ResourceInUserServiceTest {
         InsufficientResourceQuantityException.class,
         () ->
             resourceInUserService.removeQuantityFromResource(
-                userId, resourceId, new BigDecimal("10").setScale(2, RoundingMode.HALF_UP)));
+                userId, resourceId, BigDecimalUtil.getBigDecimal("10")));
 
     verify(userRepository, times(1)).findById(userId);
   }
@@ -199,7 +199,7 @@ class ResourceInUserServiceTest {
   void willRemoveQuantityFromResourceInUserSuccessfully() {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     final BigDecimal initialQuantity = resourceInUser.getQuantity();
-    final BigDecimal quantityToRemove = new BigDecimal("2").setScale(2, RoundingMode.HALF_UP);
+    final BigDecimal quantityToRemove = BigDecimalUtil.getBigDecimal("2");
 
     resourceInUserService.removeQuantityFromResource(userId, resourceId, quantityToRemove);
 
@@ -305,7 +305,7 @@ class ResourceInUserServiceTest {
     transferResourceRequestDto.setPreviousOwnerId(userId);
     transferResourceRequestDto.setNewOwnerId(secondUserId);
     transferResourceRequestDto.setTransferredResourceId(resourceId);
-    transferResourceRequestDto.setQuantity(new BigDecimal("6").setScale(2, RoundingMode.HALF_UP));
+    transferResourceRequestDto.setQuantity(BigDecimalUtil.getBigDecimal("6"));
     return transferResourceRequestDto;
   }
 }

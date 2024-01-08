@@ -11,7 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +21,7 @@ import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ResourceMapper;
+import jewellery.inventory.utils.BigDecimalUtil;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -89,7 +89,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     resourceQuantityResponseDtos.forEach(
         resourceQuantityDto -> {
           assertEquals(
-              new BigDecimal("0").setScale(2, RoundingMode.HALF_UP),
+              BigDecimalUtil.getBigDecimal("0"),
               resourceQuantityDto.getQuantity().setScale(2, RoundingMode.HALF_UP));
         });
     assertEquals(
@@ -108,7 +108,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         getResourceQuantityWithRequest(createdResources.get(0).getId());
 
     assertEquals(
-        new BigDecimal("0").setScale(2, RoundingMode.HALF_UP),
+        BigDecimalUtil.getBigDecimal("0"),
         fetchedResourceQuantity.getQuantity().setScale(2, RoundingMode.HALF_UP));
     assertEquals(
         createdResources.get(0).getPricePerQuantity(),

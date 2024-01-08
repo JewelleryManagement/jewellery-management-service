@@ -8,8 +8,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.File;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -28,6 +26,7 @@ import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.PreciousStone;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.ImageService;
+import jewellery.inventory.utils.BigDecimalUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
@@ -410,8 +409,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResourcePurchaseRequestDto resourcePurchaseRequestDto = new ResourcePurchaseRequestDto();
     resourcePurchaseRequestDto.setUserId(user.getId());
     resourcePurchaseRequestDto.setResourceId(preciousStone.getId());
-    resourcePurchaseRequestDto.setQuantity(new BigDecimal("20").setScale(2, RoundingMode.HALF_UP));
-    resourcePurchaseRequestDto.setDealPrice(new BigDecimal("10").setScale(2, RoundingMode.HALF_UP));
+    resourcePurchaseRequestDto.setQuantity(BigDecimalUtil.getBigDecimal("20"));
+    resourcePurchaseRequestDto.setDealPrice(BigDecimalUtil.getBigDecimal("10"));
     return resourcePurchaseRequestDto;
   }
 
