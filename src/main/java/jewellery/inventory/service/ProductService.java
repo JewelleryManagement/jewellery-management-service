@@ -49,6 +49,7 @@ public class ProductService implements EntityFetcher {
     Product product = getProduct(id);
     User user = getUser(productUpdateRequestDto.getOwnerId());
     throwExceptionIfProductIsSold(product);
+    throwExceptionIfProductIsPartOfAnotherProduct(id, product);
     moveQuantityFromResourcesInProductToResourcesInUser(product);
     disassembleProductContent(product);
 
@@ -158,7 +159,8 @@ public class ProductService implements EntityFetcher {
 
   private void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
     if (product.getContentOf() != null) {
-      logger.error("Product with ID {} is part of another product and cannot be deleted.", id);
+      logger.error(
+          "Product with ID {} is part of another product and cannot be deleted or updated.", id);
       throw new ProductIsContentException(id);
     }
   }
