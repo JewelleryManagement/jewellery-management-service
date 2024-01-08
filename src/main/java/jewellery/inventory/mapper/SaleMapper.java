@@ -2,6 +2,7 @@ package jewellery.inventory.mapper;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.*;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -66,15 +67,19 @@ public class SaleMapper {
     BigDecimal totalPrice = new BigDecimal("0");
 
     for (Product product : products) {
-      BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(new BigDecimal("0"));
-      BigDecimal discountRate = Optional.ofNullable(product.getDiscount()).orElse(new BigDecimal("0"));
-      BigDecimal discountAmount = salePrice.multiply(discountRate.divide(BigDecimalUtil.getBigDecimal("100")));
+      BigDecimal salePrice =
+          Optional.ofNullable(product.getSalePrice()).orElse(new BigDecimal("0"));
+      BigDecimal discountRate =
+          Optional.ofNullable(product.getDiscount()).orElse(new BigDecimal("0"));
+      BigDecimal discountAmount =
+          salePrice.multiply(discountRate.divide(BigDecimalUtil.getBigDecimal("100"), RoundingMode.HALF_UP));
       totalDiscountAmount = totalDiscountAmount.add(discountAmount);
       totalPrice = totalPrice.add(salePrice);
     }
 
-    if (PERCENTAGE.equals(calculationType) && totalPrice.compareTo(new BigDecimal("0")) != 0) {
-      return (totalDiscountAmount.divide(totalPrice, MathContext.DECIMAL128)).multiply(BigDecimalUtil.getBigDecimal("100"));
+    if (PERCENTAGE.equals(calculationType) && !totalPrice.equals(BigDecimal.ZERO)) {
+      return (totalDiscountAmount.divide(totalPrice, MathContext.DECIMAL128))
+          .multiply(BigDecimalUtil.getBigDecimal("100"));
     } else if (AMOUNT.equals(calculationType)) {
       return totalPrice.subtract(totalDiscountAmount);
     }

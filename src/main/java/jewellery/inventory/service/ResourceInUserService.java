@@ -162,19 +162,27 @@ public class ResourceInUserService implements EntityFetcher {
     BigDecimal totalQuantity = resourceInUser.getQuantity();
     BigDecimal newQuantity = totalQuantity.subtract(quantityToRemove);
 
-    if (newQuantity.compareTo(new BigDecimal("0")) < 0) {
+    if (isNegative(newQuantity)) {
       throw new InsufficientResourceQuantityException(quantityToRemove, totalQuantity);
     }
 
     resourceInUser.setQuantity(newQuantity);
     User owner = resourceInUser.getOwner();
-    if (newQuantity.abs().compareTo(EPSILON) < 0) {
+    if (isApproachingZero(newQuantity)) {
       owner.getResourcesOwned().remove(resourceInUser);
       resourceInUser = null;
     }
     userRepository.save(owner);
     logger.debug("ResourceInUser after quantity removal: {}", resourceInUser);
     return resourceInUser;
+  }
+
+  private boolean isApproachingZero(BigDecimal value) {
+    return value.abs().compareTo(EPSILON) < 0;
+  }
+
+  private boolean isNegative(BigDecimal newQuantity) {
+    return newQuantity.compareTo(BigDecimal.ZERO) < 0;
   }
 
   private ResourceInUser findResourceInUserOrThrow(User previousOwner, UUID resourceId) {
