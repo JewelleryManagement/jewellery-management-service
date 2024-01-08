@@ -2,6 +2,7 @@ package jewellery.inventory.model;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 import jewellery.inventory.model.resource.Resource;
 import lombok.*;
@@ -21,8 +22,8 @@ public class ResourceInUser {
 
   @ManyToOne private Resource resource;
 
-  private double quantity;
+  private BigDecimal quantity;
 
   @Transient
-  private double dealPrice;
+  private BigDecimal dealPrice;
 }

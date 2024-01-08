@@ -1,6 +1,7 @@
 package jewellery.inventory.model.resource;
 
 import jakarta.persistence.Entity;
+import java.math.BigDecimal;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -16,5 +17,5 @@ public class SemiPreciousStone extends Resource {
     private String cut;
     private String clarity;
     private String shape;
-    private Double size;
+    private BigDecimal size;
 }

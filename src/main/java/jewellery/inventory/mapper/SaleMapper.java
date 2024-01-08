@@ -1,5 +1,7 @@
 package jewellery.inventory.mapper;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.*;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -7,6 +9,7 @@ import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
+import jewellery.inventory.utils.BigDecimalUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -50,28 +53,30 @@ public class SaleMapper {
     return productResponseDtos;
   }
 
-  private double getTotalPriceFromEntity(List<Product> products) {
-    double totalPrice = 0;
+  private BigDecimal getTotalPriceFromEntity(List<Product> products) {
+    BigDecimal totalPrice = new BigDecimal("0");
     for (Product product : products) {
-      totalPrice += product.getSalePrice();
+      totalPrice = totalPrice.add(product.getSalePrice());
     }
     return totalPrice;
   }
 
-  private double calculateDiscount(List<Product> products, String calculationType) {
-    double totalDiscountAmount = 0;
-    double totalPrice = 0;
+  private BigDecimal calculateDiscount(List<Product> products, String calculationType) {
+    BigDecimal totalDiscountAmount = new BigDecimal("0");
+    BigDecimal totalPrice = new BigDecimal("0");
 
     for (Product product : products) {
-      double discountAmount = product.getSalePrice() * (product.getDiscount() / 100);
-      totalDiscountAmount += discountAmount;
-      totalPrice += product.getSalePrice();
+      BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(new BigDecimal("0"));
+      BigDecimal discountRate = Optional.ofNullable(product.getDiscount()).orElse(new BigDecimal("0"));
+      BigDecimal discountAmount = salePrice.multiply(discountRate.divide(BigDecimalUtil.getBigDecimal("100")));
+      totalDiscountAmount = totalDiscountAmount.add(discountAmount);
+      totalPrice = totalPrice.add(salePrice);
     }
 
-    if (PERCENTAGE.equals(calculationType) && totalPrice != 0) {
-      return (totalDiscountAmount / totalPrice) * 100;
+    if (PERCENTAGE.equals(calculationType) && totalPrice.compareTo(new BigDecimal("0")) != 0) {
+      return (totalDiscountAmount.divide(totalPrice, MathContext.DECIMAL128)).multiply(BigDecimalUtil.getBigDecimal("100"));
     } else if (AMOUNT.equals(calculationType)) {
-      return totalPrice - totalDiscountAmount;
+      return totalPrice.subtract(totalDiscountAmount);
     }
 
     throw new IllegalArgumentException("Invalid calculation type");

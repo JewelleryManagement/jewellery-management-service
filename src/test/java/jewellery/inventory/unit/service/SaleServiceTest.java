@@ -28,6 +28,7 @@ import jewellery.inventory.repository.*;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.SaleService;
 import jewellery.inventory.service.UserService;
+import jewellery.inventory.utils.BigDecimalUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,7 +74,8 @@ class SaleServiceTest {
     productReturnResponseDto =
         SaleTestHelper.getProductReturnResponseDto(saleResponseDto, productResponseDto);
     productPriceDiscountRequestDto =
-        SaleTestHelper.createProductPriceDiscountRequest(product.getId(), 1000, 10);
+        SaleTestHelper.createProductPriceDiscountRequest(
+            product.getId(), BigDecimalUtil.getBigDecimal("1000"), BigDecimalUtil.getBigDecimal("10"));
     List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
     productPriceDiscountRequestDtoList.add(productPriceDiscountRequestDto);
     saleRequestDto =

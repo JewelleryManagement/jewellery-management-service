@@ -1,5 +1,6 @@
 package jewellery.inventory.dto.response;
 
+import java.math.BigDecimal;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -10,5 +11,5 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public class ResourcePurchaseResponseDto extends ResourcesInUserResponseDto {
 
-    private double dealPrice;
+    private BigDecimal dealPrice;
 }
