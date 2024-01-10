@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 import jewellery.inventory.dto.request.AuthenticationRequestDto;
+import jewellery.inventory.dto.response.ExecutorResponseDto;
 import jewellery.inventory.dto.response.UserAuthDetailsDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.not_found.NoAuthenticatedUserException;
@@ -93,15 +94,15 @@ class AuthServiceTest {
   @Test
   void willGetUserResponseWhenAuthenticatedUser() {
     User user = new User();
-    UserResponseDto expectedUserResponseDto = new UserResponseDto();
+    ExecutorResponseDto expectedUserResponseDto = new ExecutorResponseDto();
     Authentication authentication = Mockito.mock(Authentication.class);
     Mockito.when(authentication.getPrincipal()).thenReturn(user);
     SecurityContext securityContext = Mockito.mock(SecurityContext.class);
     Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
     SecurityContextHolder.setContext(securityContext);
-    Mockito.when(userMapper.toUserResponse(user)).thenReturn(expectedUserResponseDto);
+    Mockito.when(userMapper.toExecutorResponse(user)).thenReturn(expectedUserResponseDto);
 
-    UserResponseDto actualUserResponseDto = authService.getCurrentUser();
+    ExecutorResponseDto actualUserResponseDto = authService.getCurrentUser();
 
     assertEquals(expectedUserResponseDto, actualUserResponseDto);
   }

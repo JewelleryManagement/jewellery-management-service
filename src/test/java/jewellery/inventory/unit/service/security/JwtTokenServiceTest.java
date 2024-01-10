@@ -1,6 +1,7 @@
 package jewellery.inventory.unit.service.security;
 
-import static jewellery.inventory.helper.UserTestHelper.USER_NAME;
+import static jewellery.inventory.helper.UserTestHelper.FIRST_NAME;
+import static jewellery.inventory.helper.UserTestHelper.USER_EMAIL;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -55,7 +56,7 @@ class JwtTokenServiceTest {
     ReflectionTestUtils.setField(jwtTokenService, "tokenExpiration", TOKEN_EXPIRATION);
     key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_KEY));
     lenient().when(jwtUtils.getSigningKey()).thenReturn(key);
-    lenient().when(userDetails.getUsername()).thenReturn(USER_NAME);
+    lenient().when(userDetails.getUsername()).thenReturn(USER_EMAIL);
   }
 
   @Test
@@ -87,7 +88,7 @@ class JwtTokenServiceTest {
     String token = jwtTokenService.generateToken(extraClaims, userDetails);
 
     Claims claims = parseClaimsFromToken(token);
-    assertThat(claims.getSubject()).isEqualTo(USER_NAME);
+    assertThat(claims.getSubject()).isEqualTo(USER_EMAIL);
   }
 
   @Test
@@ -97,7 +98,7 @@ class JwtTokenServiceTest {
 
     String name = jwtTokenService.extractName(token);
 
-    assertThat(name).isEqualTo(USER_NAME);
+    assertThat(name).isEqualTo(USER_EMAIL);
   }
 
   @Test
@@ -115,7 +116,7 @@ class JwtTokenServiceTest {
   void isTokenValidWithExpiredTokenThrowsJwtExpiredException() {
     Claims expiredClaims =
         Jwts.claims()
-            .setSubject(USER_NAME)
+            .setSubject(USER_EMAIL)
             .setExpiration(Date.from(Instant.now().minusMillis(10200L)));
     doReturn(expiredClaims).when(jwtUtils).extractAllClaims(anyString());
 
@@ -126,7 +127,7 @@ class JwtTokenServiceTest {
   @Test
   void generateTokenWithNullUserDetailsThrowsIllegalArgumentException() {
     lenient().when(jwtUtils.getSigningKey()).thenReturn(key);
-    lenient().when(userDetails.getUsername()).thenReturn(USER_NAME);
+    lenient().when(userDetails.getUsername()).thenReturn(USER_EMAIL);
 
     assertThatThrownBy(() -> jwtTokenService.generateToken(null))
         .isInstanceOf(BadCredentialsException.class)
@@ -154,7 +155,7 @@ class JwtTokenServiceTest {
 
   @Test
   void isTokenValidWithNullTokenExpirationThrowsJwtExpiredException() {
-    Claims expiredClaims = Jwts.claims().setSubject(USER_NAME).setExpiration(null);
+    Claims expiredClaims = Jwts.claims().setSubject(USER_EMAIL).setExpiration(null);
     doReturn(expiredClaims).when(jwtUtils).extractAllClaims(anyString());
 
     assertThatThrownBy(() -> jwtTokenService.isTokenValid(TOKEN_MOCK, userDetails))
@@ -166,7 +167,7 @@ class JwtTokenServiceTest {
     String tokenWithValidExpiration = TOKEN_MOCK;
     Claims claimsWithValidExpiration = mock(Claims.class);
 
-    when(claimsWithValidExpiration.getSubject()).thenReturn(USER_NAME);
+    when(claimsWithValidExpiration.getSubject()).thenReturn(USER_EMAIL);
     when(claimsWithValidExpiration.getExpiration())
         .thenReturn(new Date(System.currentTimeMillis() + 1000000));
 
@@ -188,11 +189,11 @@ class JwtTokenServiceTest {
   @Test
   void extractUserEmailSuccessfullyExtractsValidEmail() {
     mockClaims();
-    when(jwtTokenService.extractName(TOKEN_MOCK)).thenReturn(USER_NAME);
+    when(jwtTokenService.extractName(TOKEN_MOCK)).thenReturn(FIRST_NAME);
 
     String actualEmail = jwtTokenService.extractUserEmail(TOKEN_MOCK);
 
-    assertEquals(USER_NAME, actualEmail);
+    assertEquals(FIRST_NAME, actualEmail);
   }
 
   @ParameterizedTest
@@ -230,7 +231,7 @@ class JwtTokenServiceTest {
   }
 
   private void setupDefaultExtractAllClaimsBehavior() {
-    Claims claims = Jwts.claims().setSubject(USER_NAME);
+    Claims claims = Jwts.claims().setSubject(USER_EMAIL);
     claims.setExpiration(Date.from(Instant.now().plusMillis(TOKEN_EXPIRATION)));
 
     lenient().doReturn(claims).when(jwtUtils).extractAllClaims(anyString());
@@ -241,8 +242,7 @@ class JwtTokenServiceTest {
   }
 
   private String generateExpiredToken() {
-    Date expiredDate =
-        new Date(System.currentTimeMillis() - ONE_DAY_IN_MILLISECONDS);
+    Date expiredDate = new Date(System.currentTimeMillis() - ONE_DAY_IN_MILLISECONDS);
 
     return Jwts.builder()
         .setSubject("testUser")

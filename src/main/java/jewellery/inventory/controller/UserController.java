@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.request.UserUpdateRequestDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -56,7 +57,7 @@ public class UserController {
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{id}")
   public UserResponseDto updateUser(
-      @PathVariable UUID id, @Valid @RequestBody UserRequestDto userRequest) {
+      @PathVariable UUID id, @Valid @RequestBody UserUpdateRequestDto userRequest) {
     return userService.updateUser(userRequest, id);
   }
 

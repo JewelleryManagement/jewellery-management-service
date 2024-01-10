@@ -1,14 +1,16 @@
 package jewellery.inventory.mapper;
 
+import java.time.LocalDate;
+import java.util.List;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.ProductReturnResponseDto;
+import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.model.Product;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -67,6 +69,15 @@ public class ProductMapper {
                   return resourceQuantityResponseDto;
                 })
             .toList());
+  }
+
+  public ProductReturnResponseDto mapToProductReturnResponseDto(
+      SaleResponseDto sale, Product product) {
+    ProductReturnResponseDto returnedProductResponseDto = new ProductReturnResponseDto();
+    returnedProductResponseDto.setReturnedProduct(mapToProductResponseDto(product));
+    returnedProductResponseDto.setSaleAfter(sale);
+    returnedProductResponseDto.setDate(LocalDate.now());
+    return returnedProductResponseDto;
   }
 
   private void setContentProductToResponse(Product product, ProductResponseDto response) {

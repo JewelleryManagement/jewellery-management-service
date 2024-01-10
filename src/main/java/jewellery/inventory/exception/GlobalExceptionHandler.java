@@ -1,7 +1,7 @@
 package jewellery.inventory.exception;
 
 import io.jsonwebtoken.security.SignatureException;
-
+import jakarta.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -15,10 +15,7 @@ import jewellery.inventory.exception.image.MultipartFileSizeException;
 import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
 import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
-import jewellery.inventory.exception.product.ProductIsContentException;
-import jewellery.inventory.exception.product.ProductIsSoldException;
-import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
-import jewellery.inventory.exception.product.UserNotOwnerException;
+import jewellery.inventory.exception.product.*;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -57,17 +54,23 @@ public class GlobalExceptionHandler {
     DuplicateException.class,
     MultipartFileContentTypeException.class,
     MultipartFileNotSelectedException.class,
-    MultipartFileSizeException.class
+    MultipartFileSizeException.class,
+    ConstraintViolationException.class
   })
   public ResponseEntity<Object> handleBadDataExceptions(RuntimeException ex) {
-    return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    String errorMessage = ex.getMessage();
+    if (ex instanceof ConstraintViolationException cve) {
+      errorMessage = cve.getConstraintViolations().iterator().next().getMessage();
+    }
+    return createErrorResponse(HttpStatus.BAD_REQUEST, errorMessage);
   }
 
   @ExceptionHandler({
     ProductIsContentException.class,
     ProductIsSoldException.class,
     UserNotOwnerException.class,
-    ProductOwnerEqualsRecipientException.class
+    ProductOwnerEqualsRecipientException.class,
+    ProductNotSoldException.class
   })
   public ResponseEntity<Object> handleEntityConstraintConflict(RuntimeException ex) {
     return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage());

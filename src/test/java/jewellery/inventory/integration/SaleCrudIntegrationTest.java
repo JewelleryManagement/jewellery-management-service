@@ -4,19 +4,15 @@ import static jewellery.inventory.helper.ProductTestHelper.getProductRequestDto;
 import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.model.EventType.SALE_CREATE;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
+import static jewellery.inventory.model.EventType.SALE_RETURN_PRODUCT;
+import static org.junit.jupiter.api.Assertions.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
@@ -69,6 +65,10 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return "/sales";
   }
 
+  private String getSaleReturnProductUrl(UUID productId) {
+    return getBaseSaleUrl() + "/return-product/" + productId;
+  }
+
   @BeforeEach
   void setUp() {
     seller = createUserInDatabase(createTestUserRequest());
@@ -84,16 +84,56 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void getAllSalesSuccessfully() {
-    ResponseEntity<ProductResponseDto> productResponse =
-        this.testRestTemplate.postForEntity(
-            getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+  void returnProductSuccessfully() throws JsonProcessingException {
+    ResponseEntity<ProductResponseDto> productResponse = createProduct(productRequestDto);
 
     SaleRequestDto saleRequestDto = getSaleRequestDto(seller, buyer, productResponse);
 
-    ResponseEntity<SaleResponseDto> saleResponse =
-        this.testRestTemplate.postForEntity(
-            getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
+    ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
+
+    assertEquals(
+        saleRequestDto.getProducts().get(0).getProductId(), productResponse.getBody().getId());
+    assertNotEquals(
+        saleResponse.getBody().getProducts().get(0).getOwner(),
+        productResponse.getBody().getOwner());
+
+    ResponseEntity<ProductReturnResponseDto> response =
+        returnProductFromSale(productResponse.getBody().getId());
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertNull(response.getBody().getSaleAfter());
+    assertNull(response.getBody().getReturnedProduct().getPartOfSale());
+    assertEquals(
+        productResponse.getBody().getOwner(), response.getBody().getReturnedProduct().getOwner());
+    assertEquals(response.getBody().getDate(), LocalDate.now());
+
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(SALE_RETURN_PRODUCT, expectedEventPayload);
+  }
+
+  @Test
+  void returnProductWillThrowsProductNotSoldException() {
+    ResponseEntity<ProductResponseDto> productResponse = createProduct(productRequestDto);
+
+    ResponseEntity<ProductReturnResponseDto> response =
+        returnProductFromSale(productResponse.getBody().getId());
+
+    assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    assertNull((productResponse.getBody()).getPartOfSale());
+    assertNull((response.getBody()).getReturnedProduct());
+  }
+
+  @Test
+  void getAllSalesSuccessfully() {
+    ResponseEntity<ProductResponseDto> productResponse = createProduct(productRequestDto);
+
+    SaleRequestDto saleRequestDto =
+        getSaleRequestDto(seller, buyer, createProduct(productRequestDto));
+
+    ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
 
     ResponseEntity<List<SaleResponseDto>> response =
         this.testRestTemplate.exchange(
@@ -112,21 +152,14 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void createSaleSuccessfully() throws JsonProcessingException {
-
-    ResponseEntity<ProductResponseDto> productResponse =
-        this.testRestTemplate.postForEntity(
-            getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+    ResponseEntity<ProductResponseDto> productResponse = createProduct(productRequestDto);
 
     productRequestDto2.setProductsContent(List.of(productResponse.getBody().getId()));
-    ResponseEntity<ProductResponseDto> productResponse2 =
-        this.testRestTemplate.postForEntity(
-            getBaseProductUrl(), productRequestDto2, ProductResponseDto.class);
+    ResponseEntity<ProductResponseDto> productResponse2 = createProduct(productRequestDto2);
 
     SaleRequestDto saleRequestDto = getSaleRequestDto(seller, buyer, productResponse2);
 
-    ResponseEntity<SaleResponseDto> saleResponse =
-        this.testRestTemplate.postForEntity(
-            getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
+    ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
 
     assertEquals(
         buyer.getId(),
@@ -139,14 +172,35 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(),
         saleResponse.getBody().getProducts().get(0).getId());
-    assertEquals(SALE_TOTAL_PRICE, saleResponse.getBody().getTotalPrice());
-    assertEquals(SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount());
-    assertEquals(SALE_DISCOUNTED_PRICE, saleResponse.getBody().getTotalDiscountedPrice());
+    assertEquals(SALE_TOTAL_PRICE, saleResponse.getBody().getTotalPrice(), 0.001);
+    assertEquals(SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount(), 0.001);
+    assertEquals(SALE_DISCOUNTED_PRICE, saleResponse.getBody().getTotalDiscountedPrice(), 0.001);
 
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(SALE_CREATE, expectedEventPayload);
+  }
+
+  @Nullable
+  private ResponseEntity<ProductResponseDto> createProduct(ProductRequestDto productRequestDto) {
+    return this.testRestTemplate.postForEntity(
+        getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+  }
+
+  @Nullable
+  private ResponseEntity<SaleResponseDto> createSale(SaleRequestDto saleRequestDto) {
+    return this.testRestTemplate.postForEntity(
+        getBaseSaleUrl(), saleRequestDto, SaleResponseDto.class);
+  }
+
+  @Nullable
+  private ResponseEntity<ProductReturnResponseDto> returnProductFromSale(UUID productId) {
+    return this.testRestTemplate.exchange(
+        getSaleReturnProductUrl(productId),
+        HttpMethod.PUT,
+        null,
+        new ParameterizedTypeReference<>() {});
   }
 
   @NotNull
