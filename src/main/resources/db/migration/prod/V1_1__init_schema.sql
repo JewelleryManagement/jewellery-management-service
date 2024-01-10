@@ -108,9 +108,10 @@ CREATE TABLE IF NOT EXISTS public.product_author (
 
 -- public.system_event definition
 CREATE TABLE IF NOT EXISTS public.system_event (
-	id uuid NOT NULL,
-	"data" jsonb NULL,
-	"timestamp" timestamp(6) NULL,
-	"type" varchar(255) NULL,
-	CONSTRAINT system_event_pkey PRIMARY KEY (id)
+    id uuid NOT NULL,
+    timestamp timestamp with time zone,
+    type varchar(255),
+    executor jsonb,
+    payload jsonb,
+    PRIMARY KEY (id)
 );
