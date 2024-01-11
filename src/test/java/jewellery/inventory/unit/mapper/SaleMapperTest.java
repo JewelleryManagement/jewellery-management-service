@@ -2,6 +2,7 @@ package jewellery.inventory.unit.mapper;
 
 import static jewellery.inventory.helper.ProductTestHelper.getTestProduct;
 import static jewellery.inventory.helper.UserTestHelper.*;
+import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -21,7 +22,6 @@ import jewellery.inventory.model.Product;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
-import jewellery.inventory.utils.BigDecimalUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,8 +57,8 @@ class SaleMapperTest {
     productPriceDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(
             product.getId(),
-            BigDecimalUtil.getBigDecimal("1000"),
-            BigDecimalUtil.getBigDecimal("10"));
+            getBigDecimal("1000"),
+            getBigDecimal("10"));
     List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
     productPriceDiscountRequestDtoList.add(productPriceDiscountRequestDto);
     saleRequestDto =

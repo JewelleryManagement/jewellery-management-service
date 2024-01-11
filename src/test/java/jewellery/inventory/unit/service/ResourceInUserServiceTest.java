@@ -2,6 +2,7 @@ package jewellery.inventory.unit.service;
 
 import static jewellery.inventory.helper.ResourceTestHelper.getPearl;
 import static jewellery.inventory.helper.UserTestHelper.*;
+import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -26,7 +27,6 @@ import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
 import jewellery.inventory.service.ResourceInUserService;
-import jewellery.inventory.utils.BigDecimalUtil;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,10 +50,8 @@ class ResourceInUserServiceTest {
   private UUID secondUserId;
   private UUID resourceId;
   private ResourceInUser resourceInUser;
-  private static final BigDecimal INITIAL_QUANTITY =
-      BigDecimalUtil.getBigDecimal("5");
-  private static final BigDecimal TEST_DEAL_PRICE =
-      BigDecimalUtil.getBigDecimal("555.55");
+  private static final BigDecimal INITIAL_QUANTITY = getBigDecimal("5");
+  private static final BigDecimal TEST_DEAL_PRICE = getBigDecimal("555.55");
 
   @BeforeEach
   void setUp() {
@@ -84,11 +82,7 @@ class ResourceInUserServiceTest {
     when(resourceRepository.findById(resourceId)).thenReturn(Optional.of(resource));
 
     ResourcePurchaseRequestDto purchaseRequestDto =
-        createResourcePurchaseRequest(
-            userId,
-            resourceId,
-            BigDecimalUtil.getBigDecimal("16"),
-            TEST_DEAL_PRICE);
+        createResourcePurchaseRequest(userId, resourceId, getBigDecimal("16"), TEST_DEAL_PRICE);
 
     resourceInUserService.addResourceToUser(purchaseRequestDto);
 
@@ -100,11 +94,7 @@ class ResourceInUserServiceTest {
   @Test
   void willThrowUserNotFoundExceptionWhenAddResourceToUserAndUserNonexistent() {
     ResourcePurchaseRequestDto requestDto =
-        createResourcePurchaseRequest(
-            userId,
-            resourceId,
-            BigDecimalUtil.getBigDecimal("10"),
-            TEST_DEAL_PRICE);
+        createResourcePurchaseRequest(userId, resourceId, getBigDecimal("10"), TEST_DEAL_PRICE);
     when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
     assertThrows(
@@ -118,11 +108,7 @@ class ResourceInUserServiceTest {
   @Test
   void willThrowResourceNotFoundExceptionWhenAddResourceToUserAndResourceNotFound() {
     ResourcePurchaseRequestDto requestDto =
-        createResourcePurchaseRequest(
-            userId,
-            resourceId,
-            BigDecimalUtil.getBigDecimal("10"),
-            TEST_DEAL_PRICE);
+        createResourcePurchaseRequest(userId, resourceId, getBigDecimal("10"), TEST_DEAL_PRICE);
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(resourceRepository.findById(resourceId)).thenReturn(Optional.empty());
 
@@ -163,7 +149,7 @@ class ResourceInUserServiceTest {
         UserNotFoundException.class,
         () ->
             resourceInUserService.removeQuantityFromResource(
-                userId, resourceId, BigDecimalUtil.getBigDecimal("10")));
+                userId, resourceId, getBigDecimal("10")));
 
     verify(userRepository, times(1)).findById(userId);
   }
@@ -177,7 +163,7 @@ class ResourceInUserServiceTest {
         ResourceInUserNotFoundException.class,
         () ->
             resourceInUserService.removeQuantityFromResource(
-                userId, resourceId, BigDecimalUtil.getBigDecimal("10")));
+                userId, resourceId, getBigDecimal("10")));
 
     verify(userRepository, times(1)).findById(userId);
   }
@@ -190,7 +176,7 @@ class ResourceInUserServiceTest {
         InsufficientResourceQuantityException.class,
         () ->
             resourceInUserService.removeQuantityFromResource(
-                userId, resourceId, BigDecimalUtil.getBigDecimal("10")));
+                userId, resourceId, getBigDecimal("10")));
 
     verify(userRepository, times(1)).findById(userId);
   }
@@ -199,7 +185,7 @@ class ResourceInUserServiceTest {
   void willRemoveQuantityFromResourceInUserSuccessfully() {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     final BigDecimal initialQuantity = resourceInUser.getQuantity();
-    final BigDecimal quantityToRemove = BigDecimalUtil.getBigDecimal("2");
+    final BigDecimal quantityToRemove = getBigDecimal("2");
 
     resourceInUserService.removeQuantityFromResource(userId, resourceId, quantityToRemove);
 
@@ -305,7 +291,7 @@ class ResourceInUserServiceTest {
     transferResourceRequestDto.setPreviousOwnerId(userId);
     transferResourceRequestDto.setNewOwnerId(secondUserId);
     transferResourceRequestDto.setTransferredResourceId(resourceId);
-    transferResourceRequestDto.setQuantity(BigDecimalUtil.getBigDecimal("6"));
+    transferResourceRequestDto.setQuantity(getBigDecimal("6"));
     return transferResourceRequestDto;
   }
 }

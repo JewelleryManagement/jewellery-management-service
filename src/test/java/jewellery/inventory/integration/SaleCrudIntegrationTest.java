@@ -5,6 +5,7 @@ import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.model.EventType.SALE_CREATE;
 import static jewellery.inventory.model.EventType.SALE_RETURN_PRODUCT;
+import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,7 +22,6 @@ import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.PreciousStone;
-import jewellery.inventory.utils.BigDecimalUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,9 +34,9 @@ import org.springframework.http.ResponseEntity;
 
 class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
-  private static final BigDecimal SALE_TOTAL_PRICE = BigDecimalUtil.getBigDecimal("10000");
-  private static final BigDecimal SALE_DISCOUNT = BigDecimalUtil.getBigDecimal("10");
-  private static final BigDecimal SALE_DISCOUNTED_PRICE = BigDecimalUtil.getBigDecimal("9000");
+  private static final BigDecimal SALE_TOTAL_PRICE = getBigDecimal("10000");
+  private static final BigDecimal SALE_DISCOUNT = getBigDecimal("10");
+  private static final BigDecimal SALE_DISCOUNTED_PRICE = getBigDecimal("9000");
   private User seller;
   private User buyer;
   private PreciousStone preciousStone;
@@ -234,8 +234,8 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResourcePurchaseRequestDto resourcePurchaseRequestDto = new ResourcePurchaseRequestDto();
     resourcePurchaseRequestDto.setUserId(user.getId());
     resourcePurchaseRequestDto.setResourceId(preciousStone.getId());
-    resourcePurchaseRequestDto.setQuantity(BigDecimalUtil.getBigDecimal("20"));
-    resourcePurchaseRequestDto.setDealPrice(BigDecimalUtil.getBigDecimal("100"));
+    resourcePurchaseRequestDto.setQuantity(getBigDecimal("20"));
+    resourcePurchaseRequestDto.setDealPrice(getBigDecimal("100"));
     return resourcePurchaseRequestDto;
   }
 

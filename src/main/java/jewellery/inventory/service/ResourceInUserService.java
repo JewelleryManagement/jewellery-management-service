@@ -1,6 +1,7 @@
 package jewellery.inventory.service;
 
 import static jewellery.inventory.model.EventType.RESOURCE_REMOVE_QUANTITY;
+import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -44,7 +45,7 @@ public class ResourceInUserService implements EntityFetcher {
   private final ResourcesInUserMapper resourcesInUserMapper;
   private final UserMapper userMapper;
   private final ResourceMapper resourceMapper;
-  private static final BigDecimal EPSILON = new BigDecimal("1e-10");
+  private static final BigDecimal EPSILON = getBigDecimal("1e-10");
 
   @Transactional
   @LogCreateEvent(eventType = EventType.RESOURCE_TRANSFER)

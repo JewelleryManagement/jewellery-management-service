@@ -1,12 +1,13 @@
 package jewellery.inventory.helper;
 
+import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
+
 import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.stream.Stream;
 import jewellery.inventory.dto.request.resource.*;
 import jewellery.inventory.dto.response.resource.*;
 import jewellery.inventory.model.resource.*;
-import jewellery.inventory.utils.BigDecimalUtil;
 import org.junit.jupiter.params.provider.Arguments;
 
 public class ResourceTestHelper {
@@ -35,20 +36,20 @@ public class ResourceTestHelper {
   public static final String UPDATED_PLATING = PLATING + "ish";
   private static final String CUT = "diamond";
   private static final String DIMENSION_SIZE = "4.50x4.90x2.50";
-  private static final BigDecimal DIMENSION_X = BigDecimalUtil.getBigDecimal("4.5");
-  private static final BigDecimal DIMENSION_Y = BigDecimalUtil.getBigDecimal("4.9");
-  private static final BigDecimal DIMENSION_Z = BigDecimalUtil.getBigDecimal("2.5");
-  private static final BigDecimal SIZE = BigDecimalUtil.getBigDecimal("0.55");
+  private static final BigDecimal DIMENSION_X = getBigDecimal("4.5");
+  private static final BigDecimal DIMENSION_Y = getBigDecimal("4.9");
+  private static final BigDecimal DIMENSION_Z = getBigDecimal("2.5");
+  private static final BigDecimal SIZE = getBigDecimal("0.55");
   private static final Integer PURITY = 925;
   public static final int UPDATED_PURITY = PURITY + 1;
-  private static final BigDecimal CARAT_PRECIOUS_STONE = BigDecimalUtil.getBigDecimal("5.1");
+  private static final BigDecimal CARAT_PRECIOUS_STONE = getBigDecimal("5.1");
   public static final BigDecimal UPDATED_CARAT_PRECIOUS_STONE =
-      CARAT_PRECIOUS_STONE.add(BigDecimalUtil.getBigDecimal("2.1"));
+      CARAT_PRECIOUS_STONE.add(getBigDecimal("2.1"));
   private static final String CLARITY = "opaque";
   public static final String UPDATED_CLARITY = CLARITY + "ish";
   private static final String DESCRIPTION = "A linking part made of gold";
   public static final String UPDATED_DESCRIPTION = DESCRIPTION + " and \"real\" silver";
-  public static final BigDecimal PRICE_PER_QUANTITY = BigDecimalUtil.getBigDecimal("50.5");
+  public static final BigDecimal PRICE_PER_QUANTITY = getBigDecimal("50.5");
   public static final String NOTE = "Note";
 
   private ResourceTestHelper() {}

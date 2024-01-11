@@ -7,6 +7,7 @@ import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.model.EventType.RESOURCE_ADD_QUANTITY;
 import static jewellery.inventory.model.EventType.RESOURCE_REMOVE_QUANTITY;
 import static jewellery.inventory.model.EventType.RESOURCE_TRANSFER;
+import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,16 +27,15 @@ import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.PreciousStoneResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
-import jewellery.inventory.utils.BigDecimalUtil;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.*;
 
 class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
-  private static final BigDecimal RESOURCE_QUANTITY = BigDecimalUtil.getBigDecimal("5");
-  private static final BigDecimal RESOURCE_QUANTITY_TO_REMOVE = BigDecimalUtil.getBigDecimal("1");
-  private static final BigDecimal RESOURCE_PRICE = BigDecimalUtil.getBigDecimal("105.5");
+  private static final BigDecimal RESOURCE_QUANTITY = getBigDecimal("5");
+  private static final BigDecimal RESOURCE_QUANTITY_TO_REMOVE = getBigDecimal("1");
+  private static final BigDecimal RESOURCE_PRICE = getBigDecimal("105.5");
 
   private String buildUrl(String... paths) {
     return "/" + String.join("/", paths);
@@ -118,8 +118,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
             createResourcePurchaseRequestDto(
                 createdUser.getId(),
                 createdResource.getId(),
-                new BigDecimal(RESOURCE_QUANTITY.negate().toString()),
-                new BigDecimal(RESOURCE_PRICE.negate().toString())));
+                getBigDecimal(RESOURCE_QUANTITY.negate().toString()),
+                getBigDecimal(RESOURCE_PRICE.negate().toString())));
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
@@ -143,7 +143,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertNotNull(resourceQuantities);
     assertEquals(1, resourceQuantities.size());
     assertEquals(
-        RESOURCE_QUANTITY.multiply(new BigDecimal("2")).setScale(2, RoundingMode.HALF_UP),
+        RESOURCE_QUANTITY.multiply(getBigDecimal("2")).setScale(2, RoundingMode.HALF_UP),
         resourceQuantities.get(0).getQuantity().setScale(2, RoundingMode.HALF_UP));
   }
 
@@ -308,7 +308,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         sendDeleteQuantityFromResourceInUserRequest(
             createdUser.getId(),
             createdResource.getId(),
-            RESOURCE_QUANTITY.add(BigDecimalUtil.getBigDecimal("1")));
+            RESOURCE_QUANTITY.add(getBigDecimal("1")));
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
@@ -323,7 +323,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
-            createdUser.getId(), createdResource.getId(), BigDecimal.valueOf(-1.0));
+            createdUser.getId(), createdResource.getId(), getBigDecimal("-1.0"));
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
@@ -358,7 +358,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertEquals(
         response.getTransferredResource().getResource().getId(),
         requestDto.getTransferredResourceId());
-    assertEquals(new BigDecimal("1"), response.getTransferredResource().getQuantity());
+    assertEquals(getBigDecimal("1"), response.getTransferredResource().getQuantity());
 
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(response, objectMapper);
@@ -373,7 +373,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     requestDto.setPreviousOwnerId(sender.getId());
     requestDto.setNewOwnerId(receiver.getId());
     requestDto.setTransferredResourceId(createdResource.getId());
-    requestDto.setQuantity(new BigDecimal("1"));
+    requestDto.setQuantity(getBigDecimal("1"));
     return requestDto;
   }
 

@@ -4,6 +4,7 @@ import static jewellery.inventory.helper.ProductTestHelper.*;
 import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.model.EventType.*;
+import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -26,7 +27,6 @@ import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.PreciousStone;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.ImageService;
-import jewellery.inventory.utils.BigDecimalUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
@@ -381,7 +381,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ProductResponseDto productResponseDto = response.getBody();
 
     Map<String, Object> expectedEventPayload =
-            getUpdateEventPayload(product, productResponseDto, objectMapper);
+        getUpdateEventPayload(product, productResponseDto, objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(PRODUCT_UPDATE, expectedEventPayload);
 
@@ -409,8 +409,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResourcePurchaseRequestDto resourcePurchaseRequestDto = new ResourcePurchaseRequestDto();
     resourcePurchaseRequestDto.setUserId(user.getId());
     resourcePurchaseRequestDto.setResourceId(preciousStone.getId());
-    resourcePurchaseRequestDto.setQuantity(BigDecimalUtil.getBigDecimal("20"));
-    resourcePurchaseRequestDto.setDealPrice(BigDecimalUtil.getBigDecimal("10"));
+    resourcePurchaseRequestDto.setQuantity(getBigDecimal("20"));
+    resourcePurchaseRequestDto.setDealPrice(getBigDecimal("10"));
     return resourcePurchaseRequestDto;
   }
 
