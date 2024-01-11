@@ -206,10 +206,9 @@ public class ProductService implements EntityFetcher {
         resourceInProduct -> {
           resourceInUserService.addResourceToUserNoLog(
               getResourceInUserRequest(product.getOwner(), resourceInProduct));
-          resourceInProduct.setQuantity(0);
+          resourceInProductRepository.delete(resourceInProduct);
         });
     product.setResourcesContent(null);
-    clearResourceInProductRepository();
   }
 
   private ResourceInUserRequestDto getResourceInUserRequest(
@@ -409,16 +408,6 @@ public class ProductService implements EntityFetcher {
         resourceInProduct.getProduct().getId());
 
     return resourceInProduct;
-  }
-
-  private void clearResourceInProductRepository() {
-    List<ResourceInProduct> allProducts = resourceInProductRepository.findAll();
-    allProducts.forEach(
-        resourceInProduct -> {
-          if (resourceInProduct.getQuantity() == 0) {
-            resourceInProductRepository.delete(resourceInProduct);
-          }
-        });
   }
 
   @Override
