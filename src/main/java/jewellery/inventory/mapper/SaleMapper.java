@@ -67,12 +67,11 @@ public class SaleMapper {
     BigDecimal totalPrice = BigDecimal.ZERO;
 
     for (Product product : products) {
-      BigDecimal salePrice =
-          Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
-      BigDecimal discountRate =
-          Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
+      BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
+      BigDecimal discountRate = Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
       BigDecimal discountAmount =
-          salePrice.multiply(discountRate.divide(BigDecimalUtil.getBigDecimal("100"), RoundingMode.HALF_UP));
+          salePrice.multiply(
+              discountRate.divide(BigDecimalUtil.getBigDecimal("100"), RoundingMode.HALF_UP));
       totalDiscountAmount = totalDiscountAmount.add(discountAmount);
       totalPrice = totalPrice.add(salePrice);
     }

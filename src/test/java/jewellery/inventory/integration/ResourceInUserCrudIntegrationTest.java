@@ -263,7 +263,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         sendGetResourcesInUserRequest(createdUser.getId());
     ResourceQuantityResponseDto resourceQuantity =
         findResourceQuantityIn(createdResource.getId(), resourcesInUserResponse);
-    assertEquals(RESOURCE_QUANTITY.subtract(RESOURCE_QUANTITY_TO_REMOVE), resourceQuantity.getQuantity());
+    assertEquals(
+        RESOURCE_QUANTITY.subtract(RESOURCE_QUANTITY_TO_REMOVE), resourceQuantity.getQuantity());
 
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(response.getBody(), deleteQuantityResponse.getBody(), objectMapper);
