@@ -211,7 +211,7 @@ public class ProductService implements EntityFetcher {
         resourceInProduct -> {
           resourceInUserService.addResourceToUserNoLog(
               getResourceInUserRequest(owner, resourceInProduct));
-          resourceInProduct.setQuantity(new BigDecimal("0"));
+          resourceInProduct.setQuantity(BigDecimal.ZERO);
         });
   }
 

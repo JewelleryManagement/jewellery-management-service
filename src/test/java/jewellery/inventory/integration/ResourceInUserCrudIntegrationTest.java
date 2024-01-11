@@ -33,12 +33,9 @@ import org.springframework.http.*;
 
 class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
-  private static final BigDecimal RESOURCE_QUANTITY =
-      BigDecimalUtil.getBigDecimal("5");
-  private static final BigDecimal RESOURCE_QUANTITY_TO_REMOVE =
-      BigDecimalUtil.getBigDecimal("1");
-  private static final BigDecimal RESOURCE_PRICE =
-      BigDecimalUtil.getBigDecimal("105.5");
+  private static final BigDecimal RESOURCE_QUANTITY = BigDecimalUtil.getBigDecimal("5");
+  private static final BigDecimal RESOURCE_QUANTITY_TO_REMOVE = BigDecimalUtil.getBigDecimal("1");
+  private static final BigDecimal RESOURCE_PRICE = BigDecimalUtil.getBigDecimal("105.5");
 
   private String buildUrl(String... paths) {
     return "/" + String.join("/", paths);
@@ -121,8 +118,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
             createResourcePurchaseRequestDto(
                 createdUser.getId(),
                 createdResource.getId(),
-                new BigDecimal("-5"),
-                new BigDecimal("-105.5")));
+                new BigDecimal(RESOURCE_QUANTITY.negate().toString()),
+                new BigDecimal(RESOURCE_PRICE.negate().toString())));
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
@@ -266,7 +263,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
         sendGetResourcesInUserRequest(createdUser.getId());
     ResourceQuantityResponseDto resourceQuantity =
         findResourceQuantityIn(createdResource.getId(), resourcesInUserResponse);
-    assertEquals(RESOURCE_QUANTITY.subtract(new BigDecimal("1")), resourceQuantity.getQuantity());
+    assertEquals(RESOURCE_QUANTITY.subtract(RESOURCE_QUANTITY_TO_REMOVE), resourceQuantity.getQuantity());
 
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(response.getBody(), deleteQuantityResponse.getBody(), objectMapper);

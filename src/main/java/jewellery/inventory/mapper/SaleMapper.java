@@ -55,7 +55,7 @@ public class SaleMapper {
   }
 
   private BigDecimal getTotalPriceFromEntity(List<Product> products) {
-    BigDecimal totalPrice = new BigDecimal("0");
+    BigDecimal totalPrice = BigDecimal.ZERO;
     for (Product product : products) {
       totalPrice = totalPrice.add(product.getSalePrice());
     }
@@ -63,14 +63,14 @@ public class SaleMapper {
   }
 
   private BigDecimal calculateDiscount(List<Product> products, String calculationType) {
-    BigDecimal totalDiscountAmount = new BigDecimal("0");
-    BigDecimal totalPrice = new BigDecimal("0");
+    BigDecimal totalDiscountAmount = BigDecimal.ZERO;
+    BigDecimal totalPrice = BigDecimal.ZERO;
 
     for (Product product : products) {
       BigDecimal salePrice =
-          Optional.ofNullable(product.getSalePrice()).orElse(new BigDecimal("0"));
+          Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
       BigDecimal discountRate =
-          Optional.ofNullable(product.getDiscount()).orElse(new BigDecimal("0"));
+          Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
       BigDecimal discountAmount =
           salePrice.multiply(discountRate.divide(BigDecimalUtil.getBigDecimal("100"), RoundingMode.HALF_UP));
       totalDiscountAmount = totalDiscountAmount.add(discountAmount);

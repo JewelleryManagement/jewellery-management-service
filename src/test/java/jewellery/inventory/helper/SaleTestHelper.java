@@ -77,16 +77,16 @@ public class SaleTestHelper {
 
     dto.setSeller(userResponseDtoSeller);
     dto.setBuyer(userResponseDtoBuyer);
-    dto.setTotalDiscountedPrice(new BigDecimal("0"));
-    dto.setTotalDiscount(new BigDecimal("0"));
+    dto.setTotalDiscountedPrice(BigDecimal.ZERO);
+    dto.setTotalDiscount(BigDecimal.ZERO);
 
     sale.getProducts()
         .forEach(
             product -> {
               BigDecimal salePrice =
-                  Optional.ofNullable(product.getSalePrice()).orElse(new BigDecimal("0"));
+                  Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
               BigDecimal discount =
-                  Optional.ofNullable(product.getDiscount()).orElse(new BigDecimal("0"));
+                  Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
               dto.setTotalDiscountedPrice(dto.getTotalDiscountedPrice().add(salePrice));
               dto.setTotalDiscount(dto.getTotalDiscount().add(discount));
             });

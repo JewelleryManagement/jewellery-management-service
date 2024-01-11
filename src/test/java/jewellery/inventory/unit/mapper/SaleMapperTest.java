@@ -98,7 +98,7 @@ class SaleMapperTest {
     when(userMapper.toUserResponse(buyer)).thenReturn(buyerResponseDto);
 
     when(productMapper.mapToProductResponseDto(product)).thenReturn(new ProductResponseDto());
-    sale.getProducts().get(0).setSalePrice(new BigDecimal("0"));
+    sale.getProducts().get(0).setSalePrice(BigDecimal.ZERO);
     assertThrows(IllegalArgumentException.class, () -> saleMapper.mapEntityToResponseDto(sale));
   }
 }
