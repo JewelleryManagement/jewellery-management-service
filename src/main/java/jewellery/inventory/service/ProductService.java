@@ -260,6 +260,7 @@ public class ProductService implements EntityFetcher {
           productId -> {
             logger.debug("Processing product with ID: {}", productId);
             Product product = getProduct(productId);
+            throwExceptionIfProductIsPartOfItself(product, parentProduct.getId());
             throwExceptionIfProductIsSold(product);
             if (product.getOwner().getId().equals(parentProduct.getOwner().getId())) {
               product.setContentOf(parentProduct);
@@ -276,6 +277,12 @@ public class ProductService implements EntityFetcher {
     }
 
     return products;
+  }
+
+  private void throwExceptionIfProductIsPartOfItself(Product product, UUID parentId) {
+    if (product.getId().equals(parentId)) {
+      throw new ProductPartOfItselfException();
+    }
   }
 
   private User getUser(UUID userId) {
