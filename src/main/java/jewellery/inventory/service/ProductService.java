@@ -281,6 +281,7 @@ public class ProductService implements EntityFetcher {
 
   private void throwExceptionIfProductIsPartOfItself(Product product, UUID parentId) {
     if (product.getId().equals(parentId)) {
+      logger.error("The edited product cannot be part of its content.");
       throw new ProductPartOfItselfException();
     }
   }

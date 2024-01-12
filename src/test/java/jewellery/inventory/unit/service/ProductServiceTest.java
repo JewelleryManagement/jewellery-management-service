@@ -319,4 +319,12 @@ class ProductServiceTest {
     when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
     assertThrows(ProductIsContentException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
   }
+
+  @Test
+  void testUpdateProductShouldThrowWhenProductIsPartOfItself() {
+    productRequestDto.setProductsContent(List.of(product.getId()));
+    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+    assertThrows(ProductPartOfItselfException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
+  }
 }
