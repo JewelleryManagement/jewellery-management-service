@@ -2,9 +2,11 @@ package jewellery.inventory.unit.mapper;
 
 import static jewellery.inventory.helper.ProductTestHelper.getTestProduct;
 import static jewellery.inventory.helper.UserTestHelper.*;
+import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
@@ -53,7 +55,10 @@ class SaleMapperTest {
     productsForSale = SaleTestHelper.getProductsList(product);
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSale);
     productPriceDiscountRequestDto =
-        SaleTestHelper.createProductPriceDiscountRequest(product.getId(), 1000, 10);
+        SaleTestHelper.createProductPriceDiscountRequest(
+            product.getId(),
+            getBigDecimal("1000"),
+            getBigDecimal("10"));
     List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
     productPriceDiscountRequestDtoList.add(productPriceDiscountRequestDto);
     saleRequestDto =
@@ -93,8 +98,7 @@ class SaleMapperTest {
     when(userMapper.toUserResponse(buyer)).thenReturn(buyerResponseDto);
 
     when(productMapper.mapToProductResponseDto(product)).thenReturn(new ProductResponseDto());
-    sale.getProducts().get(0).setSalePrice(0);
-    assertThrows(
-            IllegalArgumentException.class, () -> saleMapper.mapEntityToResponseDto(sale));
-   }
+    sale.getProducts().get(0).setSalePrice(BigDecimal.ZERO);
+    assertThrows(IllegalArgumentException.class, () -> saleMapper.mapEntityToResponseDto(sale));
+  }
 }

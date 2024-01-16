@@ -1,6 +1,7 @@
 package jewellery.inventory.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -20,7 +21,7 @@ public class SaleResponseDto {
   private List<ProductResponseDto> products;
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
   private LocalDate date;
-  private double totalPrice;
-  private double totalDiscountedPrice;
-  private double totalDiscount;
+  private BigDecimal totalPrice;
+  private BigDecimal totalDiscountedPrice;
+  private BigDecimal totalDiscount;
 }

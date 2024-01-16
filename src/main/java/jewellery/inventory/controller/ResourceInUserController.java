@@ -3,6 +3,7 @@ package jewellery.inventory.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.PositiveOrZero;
+import java.math.BigDecimal;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
@@ -67,7 +68,7 @@ public class ResourceInUserController {
   public ResourcesInUserResponseDto removeQuantityFromUserResource(
       @PathVariable UUID userId,
       @PathVariable UUID resourceId,
-      @PathVariable("quantity") @PositiveOrZero(message = QUANTITY_MIN_VALUE_MSG) double quantity) {
+      @PathVariable("quantity") @PositiveOrZero(message = QUANTITY_MIN_VALUE_MSG) BigDecimal quantity) {
     return resourceAvailabilityService.removeQuantityFromResource(userId, resourceId, quantity);
   }
 

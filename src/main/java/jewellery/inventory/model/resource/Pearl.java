@@ -1,6 +1,7 @@
 package jewellery.inventory.model.resource;
 
 import jakarta.persistence.Entity;
+import java.math.BigDecimal;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -13,7 +14,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public class Pearl extends Resource {
     private String type;
-    private Double size;
+    private BigDecimal size;
     private String quality;
     private String color;
     private String shape;

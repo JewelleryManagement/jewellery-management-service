@@ -5,8 +5,12 @@ import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.model.EventType.SALE_CREATE;
 import static jewellery.inventory.model.EventType.SALE_RETURN_PRODUCT;
+import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 import jewellery.inventory.dto.request.*;
@@ -30,13 +34,13 @@ import org.springframework.http.ResponseEntity;
 
 class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
-  private static final Double SALE_TOTAL_PRICE = 10000.0;
-  private static final Double SALE_DISCOUNT = 10.0;
-  private static final Double SALE_DISCOUNTED_PRICE = 9000.0;
+  private static final BigDecimal SALE_TOTAL_PRICE = getBigDecimal("10000");
+  private static final BigDecimal SALE_DISCOUNT = getBigDecimal("10");
+  private static final BigDecimal SALE_DISCOUNTED_PRICE = getBigDecimal("9000");
   private User seller;
   private User buyer;
   private PreciousStone preciousStone;
-  private ResourceInUserRequestDto resourceInUserRequestDto;
+  private ResourcePurchaseRequestDto resourceInUserRequestDto;
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
   private ProductRequestDto productRequestDto;
   private ProductRequestDto productRequestDto2;
@@ -172,9 +176,12 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(),
         saleResponse.getBody().getProducts().get(0).getId());
-    assertEquals(SALE_TOTAL_PRICE, saleResponse.getBody().getTotalPrice(), 0.001);
-    assertEquals(SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount(), 0.001);
-    assertEquals(SALE_DISCOUNTED_PRICE, saleResponse.getBody().getTotalDiscountedPrice(), 0.001);
+    assertEquals(SALE_TOTAL_PRICE, saleResponse.getBody().getTotalPrice());
+    assertEquals(
+        SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount().setScale(2, RoundingMode.HALF_UP));
+    assertEquals(
+        SALE_DISCOUNTED_PRICE,
+        saleResponse.getBody().getTotalDiscountedPrice().setScale(2, RoundingMode.HALF_UP));
 
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
@@ -222,13 +229,14 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @NotNull
-  private static ResourceInUserRequestDto getResourceInUserRequestDto(
+  private static ResourcePurchaseRequestDto getResourceInUserRequestDto(
       User user, PreciousStone preciousStone) {
-    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
-    resourceInUserRequestDto.setUserId(user.getId());
-    resourceInUserRequestDto.setResourceId(preciousStone.getId());
-    resourceInUserRequestDto.setQuantity(20);
-    return resourceInUserRequestDto;
+    ResourcePurchaseRequestDto resourcePurchaseRequestDto = new ResourcePurchaseRequestDto();
+    resourcePurchaseRequestDto.setUserId(user.getId());
+    resourcePurchaseRequestDto.setResourceId(preciousStone.getId());
+    resourcePurchaseRequestDto.setQuantity(getBigDecimal("20"));
+    resourcePurchaseRequestDto.setDealPrice(getBigDecimal("100"));
+    return resourcePurchaseRequestDto;
   }
 
   @Nullable

@@ -1,6 +1,7 @@
 package jewellery.inventory.dto.request;
 
 import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,10 +13,9 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 public class ResourceInUserRequestDto {
-
   @NotNull private UUID userId;
   @NotNull private UUID resourceId;
 
   @Positive
-  private double quantity;
+  private BigDecimal quantity;
 }
