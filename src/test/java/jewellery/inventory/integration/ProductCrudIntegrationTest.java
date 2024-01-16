@@ -390,6 +390,22 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         productResponseDto.getResourcesContent().get(0).getQuantity());
   }
 
+  @Test
+  void productUpdateShouldThrowWhenProductContentsItself() {
+    ProductResponseDto product = createProductWithRequest(productRequestDto);
+    UUID productId = product.getId();
+
+    productRequestDto.setResourcesContent(productRequestDto2.getResourcesContent());
+    productRequestDto.setProductsContent(List.of(productId));
+    HttpEntity<ProductRequestDto> requestEntity = new HttpEntity<>(productRequestDto, headers);
+
+    ResponseEntity<ProductResponseDto> response =
+            this.testRestTemplate.exchange(
+                    getProductUrl(productId), HttpMethod.PUT, requestEntity, ProductResponseDto.class);
+
+    assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+  }
+
   private void uploadImageAndAssertSuccessfulResponse(ProductResponseDto productResponse) {
     ResponseEntity<ImageResponseDto> response =
         this.testRestTemplate.postForEntity(
