@@ -324,26 +324,26 @@ public class ProductService implements EntityFetcher {
   }
 
   private BigDecimal calculateProductContentsPrice(ProductRequestDto productRequestDto) {
-    BigDecimal productsContentPrice = BigDecimal.ZERO;
-    for (int i = 0; i < productRequestDto.getProductsContent().size(); i++) {
-      UUID productID = productRequestDto.getProductsContent().get(i);
-      productsContentPrice = productsContentPrice.add(getProduct(productID).getSalePrice());
-    }
+    BigDecimal productsContentPrice =
+        productRequestDto.getProductsContent().stream()
+            .map(productId -> getProduct(productId).getSalePrice())
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
     BigDecimal resourcesContentsPrice = calculateProductResourcesPrice(productRequestDto);
     return productsContentPrice.add(resourcesContentsPrice);
   }
 
   private BigDecimal calculateProductResourcesPrice(ProductRequestDto productRequestDto) {
-    BigDecimal salePriceOfProductResources = BigDecimal.ZERO;
-    for (int i = 0; i < productRequestDto.getResourcesContent().size(); i++) {
-      BigDecimal resourceQuantity = productRequestDto.getResourcesContent().get(i).getQuantity();
-      ResourceResponseDto resourceResponseDto =
-          resourceService.getResource(productRequestDto.getResourcesContent().get(i).getId());
-      BigDecimal resourcePriceQuantity = resourceResponseDto.getPricePerQuantity();
-      salePriceOfProductResources =
-          salePriceOfProductResources.add(resourceQuantity.multiply(resourcePriceQuantity));
-    }
-    return salePriceOfProductResources;
+    return productRequestDto.getResourcesContent().stream()
+        .map(
+            resourceContent -> {
+              BigDecimal resourceQuantity = resourceContent.getQuantity();
+              ResourceResponseDto resourceResponseDto =
+                  resourceService.getResource(resourceContent.getId());
+              BigDecimal resourcePriceQuantity = resourceResponseDto.getPricePerQuantity();
+              return resourceQuantity.multiply(resourcePriceQuantity);
+            })
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
   private List<User> getAuthors(ProductRequestDto productRequestDto) {
