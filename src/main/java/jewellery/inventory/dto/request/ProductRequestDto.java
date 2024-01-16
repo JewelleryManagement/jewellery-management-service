@@ -3,10 +3,13 @@ package jewellery.inventory.dto.request;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
-import java.util.UUID;
+import jakarta.validation.constraints.Positive;
+import java.math.BigDecimal;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import lombok.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -23,9 +26,8 @@ public class ProductRequestDto {
   private List<UUID> productsContent;
   private String description;
   @NotNull
-  private double salePrice;
-  @NotNull
-  private String catalogNumber;
-  @NotNull
-  private String productionNumber;
+  @Positive
+  private BigDecimal salePrice;
+  @NotNull private String catalogNumber;
+  @NotNull private String productionNumber;
 }

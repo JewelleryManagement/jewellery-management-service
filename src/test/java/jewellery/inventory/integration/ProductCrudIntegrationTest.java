@@ -4,6 +4,7 @@ import static jewellery.inventory.helper.ProductTestHelper.*;
 import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.model.EventType.*;
+import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,7 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ProductRequestDto;
-import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ImageResponseDto;
@@ -50,7 +51,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private User user;
   private PreciousStone preciousStone;
   private User differentUser;
-  private ResourceInUserRequestDto resourceInUserRequestDto;
+  private ResourcePurchaseRequestDto resourcePurchaseRequestDto;
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
   private ProductRequestDto productRequestDto;
   private ProductRequestDto productRequestDto2;
@@ -91,10 +92,10 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void setUp() {
     user = createUserInDatabase(createTestUserRequest());
     preciousStone = createPreciousStoneInDatabase();
-    resourceInUserRequestDto =
+    resourcePurchaseRequestDto =
         getResourceInUserRequestDto(user, Objects.requireNonNull(preciousStone));
     differentUser = createUserInDatabase(createDifferentUserRequest());
-    resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
+    resourcesInUserResponseDto = getResourcesInUserResponseDto(resourcePurchaseRequestDto);
     productRequestDto =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), user);
     productRequestDto2 =
@@ -380,7 +381,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ProductResponseDto productResponseDto = response.getBody();
 
     Map<String, Object> expectedEventPayload =
-            getUpdateEventPayload(product, productResponseDto, objectMapper);
+        getUpdateEventPayload(product, productResponseDto, objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(PRODUCT_UPDATE, expectedEventPayload);
 
@@ -419,13 +420,14 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @NotNull
-  private static ResourceInUserRequestDto getResourceInUserRequestDto(
+  private static ResourcePurchaseRequestDto getResourceInUserRequestDto(
       User user, PreciousStone preciousStone) {
-    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
-    resourceInUserRequestDto.setUserId(user.getId());
-    resourceInUserRequestDto.setResourceId(preciousStone.getId());
-    resourceInUserRequestDto.setQuantity(20);
-    return resourceInUserRequestDto;
+    ResourcePurchaseRequestDto resourcePurchaseRequestDto = new ResourcePurchaseRequestDto();
+    resourcePurchaseRequestDto.setUserId(user.getId());
+    resourcePurchaseRequestDto.setResourceId(preciousStone.getId());
+    resourcePurchaseRequestDto.setQuantity(getBigDecimal("20"));
+    resourcePurchaseRequestDto.setDealPrice(getBigDecimal("10"));
+    return resourcePurchaseRequestDto;
   }
 
   private void assertResponseMatchesCreatedRequest(
@@ -449,7 +451,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Nullable
   private ResourcesInUserResponseDto getResourcesInUserResponseDto(
-      ResourceInUserRequestDto resourceInUserRequestDto) {
+      ResourcePurchaseRequestDto resourceInUserRequestDto) {
     ResponseEntity<ResourcesInUserResponseDto> createResourceInUser =
         this.testRestTemplate.postForEntity(
             getBaseResourceAvailabilityUrl(),

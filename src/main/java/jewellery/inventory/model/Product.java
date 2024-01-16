@@ -1,6 +1,7 @@
 package jewellery.inventory.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.model.resource.ResourceInProduct;
@@ -41,7 +42,7 @@ public class Product {
   private String catalogNumber;
   private String productionNumber;
   private String description;
-  private double salePrice;
-  private double discount;
+  private BigDecimal salePrice;
+  private BigDecimal discount;
   @ManyToOne private Sale partOfSale;
 }

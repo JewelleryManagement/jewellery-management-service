@@ -1,5 +1,6 @@
 package jewellery.inventory.dto.response;
 
+import java.math.BigDecimal;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import lombok.*;
 
@@ -19,9 +20,9 @@ public class ProductResponseDto {
   private List<ProductResponseDto> productsContent;
   private UUID contentOf;
   private String description;
-  private double salePrice;
+  private BigDecimal salePrice;
   private UUID partOfSale;
   private String catalogNumber;
   private String productionNumber;
-  private double discount;
+  private BigDecimal discount;
 }

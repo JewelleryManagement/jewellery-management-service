@@ -159,8 +159,7 @@ public class ProductService implements EntityFetcher {
 
   private void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
     if (product.getContentOf() != null) {
-      logger.error(
-          "Product with ID {} is part of another product and cannot be deleted or updated.", id);
+      logger.error("Product with ID {} is part of another product and cannot be deleted.", id);
       throw new ProductIsContentException(id);
     }
   }
