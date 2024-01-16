@@ -3,8 +3,9 @@ package jewellery.inventory.dto.request;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
+
+import jakarta.validation.constraints.PositiveOrZero;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import lombok.*;
 
@@ -25,9 +26,8 @@ public class ProductRequestDto {
   List<ResourceQuantityRequestDto> resourcesContent;
   private List<UUID> productsContent;
   private String description;
-  @NotNull
-  @Positive
-  private BigDecimal salePrice;
+  @PositiveOrZero
+  private BigDecimal additionalPrice;
   @NotNull private String catalogNumber;
   @NotNull private String productionNumber;
 }

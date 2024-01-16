@@ -1,6 +1,7 @@
 package jewellery.inventory.service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -14,6 +15,7 @@ import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.exception.not_found.*;
 import jewellery.inventory.exception.product.*;
 import jewellery.inventory.mapper.ProductMapper;
@@ -42,6 +44,7 @@ public class ProductService implements EntityFetcher {
   private final ImageService imageService;
   private final ResourceInUserService resourceInUserService;
   private final ProductMapper productMapper;
+  private final ResourceService resourceService;
 
   @Transactional
   @LogUpdateEvent(eventType = EventType.PRODUCT_UPDATE)
@@ -313,11 +316,34 @@ public class ProductService implements EntityFetcher {
     product.setAuthors(getAuthors(productRequestDto));
     product.setPartOfSale(null);
     product.setDescription(productRequestDto.getDescription());
-    product.setSalePrice(productRequestDto.getSalePrice());
+    product.setSalePrice(calculateProductContentsPrice(productRequestDto));
     product.setProductionNumber(productRequestDto.getProductionNumber());
     product.setCatalogNumber(productRequestDto.getCatalogNumber());
     product.setProductsContent(new ArrayList<>());
     product.setResourcesContent(new ArrayList<>());
+  }
+
+  private BigDecimal calculateProductContentsPrice(ProductRequestDto productRequestDto) {
+    BigDecimal productsContentPrice = BigDecimal.ZERO;
+    for (int i = 0; i < productRequestDto.getProductsContent().size(); i++) {
+      UUID productID = productRequestDto.getProductsContent().get(i);
+      productsContentPrice = productsContentPrice.add(getProduct(productID).getSalePrice());
+    }
+    BigDecimal resourcesContentsPrice = calculateProductResourcesPrice(productRequestDto);
+    return productsContentPrice.add(resourcesContentsPrice);
+  }
+
+  private BigDecimal calculateProductResourcesPrice(ProductRequestDto productRequestDto) {
+    BigDecimal salePriceOfProductResources = BigDecimal.ZERO;
+    for (int i = 0; i < productRequestDto.getResourcesContent().size(); i++) {
+      BigDecimal resourceQuantity = productRequestDto.getResourcesContent().get(i).getQuantity();
+      ResourceResponseDto resourceResponseDto =
+          resourceService.getResource(productRequestDto.getResourcesContent().get(i).getId());
+      BigDecimal resourcePriceQuantity = resourceResponseDto.getPricePerQuantity();
+      salePriceOfProductResources =
+          salePriceOfProductResources.add(resourceQuantity.multiply(resourcePriceQuantity));
+    }
+    return salePriceOfProductResources;
   }
 
   private List<User> getAuthors(ProductRequestDto productRequestDto) {
