@@ -1,15 +1,14 @@
 package jewellery.inventory.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 import java.util.UUID;
 import jewellery.inventory.model.resource.Resource;
 import lombok.*;
 
 @Entity
+@Table(name = "purchased_resources")
 @EqualsAndHashCode
 @Getter
 @Setter
