@@ -41,18 +41,18 @@ public class GlobalExceptionHandler {
   @ExceptionHandler({MethodArgumentNotValidException.class})
   public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
     Map<String, List<String>> fieldErrorsMap = getFieldErrors(ex);
-    return createErrorResponse(HttpStatus.BAD_REQUEST, fieldErrorsMap);
+    return createErrorResponse(HttpStatus.BAD_REQUEST, fieldErrorsMap, ex);
   }
 
   @ExceptionHandler({NotFoundException.class, ResourceInUserNotFoundException.class})
   public ResponseEntity<Object> handleNotFoundException(NotFoundException ex) {
-    return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
   }
 
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   public ResponseEntity<Object> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
     String error = String.format("%s should be of type %s", ex.getName(), getRequiredTypeName(ex));
-    return createErrorResponse(HttpStatus.BAD_REQUEST, error);
+    return createErrorResponse(HttpStatus.BAD_REQUEST, error, ex);
   }
 
   @ExceptionHandler({
@@ -72,7 +72,7 @@ public class GlobalExceptionHandler {
               .map(ConstraintViolation::getMessage)
               .collect(Collectors.joining("; "));
     }
-    return createErrorResponse(HttpStatus.BAD_REQUEST, errorMessage);
+    return createErrorResponse(HttpStatus.BAD_REQUEST, errorMessage, ex);
   }
 
   @ExceptionHandler({
@@ -84,25 +84,26 @@ public class GlobalExceptionHandler {
     ProductPartOfItselfException.class
   })
   public ResponseEntity<Object> handleEntityConstraintConflict(RuntimeException ex) {
-    return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage());
+    return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), ex);
   }
 
   @ExceptionHandler({SignatureException.class, AuthenticationException.class})
   public ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex) {
-    return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), ex);
   }
 
   @ExceptionHandler({InvalidSecretKeyException.class})
   public ResponseEntity<Object> handleBadSecretKey(RuntimeException ex) {
-    return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
   }
 
-  private ResponseEntity<Object> createErrorResponse(HttpStatus status, Object error) {
+  private ResponseEntity<Object> createErrorResponse(
+      HttpStatus status, Object error, Exception ex) {
     Map<String, Object> body = new HashMap<>();
     String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT_PATTERN));
     body.put(TIMESTAMP_KEY, date);
     body.put(ERROR_KEY, error);
-    logger.error("{}", error);
+    logger.error("Error occurred: " + ex.getMessage(), ex);
     return new ResponseEntity<>(body, status);
   }
 
