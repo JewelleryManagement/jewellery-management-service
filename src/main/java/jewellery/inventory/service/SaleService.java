@@ -3,6 +3,7 @@ package jewellery.inventory.service;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
+import jewellery.inventory.dto.request.PurchasedResourceInUserRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
@@ -11,11 +12,13 @@ import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductNotSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
+import jewellery.inventory.exception.resources.ResourceIsPartOfProductException;
+import jewellery.inventory.exception.resources.ResourceSoldException;
+import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
 import jewellery.inventory.mapper.SaleMapper;
-import jewellery.inventory.model.EventType;
-import jewellery.inventory.model.Product;
-import jewellery.inventory.model.Sale;
-import jewellery.inventory.model.User;
+import jewellery.inventory.model.*;
+import jewellery.inventory.model.resource.Resource;
+import jewellery.inventory.model.resource.ResourceInProduct;
 import jewellery.inventory.repository.SaleRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
@@ -30,6 +33,7 @@ public class SaleService {
   private final SaleMapper saleMapper;
   private final ProductService productService;
   private final UserService userService;
+  private final PurchasedResourceInUserMapper purchasedResourceInUserMapper;
 
   public List<SaleResponseDto> getAllSales() {
     logger.debug("Fetching all Sales");
@@ -44,11 +48,14 @@ public class SaleService {
             saleRequestDto,
             userService.getUser(saleRequestDto.getSellerId()),
             userService.getUser(saleRequestDto.getBuyerId()),
-            getProductsFromSaleRequestDto(saleRequestDto));
+            getProductsFromSaleRequestDto(saleRequestDto),
+            getResourcesFromSaleRequestDto(saleRequestDto));
 
     throwExceptionIfProductIsSold(sale.getProducts());
+    throwExceptionIfResourceIsSold(sale.getResources());
     throwExceptionIfSellerNotProductOwner(sale.getProducts(), saleRequestDto.getSellerId());
     throwExceptionIfProductIsPartOfAnotherProduct(sale.getProducts());
+    throwExceptionIfResourceIsPartOfProduct(sale.getSeller(), sale.getResources());
 
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
@@ -156,5 +163,44 @@ public class SaleService {
     logger.info("Removing product with ID: {} from sale.", productToRemove.getId());
     products.remove(productToRemove);
     return products;
+  }
+
+  private List<PurchasedResourceInUser> getResourcesFromSaleRequestDto(
+      SaleRequestDto saleRequestDto) {
+    logger.info("Getting resources from sale request.");
+    List<PurchasedResourceInUserRequestDto> resources = saleRequestDto.getResources();
+    return resources.stream()
+        .map(purchasedResourceInUserMapper::toPurchasedResourceInUser)
+        .toList();
+  }
+
+  private void throwExceptionIfResourceIsSold(List<PurchasedResourceInUser> resources) {
+    resources.forEach(
+        resource -> {
+          if (resource.getPartOfSale() != null) {
+            throw new ResourceSoldException(resource.getId());
+          }
+        });
+  }
+
+  private void throwExceptionIfResourceIsPartOfProduct(
+      User owner, List<PurchasedResourceInUser> resources) {
+    List<Product> products = owner.getProductsOwned();
+
+    products.forEach(
+        product -> {
+          List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
+          resourcesInProduct.forEach(
+              res -> {
+                Resource resource = res.getResource();
+                resources.forEach(
+                    purchasedResource -> {
+                      if (purchasedResource.getResource().getId() == resource.getId()) {
+                        throw new ResourceIsPartOfProductException(
+                            resource.getId(), product.getId());
+                      }
+                    });
+              });
+        });
   }
 }

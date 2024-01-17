@@ -23,6 +23,8 @@ public class SaleRequestDto {
 
   @Valid @NotEmpty private List<ProductPriceDiscountRequestDto> products;
 
+  @Valid @NotEmpty private List<PurchasedResourceInUserRequestDto> resources;
+
   @NotNull
   @PastOrPresent(message = "Date must be in the past or present")
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
