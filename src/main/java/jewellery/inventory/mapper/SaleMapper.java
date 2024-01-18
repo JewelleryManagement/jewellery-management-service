@@ -9,6 +9,7 @@ import java.util.*;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
+import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.PurchasedResourceInUser;
@@ -64,9 +65,9 @@ public class SaleMapper {
     return productResponseDtos;
   }
 
-  private List<PurchasedResourceInUserResponseDto> mapAllResourcesToResponse(Sale sale) {
+  private List<ResourcesInUserResponseDto> mapAllResourcesToResponse(Sale sale) {
     return sale.getResources().stream()
-        .map(purchasedResourceInUserMapper::toPurchasedResourceInUserResponse)
+        .map(purchasedResourceInUserMapper::toResourcesInUserResponseDto)
         .toList();
   }
 
@@ -82,23 +83,27 @@ public class SaleMapper {
     BigDecimal totalDiscountAmount = BigDecimal.ZERO;
     BigDecimal totalPrice = BigDecimal.ZERO;
 
-    for (Product product : products) {
-      BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
-      BigDecimal discountRate = Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
-      BigDecimal discountAmount =
-          salePrice.multiply(discountRate.divide(getBigDecimal("100"), RoundingMode.HALF_UP));
-      totalDiscountAmount = totalDiscountAmount.add(discountAmount);
-      totalPrice = totalPrice.add(salePrice);
-    }
+    if (products.size() != 0) {
+      for (Product product : products) {
+        BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
+        BigDecimal discountRate =
+            Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
+        BigDecimal discountAmount =
+            salePrice.multiply(discountRate.divide(getBigDecimal("100"), RoundingMode.HALF_UP));
+        totalDiscountAmount = totalDiscountAmount.add(discountAmount);
+        totalPrice = totalPrice.add(salePrice);
+      }
 
-    if (PERCENTAGE.equals(calculationType) && !totalPrice.equals(BigDecimal.ZERO)) {
-      return (totalDiscountAmount.divide(totalPrice, MathContext.DECIMAL128))
-          .multiply(getBigDecimal("100"));
-    } else if (AMOUNT.equals(calculationType)) {
-      return totalPrice.subtract(totalDiscountAmount);
-    }
+      if (PERCENTAGE.equals(calculationType) && !totalPrice.equals(BigDecimal.ZERO)) {
+        return (totalDiscountAmount.divide(totalPrice, MathContext.DECIMAL128))
+            .multiply(getBigDecimal("100"));
+      } else if (AMOUNT.equals(calculationType)) {
+        return totalPrice.subtract(totalDiscountAmount);
+      }
 
-    throw new IllegalArgumentException("Invalid calculation type");
+      throw new IllegalArgumentException("Invalid calculation type");
+    }
+    return BigDecimal.ZERO;
   }
 
   private List<Product> setProductPriceAndDiscount(

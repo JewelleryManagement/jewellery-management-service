@@ -21,7 +21,7 @@ public class Sale {
   @OneToMany(mappedBy = "partOfSale")
   private List<Product> products;
 
-  @OneToMany(mappedBy = "partOfSales")
+  @OneToMany(mappedBy = "partOfSale")
   private List<PurchasedResourceInUser> resources;
 
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")

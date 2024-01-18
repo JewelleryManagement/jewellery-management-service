@@ -27,5 +27,5 @@ public class PurchasedResourceInUser {
 
   private BigDecimal discount;
 
-  @ManyToOne private String partOfSale;
+  @ManyToOne private Sale partOfSale;
 }
