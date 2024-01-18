@@ -38,7 +38,6 @@ public class ProductTestHelper {
     productRequestDto.setOwnerId(user.getId());
     productRequestDto.setDescription("This is test product");
     productRequestDto.setResourcesContent(List.of(resourceQuantityRequestDto));
-    productRequestDto.setSalePrice(getBigDecimal("10000"));
     return productRequestDto;
   }
 
@@ -55,7 +54,6 @@ public class ProductTestHelper {
     productRequestDto.setDescription("Test");
     productRequestDto.setOwnerId(user.getId());
     productRequestDto.setAuthors(List.of(user.getId()));
-    productRequestDto.setSalePrice(getBigDecimal("50"));
     productRequestDto.setResourcesContent(listOfResourcesInProduct);
 
     return productRequestDto;

@@ -51,7 +51,6 @@ public class SaleTestHelper {
       UUID productId, BigDecimal salePrice, BigDecimal discount) {
     ProductPriceDiscountRequestDto productRequest = new ProductPriceDiscountRequestDto();
     productRequest.setProductId(productId);
-    productRequest.setSalePrice(salePrice);
     productRequest.setDiscount(discount);
     return productRequest;
   }

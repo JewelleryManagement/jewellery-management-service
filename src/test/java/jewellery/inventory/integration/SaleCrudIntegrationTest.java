@@ -220,7 +220,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ProductPriceDiscountRequestDto productPriceDiscountRequestDto =
         new ProductPriceDiscountRequestDto();
     productPriceDiscountRequestDto.setProductId(productResponse.getBody().getId());
-    productPriceDiscountRequestDto.setSalePrice(SALE_TOTAL_PRICE);
     productPriceDiscountRequestDto.setDiscount(SALE_DISCOUNT);
     List<ProductPriceDiscountRequestDto> list = new ArrayList<>();
     list.add(productPriceDiscountRequestDto);

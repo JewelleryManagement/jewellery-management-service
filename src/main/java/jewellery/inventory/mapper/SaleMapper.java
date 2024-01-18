@@ -41,7 +41,7 @@ public class SaleMapper {
     Sale sale = new Sale();
     sale.setBuyer(buyer);
     sale.setSeller(seller);
-    sale.setProducts(setProductPriceAndDiscount(saleRequestDto, products));
+    sale.setProducts(setProductDiscounts(saleRequestDto, products));
     sale.setDate(saleRequestDto.getDate());
     return sale;
   }
@@ -87,11 +87,10 @@ public class SaleMapper {
     throw new IllegalArgumentException("Invalid calculation type");
   }
 
-  private List<Product> setProductPriceAndDiscount(
+  private List<Product> setProductDiscounts(
       SaleRequestDto saleRequestDto, List<Product> products) {
     for (int i = 0; i < products.size(); i++) {
-      if (saleRequestDto.getProducts().get(i).getSalePrice() != null) {
-        products.get(i).setSalePrice(saleRequestDto.getProducts().get(i).getSalePrice());
+      if (saleRequestDto.getProducts().get(i).getDiscount() != null) {
         products.get(i).setDiscount(saleRequestDto.getProducts().get(i).getDiscount());
       }
     }

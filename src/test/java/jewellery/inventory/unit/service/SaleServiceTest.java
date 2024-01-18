@@ -115,9 +115,7 @@ class SaleServiceTest {
     assertEquals(saleRequestDto.getBuyerId(), actual.getProducts().get(0).getOwner().getId());
     assertEquals(saleRequestDto.getSellerId(), actual.getSeller().getId());
     assertNotEquals(actual.getBuyer(), actual.getSeller());
-    assertNotEquals(
-        saleRequestDto.getProducts().get(0).getSalePrice(),
-        actual.getProducts().get(0).getSalePrice());
+
   }
 
   @Test
