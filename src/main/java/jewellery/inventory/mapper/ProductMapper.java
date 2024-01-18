@@ -32,7 +32,6 @@ public class ProductMapper {
     productResponseDto.setAuthors(getAuthorsResponse(product));
     productResponseDto.setDescription(product.getDescription());
     productResponseDto.setSalePrice(productPriceCalculator.calculateProductContentsPrice(product));
-   product.setSalePrice(productPriceCalculator.calculateProductContentsPrice(product));
     productResponseDto.setOwner(userMapper.toUserResponse(product.getOwner()));
     productResponseDto.setProductionNumber(product.getProductionNumber());
     productResponseDto.setCatalogNumber(product.getCatalogNumber());
