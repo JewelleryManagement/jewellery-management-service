@@ -159,25 +159,18 @@ public class ProductService implements EntityFetcher {
 
   private void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
     if (product.getContentOf() != null) {
-      logger.error("Product with ID {} is part of another product and cannot be deleted.", id);
       throw new ProductIsContentException(id);
     }
   }
 
   private void throwExceptionIfProductOwnerEqualsRecipient(Product product, UUID recipientId) {
     if (product.getOwner().getId().equals(recipientId)) {
-      logger.error(
-          "Product owner is the same as the recipient. Product ID: {}, Owner ID: {}, Recipient ID: {}",
-          product.getId(),
-          product.getOwner().getId(),
-          recipientId);
       throw new ProductOwnerEqualsRecipientException(recipientId);
     }
   }
 
   private void throwExceptionIfProductIsSold(Product product) {
     if (product.getPartOfSale() != null) {
-      logger.error("Product with ID {} is part of a sale", product.getId());
       throw new ProductIsSoldException(product.getId());
     }
   }
@@ -266,10 +259,6 @@ public class ProductService implements EntityFetcher {
               products.add(product);
               logger.debug("Added product with ID {} to the list.", productId);
             } else {
-              logger.error(
-                  "User with ID {} is not the owner of the product with ID {}.",
-                  parentProduct.getOwner().getId(),
-                  productId);
               throw new UserNotOwnerException(parentProduct.getOwner().getId(), product.getId());
             }
           });
@@ -280,7 +269,6 @@ public class ProductService implements EntityFetcher {
 
   private void throwExceptionIfProductIsPartOfItself(Product product, UUID parentId) {
     if (product.getId().equals(parentId)) {
-      logger.error("The edited product cannot be part of its content.");
       throw new ProductPartOfItselfException();
     }
   }

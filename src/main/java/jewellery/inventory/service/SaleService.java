@@ -59,8 +59,6 @@ public class SaleService {
   private void throwExceptionIfSellerNotProductOwner(List<Product> products, UUID sellerId) {
     for (Product product : products) {
       if (!product.getOwner().getId().equals(sellerId)) {
-        logger.error(
-            "Seller with ID {} is not the owner of product with ID {}", sellerId, product.getId());
         throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
       }
     }
@@ -90,7 +88,6 @@ public class SaleService {
   private void throwExceptionIfProductIsPartOfAnotherProduct(List<Product> products) {
     for (Product product : products) {
       if (product.getContentOf() != null) {
-        logger.error("Product with ID {} is part of another product.", product.getId());
         throw new ProductIsContentException(product.getId());
       }
     }
@@ -98,14 +95,12 @@ public class SaleService {
 
   private void throwExceptionIfProductIsPartOfAnotherProduct(Product product) {
     if (product.getContentOf() != null) {
-      logger.error("Product with ID {} is part of another product.", product.getId());
       throw new ProductIsContentException(product.getId());
     }
   }
 
   private void throwExceptionIfProductNotSold(Product product) {
     if (product.getPartOfSale() == null) {
-      logger.error("Product with ID {} is not sold.", product.getId());
       throw new ProductNotSoldException(product.getId());
     }
   }
@@ -113,7 +108,6 @@ public class SaleService {
   private void throwExceptionIfProductIsSold(List<Product> products) {
     for (Product product : products) {
       if (product.getPartOfSale() != null) {
-        logger.error("Product with ID {} is already sold.", product.getId());
         throw new ProductIsSoldException(product.getId());
       }
     }

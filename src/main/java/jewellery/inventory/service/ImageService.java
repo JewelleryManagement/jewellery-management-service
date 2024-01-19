@@ -131,7 +131,6 @@ public class ImageService {
 
   private static void checkForAttachedPicture(Product product) {
     if (product.getImage() == null) {
-      logger.error("No image attached for product id - {}", product.getId());
       throw new ImageNotFoundException(product.getId());
     }
   }
@@ -144,24 +143,18 @@ public class ImageService {
 
   private void checkContentType(MultipartFile file) {
     if (!isSupportedContentType(Objects.requireNonNull(file.getContentType()))) {
-      logger.error("Unsupported content type for file: {}", file.getContentType());
       throw new MultipartFileContentTypeException();
     }
   }
 
   private static void checkFileIsSelected(MultipartFile file) {
     if (file.isEmpty()) {
-      logger.error("No file selected.");
       throw new MultipartFileNotSelectedException();
     }
   }
 
   private static void checkFileSize(MultipartFile multipartFile, Integer fileSize) {
     if (multipartFile.getSize() > (long) fileSize * MB) {
-      logger.error(
-          "File size exceeds the allowed limit. File size: {} bytes, Allowed size: {} MB",
-          multipartFile.getSize(),
-          fileSize);
       throw new MultipartFileSizeException(fileSize);
     }
   }
@@ -174,10 +167,7 @@ public class ImageService {
       case "image/png" -> sb.append(FILE_NAME + ".png");
       case "image/jpg" -> sb.append(FILE_NAME + ".jpg");
       case "image/jpeg" -> sb.append(FILE_NAME + ".jpeg");
-      default -> {
-        logger.error("Unsupported content type: {}", multipartFile.getContentType());
-        throw new MultipartFileContentTypeException();
-      }
+      default -> throw new MultipartFileContentTypeException();
     }
     return Path.of(sb.toString());
   }
