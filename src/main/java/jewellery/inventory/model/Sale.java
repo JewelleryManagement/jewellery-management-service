@@ -18,8 +18,9 @@ public class Sale {
   @ManyToOne private User seller;
   @ManyToOne private User buyer;
 
-  @OneToMany
+  @OneToMany(mappedBy = "sale")
   private List<ProductPriceDiscount> products;
+
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   private LocalDate date;
 }

@@ -42,6 +42,7 @@ public class Product {
   private String catalogNumber;
   private String productionNumber;
   private String description;
+  @Column(name = "additional_price")
   private BigDecimal additionalPrice;
   @ManyToOne private Sale partOfSale;
 }

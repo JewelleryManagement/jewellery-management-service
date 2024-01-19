@@ -14,9 +14,15 @@ import java.util.UUID;
 @Table(name = "product_price_discount")
 public class ProductPriceDiscount {
   @Id @GeneratedValue private UUID id;
+
   @ManyToOne
   @JoinColumn(name = "product_id")
   private Product product;
+
+  @ManyToOne
+  @JoinColumn(name = "sale_id")
+  private Sale sale;
+
   private BigDecimal salePrice;
   private BigDecimal discount;
 }

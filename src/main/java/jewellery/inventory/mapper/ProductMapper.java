@@ -20,7 +20,6 @@ public class ProductMapper {
 
   private final UserMapper userMapper;
   private final ResourceMapper resourceMapper;
-  private final ProductPriceCalculator productPriceCalculator;
 
   public ProductResponseDto mapToProductResponseDto(Product product) {
 
@@ -31,7 +30,7 @@ public class ProductMapper {
     }
     productResponseDto.setAuthors(getAuthorsResponse(product));
     productResponseDto.setDescription(product.getDescription());
-    productResponseDto.setSalePrice(productPriceCalculator.calculateProductContentsPrice(product));
+    productResponseDto.setSalePrice(ProductPriceCalculator.calculateTotalPrice(product));
     productResponseDto.setOwner(userMapper.toUserResponse(product.getOwner()));
     productResponseDto.setProductionNumber(product.getProductionNumber());
     productResponseDto.setCatalogNumber(product.getCatalogNumber());
