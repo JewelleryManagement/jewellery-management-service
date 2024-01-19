@@ -12,10 +12,7 @@ import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductNotSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.SaleMapper;
-import jewellery.inventory.model.EventType;
-import jewellery.inventory.model.Product;
-import jewellery.inventory.model.Sale;
-import jewellery.inventory.model.User;
+import jewellery.inventory.model.*;
 import jewellery.inventory.repository.SaleRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
@@ -56,8 +53,10 @@ public class SaleService {
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
 
-  private void throwExceptionIfSellerNotProductOwner(List<Product> products, UUID sellerId) {
-    for (Product product : products) {
+  private void throwExceptionIfSellerNotProductOwner(
+      List<ProductPriceDiscount> products, UUID sellerId) {
+    for (ProductPriceDiscount productPriceDiscount : products) {
+      Product product = productPriceDiscount.getProduct();
       if (!product.getOwner().getId().equals(sellerId)) {
         logger.error(
             "Seller with ID {} is not the owner of product with ID {}", sellerId, product.getId());
@@ -87,10 +86,10 @@ public class SaleService {
     return saleRepository.findById(saleId).orElseThrow(() -> new SaleNotFoundException(saleId));
   }
 
-  private void throwExceptionIfProductIsPartOfAnotherProduct(List<Product> products) {
-    for (Product product : products) {
+  private void throwExceptionIfProductIsPartOfAnotherProduct(List<ProductPriceDiscount> products) {
+    for (ProductPriceDiscount productPriceDiscount : products) {
+      Product product = productPriceDiscount.getProduct();
       if (product.getContentOf() != null) {
-        logger.error("Product with ID {} is part of another product.", product.getId());
         throw new ProductIsContentException(product.getId());
       }
     }
@@ -110,28 +109,34 @@ public class SaleService {
     }
   }
 
-  private void throwExceptionIfProductIsSold(List<Product> products) {
-    for (Product product : products) {
+  private void throwExceptionIfProductIsSold(List<ProductPriceDiscount> products) {
+    for (ProductPriceDiscount productPriceDiscount : products) {
+      Product product = productPriceDiscount.getProduct();
       if (product.getPartOfSale() != null) {
-        logger.error("Product with ID {} is already sold.", product.getId());
         throw new ProductIsSoldException(product.getId());
       }
     }
   }
 
-  private void updateProductOwnersAndSale(List<Product> products, UUID buyerId, Sale sale) {
+  private void updateProductOwnersAndSale(
+      List<ProductPriceDiscount> products, UUID buyerId, Sale sale) {
     User newOwner = userService.getUser(buyerId);
-    for (Product product : products) {
+
+    for (ProductPriceDiscount productPriceDiscount : products) {
+      Product product = productPriceDiscount.getProduct();
       productService.updateProductOwnerAndSale(product, newOwner, sale);
     }
   }
 
-  private List<Product> getProductsFromSaleRequestDto(SaleRequestDto saleRequestDto) {
-    logger.info("Getting products from sale request.");
+  private List<ProductPriceDiscount> getProductsFromSaleRequestDto(SaleRequestDto saleRequestDto) {
     return saleRequestDto.getProducts().stream()
         .map(
-            productPriceDiscountRequestDto ->
-                productService.getProduct(productPriceDiscountRequestDto.getProductId()))
+            productDto -> {
+              ProductPriceDiscount productPriceDiscount = new ProductPriceDiscount();
+              productPriceDiscount.setProduct(productService.getProduct(productDto.getProductId()));
+              productPriceDiscount.setDiscount(productDto.getDiscount());
+              return productPriceDiscount;
+            })
         .toList();
   }
 
@@ -152,9 +157,11 @@ public class SaleService {
         saleMapper.mapEntityToResponseDto(sale), productToReturn);
   }
 
-  private List<Product> removeProductFromSale(List<Product> products, Product productToRemove) {
+  private List<ProductPriceDiscount> removeProductFromSale(
+      List<ProductPriceDiscount> products, Product productToRemove) {
+    products.removeIf(
+        productPriceDiscount -> productPriceDiscount.getProduct().equals(productToRemove));
     logger.info("Removing product with ID: {} from sale.", productToRemove.getId());
-    products.remove(productToRemove);
     return products;
   }
 }

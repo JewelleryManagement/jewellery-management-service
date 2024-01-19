@@ -42,8 +42,6 @@ public class Product {
   private String catalogNumber;
   private String productionNumber;
   private String description;
-  private BigDecimal salePrice;
   private BigDecimal additionalPrice;
-  private BigDecimal discount;
   @ManyToOne private Sale partOfSale;
 }
