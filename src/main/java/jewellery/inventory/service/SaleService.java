@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
-import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.PurchasedResourceInUserRequestDto;
-import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
@@ -15,24 +13,24 @@ import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductNotSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
-import jewellery.inventory.exception.resources.ResourceIsPartOfProductException;
 import jewellery.inventory.exception.resources.ResourceSoldException;
 import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
-import jewellery.inventory.model.resource.Resource;
-import jewellery.inventory.model.resource.ResourceInProduct;
+import jewellery.inventory.repository.PurchasedResourceInUserRepository;
 import jewellery.inventory.repository.SaleRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class SaleService {
   private static final Logger logger = LogManager.getLogger(SaleService.class);
   private final SaleRepository saleRepository;
+  private final PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   private final SaleMapper saleMapper;
   private final ProductService productService;
   private final UserService userService;
@@ -45,6 +43,7 @@ public class SaleService {
   }
 
   @LogCreateEvent(eventType = EventType.SALE_CREATE)
+  @Transactional
   public SaleResponseDto createSale(SaleRequestDto saleRequestDto) {
     Sale sale =
         saleMapper.mapRequestToEntity(
@@ -63,6 +62,7 @@ public class SaleService {
 
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
+    setResourcesAsPartOfSale(createdSale);
     logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
@@ -179,9 +179,10 @@ public class SaleService {
     logger.info("Getting resources from sale request.");
     List<PurchasedResourceInUserRequestDto> resources = saleRequestDto.getResources();
     if (resources != null) {
-      return resources.stream()
-          .map(purchasedResourceInUserMapper::toPurchasedResourceInUser)
-          .toList();
+      List<PurchasedResourceInUser> purchasedResourceInUsers = resources.stream()
+              .map(purchasedResourceInUserMapper::toPurchasedResourceInUser)
+              .toList();
+      return purchasedResourceInUserRepository.saveAll(purchasedResourceInUsers);
     }
     return new ArrayList<>();
   }
@@ -195,9 +196,10 @@ public class SaleService {
         });
   }
 
-  private List<PurchasedResourceInUser> updatePurchasedResourcesInUser(SaleRequestDto sale) {
-    // TODO:
-    return null;
+  private List<PurchasedResourceInUser> setResourcesAsPartOfSale(Sale sale) {
+    List<PurchasedResourceInUser> resources = sale.getResources();
+    resources.forEach(resource -> resource.setPartOfSale(sale));
+    return purchasedResourceInUserRepository.saveAll(resources);
   }
 
   private void throwExceptionIfResourceIsPartOfProduct(

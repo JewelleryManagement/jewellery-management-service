@@ -44,16 +44,14 @@ public class ResourceService implements EntityFetcher {
   }
 
   public ResourceResponseDto getResource(UUID id) {
-    Resource resource =
-        resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
+    Resource resource = getResourceById(id);
     logger.info("Resource fetched successfully. Resource ID: {}", resource.getId());
     return resourceMapper.toResourceResponse(resource);
   }
 
   @LogDeleteEvent(eventType = EventType.RESOURCE_DELETE)
   public void deleteResourceById(UUID id) {
-    Resource resource =
-        resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
+    Resource resource = getResourceById(id);
     resourceRepository.delete(resource);
     logger.info("Resource deleted successfully. Resource ID: {}", id);
   }
@@ -97,5 +95,9 @@ public class ResourceService implements EntityFetcher {
     ids = Arrays.stream(ids).filter(UUID.class::isInstance).toArray();
     Resource resource = resourceRepository.findById((UUID) ids[0]).orElse(null);
     return resourceMapper.toResourceResponse(resource);
+  }
+
+  public Resource getResourceById(UUID id) {
+    return resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
   }
 }

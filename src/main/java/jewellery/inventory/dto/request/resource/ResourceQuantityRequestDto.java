@@ -11,7 +11,6 @@ import lombok.Setter;
 @Setter
 @RequiredArgsConstructor
 public class ResourceQuantityRequestDto {
-  private UUID id;
-
+  private UUID resourceId;
   @Positive private BigDecimal quantity;
 }

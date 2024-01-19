@@ -6,15 +6,17 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.stream.Collectors;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
-import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.PurchasedResourceInUser;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
+import jewellery.inventory.model.resource.Resource;
+import jewellery.inventory.service.ResourceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +26,7 @@ public class SaleMapper {
   private final UserMapper userMapper;
   private final ProductMapper productMapper;
   private final PurchasedResourceInUserMapper purchasedResourceInUserMapper;
+  private final ResourceService resourceService;
   private static final String AMOUNT = "amount";
   private static final String PERCENTAGE = "percentage";
 
@@ -51,7 +54,7 @@ public class SaleMapper {
     sale.setBuyer(buyer);
     sale.setSeller(seller);
     sale.setProducts(setProductPriceAndDiscount(saleRequestDto, products));
-    sale.setResources(setResourcePriceAndDiscount(saleRequestDto, resources));
+    sale.setResources(setResourcesFields(saleRequestDto, resources));
     sale.setDate(saleRequestDto.getDate());
     return sale;
   }
@@ -65,10 +68,10 @@ public class SaleMapper {
     return productResponseDtos;
   }
 
-  private List<ResourcesInUserResponseDto> mapAllResourcesToResponse(Sale sale) {
+  private List<PurchasedResourceInUserResponseDto> mapAllResourcesToResponse(Sale sale) {
     return sale.getResources().stream()
-        .map(purchasedResourceInUserMapper::toResourcesInUserResponseDto)
-        .toList();
+        .map(purchasedResourceInUserMapper::toPurchasedResourceInUserResponseDto)
+        .collect(Collectors.toList());
   }
 
   private BigDecimal getTotalPriceFromEntity(List<Product> products) {
@@ -117,12 +120,19 @@ public class SaleMapper {
     return products;
   }
 
-  private List<PurchasedResourceInUser> setResourcePriceAndDiscount(
+  private List<PurchasedResourceInUser> setResourcesFields(
       SaleRequestDto saleRequestDto, List<PurchasedResourceInUser> resources) {
     for (int i = 0; i < resources.size(); i++) {
-      if (saleRequestDto.getResources().get(i).getSalePrice() != null) {
+      if (saleRequestDto.getResources() != null) {
+        Resource resource =
+            resourceService.getResourceById(
+                saleRequestDto.getResources().get(i).getResource().getResourceId());
+        resources.get(i).setResource(resource);
         resources.get(i).setSalePrice(saleRequestDto.getResources().get(i).getSalePrice());
         resources.get(i).setDiscount(saleRequestDto.getResources().get(i).getDiscount());
+        resources
+            .get(i)
+            .setQuantity(saleRequestDto.getResources().get(i).getResource().getQuantity());
       }
     }
     return resources;

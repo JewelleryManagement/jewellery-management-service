@@ -1,10 +1,19 @@
 package jewellery.inventory.dto.response;
 
 import java.math.BigDecimal;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
+@SuperBuilder
+@NoArgsConstructor
 public class PurchasedResourceInUserResponseDto {
 
-  private ResourcesInUserResponseDto resources;
+  private ResourceQuantityResponseDto resource;
   private BigDecimal salePrice;
   private BigDecimal discount;
 }
