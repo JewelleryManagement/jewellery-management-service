@@ -53,7 +53,11 @@ public class SaleMapper {
 
   public BigDecimal getTotalPriceFromEntities(List<ProductPriceDiscount> productResponseDtoList) {
     return productResponseDtoList.stream()
-        .map(ProductPriceDiscount::getSalePrice)
+        .map(
+            productPriceDiscount ->
+                productMapper
+                    .mapToProductResponseDto(productPriceDiscount.getProduct())
+                    .getSalePrice())
         .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
@@ -63,7 +67,8 @@ public class SaleMapper {
     BigDecimal totalPrice = BigDecimal.ZERO;
 
     for (ProductPriceDiscount product : products) {
-      BigDecimal salePrice = product.getSalePrice();
+      BigDecimal salePrice = productMapper
+              .mapToProductResponseDto(product.getProduct()).getSalePrice();
       BigDecimal discountRate = product.getDiscount();
       BigDecimal discountAmount = salePrice.multiply(discountRate.divide(getBigDecimal("100")));
       totalDiscountAmount = totalDiscountAmount.add(discountAmount);
@@ -71,8 +76,7 @@ public class SaleMapper {
     }
 
     if (PERCENTAGE.equals(calculationType)) {
-      return (totalDiscountAmount.divide(totalPrice, MathContext.DECIMAL128))
-          .multiply(getBigDecimal("100"));
+     return totalDiscountAmount.divide(totalPrice).multiply(getBigDecimal("100"));
     } else if (AMOUNT.equals(calculationType)) {
       return totalPrice.subtract(totalDiscountAmount);
     }
