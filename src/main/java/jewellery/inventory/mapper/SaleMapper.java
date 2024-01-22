@@ -128,7 +128,7 @@ public class SaleMapper {
             resourceService.getResourceById(
                 saleRequestDto.getResources().get(i).getResource().getResourceId());
         resources.get(i).setResource(resource);
-        resources.get(i).setSalePrice(saleRequestDto.getResources().get(i).getSalePrice());
+        resources.get(i).setSalePrice(resource.getPricePerQuantity());
         resources.get(i).setDiscount(saleRequestDto.getResources().get(i).getDiscount());
         resources
             .get(i)

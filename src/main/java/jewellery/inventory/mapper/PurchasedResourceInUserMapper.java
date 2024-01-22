@@ -8,6 +8,8 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface PurchasedResourceInUserMapper {
+
+  @Mapping(source = "resource.quantity", target = "quantity")
   PurchasedResourceInUser toPurchasedResourceInUser(
       PurchasedResourceInUserRequestDto purchasedResourceInUserRequestDto);
 

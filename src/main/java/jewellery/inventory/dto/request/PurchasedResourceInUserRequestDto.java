@@ -16,7 +16,5 @@ public class PurchasedResourceInUserRequestDto {
 
   @NotNull private ResourceQuantityRequestDto resource;
 
-  @Positive private BigDecimal salePrice;
-
   @Positive private BigDecimal discount;
 }

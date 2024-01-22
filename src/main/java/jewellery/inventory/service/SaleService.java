@@ -13,7 +13,6 @@ import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductNotSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
-import jewellery.inventory.exception.resources.ResourceSoldException;
 import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
@@ -54,11 +53,8 @@ public class SaleService {
             getResourcesFromSaleRequestDto(saleRequestDto));
 
     throwExceptionIfProductIsSold(sale.getProducts());
-    throwExceptionIfResourceIsSold(sale.getResources());
     throwExceptionIfSellerNotProductOwner(sale.getProducts(), saleRequestDto.getSellerId());
-    // TODO: resource owner exception
     throwExceptionIfProductIsPartOfAnotherProduct(sale.getProducts());
-    throwExceptionIfResourceIsPartOfProduct(sale.getSeller(), sale.getResources());
 
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
@@ -179,48 +175,16 @@ public class SaleService {
     logger.info("Getting resources from sale request.");
     List<PurchasedResourceInUserRequestDto> resources = saleRequestDto.getResources();
     if (resources != null) {
-      List<PurchasedResourceInUser> purchasedResourceInUsers = resources.stream()
-              .map(purchasedResourceInUserMapper::toPurchasedResourceInUser)
-              .toList();
+      List<PurchasedResourceInUser> purchasedResourceInUsers =
+          resources.stream().map(purchasedResourceInUserMapper::toPurchasedResourceInUser).toList();
       return purchasedResourceInUserRepository.saveAll(purchasedResourceInUsers);
     }
     return new ArrayList<>();
   }
 
-  private void throwExceptionIfResourceIsSold(List<PurchasedResourceInUser> resources) {
-    resources.forEach(
-        resource -> {
-          if (resource.getPartOfSale() != null) {
-            throw new ResourceSoldException(resource.getId());
-          }
-        });
-  }
-
-  private List<PurchasedResourceInUser> setResourcesAsPartOfSale(Sale sale) {
+  private void setResourcesAsPartOfSale(Sale sale) {
     List<PurchasedResourceInUser> resources = sale.getResources();
     resources.forEach(resource -> resource.setPartOfSale(sale));
-    return purchasedResourceInUserRepository.saveAll(resources);
-  }
-
-  private void throwExceptionIfResourceIsPartOfProduct(
-      User owner, List<PurchasedResourceInUser> resources) {
-    // TODO:
-    //    List<Product> products = owner.getProductsOwned();
-    //
-    //    products.forEach(
-    //        product -> {
-    //          List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
-    //          resourcesInProduct.forEach(
-    //              res -> {
-    //                Resource resource = res.getResource();
-    //                resources.forEach(
-    //                    purchasedResource -> {
-    //                      if (purchasedResource.getResource().getId() == resource.getId()) {
-    //                        throw new ResourceIsPartOfProductException(
-    //                            resource.getId(), product.getId());
-    //                      }
-    //                    });
-    //              });
-    //        });
+    purchasedResourceInUserRepository.saveAll(resources);
   }
 }
