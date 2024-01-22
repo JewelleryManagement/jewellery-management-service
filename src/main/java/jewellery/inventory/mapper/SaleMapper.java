@@ -2,7 +2,6 @@ package jewellery.inventory.mapper;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
-import java.math.RoundingMode;
 import java.util.*;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -54,11 +53,7 @@ public class SaleMapper {
 
   public BigDecimal getTotalPriceFromEntities(List<ProductPriceDiscount> productResponseDtoList) {
     return productResponseDtoList.stream()
-        .map(
-            productPriceDiscount ->
-                productMapper
-                    .mapToProductResponseDto(productPriceDiscount.getProduct())
-                    .getSalePrice())
+        .map(ProductPriceDiscount::getSalePrice)
         .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
@@ -68,13 +63,9 @@ public class SaleMapper {
     BigDecimal totalPrice = BigDecimal.ZERO;
 
     for (ProductPriceDiscount product : products) {
-      BigDecimal salePrice =
-          Optional.ofNullable(
-                  productMapper.mapToProductResponseDto(product.getProduct()).getSalePrice())
-              .orElse(BigDecimal.ZERO);
-      BigDecimal discountRate = Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
-      BigDecimal discountAmount =
-          salePrice.multiply(discountRate.divide(getBigDecimal("100"), RoundingMode.HALF_UP));
+      BigDecimal salePrice = product.getSalePrice();
+      BigDecimal discountRate = product.getDiscount();
+      BigDecimal discountAmount = salePrice.multiply(discountRate.divide(getBigDecimal("100")));
       totalDiscountAmount = totalDiscountAmount.add(discountAmount);
       totalPrice = totalPrice.add(salePrice);
     }
