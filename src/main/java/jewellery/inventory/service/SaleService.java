@@ -50,7 +50,7 @@ public class SaleService {
 
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
-    productPriceDiscountService.crateProductPriceDiscount(saleRequestDto,createdSale);
+    productPriceDiscountService.createProductPriceDiscount(saleRequestDto, createdSale);
     logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
@@ -78,7 +78,7 @@ public class SaleService {
     sale.setProducts(removeProductFromSale(sale.getProducts(), productToReturn));
 
     productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
-
+    productPriceDiscountService.deleteProductPriceDiscount(sale.getId(), productToReturn.getId());
     deleteSaleIfProductsIsEmpty(sale);
     logger.info("Product returned successfully. Product ID: {}", productId);
     return validateSaleAfterReturnProduct(sale, productToReturn);
@@ -146,8 +146,10 @@ public class SaleService {
     if (sale.getProducts().isEmpty()) {
       logger.info("Deleting sale with ID: {} since the products list is empty.", sale.getId());
       saleRepository.deleteById(sale.getId());
-    } else saleRepository.save(sale);
-    logger.info("Saving sale with ID: {} since the products list is not empty.", sale.getId());
+    } else {
+      logger.info("Saving sale with ID: {} since the products list is not empty.", sale.getId());
+      saleRepository.save(sale);
+    }
   }
 
   private ProductReturnResponseDto validateSaleAfterReturnProduct(

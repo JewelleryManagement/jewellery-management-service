@@ -74,7 +74,7 @@ public class ProductTestHelper {
     testProduct.setCatalogNumber("2");
     testProduct.setOwner(user);
     testProduct.setDescription("This is Test Product");
-    testProduct.setSalePrice(getBigDecimal("1000"));
+   // testProduct.setSalePrice(getBigDecimal("1000"));
     testProduct.setResourcesContent(List.of(getResourceInProduct(pearl)));
     testProduct.setProductsContent(null);
     testProduct.setContentOf(null);
@@ -95,7 +95,7 @@ public class ProductTestHelper {
     productResponseDto.setPartOfSale(null);
     productResponseDto.setCatalogNumber("Catalog Number");
     productResponseDto.setProductionNumber("Production Number");
-    productResponseDto.setDiscount(BigDecimal.ZERO);
+   // productResponseDto.setDiscount(BigDecimal.ZERO);
     return productResponseDto;
   }
 

@@ -52,14 +52,14 @@ public class SaleMapper {
         .toList();
   }
 
-  private BigDecimal getTotalPriceFromEntities(List<ProductPriceDiscount> productResponseDtoList) {
-    BigDecimal totalPrice = BigDecimal.ZERO;
-    for (ProductPriceDiscount productPriceDiscount : productResponseDtoList) {
-      BigDecimal productSalePrice =
-          productMapper.mapToProductResponseDto(productPriceDiscount.getProduct()).getSalePrice();
-      totalPrice = totalPrice.add(productSalePrice);
-    }
-    return totalPrice;
+  public BigDecimal getTotalPriceFromEntities(List<ProductPriceDiscount> productResponseDtoList) {
+    return productResponseDtoList.stream()
+        .map(
+            productPriceDiscount ->
+                productMapper
+                    .mapToProductResponseDto(productPriceDiscount.getProduct())
+                    .getSalePrice())
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
   private BigDecimal calculateDiscount(
