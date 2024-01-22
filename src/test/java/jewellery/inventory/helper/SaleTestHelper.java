@@ -33,7 +33,7 @@ public class SaleTestHelper {
     sale.setId(UUID.randomUUID());
     sale.setSeller(seller);
     sale.setBuyer(buyer);
-    sale.setProducts(products);
+   // sale.setProducts(products);
     sale.setDate(LocalDate.now());
     return sale;
   }
