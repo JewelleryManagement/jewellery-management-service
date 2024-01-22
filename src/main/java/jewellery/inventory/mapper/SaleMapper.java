@@ -1,7 +1,7 @@
 package jewellery.inventory.mapper;
 
+import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.*;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -11,8 +11,6 @@ import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 
 @Component
 @RequiredArgsConstructor
