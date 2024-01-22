@@ -25,5 +25,4 @@ public class ProductResponseDto {
   private UUID partOfSale;
   private String catalogNumber;
   private String productionNumber;
-  private BigDecimal discount;
 }

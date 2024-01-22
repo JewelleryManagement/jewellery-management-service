@@ -27,6 +27,7 @@ public class SaleService {
   private final SaleMapper saleMapper;
   private final ProductService productService;
   private final UserService userService;
+  private final ProductPriceDiscountService productPriceDiscountService;
 
   public List<SaleResponseDto> getAllSales() {
     logger.debug("Fetching all Sales");
@@ -49,6 +50,7 @@ public class SaleService {
 
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
+    productPriceDiscountService.crateProductPriceDiscount(saleRequestDto,createdSale);
     logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
