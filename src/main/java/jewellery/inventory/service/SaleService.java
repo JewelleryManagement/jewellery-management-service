@@ -50,7 +50,7 @@ public class SaleService {
 
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
-    productPriceDiscountService.createProductPriceDiscount(saleRequestDto, createdSale);
+    createdSale.setProducts(productPriceDiscountService.createProductPriceDiscount(saleRequestDto, createdSale));
     logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
