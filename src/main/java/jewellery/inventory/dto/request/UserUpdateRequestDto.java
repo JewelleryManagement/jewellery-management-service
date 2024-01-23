@@ -17,7 +17,7 @@ public class UserUpdateRequestDto {
   private static final String NAME_PATTERN_VALIDATION_MSG =
       "Name must only contain alphanumeric characters and underscores, and no consecutive underscores";
 
-  private static final String NAME_REGEX = "^(?!.*__)[\\w]*$";
+  private static final String NAME_REGEX = "^(?!.*__)[\\p{L}\\d_]*$";
 
   @NotBlank(message = "First name must not be blank, empty or null")
   @Size(min = 3, max = 50, message = "First name must be between 3 and 50 characters")
