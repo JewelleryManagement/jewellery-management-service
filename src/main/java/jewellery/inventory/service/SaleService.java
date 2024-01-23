@@ -101,10 +101,7 @@ public class SaleService {
     PurchasedResourceInUser resourceToReturn = getPurchasedResource(resourceId, saleId);
 
     sale.setResources(removeResourceFromSale(sale.getResources(), resourceToReturn));
-
-    ResourceInUser resourceInUser =
-        resourceInUserService.getResourceInUser(sale.getSeller(), resourceToReturn.getResource());
-    resourceInUser.setQuantity(resourceToReturn.getQuantity());
+    returnResourceFromSaleToUser(sale, resourceToReturn);
 
     purchasedResourceInUserRepository.delete(resourceToReturn);
 
@@ -240,5 +237,11 @@ public class SaleService {
     logger.info("Removing resource with ID: {} from sale.", resourceToRemove.getResource().getId());
     resources.remove(resourceToRemove);
     return resources;
+  }
+
+  private void returnResourceFromSaleToUser(Sale sale, PurchasedResourceInUser resourceToReturn) {
+    ResourceInUser resourceInUser =
+            resourceInUserService.getResourceInUser(sale.getSeller(), resourceToReturn.getResource());
+    resourceInUser.setQuantity(resourceInUser.getQuantity().add(resourceToReturn.getQuantity()));
   }
 }
