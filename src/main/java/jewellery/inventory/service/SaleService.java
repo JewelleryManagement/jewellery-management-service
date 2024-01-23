@@ -1,5 +1,6 @@
 package jewellery.inventory.service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -8,12 +9,15 @@ import jewellery.inventory.dto.request.PurchasedResourceInUserRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
+import jewellery.inventory.exception.not_found.ResourceNotSoldException;
 import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductNotSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
+import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.PurchasedResourceInUserRepository;
@@ -31,6 +35,7 @@ public class SaleService {
   private final SaleRepository saleRepository;
   private final PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   private final SaleMapper saleMapper;
+  private final ResourceMapper resourceMapper;
   private final ProductService productService;
   private final ResourceInUserService resourceInUserService;
   private final UserService userService;
@@ -87,9 +92,29 @@ public class SaleService {
 
     productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
 
-    deleteSaleIfProductsIsEmpty(sale);
+    deleteSaleIfProductsAndResourcesAreEmpty(sale);
     logger.info("Product returned successfully. Product ID: {}", productId);
     return validateSaleAfterReturnProduct(sale, productToReturn);
+  }
+
+  @LogCreateEvent(eventType = EventType.SALE_RETURN_RESOURCE)
+  @Transactional
+  public ResourceReturnResponseDto returnResource(UUID saleId, UUID resourceId) {
+    Sale sale = getSale(saleId);
+    PurchasedResourceInUser resourceToReturn = getPurchasedResource(resourceId, saleId);
+
+    sale.setResources(removeResourceFromSale(sale.getResources(), resourceToReturn));
+
+    ResourceInUser resourceInUser =
+        resourceInUserService.getResourceInUser(sale.getSeller(), resourceToReturn.getResource());
+    resourceInUser.setQuantity(resourceToReturn.getQuantity());
+
+    purchasedResourceInUserRepository.delete(resourceToReturn);
+
+    deleteSaleIfProductsAndResourcesAreEmpty(sale);
+    logger.info("Resource returned successfully. Resource ID: {}", resourceId);
+
+    return validateSaleAfterReturnResource(sale, resourceToReturn);
   }
 
   private Sale getSale(UUID saleId) {
@@ -149,8 +174,8 @@ public class SaleService {
     return products;
   }
 
-  private void deleteSaleIfProductsIsEmpty(Sale sale) {
-    if (sale.getProducts().isEmpty()) {
+  private void deleteSaleIfProductsAndResourcesAreEmpty(Sale sale) {
+    if (sale.getProducts().isEmpty() && sale.getResources().isEmpty()) {
       logger.info("Deleting sale with ID: {} since the products list is empty.", sale.getId());
       saleRepository.deleteById(sale.getId());
     } else saleRepository.save(sale);
@@ -159,11 +184,27 @@ public class SaleService {
 
   private ProductReturnResponseDto validateSaleAfterReturnProduct(
       Sale sale, Product productToReturn) {
-    if (sale.getProducts().isEmpty()) {
+    if (sale.getProducts().isEmpty() && sale.getResources().isEmpty()) {
       return productService.getProductReturnResponseDto(null, productToReturn);
     }
     return productService.getProductReturnResponseDto(
         saleMapper.mapEntityToResponseDto(sale), productToReturn);
+  }
+
+  private ResourceReturnResponseDto validateSaleAfterReturnResource(
+          Sale sale, PurchasedResourceInUser resourceToReturn) {
+    if (sale.getResources().isEmpty() && sale.getProducts().isEmpty()) {
+      return ResourceReturnResponseDto.builder()
+              .returnedResource(resourceMapper.toResourceResponse(resourceToReturn.getResource()))
+              .saleAfter(null)
+              .date(LocalDate.now())
+              .build();
+    }
+    return ResourceReturnResponseDto.builder()
+            .returnedResource(resourceMapper.toResourceResponse(resourceToReturn.getResource()))
+            .saleAfter(saleMapper.mapEntityToResponseDto(sale))
+            .date(LocalDate.now())
+            .build();
   }
 
   private List<Product> removeProductFromSale(List<Product> products, Product productToRemove) {
@@ -196,5 +237,18 @@ public class SaleService {
           resourceInUserService.getResourceInUser(sale.getSeller(), resource.getResource());
       resourceInUserService.removeQuantityFromResource(resourceInUser, resource.getQuantity());
     }
+  }
+
+  private PurchasedResourceInUser getPurchasedResource(UUID resourceId, UUID saleId) {
+    return purchasedResourceInUserRepository
+        .findByResourceIdAndPartOfSaleId(resourceId, saleId)
+        .orElseThrow(() -> new ResourceNotSoldException(resourceId, saleId));
+  }
+
+  private List<PurchasedResourceInUser> removeResourceFromSale(
+      List<PurchasedResourceInUser> resources, PurchasedResourceInUser resourceToRemove) {
+    logger.info("Removing resource with ID: {} from sale.", resourceToRemove.getResource().getId());
+    resources.remove(resourceToRemove);
+    return resources;
   }
 }

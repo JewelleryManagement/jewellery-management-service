@@ -7,6 +7,7 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
 import jewellery.inventory.service.SaleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -37,5 +38,14 @@ public class SaleController {
   @PutMapping("/return-product/{productId}")
   public ProductReturnResponseDto returnProduct(@PathVariable("productId") UUID productId) {
     return saleService.returnProduct(productId);
+  }
+
+  @Operation(summary = "Return of a sold resource")
+  @ResponseStatus(HttpStatus.OK)
+  @PutMapping("/{saleId}/return-resource/{resourceId}")
+  public ResourceReturnResponseDto returnResource(
+          @PathVariable("saleId") UUID saleId,
+          @PathVariable("resourceId") UUID resourceId) {
+    return saleService.returnResource(saleId, resourceId);
   }
 }
