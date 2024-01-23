@@ -140,7 +140,7 @@ public class ResourceInUserService implements EntityFetcher {
     return null;
   }
 
-  private ResourceInUser getResourceInUser(User user, Resource resource) {
+  public ResourceInUser getResourceInUser(User user, Resource resource) {
     logger.debug("Getting resource in user. User: {}, Resource: {}", user, resource);
     return findResourceInUser(user, resource.getId())
         .orElseGet(() -> createAndAddNewResourceInUser(user, resource, BigDecimal.ZERO));
@@ -156,7 +156,7 @@ public class ResourceInUserService implements EntityFetcher {
     return resourceInUser;
   }
 
-  private ResourceInUser removeQuantityFromResource(
+  public ResourceInUser removeQuantityFromResource(
       ResourceInUser resourceInUser, BigDecimal quantityToRemove) {
 
     BigDecimal totalQuantity = resourceInUser.getQuantity();

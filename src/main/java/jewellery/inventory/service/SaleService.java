@@ -32,6 +32,7 @@ public class SaleService {
   private final PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   private final SaleMapper saleMapper;
   private final ProductService productService;
+  private final ResourceInUserService resourceInUserService;
   private final UserService userService;
   private final PurchasedResourceInUserMapper purchasedResourceInUserMapper;
 
@@ -58,6 +59,7 @@ public class SaleService {
 
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
+    removeQuantityFromResourcesInUser(sale);
     setResourcesAsPartOfSale(createdSale);
     logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
     return saleMapper.mapEntityToResponseDto(createdSale);
@@ -186,5 +188,13 @@ public class SaleService {
     List<PurchasedResourceInUser> resources = sale.getResources();
     resources.forEach(resource -> resource.setPartOfSale(sale));
     purchasedResourceInUserRepository.saveAll(resources);
+  }
+
+  private void removeQuantityFromResourcesInUser(Sale sale) {
+    for (PurchasedResourceInUser resource : sale.getResources()) {
+      ResourceInUser resourceInUser =
+          resourceInUserService.getResourceInUser(sale.getSeller(), resource.getResource());
+      resourceInUserService.removeQuantityFromResource(resourceInUser, resource.getQuantity());
+    }
   }
 }
