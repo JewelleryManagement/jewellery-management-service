@@ -98,7 +98,7 @@ public class SaleMapper {
     BigDecimal totalDiscountAmount = BigDecimal.ZERO;
     BigDecimal totalPrice = BigDecimal.ZERO;
 
-    if (products.size() != 0) {
+    if (!products.isEmpty()) {
       for (Product product : products) {
         BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
         BigDecimal discountRate =
@@ -110,7 +110,7 @@ public class SaleMapper {
       }
     }
 
-    if (resources.size() != 0) {
+    if (!resources.isEmpty()) {
       for (PurchasedResourceInUser resource : resources) {
         BigDecimal salePrice =
             Optional.ofNullable(resource.getResource().getPricePerQuantity())
