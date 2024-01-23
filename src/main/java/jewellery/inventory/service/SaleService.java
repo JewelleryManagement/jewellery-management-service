@@ -1,6 +1,5 @@
 package jewellery.inventory.service;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -17,7 +16,6 @@ import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductNotSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
-import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.PurchasedResourceInUserRepository;
@@ -35,7 +33,6 @@ public class SaleService {
   private final SaleRepository saleRepository;
   private final PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   private final SaleMapper saleMapper;
-  private final ResourceMapper resourceMapper;
   private final ProductService productService;
   private final ResourceInUserService resourceInUserService;
   private final UserService userService;
@@ -192,19 +189,12 @@ public class SaleService {
   }
 
   private ResourceReturnResponseDto validateSaleAfterReturnResource(
-          Sale sale, PurchasedResourceInUser resourceToReturn) {
+      Sale sale, PurchasedResourceInUser resourceToReturn) {
     if (sale.getResources().isEmpty() && sale.getProducts().isEmpty()) {
-      return ResourceReturnResponseDto.builder()
-              .returnedResource(resourceMapper.toResourceResponse(resourceToReturn.getResource()))
-              .saleAfter(null)
-              .date(LocalDate.now())
-              .build();
+      return saleMapper.mapToResourceReturnResponseDto(resourceToReturn, null);
     }
-    return ResourceReturnResponseDto.builder()
-            .returnedResource(resourceMapper.toResourceResponse(resourceToReturn.getResource()))
-            .saleAfter(saleMapper.mapEntityToResponseDto(sale))
-            .date(LocalDate.now())
-            .build();
+    return saleMapper.mapToResourceReturnResponseDto(
+        resourceToReturn, saleMapper.mapEntityToResponseDto(sale));
   }
 
   private List<Product> removeProductFromSale(List<Product> products, Product productToRemove) {

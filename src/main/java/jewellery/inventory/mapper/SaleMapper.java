@@ -5,12 +5,14 @@ import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.PurchasedResourceInUser;
 import jewellery.inventory.model.Sale;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Component;
 public class SaleMapper {
   private final UserMapper userMapper;
   private final ProductMapper productMapper;
+  private final ResourceMapper resourceMapper;
   private final PurchasedResourceInUserMapper purchasedResourceInUserMapper;
   private final ResourceService resourceService;
   private static final String AMOUNT = "amount";
@@ -95,7 +98,7 @@ public class SaleMapper {
     BigDecimal totalDiscountAmount = BigDecimal.ZERO;
     BigDecimal totalPrice = BigDecimal.ZERO;
 
-    if (!products.isEmpty()) {
+    if (products.size() != 0) {
       for (Product product : products) {
         BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
         BigDecimal discountRate =
@@ -107,7 +110,7 @@ public class SaleMapper {
       }
     }
 
-    if (!resources.isEmpty()) {
+    if (resources.size() != 0) {
       for (PurchasedResourceInUser resource : resources) {
         BigDecimal salePrice =
             Optional.ofNullable(resource.getResource().getPricePerQuantity())
@@ -165,5 +168,13 @@ public class SaleMapper {
       }
     }
     return resources;
+  }
+
+  public ResourceReturnResponseDto mapToResourceReturnResponseDto(PurchasedResourceInUser resourceToReturn, SaleResponseDto sale) {
+    return ResourceReturnResponseDto.builder()
+            .returnedResource(resourceMapper.toResourceResponse(resourceToReturn.getResource()))
+            .saleAfter(sale)
+            .date(LocalDate.now())
+            .build();
   }
 }
