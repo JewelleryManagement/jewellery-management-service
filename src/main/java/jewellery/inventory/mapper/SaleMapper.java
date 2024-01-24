@@ -7,7 +7,6 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
@@ -64,6 +63,15 @@ public class SaleMapper {
     return sale;
   }
 
+  public ResourceReturnResponseDto mapToResourceReturnResponseDto(
+          PurchasedResourceInUser resourceToReturn, SaleResponseDto sale) {
+    return ResourceReturnResponseDto.builder()
+            .returnedResource(resourceMapper.toResourceResponse(resourceToReturn.getResource()))
+            .saleAfter(sale)
+            .date(LocalDate.now())
+            .build();
+  }
+
   private List<ProductResponseDto> mapAllProductsToResponse(Sale sale) {
     List<ProductResponseDto> productResponseDtos = new ArrayList<>();
     for (Product product : sale.getProducts()) {
@@ -76,7 +84,7 @@ public class SaleMapper {
   private List<PurchasedResourceInUserResponseDto> mapAllResourcesToResponse(Sale sale) {
     return sale.getResources().stream()
         .map(purchasedResourceInUserMapper::toPurchasedResourceInUserResponseDto)
-        .collect(Collectors.toList());
+        .toList();
   }
 
   private BigDecimal getTotalPriceFromEntity(
@@ -93,53 +101,110 @@ public class SaleMapper {
     return totalPrice;
   }
 
-  private BigDecimal calculateDiscount(
-      List<Product> products, List<PurchasedResourceInUser> resources, String calculationType) {
-    BigDecimal totalDiscountAmount = BigDecimal.ZERO;
-    BigDecimal totalPrice = BigDecimal.ZERO;
+  private BigDecimal calculateDiscount(List<Product> products, List<PurchasedResourceInUser> resources, String calculationType) {
+    BigDecimal totalDiscountAmount = calculateTotalDiscountAmount(products, resources);
+    BigDecimal totalPrice = calculateTotalPrice(products, resources);
 
-    if (!products.isEmpty()) {
-      for (Product product : products) {
-        BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
-        BigDecimal discountRate =
-            Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
-        BigDecimal discountAmount =
-                salePrice.multiply(discountRate).divide(getBigDecimal("100"), RoundingMode.HALF_UP);
-        totalDiscountAmount = totalDiscountAmount.add(discountAmount);
-        totalPrice = totalPrice.add(salePrice);
-      }
-    }
-
-    if (!resources.isEmpty()) {
-      for (PurchasedResourceInUser resource : resources) {
-        BigDecimal salePrice =
-            Optional.ofNullable(resource.getResource().getPricePerQuantity())
-                .orElse(BigDecimal.ZERO);
-        BigDecimal discountRate =
-            Optional.ofNullable(resource.getDiscount()).orElse(BigDecimal.ZERO);
-
-        BigDecimal discountAmount =
-                salePrice.multiply(discountRate).divide(getBigDecimal("100"), RoundingMode.HALF_UP);
-        totalDiscountAmount = totalDiscountAmount.add(discountAmount);
-        totalPrice = totalPrice.add(salePrice);
-      }
-    }
-
-    getTotalDiscountAmount(calculationType, totalPrice, totalDiscountAmount);
-
-    return BigDecimal.ZERO;
-  }
-
-  private static BigDecimal getTotalDiscountAmount(
-      String calculationType, BigDecimal totalPrice, BigDecimal totalDiscountAmount) {
     if (PERCENTAGE.equals(calculationType) && !totalPrice.equals(BigDecimal.ZERO)) {
-      return (totalDiscountAmount.divide(totalPrice, MathContext.DECIMAL128))
-          .multiply(getBigDecimal("100"));
+      return totalDiscountAmount.divide(totalPrice, MathContext.DECIMAL128).multiply(getBigDecimal("100"));
     } else if (AMOUNT.equals(calculationType)) {
       return totalPrice.subtract(totalDiscountAmount);
     }
+
     throw new IllegalArgumentException("Invalid calculation type");
   }
+
+  private BigDecimal calculateTotalDiscountAmount(List<Product> products, List<PurchasedResourceInUser> resources) {
+    BigDecimal totalDiscountAmount = BigDecimal.ZERO;
+    totalDiscountAmount = totalDiscountAmount.add(calculateDiscountForProducts(products));
+    totalDiscountAmount = totalDiscountAmount.add(calculateDiscountForResources(resources));
+    return totalDiscountAmount;
+  }
+
+  private BigDecimal calculateTotalPrice(List<Product> products, List<PurchasedResourceInUser> resources) {
+    BigDecimal totalPrice = BigDecimal.ZERO;
+    totalPrice = totalPrice.add(calculatePriceForProducts(products));
+    totalPrice = totalPrice.add(calculatePriceForResources(resources));
+    return totalPrice;
+  }
+
+  private BigDecimal calculateDiscountForProducts(List<Product> products) {
+    BigDecimal discountAmount = BigDecimal.ZERO;
+    for (Product product : products) {
+      BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
+      BigDecimal discountRate = Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
+      discountAmount = discountAmount.add(salePrice.multiply(discountRate.divide(getBigDecimal("100"), RoundingMode.HALF_UP)));
+    }
+    return discountAmount;
+  }
+
+  private BigDecimal calculateDiscountForResources(List<PurchasedResourceInUser> resources) {
+    BigDecimal discountAmount = BigDecimal.ZERO;
+    for (PurchasedResourceInUser resource : resources) {
+      BigDecimal salePrice = Optional.ofNullable(resource.getResource().getPricePerQuantity()).orElse(BigDecimal.ZERO);
+      BigDecimal discountRate = Optional.ofNullable(resource.getDiscount()).orElse(BigDecimal.ZERO);
+      discountAmount = discountAmount.add(salePrice.multiply(discountRate.divide(getBigDecimal("100"), RoundingMode.HALF_UP)));
+    }
+    return discountAmount;
+  }
+
+  private BigDecimal calculatePriceForProducts(List<Product> products) {
+    BigDecimal totalPrice = BigDecimal.ZERO;
+    for (Product product : products) {
+      totalPrice = totalPrice.add(Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO));
+    }
+    return totalPrice;
+  }
+
+  private BigDecimal calculatePriceForResources(List<PurchasedResourceInUser> resources) {
+    BigDecimal totalPrice = BigDecimal.ZERO;
+    for (PurchasedResourceInUser resource : resources) {
+      totalPrice = totalPrice.add(Optional.ofNullable(resource.getResource().getPricePerQuantity()).orElse(BigDecimal.ZERO));
+    }
+    return totalPrice;
+  }
+
+//  private BigDecimal calculateDiscount(
+//      List<Product> products, List<PurchasedResourceInUser> resources, String calculationType) {
+//    BigDecimal totalDiscountAmount = BigDecimal.ZERO;
+//    BigDecimal totalPrice = BigDecimal.ZERO;
+//
+//    if (!products.isEmpty()) {
+//      for (Product product : products) {
+//        BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
+//        BigDecimal discountRate =
+//            Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
+//        BigDecimal discountAmount =
+//            salePrice.multiply(discountRate.divide(getBigDecimal("100"), RoundingMode.HALF_UP));
+//        totalDiscountAmount = totalDiscountAmount.add(discountAmount);
+//        totalPrice = totalPrice.add(salePrice);
+//      }
+//    }
+//
+//    if (!resources.isEmpty()) {
+//      for (PurchasedResourceInUser resource : resources) {
+//        BigDecimal salePrice =
+//            Optional.ofNullable(resource.getResource().getPricePerQuantity())
+//                .orElse(BigDecimal.ZERO);
+//        BigDecimal discountRate =
+//            Optional.ofNullable(resource.getDiscount()).orElse(BigDecimal.ZERO);
+//
+//        BigDecimal discountAmount =
+//            salePrice.multiply(discountRate).divide(getBigDecimal("100"), RoundingMode.HALF_UP);
+//        totalDiscountAmount = totalDiscountAmount.add(discountAmount);
+//        totalPrice = totalPrice.add(salePrice);
+//      }
+//    }
+//
+//    if (PERCENTAGE.equals(calculationType) && !totalPrice.equals(BigDecimal.ZERO)) {
+//      return (totalDiscountAmount.divide(totalPrice, MathContext.DECIMAL128))
+//          .multiply(getBigDecimal("100"));
+//    } else if (AMOUNT.equals(calculationType)) {
+//      return totalPrice.subtract(totalDiscountAmount);
+//    }
+//
+//    throw new IllegalArgumentException("Invalid calculation type");
+//  }
 
   private List<Product> setProductPriceAndDiscount(
       SaleRequestDto saleRequestDto, List<Product> products) {
@@ -168,13 +233,5 @@ public class SaleMapper {
       }
     }
     return resources;
-  }
-
-  public ResourceReturnResponseDto mapToResourceReturnResponseDto(PurchasedResourceInUser resourceToReturn, SaleResponseDto sale) {
-    return ResourceReturnResponseDto.builder()
-            .returnedResource(resourceMapper.toResourceResponse(resourceToReturn.getResource()))
-            .saleAfter(sale)
-            .date(LocalDate.now())
-            .build();
   }
 }

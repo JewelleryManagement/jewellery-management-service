@@ -241,7 +241,7 @@ public class SaleService {
 
   private void returnResourceFromSaleToUser(Sale sale, PurchasedResourceInUser resourceToReturn) {
     ResourceInUser resourceInUser =
-            resourceInUserService.getResourceInUser(sale.getSeller(), resourceToReturn.getResource());
+        resourceInUserService.getResourceInUser(sale.getSeller(), resourceToReturn.getResource());
     resourceInUser.setQuantity(resourceInUser.getQuantity().add(resourceToReturn.getQuantity()));
   }
 }
