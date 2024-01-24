@@ -75,7 +75,7 @@ class SaleServiceTest {
         SaleTestHelper.getProductReturnResponseDto(saleResponseDto, productResponseDto);
     productPriceDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(
-            product.getId(), getBigDecimal("1000"), getBigDecimal("10"));
+            product.getId(), getBigDecimal("10"));
     List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
     productPriceDiscountRequestDtoList.add(productPriceDiscountRequestDto);
     saleRequestDto =
