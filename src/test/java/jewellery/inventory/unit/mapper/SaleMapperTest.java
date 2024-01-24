@@ -14,11 +14,13 @@ import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.helper.ProductPriceDiscountTestHelper;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.Product;
+import jewellery.inventory.model.ProductPriceDiscount;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
@@ -44,6 +46,7 @@ class SaleMapperTest {
   private SaleRequestDto saleRequestDto;
   private ProductPriceDiscountRequestDto productPriceDiscountRequestDto;
   private List<Product> productsForSale;
+  private ProductPriceDiscount productPriceDiscount;
 
   @BeforeEach
   void setUp() {
@@ -56,9 +59,9 @@ class SaleMapperTest {
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSale);
     productPriceDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(
-            product.getId(),
-            getBigDecimal("1000"),
-            getBigDecimal("10"));
+            product.getId(), getBigDecimal("1000"));
+    productPriceDiscount =
+        ProductPriceDiscountTestHelper.createTestProductPriceDiscount(product, sale);
     List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
     productPriceDiscountRequestDtoList.add(productPriceDiscountRequestDto);
     saleRequestDto =
@@ -68,7 +71,8 @@ class SaleMapperTest {
 
   @Test
   void testMapRequestToEntity() {
-//    Sale sale = saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product));
+    Sale sale =
+        saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(productPriceDiscount));
 
     assertNotNull(sale);
     Assertions.assertEquals(saleRequestDto.getSellerId(), sale.getSeller().getId());
@@ -78,10 +82,10 @@ class SaleMapperTest {
 
   @Test
   void testMapEntityToResponseDto() {
+    Sale sale =
+            saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(productPriceDiscount));
     when(userMapper.toUserResponse(seller)).thenReturn(sellerResponseDto);
     when(userMapper.toUserResponse(buyer)).thenReturn(buyerResponseDto);
-
-    when(productMapper.mapToProductResponseDto(product)).thenReturn(new ProductResponseDto());
 
     SaleResponseDto saleResponseDto = saleMapper.mapEntityToResponseDto(sale);
 
@@ -93,12 +97,15 @@ class SaleMapperTest {
   }
 
   @Test
-  void testMapEntityToResponseDtoWillThrowsIllegalArgumentException() {
+  void testMapEntityToResponseDtoWillThrowsArithmeticException() {
+    Sale sale =
+            saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(productPriceDiscount));
+
     when(userMapper.toUserResponse(seller)).thenReturn(sellerResponseDto);
     when(userMapper.toUserResponse(buyer)).thenReturn(buyerResponseDto);
 
     when(productMapper.mapToProductResponseDto(product)).thenReturn(new ProductResponseDto());
     sale.getProducts().get(0).setSalePrice(BigDecimal.ZERO);
-    assertThrows(IllegalArgumentException.class, () -> saleMapper.mapEntityToResponseDto(sale));
+    assertThrows(ArithmeticException.class, () -> saleMapper.mapEntityToResponseDto(sale));
   }
 }
