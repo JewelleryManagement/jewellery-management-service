@@ -164,48 +164,6 @@ public class SaleMapper {
     return totalPrice;
   }
 
-//  private BigDecimal calculateDiscount(
-//      List<Product> products, List<PurchasedResourceInUser> resources, String calculationType) {
-//    BigDecimal totalDiscountAmount = BigDecimal.ZERO;
-//    BigDecimal totalPrice = BigDecimal.ZERO;
-//
-//    if (!products.isEmpty()) {
-//      for (Product product : products) {
-//        BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
-//        BigDecimal discountRate =
-//            Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
-//        BigDecimal discountAmount =
-//            salePrice.multiply(discountRate.divide(getBigDecimal("100"), RoundingMode.HALF_UP));
-//        totalDiscountAmount = totalDiscountAmount.add(discountAmount);
-//        totalPrice = totalPrice.add(salePrice);
-//      }
-//    }
-//
-//    if (!resources.isEmpty()) {
-//      for (PurchasedResourceInUser resource : resources) {
-//        BigDecimal salePrice =
-//            Optional.ofNullable(resource.getResource().getPricePerQuantity())
-//                .orElse(BigDecimal.ZERO);
-//        BigDecimal discountRate =
-//            Optional.ofNullable(resource.getDiscount()).orElse(BigDecimal.ZERO);
-//
-//        BigDecimal discountAmount =
-//            salePrice.multiply(discountRate).divide(getBigDecimal("100"), RoundingMode.HALF_UP);
-//        totalDiscountAmount = totalDiscountAmount.add(discountAmount);
-//        totalPrice = totalPrice.add(salePrice);
-//      }
-//    }
-//
-//    if (PERCENTAGE.equals(calculationType) && !totalPrice.equals(BigDecimal.ZERO)) {
-//      return (totalDiscountAmount.divide(totalPrice, MathContext.DECIMAL128))
-//          .multiply(getBigDecimal("100"));
-//    } else if (AMOUNT.equals(calculationType)) {
-//      return totalPrice.subtract(totalDiscountAmount);
-//    }
-//
-//    throw new IllegalArgumentException("Invalid calculation type");
-//  }
-
   private List<Product> setProductPriceAndDiscount(
       SaleRequestDto saleRequestDto, List<Product> products) {
     for (int i = 0; i < products.size(); i++) {
