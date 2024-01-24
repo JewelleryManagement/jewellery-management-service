@@ -21,8 +21,9 @@ public class ProductPriceDiscountService {
   private final ProductService productService;
   private final ProductMapper productMapper;
 
-  public List<ProductPriceDiscount> createProductPriceDiscount(SaleRequestDto saleRequestDto, Sale sale) {
-    List<ProductPriceDiscount> list=new ArrayList<>();
+  public List<ProductPriceDiscount> createProductPriceDiscount(
+      SaleRequestDto saleRequestDto, Sale sale) {
+    List<ProductPriceDiscount> list = new ArrayList<>();
     for (int i = 0; i < saleRequestDto.getProducts().size(); i++) {
       ProductPriceDiscount productPriceDiscount = new ProductPriceDiscount();
       Product product =

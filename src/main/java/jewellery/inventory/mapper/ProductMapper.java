@@ -1,5 +1,6 @@
 package jewellery.inventory.mapper;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -11,6 +12,8 @@ import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.model.Product;
+import jewellery.inventory.repository.ProductPriceDiscountRepository;
+import jewellery.inventory.service.ProductPriceDiscountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -20,17 +23,22 @@ public class ProductMapper {
 
   private final UserMapper userMapper;
   private final ResourceMapper resourceMapper;
-
+  private final ProductPriceDiscountRepository productPriceDiscountRepository;
   public ProductResponseDto mapToProductResponseDto(Product product) {
 
     ProductResponseDto productResponseDto = new ProductResponseDto();
     productResponseDto.setId(product.getId());
     if (product.getPartOfSale() != null) {
       productResponseDto.setPartOfSale(product.getPartOfSale().getId());
+      productResponseDto.setSalePrice(
+          productPriceDiscountRepository
+              .findBySaleIdAndProductId(product.getPartOfSale().getId(), product.getId())
+              .getSalePrice());
+    } else {
+      productResponseDto.setSalePrice(ProductPriceCalculator.calculateTotalPrice(product));
     }
     productResponseDto.setAuthors(getAuthorsResponse(product));
     productResponseDto.setDescription(product.getDescription());
-    productResponseDto.setSalePrice(ProductPriceCalculator.calculateTotalPrice(product));
     productResponseDto.setOwner(userMapper.toUserResponse(product.getOwner()));
     productResponseDto.setProductionNumber(product.getProductionNumber());
     productResponseDto.setCatalogNumber(product.getCatalogNumber());
