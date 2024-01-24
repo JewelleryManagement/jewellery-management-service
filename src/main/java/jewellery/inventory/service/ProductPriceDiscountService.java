@@ -40,12 +40,8 @@ public class ProductPriceDiscountService {
   }
 
   public void deleteProductPriceDiscount(UUID saleId, UUID productId) {
-    List<ProductPriceDiscount> list = productPriceDiscountRepository.findAll();
-    for (ProductPriceDiscount productPriceDiscount : list) {
-      if (productPriceDiscount.getProduct().getId().equals(productId)
-          && productPriceDiscount.getSale().getId().equals(saleId)) {
-        productPriceDiscountRepository.delete(productPriceDiscount);
-      }
-    }
+    ProductPriceDiscount productPriceDiscountForDelete =
+        productPriceDiscountRepository.findBySaleIdAndProductId(saleId, productId);
+    productPriceDiscountRepository.delete(productPriceDiscountForDelete);
   }
 }
