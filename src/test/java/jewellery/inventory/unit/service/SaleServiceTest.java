@@ -22,6 +22,7 @@ import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.Product;
+import jewellery.inventory.model.ProductPriceDiscount;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
@@ -67,15 +68,14 @@ class SaleServiceTest {
     product = getTestProduct(seller, new Resource());
     productsForSale = SaleTestHelper.getProductsList(product);
     productsForSaleTwo = SaleTestHelper.getProductsList(product, product);
-    sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSale);
-    saleTwoProducts = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSaleTwo);
+    sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer);
+    saleTwoProducts = SaleTestHelper.createSaleWithTodayDate(seller, buyer);
     saleResponseDto = SaleTestHelper.getSaleResponseDto(sale);
     productResponseDto = getReturnedProductResponseDto(product, createTestUserResponseDto(buyer));
     productReturnResponseDto =
         SaleTestHelper.getProductReturnResponseDto(saleResponseDto, productResponseDto);
     productPriceDiscountRequestDto =
-        SaleTestHelper.createProductPriceDiscountRequest(
-            product.getId(), getBigDecimal("10"));
+        SaleTestHelper.createProductPriceDiscountRequest(product.getId(), getBigDecimal("10"));
     List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
     productPriceDiscountRequestDtoList.add(productPriceDiscountRequestDto);
     saleRequestDto =
@@ -100,8 +100,6 @@ class SaleServiceTest {
 
   @Test
   void testCreateSaleSuccessfully() {
-//    when(saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product)))
-//        .thenReturn(sale);
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(saleRepository.save(sale)).thenReturn(sale);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
@@ -115,37 +113,26 @@ class SaleServiceTest {
     assertEquals(saleRequestDto.getBuyerId(), actual.getProducts().get(0).getOwner().getId());
     assertEquals(saleRequestDto.getSellerId(), actual.getSeller().getId());
     assertNotEquals(actual.getBuyer(), actual.getSeller());
-
   }
 
   @Test
   void testCreateSaleProductWillThrowsProductOwnerNotSeller() {
-//    when(saleMapper.mapRequestToEntity(
-//            saleRequestDtoSellerNotOwner, seller, buyer, List.of(product)))
-//        .thenReturn(sale);
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
-
     assertThrows(
         UserNotOwnerException.class, () -> saleService.createSale(saleRequestDtoSellerNotOwner));
   }
 
-//  @Test
-//  void testCreateSaleProductWillThrowsProductIsSold() {
-//    when(saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product)))
-//        .thenReturn(sale);
-////    sale.getProducts().get(0).setPartOfSale(new Sale());
-//    when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
-//    when(productService.getProduct(any(UUID.class))).thenReturn(product);
-//
-//    assertThrows(ProductIsSoldException.class, () -> saleService.createSale(saleRequestDto));
-//  }
+  @Test
+  void testCreateSaleProductWillThrowsProductIsSold() {
+    when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
+    when(productService.getProduct(any(UUID.class))).thenReturn(product);
+
+    assertThrows(ProductIsSoldException.class, () -> saleService.createSale(saleRequestDto));
+  }
 
   @Test
   void testCreateSaleProductWillThrowsProductIsPartOfAnotherProduct() {
-//    when(saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(product)))
-//        .thenReturn(sale);
-////    sale.getProducts().get(0).setContentOf(new Product());
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
 
