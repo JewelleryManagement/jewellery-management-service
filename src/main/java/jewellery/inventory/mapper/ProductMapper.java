@@ -1,6 +1,5 @@
 package jewellery.inventory.mapper;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -13,7 +12,6 @@ import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.repository.ProductPriceDiscountRepository;
-import jewellery.inventory.service.ProductPriceDiscountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +27,7 @@ public class ProductMapper {
     ProductResponseDto productResponseDto = new ProductResponseDto();
     productResponseDto.setId(product.getId());
     if (product.getPartOfSale() != null && !product.getPartOfSale().getProducts().isEmpty()) {
+      productResponseDto.setPartOfSale(product.getPartOfSale().getId());
       productResponseDto.setSalePrice(
           productPriceDiscountRepository
               .findBySaleIdAndProductId(product.getPartOfSale().getId(), product.getId())

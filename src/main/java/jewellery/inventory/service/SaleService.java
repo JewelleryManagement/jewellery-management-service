@@ -49,8 +49,8 @@ public class SaleService {
     throwExceptionIfProductIsPartOfAnotherProduct(sale.getProducts());
 
     Sale createdSale = saleRepository.save(sale);
-    updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
     createdSale.setProducts(productPriceDiscountService.createProductPriceDiscount(saleRequestDto, createdSale));
+    updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
     logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
