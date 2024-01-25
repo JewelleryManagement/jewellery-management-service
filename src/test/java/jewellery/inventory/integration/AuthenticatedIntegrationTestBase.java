@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Collections;
 import jewellery.inventory.helper.SystemEventTestHelper;
 import jewellery.inventory.model.Image;
+import jewellery.inventory.model.ProductPriceDiscount;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.ImageService;
@@ -44,12 +45,14 @@ abstract class AuthenticatedIntegrationTestBase {
 
   @Autowired private ImageService imageService;
   @Autowired private ImageRepository imageRepository;
+  @Autowired private ProductPriceDiscountRepository productPriceDiscountRepository;
 
   protected HttpHeaders headers;
 
   @BeforeEach
   void setup() {
     deleteAllImages();
+    productPriceDiscountRepository.deleteAll();
     productRepository.deleteAll();
     saleRepository.deleteAll();
     userRepository.deleteAll();
