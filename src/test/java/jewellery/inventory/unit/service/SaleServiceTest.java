@@ -250,25 +250,27 @@ class SaleServiceTest {
     when(saleRepository.findById(sale.getId())).thenReturn(Optional.of(sale));
     when(purchasedResourceInUserRepository.findByResourceIdAndPartOfSaleId(
             purchasedResourceInUser.getResource().getId(), sale.getId()))
-        .thenReturn(Optional.of(purchasedResourceInUser));
+            .thenReturn(Optional.of(purchasedResourceInUser));
     purchasedResourceInUser.setPartOfSale(sale);
 
     ResourceInUser resourceInUser = SaleTestHelper.createResourceInUser(BigDecimal.TEN);
     when(resourceInUserService.getResourceInUser(
             sale.getSeller(), purchasedResourceInUser.getResource()))
-        .thenReturn(resourceInUser);
+            .thenReturn(resourceInUser);
 
     assertEquals(resourceInUser.getQuantity(), BigDecimal.TEN);
     assertEquals(purchasedResourceInUser.getQuantity(), BigDecimal.ONE);
     assertEquals(1, sale.getResources().size());
 
     when(saleService.returnResource(sale.getId(), purchasedResourceInUser.getResource().getId()))
-        .thenReturn(new ResourceReturnResponseDto());
+            .thenReturn(new ResourceReturnResponseDto());
+
+    resourceInUser.setQuantity(BigDecimal.TEN);
     ResourceReturnResponseDto actualReturnResourceResponse =
-        saleService.returnResource(sale.getId(), purchasedResourceInUser.getResource().getId());
+            saleService.returnResource(sale.getId(), purchasedResourceInUser.getResource().getId());
 
     assertNotNull(actualReturnResourceResponse);
     assertEquals(0, sale.getResources().size());
-    assertEquals(resourceInUser.getQuantity(), BigDecimal.valueOf(12));
+    assertEquals(resourceInUser.getQuantity(), BigDecimal.valueOf(11));
   }
 }
