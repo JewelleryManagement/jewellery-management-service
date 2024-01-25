@@ -17,6 +17,8 @@ import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
+import jewellery.inventory.exception.not_found.ResourceNotSoldException;
 import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
@@ -222,5 +224,50 @@ class SaleServiceTest {
     assertNotEquals(
         productReturnResponseDto.getReturnedProduct().getOwner().getId(),
         productBeforeReturn.getOwner().getId());
+  }
+
+  @Test
+  void testReturnResourceShouldThrowWhenSaleNotFound() {
+    purchasedResourceInUser.setPartOfSale(new Sale());
+    assertThrows(
+        SaleNotFoundException.class,
+        () ->
+            saleService.returnResource(
+                sale.getId(), purchasedResourceInUser.getResource().getId()));
+  }
+
+  @Test
+  void testReturnResourceShouldThrowWhenResourceInNotPartOfThisSale() {
+    when(saleRepository.findById(sale.getId())).thenReturn(Optional.of(sale));
+    purchasedResourceInUser.setPartOfSale(new Sale());
+    assertThrows(
+        ResourceNotSoldException.class,
+        () ->
+            saleService.returnResource(
+                sale.getId(), purchasedResourceInUser.getResource().getId()));
+  }
+
+  @Test
+  void testReturnResourceSuccessfully() {
+    when(saleRepository.findById(sale.getId())).thenReturn(Optional.of(sale));
+    when(purchasedResourceInUserRepository.findByResourceIdAndPartOfSaleId(
+            purchasedResourceInUser.getResource().getId(), sale.getId()))
+        .thenReturn(Optional.of(purchasedResourceInUser));
+    purchasedResourceInUser.setPartOfSale(sale);
+
+    ResourceInUser resourceInUser = SaleTestHelper.createResourceInUser(BigDecimal.TEN);
+    when(resourceInUserService.getResourceInUser(sale.getSeller(), purchasedResourceInUser.getResource())).thenReturn(resourceInUser);
+
+    assertEquals(resourceInUser.getQuantity(), BigDecimal.TEN);
+    assertEquals(purchasedResourceInUser.getQuantity(), BigDecimal.ONE);
+    assertEquals(1, sale.getResources().size());
+
+        when(saleService.returnResource(sale.getId(), purchasedResourceInUser.getResource().getId())).thenReturn(new ResourceReturnResponseDto());
+    ResourceReturnResponseDto actualReturnResourceResponse =
+        saleService.returnResource(sale.getId(), purchasedResourceInUser.getResource().getId());
+
+    assertNotNull(actualReturnResourceResponse);
+    assertEquals(0, sale.getResources().size());
+    assertEquals(resourceInUser.getQuantity(), BigDecimal.valueOf(12));
   }
 }

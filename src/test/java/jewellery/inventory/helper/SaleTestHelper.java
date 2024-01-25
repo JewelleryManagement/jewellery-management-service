@@ -14,10 +14,7 @@ import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
-import jewellery.inventory.model.Product;
-import jewellery.inventory.model.PurchasedResourceInUser;
-import jewellery.inventory.model.Sale;
-import jewellery.inventory.model.User;
+import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 
 public class SaleTestHelper {
@@ -195,5 +192,15 @@ public class SaleTestHelper {
         .resource(createResourceQuantityRequest())
         .discount(BigDecimal.TEN)
         .build();
+  }
+
+  public static ResourceInUser createResourceInUser(BigDecimal price) {
+    ResourceInUser resourceInUser = new ResourceInUser();
+    resourceInUser.setResource(createResource(price));
+    resourceInUser.setQuantity(BigDecimal.TEN);
+    resourceInUser.setOwner(UserTestHelper.createTestUserWithId());
+    resourceInUser.setId(UUID.randomUUID());
+    resourceInUser.setDealPrice(BigDecimal.TEN);
+    return resourceInUser;
   }
 }

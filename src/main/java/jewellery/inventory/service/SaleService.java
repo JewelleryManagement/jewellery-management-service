@@ -234,9 +234,14 @@ public class SaleService {
 
   private List<PurchasedResourceInUser> removeResourceFromSale(
       List<PurchasedResourceInUser> resources, PurchasedResourceInUser resourceToRemove) {
+    List<PurchasedResourceInUser> result = new ArrayList<>();
+    for (PurchasedResourceInUser resource : resources) {
+      if (!resource.getId().equals(resourceToRemove.getId())) {
+        result.add(resource);
+      }
+    }
     logger.info("Removing resource with ID: {} from sale.", resourceToRemove.getResource().getId());
-    resources.remove(resourceToRemove);
-    return resources;
+    return result;
   }
 
   private void returnResourceFromSaleToUser(Sale sale, PurchasedResourceInUser resourceToReturn) {
