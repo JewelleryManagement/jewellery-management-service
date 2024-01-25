@@ -56,7 +56,7 @@ class SaleMapperTest {
     sellerResponseDto = createTestUserResponseDto(seller);
     buyerResponseDto = createTestUserResponseDto(buyer);
     productsForSale = SaleTestHelper.getProductsList(product);
-    sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, productsForSale);
+    sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer);
     productPriceDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(
             product.getId(),getBigDecimal("1000"));

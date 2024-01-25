@@ -14,6 +14,7 @@ import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.Product;
+import jewellery.inventory.model.ProductPriceDiscount;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 
@@ -28,12 +29,11 @@ public class SaleTestHelper {
     return productReturn;
   }
 
-  public static Sale createSaleWithTodayDate(User seller, User buyer, List<Product> products) {
+  public static Sale createSaleWithTodayDate(User seller, User buyer) {
     Sale sale = new Sale();
     sale.setId(UUID.randomUUID());
     sale.setSeller(seller);
     sale.setBuyer(buyer);
-   // sale.setProducts(products);
     sale.setDate(LocalDate.now());
     return sale;
   }
@@ -76,8 +76,12 @@ public class SaleTestHelper {
 
     dto.setSeller(userResponseDtoSeller);
     dto.setBuyer(userResponseDtoBuyer);
+    ProductResponseDto productResponseDto =new ProductResponseDto();
+    productResponseDto.setId(UUID.randomUUID());
+    dto.setProducts(List.of(productResponseDto));
     dto.setTotalDiscountedPrice(BigDecimal.ZERO);
     dto.setTotalDiscount(BigDecimal.ZERO);
+    sale.setProducts(List.of(new ProductPriceDiscount()));
 
     sale.getProducts()
         .forEach(
@@ -110,5 +114,10 @@ public class SaleTestHelper {
     ProductResponseDto productResponseDto = new ProductResponseDto();
     productResponseDto.setOwner(owner);
     return productResponseDto;
+  }
+  private static ProductPriceDiscount createProductPriceDiscount(Product product){
+    ProductPriceDiscount productPriceDiscount=new ProductPriceDiscount();
+    productPriceDiscount.setProduct(product);
+    return productPriceDiscount;
   }
 }
