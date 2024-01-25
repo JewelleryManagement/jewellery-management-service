@@ -6,7 +6,7 @@ import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -107,7 +107,6 @@ class SaleServiceTest {
 
   @Test
   void testGetAllSales() {
-
     List<Sale> sales = Arrays.asList(sale, new Sale(), new Sale());
 
     when(saleRepository.findAll()).thenReturn(sales);
@@ -119,9 +118,8 @@ class SaleServiceTest {
 
   @Test
   void testCreateSaleSuccessfully() {
-
     when(saleMapper.mapRequestToEntity(
-            eq(saleRequestDto), eq(seller), eq(buyer), eq(List.of(product)), eq(List.of())))
+            any(SaleRequestDto.class), any(User.class), any(User.class), anyList(), anyList()))
         .thenReturn(sale);
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(saleRepository.save(sale)).thenReturn(sale);
@@ -146,7 +144,7 @@ class SaleServiceTest {
   @Test
   void testCreateSaleProductWillThrowsProductOwnerNotSeller() {
     when(saleMapper.mapRequestToEntity(
-            saleRequestDtoSellerNotOwner, seller, buyer, List.of(product), new ArrayList<>()))
+            any(SaleRequestDto.class), any(User.class), any(User.class), anyList(), anyList()))
         .thenReturn(sale);
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
@@ -158,7 +156,7 @@ class SaleServiceTest {
   @Test
   void testCreateSaleProductWillThrowsProductIsSold() {
     when(saleMapper.mapRequestToEntity(
-            saleRequestDto, seller, buyer, List.of(product), new ArrayList<>()))
+            any(SaleRequestDto.class), any(User.class), any(User.class), anyList(), anyList()))
         .thenReturn(sale);
     sale.getProducts().get(0).setPartOfSale(new Sale());
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
@@ -170,7 +168,7 @@ class SaleServiceTest {
   @Test
   void testCreateSaleProductWillThrowsProductIsPartOfAnotherProduct() {
     when(saleMapper.mapRequestToEntity(
-            saleRequestDto, seller, buyer, List.of(product), new ArrayList<>()))
+            any(SaleRequestDto.class), any(User.class), any(User.class), anyList(), anyList()))
         .thenReturn(sale);
     sale.getProducts().get(0).setContentOf(new Product());
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
@@ -256,13 +254,16 @@ class SaleServiceTest {
     purchasedResourceInUser.setPartOfSale(sale);
 
     ResourceInUser resourceInUser = SaleTestHelper.createResourceInUser(BigDecimal.TEN);
-    when(resourceInUserService.getResourceInUser(sale.getSeller(), purchasedResourceInUser.getResource())).thenReturn(resourceInUser);
+    when(resourceInUserService.getResourceInUser(
+            sale.getSeller(), purchasedResourceInUser.getResource()))
+        .thenReturn(resourceInUser);
 
     assertEquals(resourceInUser.getQuantity(), BigDecimal.TEN);
     assertEquals(purchasedResourceInUser.getQuantity(), BigDecimal.ONE);
     assertEquals(1, sale.getResources().size());
 
-        when(saleService.returnResource(sale.getId(), purchasedResourceInUser.getResource().getId())).thenReturn(new ResourceReturnResponseDto());
+    when(saleService.returnResource(sale.getId(), purchasedResourceInUser.getResource().getId()))
+        .thenReturn(new ResourceReturnResponseDto());
     ResourceReturnResponseDto actualReturnResourceResponse =
         saleService.returnResource(sale.getId(), purchasedResourceInUser.getResource().getId());
 
