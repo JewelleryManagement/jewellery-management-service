@@ -1,11 +1,13 @@
 package jewellery.inventory.unit.service;
 
+import static jewellery.inventory.helper.ProductPriceDiscountTestHelper.createTestProductPriceDiscount;
 import static jewellery.inventory.helper.ProductTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
 import java.util.*;
@@ -27,6 +29,7 @@ import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.*;
+import jewellery.inventory.service.ProductPriceDiscountService;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.SaleService;
 import jewellery.inventory.service.UserService;
@@ -46,11 +49,11 @@ class SaleServiceTest {
   @Mock private ProductService productService;
   @Mock private ProductRepository productRepository;
   @Mock private SaleMapper saleMapper;
+  @Mock private ProductPriceDiscountService productPriceDiscountService;
   private User seller;
   private User buyer;
   private Product product;
   private Sale sale;
-  private Sale saleTwoProducts;
   private ProductReturnResponseDto productReturnResponseDto;
   private SaleRequestDto saleRequestDto;
   private SaleRequestDto saleRequestDtoSellerNotOwner;
@@ -59,6 +62,7 @@ class SaleServiceTest {
   private List<Product> productsForSale;
   private List<Product> productsForSaleTwo;
   private ProductResponseDto productResponseDto;
+  private ProductPriceDiscount productPriceDiscount;
 
   @BeforeEach
   void setUp() {
@@ -69,7 +73,6 @@ class SaleServiceTest {
     productsForSale = SaleTestHelper.getProductsList(product);
     productsForSaleTwo = SaleTestHelper.getProductsList(product, product);
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer);
-    saleTwoProducts = SaleTestHelper.createSaleWithTodayDate(seller, buyer);
     saleResponseDto = SaleTestHelper.getSaleResponseDto(sale);
     productResponseDto = getReturnedProductResponseDto(product, createTestUserResponseDto(buyer));
     productReturnResponseDto =
@@ -84,6 +87,7 @@ class SaleServiceTest {
     saleRequestDtoSellerNotOwner =
         SaleTestHelper.createSaleRequest(
             buyer.getId(), buyer.getId(), productPriceDiscountRequestDtoList);
+    productPriceDiscount = createTestProductPriceDiscount(product, sale);
   }
 
   @Test
@@ -100,6 +104,12 @@ class SaleServiceTest {
 
   @Test
   void testCreateSaleSuccessfully() {
+    productPriceDiscount.setProduct(product);
+    sale.setProducts(List.of(productPriceDiscount));
+    when(saleMapper.mapRequestToEntity(
+            any(SaleRequestDto.class), any(User.class), any(User.class), anyList()))
+        .thenReturn(sale);
+
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(saleRepository.save(sale)).thenReturn(sale);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
@@ -117,6 +127,11 @@ class SaleServiceTest {
 
   @Test
   void testCreateSaleProductWillThrowsProductOwnerNotSeller() {
+    productPriceDiscount.setProduct(product);
+    sale.setProducts(List.of(productPriceDiscount));
+    when(saleMapper.mapRequestToEntity(
+            any(SaleRequestDto.class), any(User.class), any(User.class), anyList()))
+            .thenReturn(sale);
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
     assertThrows(
@@ -125,6 +140,12 @@ class SaleServiceTest {
 
   @Test
   void testCreateSaleProductWillThrowsProductIsSold() {
+    product.setPartOfSale(sale);
+    productPriceDiscount.setProduct(product);
+    sale.setProducts(List.of(productPriceDiscount));
+    when(saleMapper.mapRequestToEntity(
+            any(SaleRequestDto.class), any(User.class), any(User.class), anyList()))
+            .thenReturn(sale);
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
 
@@ -133,6 +154,12 @@ class SaleServiceTest {
 
   @Test
   void testCreateSaleProductWillThrowsProductIsPartOfAnotherProduct() {
+    product.setContentOf(product);
+    productPriceDiscount.setProduct(product);
+    sale.setProducts(List.of(productPriceDiscount));
+    when(saleMapper.mapRequestToEntity(
+            any(SaleRequestDto.class), any(User.class), any(User.class), anyList()))
+            .thenReturn(sale);
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
 
@@ -165,14 +192,16 @@ class SaleServiceTest {
 
   @Test
   void testReturnProductSuccessfullyWithTwoProducts() {
-    product.setPartOfSale(saleTwoProducts);
+    product.setPartOfSale(sale);
     Product productBeforeReturn = product;
+    productPriceDiscount.setProduct(productBeforeReturn);
+    sale.setProducts(List.of(productPriceDiscount));
 
-    assertEquals(2, saleTwoProducts.getProducts().size());
+    assertEquals(1, sale.getProducts().size());
     assertNotNull(productBeforeReturn.getPartOfSale());
 
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
-    when(saleRepository.findById(any(UUID.class))).thenReturn(Optional.of(saleTwoProducts));
+    when(saleRepository.findById(any(UUID.class))).thenReturn(Optional.of(sale));
     when(saleService.returnProduct(product.getId())).thenReturn(productReturnResponseDto);
 
     ProductReturnResponseDto productReturnResponseDto = saleService.returnProduct(product.getId());

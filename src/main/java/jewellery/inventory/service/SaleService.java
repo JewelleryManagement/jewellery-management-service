@@ -1,5 +1,6 @@
 package jewellery.inventory.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
@@ -161,11 +162,19 @@ public class SaleService {
         saleMapper.mapEntityToResponseDto(sale), productToReturn);
   }
 
-  private List<ProductPriceDiscount> removeProductFromSale(
-      List<ProductPriceDiscount> products, Product productToRemove) {
-    products.removeIf(
-        productPriceDiscount -> productPriceDiscount.getProduct().equals(productToRemove));
-    logger.info("Removing product with ID: {} from sale.", productToRemove.getId());
-    return products;
+  private List<ProductPriceDiscount> removeProductFromSale(List<ProductPriceDiscount> products, Product productToRemove) {
+    List<ProductPriceDiscount> updatedList = new ArrayList<>();
+
+    for (ProductPriceDiscount ppd : products) {
+      if (!ppd.getProduct().getId().equals(productToRemove.getId())) {
+        updatedList.add(ppd);
+      }
+    }
+
+    if (updatedList.size() < products.size()) {
+      logger.info("Removing product with ID: {} from sale.", productToRemove.getId());
+    }
+
+    return updatedList;
   }
 }
