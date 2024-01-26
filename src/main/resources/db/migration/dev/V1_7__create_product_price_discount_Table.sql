@@ -5,9 +5,6 @@ ALTER TABLE Product
 DROP COLUMN sale_price CASCADE,
 DROP COLUMN discount CASCADE;
 
-UPDATE resource
-SET price_per_quantity = 1.0;
-
 CREATE TABLE product_price_discount (
     id UUID PRIMARY KEY,
     product_id UUID,
