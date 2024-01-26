@@ -3,12 +3,12 @@ package jewellery.inventory.calculator;
 import java.math.BigDecimal;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.resource.ResourceInProduct;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class ProductPriceCalculator {
-  private ProductPriceCalculator() {
-  }
 
   public static BigDecimal calculateTotalPrice(Product product) {
     return calculateTotalPrice(product, BigDecimal.ZERO);

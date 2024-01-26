@@ -30,27 +30,27 @@ SELECT id FROM users WHERE id = '87230978-ac6f-4153-964d-b027e791cb7f'
 
 INSERT INTO public.resource
 (dtype, id, clazz, note, price_per_quantity, quantity_type, description, color, plating, purity, "type", quality, shape, "size", carat, clarity, cut, dimensionx, dimensiony, dimensionz)
-SELECT 'Pearl', '6ea11215-db8f-4b5a-a5dd-1fa748059655', 'Pearl', NULL, 0.0, 'Carat', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.0, NULL, NULL, NULL, NULL, NULL, NULL
+SELECT 'Pearl', '6ea11215-db8f-4b5a-a5dd-1fa748059655', 'Pearl', NULL, 1.0, 'Carat', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.0, NULL, NULL, NULL, NULL, NULL, NULL
 WHERE NOT EXISTS (
 SELECT id FROM resource WHERE id = '6ea11215-db8f-4b5a-a5dd-1fa748059655');
 INSERT INTO public.resource
 (dtype, id, clazz, note, price_per_quantity, quantity_type, description, color, plating, purity, "type", quality, shape, "size", carat, clarity, cut, dimensionx, dimensiony, dimensionz)
-SELECT 'Metal', '9f76ddce-b01d-451b-add2-4218fd87d358'::uuid, 'Metal', NULL, 0.0, 'Carat', NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+SELECT 'Metal', '9f76ddce-b01d-451b-add2-4218fd87d358'::uuid, 'Metal', NULL, 1.0, 'Carat', NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 WHERE NOT EXISTS (
 SELECT id FROM resource WHERE id = '9f76ddce-b01d-451b-add2-4218fd87d358');
 INSERT INTO public.resource
 (dtype, id, clazz, note, price_per_quantity, quantity_type, description, color, plating, purity, "type", quality, shape, "size", carat, clarity, cut, dimensionx, dimensiony, dimensionz)
-SELECT 'PreciousStone', '4d3b076c-b8da-48ab-bfd8-fb50a470e922', 'PreciousStone', NULL, 0.0, 'Carat', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.0, NULL, NULL, 0.0, 0.0, 0.0
+SELECT 'PreciousStone', '4d3b076c-b8da-48ab-bfd8-fb50a470e922', 'PreciousStone', NULL, 1.0, 'Carat', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0.0, NULL, NULL, 0.0, 0.0, 0.0
 WHERE NOT EXISTS (
 SELECT id FROM resource WHERE id = '4d3b076c-b8da-48ab-bfd8-fb50a470e922');
 INSERT INTO public.resource
 (dtype, id, clazz, note, price_per_quantity, quantity_type, description, color, plating, purity, "type", quality, shape, "size", carat, clarity, cut, dimensionx, dimensiony, dimensionz)
-SELECT 'SemiPreciousStone', '00d905ba-836f-4cef-8827-c339ca94367c', 'SemiPreciousStone', NULL, 0.0, 'Carat', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+SELECT 'SemiPreciousStone', '00d905ba-836f-4cef-8827-c339ca94367c', 'SemiPreciousStone', NULL, 1.0, 'Carat', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 WHERE NOT EXISTS (
 SELECT id FROM resource WHERE id = '00d905ba-836f-4cef-8827-c339ca94367c');
 INSERT INTO public.resource
 (dtype, id, clazz, note, price_per_quantity, quantity_type, description, color, plating, purity, "type", quality, shape, "size", carat, clarity, cut, dimensionx, dimensiony, dimensionz)
-SELECT 'Element', 'eeb95277-9d4a-46ea-a876-2f786ae4fd5a', 'Element', NULL, 0.0, 'Carat', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+SELECT 'Element', 'eeb95277-9d4a-46ea-a876-2f786ae4fd5a', 'Element', NULL, 1.0, 'Carat', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 WHERE NOT EXISTS (
 SELECT id FROM resource WHERE id = 'eeb95277-9d4a-46ea-a876-2f786ae4fd5a');
 
@@ -201,17 +201,6 @@ SELECT id FROM image WHERE id = '333cdb27-2864-4136-ad46-aea94030db04');
 UPDATE public.product
 SET image_id = '333cdb27-2864-4136-ad46-aea94030db04'
 WHERE id = 'da284aef-9bf2-4e26-8bb7-827c8afb8cc8';
-
-
-INSERT INTO public.sale
-(id, "date", buyer_id, seller_id)
-SELECT '38839f01-ed22-4a15-86eb-125d7cceafd9', '2023-11-11 02:00:00.000', 'beb48c43-cb43-4238-9442-74cda523ed81', '88596531-7f0f-407d-b502-31833b8c8e8d'
-WHERE NOT EXISTS (
-SELECT id FROM sale WHERE id = '38839f01-ed22-4a15-86eb-125d7cceafd9');
-UPDATE public.product
-SET part_of_sale_id = '38839f01-ed22-4a15-86eb-125d7cceafd9'
-WHERE id = 'e0f72130-f83d-4ca7-845b-aa82f2bb9a22';
-
 
 INSERT INTO public.system_event
 (id, executor, payload, "timestamp", "type")

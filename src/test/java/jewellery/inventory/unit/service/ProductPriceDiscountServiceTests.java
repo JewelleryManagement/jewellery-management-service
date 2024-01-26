@@ -24,7 +24,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ProductPriceDiscountServiceTests {
-
+  @InjectMocks
+  private ProductPriceDiscountService productPriceDiscountService;
   @Mock
   private ProductPriceDiscountRepository productPriceDiscountRepository;
 
@@ -33,9 +34,6 @@ public class ProductPriceDiscountServiceTests {
 
   @Mock
   private ProductMapper productMapper;
-
-  @InjectMocks
-  private ProductPriceDiscountService productPriceDiscountService;
 
   @Test
   public void testDeleteProductPriceDiscount() {
