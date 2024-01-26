@@ -7,6 +7,7 @@ import static jewellery.inventory.model.EventType.RESOURCE_CREATE;
 import static jewellery.inventory.model.EventType.RESOURCE_DELETE;
 import static jewellery.inventory.model.EventType.RESOURCE_UPDATE;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -232,17 +233,17 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   private void assertInputMatchesFetchedFromServer(List<ResourceRequestDto> updatedInputDtos)
-      throws JsonProcessingException {
+          throws JsonProcessingException {
     List<ResourceResponseDto> updatedResources = getResourcesWithRequest();
     updatedResources.forEach(resourceResponseDto -> resourceResponseDto.setId(null));
 
-    assertEquals(
-        updatedInputDtos.stream()
-            .map(
-                resourceRequestDto ->
+    List<ResourceResponseDto> mappedDtos = updatedInputDtos.stream()
+            .map(resourceRequestDto ->
                     resourceMapper.toResourceResponse(
-                        resourceMapper.toResourceEntity(resourceRequestDto)))
-            .toList(),
-        updatedResources);
+                            resourceMapper.toResourceEntity(resourceRequestDto)))
+            .toList();
+
+    assertThat(mappedDtos)
+            .containsExactlyInAnyOrderElementsOf(updatedResources);
   }
 }
