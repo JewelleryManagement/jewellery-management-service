@@ -7,10 +7,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
-import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
@@ -202,23 +200,5 @@ public class SaleTestHelper {
     resourceInUser.setId(UUID.randomUUID());
     resourceInUser.setDealPrice(BigDecimal.TEN);
     return resourceInUser;
-  }
-
-  public static ResourceRequestDto createResourceRequest() {
-    return ResourceRequestDto.builder()
-        .clazz("Pearl")
-        .quantityType("carat")
-        .pricePerQuantity(BigDecimal.TEN)
-        .build();
-  }
-
-  public static ResourcePurchaseRequestDto createResourceInUserRequest(
-      UUID userId, UUID resourceId) {
-    ResourcePurchaseRequestDto requestDto = new ResourcePurchaseRequestDto();
-    requestDto.setResourceId(resourceId);
-    requestDto.setUserId(userId);
-    requestDto.setQuantity(BigDecimal.valueOf(100));
-    requestDto.setDealPrice(BigDecimal.valueOf(100));
-    return requestDto;
   }
 }

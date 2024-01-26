@@ -19,10 +19,7 @@ import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.helper.SaleTestHelper;
-import jewellery.inventory.mapper.ProductMapper;
-import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
-import jewellery.inventory.mapper.SaleMapper;
-import jewellery.inventory.mapper.UserMapper;
+import jewellery.inventory.mapper.*;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.PurchasedResourceInUser;
 import jewellery.inventory.model.Sale;
@@ -42,6 +39,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class SaleMapperTest {
   @InjectMocks private SaleMapper saleMapper;
   @Mock private UserMapper userMapper;
+  @Mock private ResourceMapper resourceMapper;
   @Mock private ProductMapper productMapper;
   @Mock private ResourceService resourceService;
   @Mock private ResourceRepository resourceRepository;
@@ -108,9 +106,6 @@ class SaleMapperTest {
     when(userMapper.toUserResponse(buyer)).thenReturn(buyerResponseDto);
 
     when(productMapper.mapToProductResponseDto(product)).thenReturn(new ProductResponseDto());
-    when(purchasedResourceInUserMapper.toPurchasedResourceInUserResponseDto(
-            purchasedResourceInUser))
-        .thenReturn(purchasedResourceInUserResponseDto);
 
     SaleResponseDto saleResponseDto = saleMapper.mapEntityToResponseDto(sale);
 

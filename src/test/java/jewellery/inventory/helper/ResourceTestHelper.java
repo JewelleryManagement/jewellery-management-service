@@ -143,7 +143,7 @@ public class ResourceTestHelper {
         .build();
   }
 
-  private static ResourceRequestDto getPearlRequestDto() {
+  public static ResourceRequestDto getPearlRequestDto() {
     return PearlRequestDto.builder()
         .clazz(CLAZZ_PEARL)
         .quantityType(QUANTITY_TYPE_UNIT)

@@ -11,6 +11,8 @@ import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.PurchasedResourceInUser;
@@ -64,12 +66,12 @@ public class SaleMapper {
   }
 
   public ResourceReturnResponseDto mapToResourceReturnResponseDto(
-          PurchasedResourceInUser resourceToReturn, SaleResponseDto sale) {
+      PurchasedResourceInUser resourceToReturn, SaleResponseDto sale) {
     return ResourceReturnResponseDto.builder()
-            .returnedResource(resourceMapper.toResourceResponse(resourceToReturn.getResource()))
-            .saleAfter(sale)
-            .date(LocalDate.now())
-            .build();
+        .returnedResource(resourceMapper.toResourceResponse(resourceToReturn.getResource()))
+        .saleAfter(sale)
+        .date(LocalDate.now())
+        .build();
   }
 
   private List<ProductResponseDto> mapAllProductsToResponse(Sale sale) {
@@ -82,9 +84,21 @@ public class SaleMapper {
   }
 
   private List<PurchasedResourceInUserResponseDto> mapAllResourcesToResponse(Sale sale) {
-    return sale.getResources().stream()
-        .map(purchasedResourceInUserMapper::toPurchasedResourceInUserResponseDto)
-        .toList();
+    List<PurchasedResourceInUserResponseDto> result = new ArrayList<>();
+    for (PurchasedResourceInUser resource : sale.getResources()) {
+      PurchasedResourceInUserResponseDto purchasedResourceInUserResponseDto =
+          new PurchasedResourceInUserResponseDto();
+      ResourceQuantityResponseDto resourceQuantityResponseDto = new ResourceQuantityResponseDto();
+      ResourceResponseDto resourceResponseDto =
+          resourceMapper.toResourceResponse(resource.getResource());
+      resourceQuantityResponseDto.setResource(resourceResponseDto);
+      resourceQuantityResponseDto.setQuantity(resource.getQuantity());
+      purchasedResourceInUserResponseDto.setResource(resourceQuantityResponseDto);
+      purchasedResourceInUserResponseDto.setSalePrice(resource.getSalePrice());
+      purchasedResourceInUserResponseDto.setDiscount(resource.getDiscount());
+      result.add(purchasedResourceInUserResponseDto);
+    }
+    return result;
   }
 
   private BigDecimal getTotalPriceFromEntity(
@@ -101,12 +115,15 @@ public class SaleMapper {
     return totalPrice;
   }
 
-  private BigDecimal calculateDiscount(List<Product> products, List<PurchasedResourceInUser> resources, String calculationType) {
+  private BigDecimal calculateDiscount(
+      List<Product> products, List<PurchasedResourceInUser> resources, String calculationType) {
     BigDecimal totalDiscountAmount = calculateTotalDiscountAmount(products, resources);
     BigDecimal totalPrice = calculateTotalPrice(products, resources);
 
     if (PERCENTAGE.equals(calculationType) && !totalPrice.equals(BigDecimal.ZERO)) {
-      return totalDiscountAmount.divide(totalPrice, MathContext.DECIMAL128).multiply(getBigDecimal("100"));
+      return totalDiscountAmount
+          .divide(totalPrice, MathContext.DECIMAL128)
+          .multiply(getBigDecimal("100"));
     } else if (AMOUNT.equals(calculationType)) {
       return totalPrice.subtract(totalDiscountAmount);
     }
@@ -114,14 +131,16 @@ public class SaleMapper {
     throw new IllegalArgumentException("Invalid calculation type");
   }
 
-  private BigDecimal calculateTotalDiscountAmount(List<Product> products, List<PurchasedResourceInUser> resources) {
+  private BigDecimal calculateTotalDiscountAmount(
+      List<Product> products, List<PurchasedResourceInUser> resources) {
     BigDecimal totalDiscountAmount = BigDecimal.ZERO;
     totalDiscountAmount = totalDiscountAmount.add(calculateDiscountForProducts(products));
     totalDiscountAmount = totalDiscountAmount.add(calculateDiscountForResources(resources));
     return totalDiscountAmount;
   }
 
-  private BigDecimal calculateTotalPrice(List<Product> products, List<PurchasedResourceInUser> resources) {
+  private BigDecimal calculateTotalPrice(
+      List<Product> products, List<PurchasedResourceInUser> resources) {
     BigDecimal totalPrice = BigDecimal.ZERO;
     totalPrice = totalPrice.add(calculatePriceForProducts(products));
     totalPrice = totalPrice.add(calculatePriceForResources(resources));
@@ -133,7 +152,9 @@ public class SaleMapper {
     for (Product product : products) {
       BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
       BigDecimal discountRate = Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
-      discountAmount = discountAmount.add(salePrice.multiply(discountRate.divide(getBigDecimal("100"), RoundingMode.HALF_UP)));
+      discountAmount =
+          discountAmount.add(
+              salePrice.multiply(discountRate.divide(getBigDecimal("100"), RoundingMode.HALF_UP)));
     }
     return discountAmount;
   }
@@ -141,9 +162,12 @@ public class SaleMapper {
   private BigDecimal calculateDiscountForResources(List<PurchasedResourceInUser> resources) {
     BigDecimal discountAmount = BigDecimal.ZERO;
     for (PurchasedResourceInUser resource : resources) {
-      BigDecimal salePrice = Optional.ofNullable(resource.getResource().getPricePerQuantity()).orElse(BigDecimal.ZERO);
+      BigDecimal salePrice =
+          Optional.ofNullable(resource.getResource().getPricePerQuantity()).orElse(BigDecimal.ZERO);
       BigDecimal discountRate = Optional.ofNullable(resource.getDiscount()).orElse(BigDecimal.ZERO);
-      discountAmount = discountAmount.add(salePrice.multiply(discountRate.divide(getBigDecimal("100"), RoundingMode.HALF_UP)));
+      discountAmount =
+          discountAmount.add(
+              salePrice.multiply(discountRate.divide(getBigDecimal("100"), RoundingMode.HALF_UP)));
     }
     return discountAmount;
   }
@@ -151,7 +175,8 @@ public class SaleMapper {
   private BigDecimal calculatePriceForProducts(List<Product> products) {
     BigDecimal totalPrice = BigDecimal.ZERO;
     for (Product product : products) {
-      totalPrice = totalPrice.add(Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO));
+      totalPrice =
+          totalPrice.add(Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO));
     }
     return totalPrice;
   }
@@ -159,7 +184,10 @@ public class SaleMapper {
   private BigDecimal calculatePriceForResources(List<PurchasedResourceInUser> resources) {
     BigDecimal totalPrice = BigDecimal.ZERO;
     for (PurchasedResourceInUser resource : resources) {
-      totalPrice = totalPrice.add(Optional.ofNullable(resource.getResource().getPricePerQuantity()).orElse(BigDecimal.ZERO));
+      totalPrice =
+          totalPrice.add(
+              Optional.ofNullable(resource.getResource().getPricePerQuantity())
+                  .orElse(BigDecimal.ZERO));
     }
     return totalPrice;
   }
