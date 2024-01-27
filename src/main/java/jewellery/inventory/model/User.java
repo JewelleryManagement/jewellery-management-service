@@ -54,7 +54,7 @@ public class User implements UserDetails {
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ResourceInUser> resourcesOwned = new ArrayList<>();
 
-  @OneToMany
+  @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
   private List<PurchasedResourceInUser> purchasedResources;
 
   @Override
