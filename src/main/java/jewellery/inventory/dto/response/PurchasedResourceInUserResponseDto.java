@@ -14,6 +14,7 @@ import lombok.experimental.SuperBuilder;
 public class PurchasedResourceInUserResponseDto {
 
   private ResourceQuantityResponseDto resource;
+  private UserResponseDto owner;
   private BigDecimal salePrice;
   private BigDecimal discount;
 }

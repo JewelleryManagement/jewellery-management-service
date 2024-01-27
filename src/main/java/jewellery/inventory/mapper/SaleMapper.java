@@ -83,7 +83,7 @@ public class SaleMapper {
     return productResponseDtos;
   }
 
-  private List<PurchasedResourceInUserResponseDto> mapAllResourcesToResponse(Sale sale) {
+  public List<PurchasedResourceInUserResponseDto> mapAllResourcesToResponse(Sale sale) {
     List<PurchasedResourceInUserResponseDto> result = new ArrayList<>();
     for (PurchasedResourceInUser resource : sale.getResources()) {
       PurchasedResourceInUserResponseDto purchasedResourceInUserResponseDto =
@@ -96,6 +96,7 @@ public class SaleMapper {
       purchasedResourceInUserResponseDto.setResource(resourceQuantityResponseDto);
       purchasedResourceInUserResponseDto.setSalePrice(resource.getSalePrice());
       purchasedResourceInUserResponseDto.setDiscount(resource.getDiscount());
+      purchasedResourceInUserResponseDto.setOwner(userMapper.toUserResponse(sale.getBuyer()));
       result.add(purchasedResourceInUserResponseDto);
     }
     return result;

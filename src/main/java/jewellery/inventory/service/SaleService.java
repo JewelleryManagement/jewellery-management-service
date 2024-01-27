@@ -214,7 +214,10 @@ public class SaleService {
 
   private void setResourcesAsPartOfSale(Sale sale) {
     List<PurchasedResourceInUser> resources = sale.getResources();
-    resources.forEach(resource -> resource.setPartOfSale(sale));
+    resources.forEach(resource -> {
+      resource.setPartOfSale(sale);
+      resource.setOwner(sale.getBuyer());
+    });
     purchasedResourceInUserRepository.saveAll(resources);
   }
 

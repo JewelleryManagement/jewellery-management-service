@@ -18,6 +18,7 @@ import lombok.*;
 public class PurchasedResourceInUser {
   @Id @GeneratedValue private UUID id;
   @ManyToOne private Resource resource;
+  @ManyToOne private User owner;
   private BigDecimal quantity;
   private BigDecimal salePrice;
   private BigDecimal discount;

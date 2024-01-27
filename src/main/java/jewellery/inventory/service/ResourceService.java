@@ -1,5 +1,6 @@
 package jewellery.inventory.service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -8,12 +9,16 @@ import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
+import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
+import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
 import jewellery.inventory.mapper.ResourceMapper;
+import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.resource.Resource;
+import jewellery.inventory.repository.PurchasedResourceInUserRepository;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +32,9 @@ public class ResourceService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(ResourceService.class);
   private final ResourceRepository resourceRepository;
   private final ResourceInUserRepository resourceInUserRepository;
+  private final PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   private final ResourceMapper resourceMapper;
+  private final PurchasedResourceInUserMapper purchasedResourceInUserMapper;
 
   public List<ResourceResponseDto> getAllResources() {
     logger.debug("Fetching all Resources");
@@ -99,5 +106,11 @@ public class ResourceService implements EntityFetcher {
 
   public Resource getResourceById(UUID id) {
     return resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
+  }
+
+  public List<PurchasedResourceInUserResponseDto> getAllPurchasedResources(UUID userId) {
+    return purchasedResourceInUserRepository.findAllByOwnerId(userId).stream()
+        .map(purchasedResourceInUserMapper::toPurchaseResourceInUserResponse)
+        .toList();
   }
 }
