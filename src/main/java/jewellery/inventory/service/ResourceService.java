@@ -1,6 +1,5 @@
 package jewellery.inventory.service;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -15,8 +14,8 @@ import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
 import jewellery.inventory.mapper.ResourceMapper;
-import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.EventType;
+import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.PurchasedResourceInUserRepository;
 import jewellery.inventory.repository.ResourceInUserRepository;
@@ -35,6 +34,7 @@ public class ResourceService implements EntityFetcher {
   private final PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   private final ResourceMapper resourceMapper;
   private final PurchasedResourceInUserMapper purchasedResourceInUserMapper;
+  private final UserService userService;
 
   public List<ResourceResponseDto> getAllResources() {
     logger.debug("Fetching all Resources");
@@ -109,7 +109,8 @@ public class ResourceService implements EntityFetcher {
   }
 
   public List<PurchasedResourceInUserResponseDto> getAllPurchasedResources(UUID userId) {
-    return purchasedResourceInUserRepository.findAllByOwnerId(userId).stream()
+    User user = userService.getUser(userId);
+    return purchasedResourceInUserRepository.findAllByOwnerId(user.getId()).stream()
         .map(purchasedResourceInUserMapper::toPurchaseResourceInUserResponse)
         .toList();
   }

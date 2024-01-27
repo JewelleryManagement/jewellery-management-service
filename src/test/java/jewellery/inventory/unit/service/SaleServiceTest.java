@@ -16,6 +16,7 @@ import jewellery.inventory.dto.request.PurchasedResourceInUserRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
+import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
 import jewellery.inventory.exception.not_found.ResourceNotSoldException;
@@ -25,6 +26,7 @@ import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductNotSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.helper.SaleTestHelper;
+import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
@@ -42,6 +44,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SaleServiceTest {
   @InjectMocks private SaleService saleService;
+  @InjectMocks private ResourceService resourceService;
   @Mock private SaleRepository saleRepository;
   @Mock private UserService userService;
   @Mock private ProductService productService;
@@ -272,5 +275,31 @@ class SaleServiceTest {
     assertNotNull(actualReturnResourceResponse);
     assertEquals(0, sale.getResources().size());
     assertEquals(resourceInUser.getQuantity(), BigDecimal.valueOf(11));
+  }
+
+    @Test
+  void testGetAllPurchasedResourcesSuccessfully() {
+    User user = UserTestHelper.createTestUserWithId();
+    when(userService.getUser(user.getId())).thenReturn(user);
+
+    PurchasedResourceInUser purchasedResourceInUser =
+        SaleTestHelper.createPurchasedResource(BigDecimal.TEN);
+    when(purchasedResourceInUserRepository.findAllByOwnerId(user.getId()))
+        .thenReturn(List.of(purchasedResourceInUser));
+
+    PurchasedResourceInUserResponseDto purchasedResourceInUserResponseDto =
+        SaleTestHelper.createPurchasedResourceResponseDto(new Sale());
+    when(purchasedResourceInUserMapper.toPurchaseResourceInUserResponse(any()))
+        .thenReturn(purchasedResourceInUserResponseDto);
+
+    List<PurchasedResourceInUserResponseDto> actualResponse =
+        resourceService.getAllPurchasedResources(user.getId());
+
+    assertNotNull(actualResponse);
+    assertEquals(actualResponse.size(), 1);
+
+    assertEquals(
+        actualResponse.get(0).getResource().getResource().getId(),
+        purchasedResourceInUserResponseDto.getResource().getResource().getId());
   }
 }

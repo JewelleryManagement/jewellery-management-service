@@ -8,6 +8,7 @@ import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -40,7 +41,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private User seller;
   private User buyer;
   private PreciousStone preciousStone;
-  private ResponseEntity<Pearl> resourceForSale;
+  private ResponseEntity<Pearl> pearl;
   private ResourcePurchaseRequestDto resourceInUserRequestDto;
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
   private ProductRequestDto productRequestDto;
@@ -91,9 +92,9 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), seller);
     productRequestDto2 =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), seller);
-    resourceForSale = createPearlInDatabase();
+    pearl = createPearlInDatabase();
     pearlInUserRequest =
-        getResourceInUserRequestDto(seller, Objects.requireNonNull(resourceForSale.getBody()));
+        getResourceInUserRequestDto(seller, Objects.requireNonNull(pearl.getBody()));
     getResourcesInUserResponseDto(pearlInUserRequest);
   }
 
@@ -106,8 +107,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     ResponseEntity<ResourceReturnResponseDto> response =
         this.testRestTemplate.exchange(
-            getSaleReturnResourceUrl(
-                saleResponse.getBody().getId(), resourceForSale.getBody().getId()),
+            getSaleReturnResourceUrl(saleResponse.getBody().getId(), pearl.getBody().getId()),
             HttpMethod.PUT,
             null,
             ResourceReturnResponseDto.class);
@@ -115,8 +115,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertNotNull(response.getBody().getSaleAfter());
-    assertEquals(
-        resourceForSale.getBody().getId(), response.getBody().getReturnedResource().getId());
+    assertEquals(pearl.getBody().getId(), response.getBody().getReturnedResource().getId());
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
 
@@ -209,8 +208,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     BigDecimal totalPrice =
         SALE_TOTAL_PRICE.add(
-            Objects.requireNonNull(resourceForSale
-                            .getBody())
+            Objects.requireNonNull(pearl.getBody())
                 .getPricePerQuantity()
                 .multiply(saleRequestDto.getResources().get(0).getResource().getQuantity()));
     assertEquals(totalPrice, saleResponse.getBody().getTotalPrice());
@@ -230,13 +228,19 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void createSaleResourceSuccessfully() throws JsonProcessingException {
 
     SaleRequestDto saleRequestDto =
-        getSaleRequestDto(seller, buyer, Objects.requireNonNull(createProduct(productRequestDto)), pearlInUserRequest);
+        getSaleRequestDto(
+            seller,
+            buyer,
+            Objects.requireNonNull(createProduct(productRequestDto)),
+            pearlInUserRequest);
     saleRequestDto.setProducts(new ArrayList<>());
 
     ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
 
     assertEquals(HttpStatus.CREATED, saleResponse.getStatusCode());
-    assertEquals(saleRequestDto.getBuyerId(), Objects.requireNonNull(saleResponse.getBody()).getBuyer().getId());
+    assertEquals(
+        saleRequestDto.getBuyerId(),
+        Objects.requireNonNull(saleResponse.getBody()).getBuyer().getId());
     assertEquals(saleRequestDto.getSellerId(), saleResponse.getBody().getSeller().getId());
     assertEquals(saleRequestDto.getDate(), saleResponse.getBody().getDate());
     assertEquals(
@@ -246,7 +250,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         saleResponse.getBody().getResources().get(0).getResource().getResource().getId());
 
     BigDecimal totalPrice =
-        Objects.requireNonNull(resourceForSale.getBody())
+        Objects.requireNonNull(pearl.getBody())
             .getPricePerQuantity()
             .multiply(saleRequestDto.getResources().get(0).getResource().getQuantity());
     assertEquals(totalPrice, saleResponse.getBody().getTotalPrice());
@@ -298,6 +302,40 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(SALE_CREATE, expectedEventPayload);
+  }
+
+  @Test
+  void testGetAllPurchasedResourcesShouldThrowWhenUserNotFound() {
+    ResponseEntity<String> response =
+        this.testRestTemplate.getForEntity(
+            getBaseResourceUrl() + "/purchased/" + UUID.randomUUID(), String.class);
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+  }
+
+  @Test
+  void testGetAllPurchasedResourcesSuccessfully() throws JsonProcessingException {
+    SaleRequestDto saleRequestDto =
+        getSaleRequestDto(
+            seller,
+            buyer,
+            Objects.requireNonNull(createProduct(productRequestDto)),
+            pearlInUserRequest);
+    saleRequestDto.setProducts(new ArrayList<>());
+
+    ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.getForEntity("/resources/purchased/" + buyer.getId(), String.class);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+
+    List<PurchasedResourceInUserResponseDto> resources =
+        objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+    assertEquals(resources.size(), 1);
+    for (PurchasedResourceInUserResponseDto resource : resources) {
+      assertEquals(resource.getResource().getResource().getId(), pearl.getBody().getId());
+    }
   }
 
   @Nullable
