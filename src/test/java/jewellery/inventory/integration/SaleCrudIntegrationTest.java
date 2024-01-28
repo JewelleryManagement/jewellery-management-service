@@ -193,6 +193,22 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
+  void createSaleShouldThrowWhenResourceNotOwned() {
+    seller.setId(UUID.randomUUID());
+    SaleRequestDto saleRequestDto =
+            getSaleRequestDto(
+                    seller,
+                    buyer,
+                    Objects.requireNonNull(createProduct(productRequestDto)),
+                    pearlInUserRequest);
+    saleRequestDto.setProducts(new ArrayList<>());
+
+    ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
+
+    assertEquals(HttpStatus.NOT_FOUND, saleResponse.getStatusCode());
+  }
+
+  @Test
   void createSaleWithResourceAndProductSuccessfully() throws JsonProcessingException {
     SaleRequestDto saleRequestDto =
         getSaleRequestDto(seller, buyer, createProduct(productRequestDto), pearlInUserRequest);
@@ -326,7 +342,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             pearlInUserRequest);
     saleRequestDto.setProducts(new ArrayList<>());
 
-    ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
+    createSale(saleRequestDto);
 
     ResponseEntity<String> response =
         this.testRestTemplate.getForEntity(

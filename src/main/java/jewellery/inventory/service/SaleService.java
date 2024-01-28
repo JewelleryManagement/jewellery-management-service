@@ -58,6 +58,7 @@ public class SaleService {
     throwExceptionIfProductIsSold(sale.getProducts());
     throwExceptionIfSellerNotProductOwner(sale.getProducts(), saleRequestDto.getSellerId());
     throwExceptionIfProductIsPartOfAnotherProduct(sale.getProducts());
+    throwExceptionIfResourceIsNotOwned(saleRequestDto);
 
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
@@ -254,5 +255,13 @@ public class SaleService {
     ResourceInUser resourceInUser =
         resourceInUserService.getResourceInUser(sale.getSeller(), resourceToReturn.getResource());
     resourceInUser.setQuantity(resourceInUser.getQuantity().add(resourceToReturn.getQuantity()));
+  }
+
+  private void throwExceptionIfResourceIsNotOwned(SaleRequestDto saleRequestDto) {
+    for (PurchasedResourceInUserRequestDto resource : saleRequestDto.getResources()) {
+      resourceInUserService.findResourceInUserOrThrow(
+          userService.getUser(saleRequestDto.getSellerId()),
+          resource.getResource().getResourceId());
+    }
   }
 }

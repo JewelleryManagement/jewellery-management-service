@@ -199,7 +199,7 @@ public class ResourceInUserService implements EntityFetcher {
     return newQuantity.compareTo(BigDecimal.ZERO) < 0;
   }
 
-  private ResourceInUser findResourceInUserOrThrow(User previousOwner, UUID resourceId) {
+  public ResourceInUser findResourceInUserOrThrow(User previousOwner, UUID resourceId) {
     return findResourceInUser(previousOwner, resourceId)
         .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, previousOwner.getId()));
   }

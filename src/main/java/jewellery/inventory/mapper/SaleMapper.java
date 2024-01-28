@@ -85,20 +85,27 @@ public class SaleMapper {
   public List<PurchasedResourceInUserResponseDto> mapAllResourcesToResponse(Sale sale) {
     List<PurchasedResourceInUserResponseDto> result = new ArrayList<>();
     for (PurchasedResourceInUser resource : sale.getResources()) {
-      PurchasedResourceInUserResponseDto purchasedResourceInUserResponseDto =
-          new PurchasedResourceInUserResponseDto();
-      ResourceQuantityResponseDto resourceQuantityResponseDto = new ResourceQuantityResponseDto();
-      ResourceResponseDto resourceResponseDto =
-          resourceMapper.toResourceResponse(resource.getResource());
-      resourceQuantityResponseDto.setResource(resourceResponseDto);
-      resourceQuantityResponseDto.setQuantity(resource.getQuantity());
-      purchasedResourceInUserResponseDto.setResource(resourceQuantityResponseDto);
-      purchasedResourceInUserResponseDto.setSalePrice(resource.getSalePrice());
-      purchasedResourceInUserResponseDto.setDiscount(resource.getDiscount());
-      purchasedResourceInUserResponseDto.setOwner(userMapper.toUserResponse(sale.getBuyer()));
-      result.add(purchasedResourceInUserResponseDto);
+      result.add(getPurchasedResourceInUserResponseDto(sale, resource));
     }
     return result;
+  }
+
+  private PurchasedResourceInUserResponseDto getPurchasedResourceInUserResponseDto(
+      Sale sale, PurchasedResourceInUser resource) {
+    return PurchasedResourceInUserResponseDto.builder()
+        .resource(getResourceQuantityResponseDto(resource))
+        .salePrice(resource.getSalePrice())
+        .discount(resource.getDiscount())
+        .owner(userMapper.toUserResponse(sale.getBuyer()))
+        .build();
+  }
+
+  private ResourceQuantityResponseDto getResourceQuantityResponseDto(
+      PurchasedResourceInUser resource) {
+    return ResourceQuantityResponseDto.builder()
+        .resource(resourceMapper.toResourceResponse(resource.getResource()))
+        .quantity(resource.getQuantity())
+        .build();
   }
 
   private BigDecimal getTotalPriceFromEntity(
@@ -118,7 +125,7 @@ public class SaleMapper {
   private BigDecimal calculateDiscount(
       List<Product> products, List<PurchasedResourceInUser> resources, String calculationType) {
     BigDecimal totalDiscountAmount = calculateTotalDiscountAmount(products, resources);
-    BigDecimal totalPrice = calculateTotalPrice(products, resources);
+    BigDecimal totalPrice = getTotalPriceFromEntity(products, resources);
 
     if (PERCENTAGE.equals(calculationType) && !totalPrice.equals(BigDecimal.ZERO)) {
       return totalDiscountAmount
@@ -137,14 +144,6 @@ public class SaleMapper {
     totalDiscountAmount = totalDiscountAmount.add(calculateDiscountForProducts(products));
     totalDiscountAmount = totalDiscountAmount.add(calculateDiscountForResources(resources));
     return totalDiscountAmount;
-  }
-
-  private BigDecimal calculateTotalPrice(
-      List<Product> products, List<PurchasedResourceInUser> resources) {
-    BigDecimal totalPrice = BigDecimal.ZERO;
-    totalPrice = totalPrice.add(calculatePriceForProducts(products));
-    totalPrice = totalPrice.add(calculatePriceForResources(resources));
-    return totalPrice;
   }
 
   private BigDecimal calculateDiscountForProducts(List<Product> products) {
@@ -169,24 +168,6 @@ public class SaleMapper {
               salePrice.multiply(discountRate).divide(getBigDecimal("100"), RoundingMode.HALF_UP));
     }
     return discountAmount;
-  }
-
-  private BigDecimal calculatePriceForProducts(List<Product> products) {
-    BigDecimal totalPrice = BigDecimal.ZERO;
-    for (Product product : products) {
-      totalPrice =
-          totalPrice.add(Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO));
-    }
-    return totalPrice;
-  }
-
-  private BigDecimal calculatePriceForResources(List<PurchasedResourceInUser> resources) {
-    BigDecimal totalPrice = BigDecimal.ZERO;
-    for (PurchasedResourceInUser resource : resources) {
-      totalPrice =
-          totalPrice.add(Optional.ofNullable(resource.getSalePrice()).orElse(BigDecimal.ZERO));
-    }
-    return totalPrice;
   }
 
   private List<Product> setProductPriceAndDiscount(
