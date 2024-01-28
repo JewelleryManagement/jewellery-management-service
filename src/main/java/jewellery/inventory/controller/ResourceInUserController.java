@@ -4,9 +4,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
+import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
@@ -68,7 +70,8 @@ public class ResourceInUserController {
   public ResourcesInUserResponseDto removeQuantityFromUserResource(
       @PathVariable UUID userId,
       @PathVariable UUID resourceId,
-      @PathVariable("quantity") @PositiveOrZero(message = QUANTITY_MIN_VALUE_MSG) BigDecimal quantity) {
+      @PathVariable("quantity") @PositiveOrZero(message = QUANTITY_MIN_VALUE_MSG)
+          BigDecimal quantity) {
     return resourceAvailabilityService.removeQuantityFromResource(userId, resourceId, quantity);
   }
 
@@ -78,5 +81,13 @@ public class ResourceInUserController {
   public ResourceOwnedByUsersResponseDto getAllUsersAndQuantitiesByResource(
       @PathVariable UUID resourceId) {
     return resourceAvailabilityService.getUsersAndQuantities(resourceId);
+  }
+
+  @Operation(summary = "Get all purchased resources")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/purchased/{userId}")
+  public List<PurchasedResourceInUserResponseDto> getAllPurchasedResources(
+      @PathVariable("userId") UUID userId) {
+    return resourceAvailabilityService.getAllPurchasedResources(userId);
   }
 }

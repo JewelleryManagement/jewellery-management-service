@@ -44,7 +44,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SaleServiceTest {
   @InjectMocks private SaleService saleService;
-  @InjectMocks private ResourceService resourceService;
   @Mock private SaleRepository saleRepository;
   @Mock private UserService userService;
   @Mock private ProductService productService;
@@ -253,47 +252,41 @@ class SaleServiceTest {
     when(saleRepository.findById(sale.getId())).thenReturn(Optional.of(sale));
     when(purchasedResourceInUserRepository.findByResourceIdAndPartOfSaleId(
             purchasedResourceInUser.getResource().getId(), sale.getId()))
-            .thenReturn(Optional.of(purchasedResourceInUser));
+        .thenReturn(Optional.of(purchasedResourceInUser));
     purchasedResourceInUser.setPartOfSale(sale);
 
     ResourceInUser resourceInUser = SaleTestHelper.createResourceInUser(BigDecimal.TEN);
     when(resourceInUserService.getResourceInUser(
             sale.getSeller(), purchasedResourceInUser.getResource()))
-            .thenReturn(resourceInUser);
+        .thenReturn(resourceInUser);
 
     assertEquals(resourceInUser.getQuantity(), BigDecimal.TEN);
     assertEquals(purchasedResourceInUser.getQuantity(), BigDecimal.ONE);
     assertEquals(1, sale.getResources().size());
 
     when(saleService.returnResource(sale.getId(), purchasedResourceInUser.getResource().getId()))
-            .thenReturn(new ResourceReturnResponseDto());
+        .thenReturn(new ResourceReturnResponseDto());
 
     resourceInUser.setQuantity(BigDecimal.TEN);
     ResourceReturnResponseDto actualReturnResourceResponse =
-            saleService.returnResource(sale.getId(), purchasedResourceInUser.getResource().getId());
+        saleService.returnResource(sale.getId(), purchasedResourceInUser.getResource().getId());
 
     assertNotNull(actualReturnResourceResponse);
     assertEquals(0, sale.getResources().size());
     assertEquals(resourceInUser.getQuantity(), BigDecimal.valueOf(11));
   }
 
-    @Test
+  @Test
   void testGetAllPurchasedResourcesSuccessfully() {
+
     User user = UserTestHelper.createTestUserWithId();
-    when(userService.getUser(user.getId())).thenReturn(user);
-
-    PurchasedResourceInUser purchasedResourceInUser =
-        SaleTestHelper.createPurchasedResource(BigDecimal.TEN);
-    when(purchasedResourceInUserRepository.findAllByOwnerId(user.getId()))
-        .thenReturn(List.of(purchasedResourceInUser));
-
     PurchasedResourceInUserResponseDto purchasedResourceInUserResponseDto =
         SaleTestHelper.createPurchasedResourceResponseDto(new Sale());
-    when(purchasedResourceInUserMapper.toPurchaseResourceInUserResponse(any()))
-        .thenReturn(purchasedResourceInUserResponseDto);
 
+    when(resourceInUserService.getAllPurchasedResources(user.getId()))
+        .thenReturn(List.of(purchasedResourceInUserResponseDto));
     List<PurchasedResourceInUserResponseDto> actualResponse =
-        resourceService.getAllPurchasedResources(user.getId());
+        resourceInUserService.getAllPurchasedResources(user.getId());
 
     assertNotNull(actualResponse);
     assertEquals(actualResponse.size(), 1);

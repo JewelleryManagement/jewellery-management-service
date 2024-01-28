@@ -3,6 +3,7 @@ package jewellery.inventory.service;
 import static jewellery.inventory.model.EventType.RESOURCE_REMOVE_QUANTITY;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
@@ -10,6 +11,7 @@ import jewellery.inventory.aspect.annotation.*;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
+import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
@@ -18,6 +20,7 @@ import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResou
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
+import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
 import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.mapper.ResourcesInUserMapper;
 import jewellery.inventory.mapper.UserMapper;
@@ -25,6 +28,7 @@ import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
+import jewellery.inventory.repository.PurchasedResourceInUserRepository;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
@@ -44,6 +48,9 @@ public class ResourceInUserService implements EntityFetcher {
   private final ResourcesInUserMapper resourcesInUserMapper;
   private final UserMapper userMapper;
   private final ResourceMapper resourceMapper;
+  private final PurchasedResourceInUserRepository purchasedResourceInUserRepository;
+  private final PurchasedResourceInUserMapper purchasedResourceInUserMapper;
+  private final UserService userService;
   private static final BigDecimal EPSILON = new BigDecimal("1e-10");
 
   @Transactional
@@ -119,6 +126,13 @@ public class ResourceInUserService implements EntityFetcher {
     user.getResourcesOwned().remove(resourceToRemove);
     logger.debug("Resource to remove: {}", resourceToRemove);
     userRepository.save(user);
+  }
+
+  public List<PurchasedResourceInUserResponseDto> getAllPurchasedResources(UUID userId) {
+    User user = userService.getUser(userId);
+    return purchasedResourceInUserRepository.findAllByOwnerId(user.getId()).stream()
+        .map(purchasedResourceInUserMapper::toPurchaseResourceInUserResponse)
+        .toList();
   }
 
   public ResourceOwnedByUsersResponseDto getUsersAndQuantities(UUID resourceId) {

@@ -62,7 +62,7 @@ public class SaleService {
     Sale createdSale = saleRepository.save(sale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
     removeQuantityFromResourcesInUser(sale);
-    setResourcesAsPartOfSale(createdSale);
+    setFieldsOfResourcesAfterSale(createdSale);
     logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
@@ -212,12 +212,15 @@ public class SaleService {
     return new ArrayList<>();
   }
 
-  private void setResourcesAsPartOfSale(Sale sale) {
+  private void setFieldsOfResourcesAfterSale(Sale sale) {
     List<PurchasedResourceInUser> resources = sale.getResources();
-    resources.forEach(resource -> {
-      resource.setPartOfSale(sale);
-      resource.setOwner(sale.getBuyer());
-    });
+    resources.forEach(
+        resource -> {
+          resource.setPartOfSale(sale);
+          resource.setOwner(sale.getBuyer());
+          resource.setSalePrice(
+              resource.getQuantity().multiply(resource.getResource().getPricePerQuantity()));
+        });
     purchasedResourceInUserRepository.saveAll(resources);
   }
 

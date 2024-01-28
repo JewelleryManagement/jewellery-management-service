@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
-import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.service.ResourceService;
@@ -69,12 +68,5 @@ public class ResourceController {
   @GetMapping("/quantity")
   public List<ResourceQuantityResponseDto> getAllResourceQuantities() {
     return resourceService.getAllResourceQuantities();
-  }
-
-  @Operation(summary = "Get all purchased resources")
-  @ResponseStatus(HttpStatus.OK)
-  @GetMapping("/purchased/{userId}")
-  public List<PurchasedResourceInUserResponseDto> getAllPurchasedResources(@PathVariable("userId") UUID userId) {
-    return resourceService.getAllPurchasedResources(userId);
   }
 }

@@ -80,6 +80,10 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return getBaseSaleUrl() + "/" + saleId + "/return-resource/" + resourceId;
   }
 
+  private String getPurchasedResourcesInUser(UUID userId) {
+    return "/resources/availability/purchased/" + userId;
+  }
+
   @BeforeEach
   void setUp() {
     seller = createUserInDatabase(createTestUserRequest());
@@ -325,7 +329,8 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
 
     ResponseEntity<String> response =
-        this.testRestTemplate.getForEntity("/resources/purchased/" + buyer.getId(), String.class);
+        this.testRestTemplate.getForEntity(
+            getPurchasedResourcesInUser(buyer.getId()), String.class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
 

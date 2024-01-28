@@ -29,7 +29,6 @@ public class SaleMapper {
   private final UserMapper userMapper;
   private final ProductMapper productMapper;
   private final ResourceMapper resourceMapper;
-  private final PurchasedResourceInUserMapper purchasedResourceInUserMapper;
   private final ResourceService resourceService;
   private static final String AMOUNT = "amount";
   private static final String PERCENTAGE = "percentage";
@@ -110,7 +109,7 @@ public class SaleMapper {
     }
 
     for (PurchasedResourceInUser resource : resources) {
-      totalPrice = totalPrice.add(resource.getResource().getPricePerQuantity());
+      totalPrice = totalPrice.add(resource.getSalePrice());
     }
 
     return totalPrice;
@@ -155,7 +154,7 @@ public class SaleMapper {
       BigDecimal discountRate = Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
       discountAmount =
           discountAmount.add(
-              salePrice.multiply(discountRate.divide(getBigDecimal("100"), RoundingMode.HALF_UP)));
+              salePrice.multiply(discountRate).divide(getBigDecimal("100"), RoundingMode.HALF_UP));
     }
     return discountAmount;
   }
@@ -163,12 +162,11 @@ public class SaleMapper {
   private BigDecimal calculateDiscountForResources(List<PurchasedResourceInUser> resources) {
     BigDecimal discountAmount = BigDecimal.ZERO;
     for (PurchasedResourceInUser resource : resources) {
-      BigDecimal salePrice =
-          Optional.ofNullable(resource.getResource().getPricePerQuantity()).orElse(BigDecimal.ZERO);
+      BigDecimal salePrice = Optional.ofNullable(resource.getSalePrice()).orElse(BigDecimal.ZERO);
       BigDecimal discountRate = Optional.ofNullable(resource.getDiscount()).orElse(BigDecimal.ZERO);
       discountAmount =
           discountAmount.add(
-              salePrice.multiply(discountRate.divide(getBigDecimal("100"), RoundingMode.HALF_UP)));
+              salePrice.multiply(discountRate).divide(getBigDecimal("100"), RoundingMode.HALF_UP));
     }
     return discountAmount;
   }
@@ -186,9 +184,7 @@ public class SaleMapper {
     BigDecimal totalPrice = BigDecimal.ZERO;
     for (PurchasedResourceInUser resource : resources) {
       totalPrice =
-          totalPrice.add(
-              Optional.ofNullable(resource.getResource().getPricePerQuantity())
-                  .orElse(BigDecimal.ZERO));
+          totalPrice.add(Optional.ofNullable(resource.getSalePrice()).orElse(BigDecimal.ZERO));
     }
     return totalPrice;
   }
