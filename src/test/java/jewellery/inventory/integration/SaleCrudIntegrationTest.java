@@ -337,7 +337,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     List<PurchasedResourceInUserResponseDto> resources =
         objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-    assertEquals(resources.size(), 1);
+    assertEquals(1, resources.size());
     for (PurchasedResourceInUserResponseDto resource : resources) {
       assertEquals(resource.getResource().getResource().getId(), pearl.getBody().getId());
     }
