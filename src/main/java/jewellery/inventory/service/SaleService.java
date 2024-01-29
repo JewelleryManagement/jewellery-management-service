@@ -9,7 +9,7 @@ import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
-import jewellery.inventory.exception.not_found.ResourceNotSoldException;
+import jewellery.inventory.exception.not_found.ResourceNotFoundInSaleException;
 import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
@@ -68,16 +68,6 @@ public class SaleService {
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
 
-  private void throwExceptionIfSellerNotProductOwner(List<Product> products, UUID sellerId) {
-    for (Product product : products) {
-      if (!product.getOwner().getId().equals(sellerId)) {
-        logger.error(
-            "Seller with ID {} is not the owner of product with ID {}", sellerId, product.getId());
-        throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
-      }
-    }
-  }
-
   @LogCreateEvent(eventType = EventType.SALE_RETURN_PRODUCT)
   public ProductReturnResponseDto returnProduct(UUID productId) {
     Product productToReturn = productService.getProduct(productId);
@@ -114,6 +104,16 @@ public class SaleService {
 
   private Sale getSale(UUID saleId) {
     return saleRepository.findById(saleId).orElseThrow(() -> new SaleNotFoundException(saleId));
+  }
+
+  private void throwExceptionIfSellerNotProductOwner(List<Product> products, UUID sellerId) {
+    for (Product product : products) {
+      if (!product.getOwner().getId().equals(sellerId)) {
+        logger.error(
+            "Seller with ID {} is not the owner of product with ID {}", sellerId, product.getId());
+        throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
+      }
+    }
   }
 
   private void throwExceptionIfProductIsPartOfAnotherProduct(List<Product> products) {
@@ -236,7 +236,7 @@ public class SaleService {
   private PurchasedResourceInUser getPurchasedResource(UUID resourceId, UUID saleId) {
     return purchasedResourceInUserRepository
         .findByResourceIdAndPartOfSaleId(resourceId, saleId)
-        .orElseThrow(() -> new ResourceNotSoldException(resourceId, saleId));
+        .orElseThrow(() -> new ResourceNotFoundInSaleException(resourceId, saleId));
   }
 
   private List<PurchasedResourceInUser> removeResourceFromSale(

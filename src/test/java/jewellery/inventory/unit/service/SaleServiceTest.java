@@ -19,7 +19,7 @@ import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
-import jewellery.inventory.exception.not_found.ResourceNotSoldException;
+import jewellery.inventory.exception.not_found.ResourceNotFoundInSaleException;
 import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
@@ -228,7 +228,6 @@ class SaleServiceTest {
 
   @Test
   void testReturnResourceShouldThrowWhenSaleNotFound() {
-    purchasedResourceInUser.setPartOfSale(new Sale());
     assertThrows(
         SaleNotFoundException.class,
         () ->
@@ -239,9 +238,9 @@ class SaleServiceTest {
   @Test
   void testReturnResourceShouldThrowWhenResourceInNotPartOfThisSale() {
     when(saleRepository.findById(sale.getId())).thenReturn(Optional.of(sale));
-    purchasedResourceInUser.setPartOfSale(new Sale());
+    sale.setResources(new ArrayList<>());
     assertThrows(
-        ResourceNotSoldException.class,
+        ResourceNotFoundInSaleException.class,
         () ->
             saleService.returnResource(
                 sale.getId(), purchasedResourceInUser.getResource().getId()));
@@ -260,8 +259,8 @@ class SaleServiceTest {
             sale.getSeller(), purchasedResourceInUser.getResource()))
         .thenReturn(resourceInUser);
 
-    assertEquals(resourceInUser.getQuantity(), BigDecimal.TEN);
-    assertEquals(purchasedResourceInUser.getQuantity(), BigDecimal.ONE);
+    assertEquals(BigDecimal.TEN, resourceInUser.getQuantity());
+    assertEquals(BigDecimal.ONE, purchasedResourceInUser.getQuantity());
     assertEquals(1, sale.getResources().size());
 
     when(saleService.returnResource(sale.getId(), purchasedResourceInUser.getResource().getId()))
@@ -273,7 +272,7 @@ class SaleServiceTest {
 
     assertNotNull(actualReturnResourceResponse);
     assertEquals(0, sale.getResources().size());
-    assertEquals(resourceInUser.getQuantity(), BigDecimal.valueOf(11));
+    assertEquals(BigDecimal.valueOf(11), resourceInUser.getQuantity());
   }
 
   @Test
@@ -289,10 +288,10 @@ class SaleServiceTest {
         resourceInUserService.getAllPurchasedResources(user.getId());
 
     assertNotNull(actualResponse);
-    assertEquals(actualResponse.size(), 1);
+    assertEquals(1, actualResponse.size());
 
     assertEquals(
-        actualResponse.get(0).getResource().getResource().getId(),
-        purchasedResourceInUserResponseDto.getResource().getResource().getId());
+        purchasedResourceInUserResponseDto.getResource().getResource().getId(),
+        actualResponse.get(0).getResource().getResource().getId());
   }
 }
