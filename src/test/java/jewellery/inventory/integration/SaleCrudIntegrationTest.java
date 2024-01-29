@@ -265,7 +265,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         calculateTotalPriceOfResource(saleRequestDto), saleResponse.getBody().getTotalPrice());
 
     assertEquals(
-        BigDecimal.TEN,
+        getBigDecimal("10"),
         saleResponse.getBody().getTotalDiscount().setScale(2, RoundingMode.HALF_UP));
     assertEquals(
         SALE_RESOURCE_DISCOUNTED_PRICE,
