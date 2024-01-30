@@ -92,7 +92,7 @@ class SaleMapperTest {
   }
 
   @Test
-  void testMapEntityToResponseDtoWillThrowsArithmeticException() {
+  void testMappingWithZeroSalePriceThrowsArithmeticException() {
     Sale sale =
         saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(productPriceDiscount));
 
