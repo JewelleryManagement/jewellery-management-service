@@ -44,7 +44,6 @@ class SaleMapperTest {
   private Sale sale;
   private SaleRequestDto saleRequestDto;
   private ProductDiscountRequestDto productDiscountRequestDto;
-  private List<Product> productsForSale;
   private ProductPriceDiscount productPriceDiscount;
 
   @BeforeEach
@@ -54,13 +53,10 @@ class SaleMapperTest {
     product = getTestProduct(seller, new Resource());
     sellerResponseDto = createTestUserResponseDto(seller);
     buyerResponseDto = createTestUserResponseDto(buyer);
-    productsForSale = SaleTestHelper.getProductsList(product);
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer);
     productDiscountRequestDto =
-        SaleTestHelper.createProductPriceDiscountRequest(
-            product.getId(),getBigDecimal("1000"));
-    productPriceDiscount =
-        SaleTestHelper.createTestProductPriceDiscount(product, sale);
+        SaleTestHelper.createProductPriceDiscountRequest(product.getId(), getBigDecimal("1000"));
+    productPriceDiscount = SaleTestHelper.createTestProductPriceDiscount(product, sale);
     List<ProductDiscountRequestDto> productDiscountRequestDtoList = new ArrayList<>();
     productDiscountRequestDtoList.add(productDiscountRequestDto);
     saleRequestDto =
@@ -82,7 +78,7 @@ class SaleMapperTest {
   @Test
   void testMapEntityToResponseDto() {
     Sale sale =
-            saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(productPriceDiscount));
+        saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(productPriceDiscount));
     when(userMapper.toUserResponse(seller)).thenReturn(sellerResponseDto);
     when(userMapper.toUserResponse(buyer)).thenReturn(buyerResponseDto);
 
@@ -98,7 +94,7 @@ class SaleMapperTest {
   @Test
   void testMapEntityToResponseDtoWillThrowsArithmeticException() {
     Sale sale =
-            saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(productPriceDiscount));
+        saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(productPriceDiscount));
 
     when(userMapper.toUserResponse(seller)).thenReturn(sellerResponseDto);
     when(userMapper.toUserResponse(buyer)).thenReturn(buyerResponseDto);

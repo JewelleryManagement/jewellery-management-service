@@ -34,9 +34,9 @@ import org.springframework.http.ResponseEntity;
 
 class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
-  private static final BigDecimal SALE_TOTAL_PRICE = getBigDecimal("10000");
+  private static final BigDecimal SALE_TOTAL_PRICE = getBigDecimal("505");
   private static final BigDecimal SALE_DISCOUNT = getBigDecimal("10");
-  private static final BigDecimal SALE_DISCOUNTED_PRICE = getBigDecimal("9000");
+  private static final BigDecimal SALE_DISCOUNTED_PRICE = getBigDecimal("454.50");
   private User seller;
   private User buyer;
   private PreciousStone preciousStone;
@@ -176,11 +176,11 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(),
         saleResponse.getBody().getProducts().get(0).getId());
-    assertEquals(SALE_TOTAL_PRICE, BigDecimal.valueOf(10000).setScale(2));
+    assertEquals(SALE_TOTAL_PRICE,saleResponse.getBody().getTotalPrice().setScale(2));
     assertEquals(
-        SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount().setScale(2, RoundingMode.HALF_UP));
+        SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount().setScale(2));
     assertEquals(
-        SALE_DISCOUNTED_PRICE, BigDecimal.valueOf(9000.00).setScale(2));
+        SALE_DISCOUNTED_PRICE, saleResponse.getBody().getTotalDiscountedPrice().setScale(2));
 
         Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
