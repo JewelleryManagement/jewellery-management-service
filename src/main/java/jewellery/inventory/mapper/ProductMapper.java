@@ -22,6 +22,7 @@ public class ProductMapper {
 
   private final UserMapper userMapper;
   private final ResourceMapper resourceMapper;
+
   public ProductResponseDto mapToProductResponseDto(Product product) {
 
     ProductResponseDto productResponseDto = new ProductResponseDto();
@@ -29,13 +30,14 @@ public class ProductMapper {
     if (product.getPartOfSale() != null && !product.getPartOfSale().getProducts().isEmpty()) {
       productResponseDto.setPartOfSale(product.getPartOfSale().getId());
       productResponseDto.setSalePrice(
-              product.getPartOfSale().getProducts().stream()
-                      .filter(productPriceDiscount ->
-                              product.getId().equals(productPriceDiscount.getProduct().getId()))
-                      .findFirst()
-                      .orElseThrow(() -> new NoSuchElementException("No matching productPriceDiscount found"))
-                      .getSalePrice()
-      );
+          product.getPartOfSale().getProducts().stream()
+              .filter(
+                  productPriceDiscount ->
+                      product.getId().equals(productPriceDiscount.getProduct().getId()))
+              .findFirst()
+              .orElseThrow(
+                  () -> new NoSuchElementException("No matching productPriceDiscount found"))
+              .getSalePrice());
     } else {
       productResponseDto.setSalePrice(calculateTotalPrice(product));
     }

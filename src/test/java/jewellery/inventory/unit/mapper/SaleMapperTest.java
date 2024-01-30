@@ -14,7 +14,6 @@ import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.helper.ProductPriceDiscountTestHelper;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.mapper.SaleMapper;
@@ -61,7 +60,7 @@ class SaleMapperTest {
         SaleTestHelper.createProductPriceDiscountRequest(
             product.getId(),getBigDecimal("1000"));
     productPriceDiscount =
-        ProductPriceDiscountTestHelper.createTestProductPriceDiscount(product, sale);
+        SaleTestHelper.createTestProductPriceDiscount(product, sale);
     List<ProductDiscountRequestDto> productDiscountRequestDtoList = new ArrayList<>();
     productDiscountRequestDtoList.add(productDiscountRequestDto);
     saleRequestDto =

@@ -1,6 +1,5 @@
 package jewellery.inventory.unit.service;
 
-import static jewellery.inventory.helper.ProductPriceDiscountTestHelper.createTestProductPriceDiscount;
 import static jewellery.inventory.helper.ProductTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
@@ -87,7 +86,7 @@ class SaleServiceTest {
     saleRequestDtoSellerNotOwner =
         SaleTestHelper.createSaleRequest(
             buyer.getId(), buyer.getId(), productDiscountRequestDtoList);
-    productPriceDiscount = createTestProductPriceDiscount(product, sale);
+    productPriceDiscount = SaleTestHelper.createTestProductPriceDiscount(product, sale);
   }
 
   @Test

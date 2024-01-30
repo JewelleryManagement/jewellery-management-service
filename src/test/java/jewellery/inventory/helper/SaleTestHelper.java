@@ -115,9 +115,12 @@ public class SaleTestHelper {
     productResponseDto.setOwner(owner);
     return productResponseDto;
   }
-  private static ProductPriceDiscount createProductPriceDiscount(Product product){
-    ProductPriceDiscount productPriceDiscount=new ProductPriceDiscount();
+  public static ProductPriceDiscount createTestProductPriceDiscount(Product product, Sale sale) {
+    ProductPriceDiscount productPriceDiscount = new ProductPriceDiscount();
+    productPriceDiscount.setDiscount(BigDecimal.ZERO);
     productPriceDiscount.setProduct(product);
+    productPriceDiscount.setSale(sale);
+    productPriceDiscount.setSalePrice(BigDecimal.ONE);
     return productPriceDiscount;
   }
 }
