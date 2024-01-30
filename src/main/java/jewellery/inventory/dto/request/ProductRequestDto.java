@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
-import jakarta.validation.constraints.PositiveOrZero;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import lombok.*;
 
@@ -26,7 +25,7 @@ public class ProductRequestDto {
   List<ResourceQuantityRequestDto> resourcesContent;
   private List<UUID> productsContent;
   private String description;
-  @PositiveOrZero
+  @NotNull
   private BigDecimal additionalPrice;
   @NotNull private String catalogNumber;
   @NotNull private String productionNumber;

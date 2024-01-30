@@ -216,12 +216,12 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     saleRequestDto.setBuyerId(buyer.getId());
     saleRequestDto.setSellerId(seller.getId());
     saleRequestDto.setDate(LocalDate.now());
-    ProductPriceDiscountRequestDto productPriceDiscountRequestDto =
-        new ProductPriceDiscountRequestDto();
-    productPriceDiscountRequestDto.setProductId(productResponse.getBody().getId());
-    productPriceDiscountRequestDto.setDiscount(SALE_DISCOUNT);
-    List<ProductPriceDiscountRequestDto> list = new ArrayList<>();
-    list.add(productPriceDiscountRequestDto);
+    ProductDiscountRequestDto productDiscountRequestDto =
+        new ProductDiscountRequestDto();
+    productDiscountRequestDto.setProductId(productResponse.getBody().getId());
+    productDiscountRequestDto.setDiscount(SALE_DISCOUNT);
+    List<ProductDiscountRequestDto> list = new ArrayList<>();
+    list.add(productDiscountRequestDto);
     saleRequestDto.setProducts(list);
     return saleRequestDto;
   }

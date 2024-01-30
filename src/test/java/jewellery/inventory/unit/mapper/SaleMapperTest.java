@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
+import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
@@ -44,7 +44,7 @@ class SaleMapperTest {
   private Product product;
   private Sale sale;
   private SaleRequestDto saleRequestDto;
-  private ProductPriceDiscountRequestDto productPriceDiscountRequestDto;
+  private ProductDiscountRequestDto productDiscountRequestDto;
   private List<Product> productsForSale;
   private ProductPriceDiscount productPriceDiscount;
 
@@ -57,16 +57,16 @@ class SaleMapperTest {
     buyerResponseDto = createTestUserResponseDto(buyer);
     productsForSale = SaleTestHelper.getProductsList(product);
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer);
-    productPriceDiscountRequestDto =
+    productDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(
             product.getId(),getBigDecimal("1000"));
     productPriceDiscount =
         ProductPriceDiscountTestHelper.createTestProductPriceDiscount(product, sale);
-    List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
-    productPriceDiscountRequestDtoList.add(productPriceDiscountRequestDto);
+    List<ProductDiscountRequestDto> productDiscountRequestDtoList = new ArrayList<>();
+    productDiscountRequestDtoList.add(productDiscountRequestDto);
     saleRequestDto =
         SaleTestHelper.createSaleRequest(
-            seller.getId(), buyer.getId(), productPriceDiscountRequestDtoList);
+            seller.getId(), buyer.getId(), productDiscountRequestDtoList);
   }
 
   @Test

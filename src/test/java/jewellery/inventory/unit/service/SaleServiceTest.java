@@ -11,7 +11,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
 import java.util.*;
-import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
+import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
@@ -58,7 +58,7 @@ class SaleServiceTest {
   private SaleRequestDto saleRequestDto;
   private SaleRequestDto saleRequestDtoSellerNotOwner;
   private SaleResponseDto saleResponseDto;
-  private ProductPriceDiscountRequestDto productPriceDiscountRequestDto;
+  private ProductDiscountRequestDto productDiscountRequestDto;
   private List<Product> productsForSale;
   private List<Product> productsForSaleTwo;
   private ProductResponseDto productResponseDto;
@@ -77,16 +77,16 @@ class SaleServiceTest {
     productResponseDto = getReturnedProductResponseDto(product, createTestUserResponseDto(buyer));
     productReturnResponseDto =
         SaleTestHelper.getProductReturnResponseDto(saleResponseDto, productResponseDto);
-    productPriceDiscountRequestDto =
+    productDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(product.getId(), getBigDecimal("10"));
-    List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
-    productPriceDiscountRequestDtoList.add(productPriceDiscountRequestDto);
+    List<ProductDiscountRequestDto> productDiscountRequestDtoList = new ArrayList<>();
+    productDiscountRequestDtoList.add(productDiscountRequestDto);
     saleRequestDto =
         SaleTestHelper.createSaleRequest(
-            seller.getId(), buyer.getId(), productPriceDiscountRequestDtoList);
+            seller.getId(), buyer.getId(), productDiscountRequestDtoList);
     saleRequestDtoSellerNotOwner =
         SaleTestHelper.createSaleRequest(
-            buyer.getId(), buyer.getId(), productPriceDiscountRequestDtoList);
+            buyer.getId(), buyer.getId(), productDiscountRequestDtoList);
     productPriceDiscount = createTestProductPriceDiscount(product, sale);
   }
 

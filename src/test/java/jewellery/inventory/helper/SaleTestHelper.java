@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
+import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
@@ -39,7 +39,7 @@ public class SaleTestHelper {
   }
 
   public static SaleRequestDto createSaleRequest(
-      UUID sellerId, UUID buyerId, List<ProductPriceDiscountRequestDto> products) {
+      UUID sellerId, UUID buyerId, List<ProductDiscountRequestDto> products) {
     SaleRequestDto saleRequest = new SaleRequestDto();
     saleRequest.setSellerId(sellerId);
     saleRequest.setBuyerId(buyerId);
@@ -47,9 +47,9 @@ public class SaleTestHelper {
     return saleRequest;
   }
 
-  public static ProductPriceDiscountRequestDto createProductPriceDiscountRequest(
+  public static ProductDiscountRequestDto createProductPriceDiscountRequest(
       UUID productId, BigDecimal discount) {
-    ProductPriceDiscountRequestDto productRequest = new ProductPriceDiscountRequestDto();
+    ProductDiscountRequestDto productRequest = new ProductDiscountRequestDto();
     productRequest.setProductId(productId);
     productRequest.setDiscount(discount);
     return productRequest;

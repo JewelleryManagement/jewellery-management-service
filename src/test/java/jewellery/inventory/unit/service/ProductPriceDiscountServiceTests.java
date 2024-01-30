@@ -6,7 +6,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.List;
 import java.util.UUID;
-import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
+import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.mapper.ProductMapper;
@@ -51,7 +51,7 @@ public class ProductPriceDiscountServiceTests {
   @Test
   public void testCreateProductPriceDiscount() {
     SaleRequestDto saleRequestDto = new SaleRequestDto();
-    saleRequestDto.setProducts(List.of(new ProductPriceDiscountRequestDto()));
+    saleRequestDto.setProducts(List.of(new ProductDiscountRequestDto()));
     Sale sale = new Sale();
 
     lenient().when(productService.getProduct(any(UUID.class))).thenReturn(new Product());

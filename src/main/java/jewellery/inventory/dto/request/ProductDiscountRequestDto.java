@@ -15,7 +15,7 @@ import java.util.UUID;
 @Setter
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class ProductPriceDiscountRequestDto {
+public class ProductDiscountRequestDto {
   @NotNull private UUID productId;
   @NotNull
   @DecimalMin(value = "0")
