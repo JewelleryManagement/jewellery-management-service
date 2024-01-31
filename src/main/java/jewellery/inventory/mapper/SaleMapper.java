@@ -52,7 +52,6 @@ public class SaleMapper {
   public BigDecimal getTotalPriceFromEntities(List<ProductPriceDiscount> productResponseDtoList) {
     return productResponseDtoList.stream()
         .map(ProductPriceDiscount::getSalePrice)
-
         .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 

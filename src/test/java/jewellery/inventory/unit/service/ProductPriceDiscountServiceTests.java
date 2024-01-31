@@ -24,16 +24,12 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ProductPriceDiscountServiceTests {
-  @InjectMocks
-  private ProductPriceDiscountService productPriceDiscountService;
-  @Mock
-  private ProductPriceDiscountRepository productPriceDiscountRepository;
+  @InjectMocks private ProductPriceDiscountService productPriceDiscountService;
+  @Mock private ProductPriceDiscountRepository productPriceDiscountRepository;
 
-  @Mock
-  private ProductService productService;
+  @Mock private ProductService productService;
 
-  @Mock
-  private ProductMapper productMapper;
+  @Mock private ProductMapper productMapper;
 
   @Test
   public void testDeleteProductPriceDiscount() {
@@ -42,12 +38,13 @@ public class ProductPriceDiscountServiceTests {
     ProductPriceDiscount productPriceDiscount = new ProductPriceDiscount();
 
     when(productPriceDiscountRepository.findBySaleIdAndProductId(saleId, productId))
-            .thenReturn(productPriceDiscount);
+        .thenReturn(productPriceDiscount);
 
     productPriceDiscountService.deleteProductPriceDiscount(saleId, productId);
 
-     verify(productPriceDiscountRepository, times(1)).delete(productPriceDiscount);
+    verify(productPriceDiscountRepository, times(1)).delete(productPriceDiscount);
   }
+
   @Test
   public void testCreateProductPriceDiscount() {
     SaleRequestDto saleRequestDto = new SaleRequestDto();
@@ -59,10 +56,9 @@ public class ProductPriceDiscountServiceTests {
     when(productMapper.mapToProductResponseDto(any())).thenReturn(new ProductResponseDto());
 
     List<ProductPriceDiscount> result =
-            productPriceDiscountService.createProductPriceDiscount(saleRequestDto, sale);
+        productPriceDiscountService.createProductPriceDiscount(saleRequestDto, sale);
 
     assertEquals(saleRequestDto.getProducts().size(), result.size());
-     verify(productPriceDiscountRepository, times(saleRequestDto.getProducts().size())).save(any());
+    verify(productPriceDiscountRepository, times(saleRequestDto.getProducts().size())).save(any());
   }
-
 }

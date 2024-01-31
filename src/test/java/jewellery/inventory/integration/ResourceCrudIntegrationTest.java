@@ -233,17 +233,18 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   private void assertInputMatchesFetchedFromServer(List<ResourceRequestDto> updatedInputDtos)
-          throws JsonProcessingException {
+      throws JsonProcessingException {
     List<ResourceResponseDto> updatedResources = getResourcesWithRequest();
     updatedResources.forEach(resourceResponseDto -> resourceResponseDto.setId(null));
 
-    List<ResourceResponseDto> mappedDtos = updatedInputDtos.stream()
-            .map(resourceRequestDto ->
+    List<ResourceResponseDto> mappedDtos =
+        updatedInputDtos.stream()
+            .map(
+                resourceRequestDto ->
                     resourceMapper.toResourceResponse(
-                            resourceMapper.toResourceEntity(resourceRequestDto)))
+                        resourceMapper.toResourceEntity(resourceRequestDto)))
             .toList();
 
-    assertThat(mappedDtos)
-            .containsExactlyInAnyOrderElementsOf(updatedResources);
+    assertThat(mappedDtos).containsExactlyInAnyOrderElementsOf(updatedResources);
   }
 }
