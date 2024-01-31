@@ -175,13 +175,12 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(),
         saleResponse.getBody().getProducts().get(0).getId());
-    assertEquals(SALE_TOTAL_PRICE,saleResponse.getBody().getTotalPrice().setScale(2));
-    assertEquals(
-        SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount().setScale(2));
+    assertEquals(SALE_TOTAL_PRICE, saleResponse.getBody().getTotalPrice().setScale(2));
+    assertEquals(SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount().setScale(2));
     assertEquals(
         SALE_DISCOUNTED_PRICE, saleResponse.getBody().getTotalDiscountedPrice().setScale(2));
 
-        Map<String, Object> expectedEventPayload =
+    Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(SALE_CREATE, expectedEventPayload);
@@ -215,8 +214,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     saleRequestDto.setBuyerId(buyer.getId());
     saleRequestDto.setSellerId(seller.getId());
     saleRequestDto.setDate(LocalDate.now());
-    ProductDiscountRequestDto productDiscountRequestDto =
-        new ProductDiscountRequestDto();
+    ProductDiscountRequestDto productDiscountRequestDto = new ProductDiscountRequestDto();
     productDiscountRequestDto.setProductId(productResponse.getBody().getId());
     productDiscountRequestDto.setDiscount(SALE_DISCOUNT);
     List<ProductDiscountRequestDto> list = new ArrayList<>();

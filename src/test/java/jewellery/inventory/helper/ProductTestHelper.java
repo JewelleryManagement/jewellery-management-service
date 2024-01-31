@@ -95,7 +95,6 @@ public class ProductTestHelper {
     productResponseDto.setPartOfSale(null);
     productResponseDto.setCatalogNumber("Catalog Number");
     productResponseDto.setProductionNumber("Production Number");
-   // productResponseDto.setDiscount(BigDecimal.ZERO);
     return productResponseDto;
   }
 

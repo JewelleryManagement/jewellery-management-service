@@ -64,7 +64,6 @@ class SaleServiceTest {
     buyer = createSecondTestUser();
     product = getTestProduct(seller, new Resource());
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer);
-    saleResponseDto = SaleTestHelper.getSaleResponseDto(sale);
     ProductResponseDto productResponseDto =
         getReturnedProductResponseDto(product, createTestUserResponseDto(buyer));
     productReturnResponseDto =
@@ -81,6 +80,7 @@ class SaleServiceTest {
         SaleTestHelper.createTestProductPriceDiscount(product, sale);
     productPriceDiscount.setProduct(product);
     sale.setProducts(List.of(productPriceDiscount));
+    saleResponseDto = SaleTestHelper.getSaleResponseDto(sale, productPriceDiscount);
   }
 
   @Test
@@ -188,8 +188,7 @@ class SaleServiceTest {
 
     ProductReturnResponseDto productReturnResponseDto = saleService.returnProduct(product.getId());
 
-    assertEquals(1, productReturnResponseDto.getSaleAfter().getProducts().size());
-    assertNull(productReturnResponseDto.getSaleAfter().getId());
+    assertNull(productReturnResponseDto.getSaleAfter());
     assertNotNull(productReturnResponseDto.getReturnedProduct());
     assertNull(productReturnResponseDto.getReturnedProduct().getPartOfSale());
     assertNotEquals(

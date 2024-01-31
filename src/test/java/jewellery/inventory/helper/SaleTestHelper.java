@@ -69,7 +69,7 @@ public class SaleTestHelper {
     return products;
   }
 
-  public static SaleResponseDto getSaleResponseDto(Sale sale) {
+  public static SaleResponseDto getSaleResponseDto(Sale sale,ProductPriceDiscount productPriceDiscount) {
     SaleResponseDto dto = new SaleResponseDto();
     UserResponseDto userResponseDtoSeller = createUserResponseDto(sale.getSeller());
     UserResponseDto userResponseDtoBuyer = createUserResponseDto(sale.getBuyer());
@@ -77,11 +77,11 @@ public class SaleTestHelper {
     dto.setSeller(userResponseDtoSeller);
     dto.setBuyer(userResponseDtoBuyer);
     ProductResponseDto productResponseDto =new ProductResponseDto();
-    productResponseDto.setId(UUID.randomUUID());
-    dto.setProducts(List.of(productResponseDto));
-    dto.setTotalDiscountedPrice(BigDecimal.ZERO);
+    productResponseDto.setId(productPriceDiscount.getId());
+    dto.setTotalPrice(productPriceDiscount.getSalePrice());
+    dto.setTotalDiscountedPrice(productPriceDiscount.getSalePrice());
     dto.setTotalDiscount(BigDecimal.ZERO);
-    sale.setProducts(List.of(new ProductPriceDiscount()));
+    dto.setProducts(List.of(productResponseDto));
 
     sale.getProducts()
         .forEach(
