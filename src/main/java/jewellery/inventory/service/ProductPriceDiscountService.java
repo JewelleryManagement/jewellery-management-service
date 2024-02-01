@@ -1,5 +1,8 @@
 package jewellery.inventory.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.Product;
@@ -8,9 +11,6 @@ import jewellery.inventory.model.Sale;
 import jewellery.inventory.repository.ProductPriceDiscountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -23,19 +23,22 @@ public class ProductPriceDiscountService {
   public List<ProductPriceDiscount> createProductPriceDiscount(
       SaleRequestDto saleRequestDto, Sale sale) {
     List<ProductPriceDiscount> list = new ArrayList<>();
-    for (int i = 0; i < saleRequestDto.getProducts().size(); i++) {
-      ProductPriceDiscount productPriceDiscount = new ProductPriceDiscount();
-      Product product =
-          productService.getProduct(saleRequestDto.getProducts().get(i).getProductId());
-      productPriceDiscount.setProduct(product);
-      productPriceDiscount.setDiscount(saleRequestDto.getProducts().get(i).getDiscount());
-      productPriceDiscount.setSale(sale);
-      productPriceDiscount.setSalePrice(
-          productMapper.mapToProductResponseDto(product).getSalePrice());
-      productPriceDiscountRepository.save(productPriceDiscount);
-      list.add(productPriceDiscount);
+    if (saleRequestDto.getProducts() != null) {
+      for (int i = 0; i < saleRequestDto.getProducts().size(); i++) {
+        ProductPriceDiscount productPriceDiscount = new ProductPriceDiscount();
+        Product product =
+            productService.getProduct(saleRequestDto.getProducts().get(i).getProductId());
+        productPriceDiscount.setProduct(product);
+        productPriceDiscount.setDiscount(saleRequestDto.getProducts().get(i).getDiscount());
+        productPriceDiscount.setSale(sale);
+        productPriceDiscount.setSalePrice(
+            productMapper.mapToProductResponseDto(product).getSalePrice());
+        productPriceDiscountRepository.save(productPriceDiscount);
+        list.add(productPriceDiscount);
+      }
+      return list;
     }
-    return list;
+    return new ArrayList<>();
   }
 
   public void deleteProductPriceDiscount(UUID saleId, UUID productId) {

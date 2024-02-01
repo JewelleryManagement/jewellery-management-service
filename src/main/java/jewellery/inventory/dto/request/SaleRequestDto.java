@@ -2,7 +2,6 @@ package jewellery.inventory.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import java.time.LocalDate;
@@ -22,6 +21,7 @@ public class SaleRequestDto {
   @NotNull private UUID buyerId;
   @Valid private List<PurchasedResourceInUserRequestDto> resources;
   @Valid private List<ProductDiscountRequestDto> products;
+
   @NotNull
   @PastOrPresent(message = "Date must be in the past or present")
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
