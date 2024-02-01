@@ -18,8 +18,8 @@ public class Sale {
   @ManyToOne private User seller;
   @ManyToOne private User buyer;
 
-  @OneToMany(mappedBy = "partOfSale")
-  private List<Product> products;
+  @OneToMany(mappedBy = "sale", cascade = CascadeType.REMOVE)
+  private List<ProductPriceDiscount> products;
 
   @OneToMany(mappedBy = "partOfSale")
   private List<PurchasedResourceInUser> resources;

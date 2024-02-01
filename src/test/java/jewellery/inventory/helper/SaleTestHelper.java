@@ -8,11 +8,21 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import jewellery.inventory.dto.request.*;
+import jewellery.inventory.dto.request.ProductDiscountRequestDto;
+import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.*;
+import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.ProductReturnResponseDto;
+import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.model.*;
+import jewellery.inventory.model.Product;
+import jewellery.inventory.model.ProductPriceDiscount;
+import jewellery.inventory.model.Sale;
+import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 
 public class SaleTestHelper {
@@ -27,12 +37,11 @@ public class SaleTestHelper {
   }
 
   public static Sale createSaleWithTodayDate(
-      User seller, User buyer, List<Product> products, List<PurchasedResourceInUser> resources) {
+      User seller, User buyer, List<PurchasedResourceInUser> resources) {
     Sale sale = new Sale();
     sale.setId(UUID.randomUUID());
     sale.setSeller(seller);
     sale.setBuyer(buyer);
-    sale.setProducts(products);
     sale.setResources(resources);
     sale.setDate(LocalDate.now());
     return sale;
@@ -41,7 +50,7 @@ public class SaleTestHelper {
   public static SaleRequestDto createSaleRequest(
       UUID sellerId,
       UUID buyerId,
-      List<ProductPriceDiscountRequestDto> products,
+      List<ProductDiscountRequestDto> products,
       List<PurchasedResourceInUserRequestDto> resources) {
     SaleRequestDto saleRequest = new SaleRequestDto();
     saleRequest.setSellerId(sellerId);
@@ -51,11 +60,10 @@ public class SaleTestHelper {
     return saleRequest;
   }
 
-  public static ProductPriceDiscountRequestDto createProductPriceDiscountRequest(
-      UUID productId, BigDecimal salePrice, BigDecimal discount) {
-    ProductPriceDiscountRequestDto productRequest = new ProductPriceDiscountRequestDto();
+  public static ProductDiscountRequestDto createProductPriceDiscountRequest(
+      UUID productId, BigDecimal discount) {
+    ProductDiscountRequestDto productRequest = new ProductDiscountRequestDto();
     productRequest.setProductId(productId);
-    productRequest.setSalePrice(salePrice);
     productRequest.setDiscount(discount);
     return productRequest;
   }
@@ -74,15 +82,20 @@ public class SaleTestHelper {
     return products;
   }
 
-  public static SaleResponseDto getSaleResponseDto(Sale sale) {
+  public static SaleResponseDto getSaleResponseDto(
+      Sale sale, ProductPriceDiscount productPriceDiscount) {
     SaleResponseDto dto = new SaleResponseDto();
     UserResponseDto userResponseDtoSeller = createUserResponseDto(sale.getSeller());
     UserResponseDto userResponseDtoBuyer = createUserResponseDto(sale.getBuyer());
 
     dto.setSeller(userResponseDtoSeller);
     dto.setBuyer(userResponseDtoBuyer);
-    dto.setTotalDiscountedPrice(BigDecimal.ZERO);
+    ProductResponseDto productResponseDto = new ProductResponseDto();
+    productResponseDto.setId(productPriceDiscount.getId());
+    dto.setTotalPrice(productPriceDiscount.getSalePrice());
+    dto.setTotalDiscountedPrice(productPriceDiscount.getSalePrice());
     dto.setTotalDiscount(BigDecimal.ZERO);
+    dto.setProducts(List.of(productResponseDto));
 
     sale.getProducts()
         .forEach(
@@ -200,5 +213,14 @@ public class SaleTestHelper {
     resourceInUser.setId(UUID.randomUUID());
     resourceInUser.setDealPrice(BigDecimal.TEN);
     return resourceInUser;
+  }
+
+  public static ProductPriceDiscount createTestProductPriceDiscount(Product product, Sale sale) {
+    ProductPriceDiscount productPriceDiscount = new ProductPriceDiscount();
+    productPriceDiscount.setDiscount(BigDecimal.ZERO);
+    productPriceDiscount.setProduct(product);
+    productPriceDiscount.setSale(sale);
+    productPriceDiscount.setSalePrice(BigDecimal.ONE);
+    return productPriceDiscount;
   }
 }

@@ -1,7 +1,9 @@
 package jewellery.inventory.mapper;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.NoSuchElementException;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
@@ -9,6 +11,7 @@ import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.model.Product;
+import jewellery.inventory.model.resource.ResourceInProduct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -23,16 +26,26 @@ public class ProductMapper {
 
     ProductResponseDto productResponseDto = new ProductResponseDto();
     productResponseDto.setId(product.getId());
-    if (product.getPartOfSale() != null) {
+    if (product.getPartOfSale() != null && !product.getPartOfSale().getProducts().isEmpty()) {
       productResponseDto.setPartOfSale(product.getPartOfSale().getId());
+      productResponseDto.setSalePrice(
+          product.getPartOfSale().getProducts().stream()
+              .filter(
+                  productPriceDiscount ->
+                      product.getId().equals(productPriceDiscount.getProduct().getId()))
+              .findFirst()
+              .orElseThrow(
+                  () -> new NoSuchElementException("No matching productPriceDiscount found"))
+              .getSalePrice());
+    } else {
+      productResponseDto.setSalePrice(calculateTotalPrice(product));
     }
     productResponseDto.setAuthors(getAuthorsResponse(product));
     productResponseDto.setDescription(product.getDescription());
-    productResponseDto.setSalePrice(product.getSalePrice());
     productResponseDto.setOwner(userMapper.toUserResponse(product.getOwner()));
     productResponseDto.setProductionNumber(product.getProductionNumber());
     productResponseDto.setCatalogNumber(product.getCatalogNumber());
-    productResponseDto.setDiscount(product.getDiscount());
+    productResponseDto.setAdditionalPrice(product.getAdditionalPrice());
 
     setContentProductToResponse(product, productResponseDto);
     setResourcesToResponse(product, productResponseDto);
@@ -84,5 +97,31 @@ public class ProductMapper {
     if (product.getContentOf() != null) {
       response.setContentOf(product.getContentOf().getId());
     }
+  }
+
+  private static BigDecimal calculateTotalPrice(Product product) {
+    return calculateTotalPrice(product, BigDecimal.ZERO);
+  }
+
+  private static BigDecimal calculateTotalPrice(Product product, BigDecimal totalPrice) {
+    if (product.getResourcesContent() != null) {
+      for (ResourceInProduct resource : product.getResourcesContent()) {
+        BigDecimal resourcePrice =
+            resource.getQuantity().multiply(resource.getResource().getPricePerQuantity());
+        totalPrice = totalPrice.add(resourcePrice);
+      }
+    }
+
+    if (product.getAdditionalPrice() != null) {
+      totalPrice = totalPrice.add(product.getAdditionalPrice());
+    }
+
+    if (product.getProductsContent() != null) {
+      for (Product nestedProduct : product.getProductsContent()) {
+        totalPrice = calculateTotalPrice(nestedProduct, totalPrice);
+      }
+    }
+
+    return totalPrice;
   }
 }

@@ -1,8 +1,8 @@
 package jewellery.inventory.dto.request;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,8 +15,9 @@ import java.util.UUID;
 @Setter
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class ProductPriceDiscountRequestDto {
+public class ProductDiscountRequestDto {
   @NotNull private UUID productId;
-  @NotNull @Positive private BigDecimal salePrice;
-  @NotNull @PositiveOrZero private BigDecimal discount;
-}
+  @NotNull
+  @DecimalMin(value = "0")
+  @DecimalMax(value = "100")
+  private BigDecimal discount;}

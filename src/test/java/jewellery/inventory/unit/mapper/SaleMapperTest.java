@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ProductPriceDiscountRequestDto;
 import jewellery.inventory.dto.request.PurchasedResourceInUserRequestDto;
+import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
@@ -22,6 +23,7 @@ import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.mapper.*;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.PurchasedResourceInUser;
+import jewellery.inventory.model.ProductPriceDiscount;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
@@ -51,12 +53,12 @@ class SaleMapperTest {
   private Product product;
   private Sale sale;
   private SaleRequestDto saleRequestDto;
-  private ProductPriceDiscountRequestDto productPriceDiscountRequestDto;
-  private List<Product> productsForSale;
-  private PurchasedResourceInUser purchasedResourceInUser;
-  private PurchasedResourceInUserRequestDto purchasedResourceInUserRequestDto;
-  private PurchasedResourceInUserResponseDto purchasedResourceInUserResponseDto;
-  private Resource resource;
+  private ProductDiscountRequestDto productDiscountRequestDto;
+  private ProductPriceDiscount productPriceDiscount;
+    private PurchasedResourceInUser purchasedResourceInUser;
+    private PurchasedResourceInUserRequestDto purchasedResourceInUserRequestDto;
+    private PurchasedResourceInUserResponseDto purchasedResourceInUserResponseDto;
+    private Resource resource;
 
   @BeforeEach
   void setUp() {
@@ -65,33 +67,25 @@ class SaleMapperTest {
     product = getTestProduct(seller, new Resource());
     sellerResponseDto = createTestUserResponseDto(seller);
     buyerResponseDto = createTestUserResponseDto(buyer);
-    productsForSale = SaleTestHelper.getProductsList(product);
-    purchasedResourceInUser = SaleTestHelper.createPurchasedResource(BigDecimal.TEN);
-    sale =
-        SaleTestHelper.createSaleWithTodayDate(
-            seller, buyer, productsForSale, List.of(purchasedResourceInUser));
-    productPriceDiscountRequestDto =
-        SaleTestHelper.createProductPriceDiscountRequest(
-            product.getId(), getBigDecimal("1000"), getBigDecimal("10"));
-    List<ProductPriceDiscountRequestDto> productPriceDiscountRequestDtoList = new ArrayList<>();
-    productPriceDiscountRequestDtoList.add(productPriceDiscountRequestDto);
-    purchasedResourceInUserRequestDto = SaleTestHelper.createPurchasedResourceRequestDto();
+    sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, List.of(purchasedResourceInUser));
+    productDiscountRequestDto =
+        SaleTestHelper.createProductPriceDiscountRequest(product.getId(), getBigDecimal("1000"));
+    productPriceDiscount = SaleTestHelper.createTestProductPriceDiscount(product, sale);
+    List<ProductDiscountRequestDto> productDiscountRequestDtoList = new ArrayList<>();
+    productDiscountRequestDtoList.add(productDiscountRequestDto);
+      purchasedResourceInUserRequestDto = SaleTestHelper.createPurchasedResourceRequestDto();
     saleRequestDto =
         SaleTestHelper.createSaleRequest(
-            seller.getId(),
-            buyer.getId(),
-            productPriceDiscountRequestDtoList,
-            List.of(purchasedResourceInUserRequestDto));
-    resource = SaleTestHelper.createResource(BigDecimal.TEN);
-    purchasedResourceInUserResponseDto = SaleTestHelper.createPurchasedResourceResponseDto(sale);
+            seller.getId(), buyer.getId(), productPriceDiscountRequestDtoList, List.of(purchasedResourceInUserRequestDto));
+      resource = SaleTestHelper.createResource(BigDecimal.TEN);
+      purchasedResourceInUserResponseDto = SaleTestHelper.createPurchasedResourceResponseDto(sale);
   }
 
   @Test
   void testMapRequestToEntity() {
-    when(resourceService.getResourceById(any(UUID.class))).thenReturn(resource);
+      when(resourceService.getResourceById(any(UUID.class))).thenReturn(resource);
     Sale actual =
-        saleMapper.mapRequestToEntity(
-            saleRequestDto, seller, buyer, List.of(product), List.of(purchasedResourceInUser));
+        saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(productPriceDiscount), List.of(purchasedResourceInUser));
 
     assertNotNull(actual);
     Assertions.assertEquals(saleRequestDto.getSellerId(), actual.getSeller().getId());
@@ -102,10 +96,10 @@ class SaleMapperTest {
 
   @Test
   void testMapEntityToResponseDto() {
+    Sale sale =
+        saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(productPriceDiscount));
     when(userMapper.toUserResponse(seller)).thenReturn(sellerResponseDto);
     when(userMapper.toUserResponse(buyer)).thenReturn(buyerResponseDto);
-
-    when(productMapper.mapToProductResponseDto(product)).thenReturn(new ProductResponseDto());
 
     SaleResponseDto saleResponseDto = saleMapper.mapEntityToResponseDto(sale);
 
@@ -118,14 +112,16 @@ class SaleMapperTest {
   }
 
   @Test
-  void testMapEntityToResponseDtoWillThrowsIllegalArgumentException() {
+  void testMappingWithZeroSalePriceThrowsArithmeticException() {
+    Sale sale =
+        saleMapper.mapRequestToEntity(saleRequestDto, seller, buyer, List.of(productPriceDiscount));
+
     when(userMapper.toUserResponse(seller)).thenReturn(sellerResponseDto);
     when(userMapper.toUserResponse(buyer)).thenReturn(buyerResponseDto);
 
     when(productMapper.mapToProductResponseDto(product)).thenReturn(new ProductResponseDto());
     sale.getProducts().get(0).setSalePrice(BigDecimal.ZERO);
-    sale.getResources().get(0).setSalePrice(BigDecimal.ZERO);
-
-    assertThrows(IllegalArgumentException.class, () -> saleMapper.mapEntityToResponseDto(sale));
+      sale.getResources().get(0).setSalePrice(BigDecimal.ZERO);
+    assertThrows(ArithmeticException.class, () -> saleMapper.mapEntityToResponseDto(sale));
   }
 }

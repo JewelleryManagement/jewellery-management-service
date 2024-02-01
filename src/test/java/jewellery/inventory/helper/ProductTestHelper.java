@@ -38,7 +38,6 @@ public class ProductTestHelper {
     productRequestDto.setOwnerId(user.getId());
     productRequestDto.setDescription("This is test product");
     productRequestDto.setResourcesContent(List.of(resourceQuantityRequestDto));
-    productRequestDto.setSalePrice(getBigDecimal("10000"));
     return productRequestDto;
   }
 
@@ -53,9 +52,9 @@ public class ProductTestHelper {
     productRequestDto.setCatalogNumber("1111");
     productRequestDto.setProductionNumber("1234");
     productRequestDto.setDescription("Test");
+    productRequestDto.setAdditionalPrice(BigDecimal.ZERO);
     productRequestDto.setOwnerId(user.getId());
     productRequestDto.setAuthors(List.of(user.getId()));
-    productRequestDto.setSalePrice(getBigDecimal("50"));
     productRequestDto.setResourcesContent(listOfResourcesInProduct);
 
     return productRequestDto;
@@ -76,7 +75,6 @@ public class ProductTestHelper {
     testProduct.setCatalogNumber("2");
     testProduct.setOwner(user);
     testProduct.setDescription("This is Test Product");
-    testProduct.setSalePrice(getBigDecimal("1000"));
     testProduct.setResourcesContent(List.of(getResourceInProduct(pearl)));
     testProduct.setProductsContent(null);
     testProduct.setContentOf(null);
@@ -97,7 +95,6 @@ public class ProductTestHelper {
     productResponseDto.setPartOfSale(null);
     productResponseDto.setCatalogNumber("Catalog Number");
     productResponseDto.setProductionNumber("Production Number");
-    productResponseDto.setDiscount(BigDecimal.ZERO);
     return productResponseDto;
   }
 

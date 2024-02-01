@@ -37,6 +37,7 @@ public class SaleService {
   private final ResourceInUserService resourceInUserService;
   private final UserService userService;
   private final PurchasedResourceInUserMapper purchasedResourceInUserMapper;
+  private final ProductPriceDiscountService productPriceDiscountService;
 
   public List<SaleResponseDto> getAllSales() {
     logger.debug("Fetching all Sales");
@@ -61,11 +62,25 @@ public class SaleService {
     throwExceptionIfResourceIsNotOwned(saleRequestDto);
 
     Sale createdSale = saleRepository.save(sale);
+    createdSale.setProducts(
+        productPriceDiscountService.createProductPriceDiscount(saleRequestDto, createdSale));
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
     removeQuantityFromResourcesInUser(sale);
     setFieldsOfResourcesAfterSale(createdSale);
     logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
     return saleMapper.mapEntityToResponseDto(createdSale);
+  }
+
+  private void throwExceptionIfSellerNotProductOwner(
+      List<ProductPriceDiscount> products, UUID sellerId) {
+    for (ProductPriceDiscount productPriceDiscount : products) {
+      Product product = productPriceDiscount.getProduct();
+      if (!product.getOwner().getId().equals(sellerId)) {
+        logger.error(
+            "Seller with ID {} is not the owner of product with ID {}", sellerId, product.getId());
+        throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
+      }
+    }
   }
 
   @LogCreateEvent(eventType = EventType.SALE_RETURN_PRODUCT)
@@ -79,7 +94,7 @@ public class SaleService {
     sale.setProducts(removeProductFromSale(sale.getProducts(), productToReturn));
 
     productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
-
+    productPriceDiscountService.deleteProductPriceDiscount(sale.getId(), productToReturn.getId());
     deleteSaleIfProductsAndResourcesAreEmpty(sale);
     logger.info("Product returned successfully. Product ID: {}", productId);
     return validateSaleAfterReturnProduct(sale, productToReturn);
@@ -116,10 +131,10 @@ public class SaleService {
     }
   }
 
-  private void throwExceptionIfProductIsPartOfAnotherProduct(List<Product> products) {
-    for (Product product : products) {
+  private void throwExceptionIfProductIsPartOfAnotherProduct(List<ProductPriceDiscount> products) {
+    for (ProductPriceDiscount productPriceDiscount : products) {
+      Product product = productPriceDiscount.getProduct();
       if (product.getContentOf() != null) {
-        logger.error("Product with ID {} is part of another product.", product.getId());
         throw new ProductIsContentException(product.getId());
       }
     }
@@ -139,42 +154,45 @@ public class SaleService {
     }
   }
 
-  private void throwExceptionIfProductIsSold(List<Product> products) {
-    for (Product product : products) {
+  private void throwExceptionIfProductIsSold(List<ProductPriceDiscount> products) {
+    for (ProductPriceDiscount productPriceDiscount : products) {
+      Product product = productPriceDiscount.getProduct();
       if (product.getPartOfSale() != null) {
-        logger.error("Product with ID {} is already sold.", product.getId());
         throw new ProductIsSoldException(product.getId());
       }
     }
   }
 
-  private void updateProductOwnersAndSale(List<Product> products, UUID buyerId, Sale sale) {
+  private void updateProductOwnersAndSale(
+      List<ProductPriceDiscount> products, UUID buyerId, Sale sale) {
     User newOwner = userService.getUser(buyerId);
-    for (Product product : products) {
+
+    for (ProductPriceDiscount productPriceDiscount : products) {
+      Product product = productPriceDiscount.getProduct();
       productService.updateProductOwnerAndSale(product, newOwner, sale);
     }
   }
 
-  private List<Product> getProductsFromSaleRequestDto(SaleRequestDto saleRequestDto) {
-    logger.info("Getting products from sale request.");
-    List<Product> products = new ArrayList<>();
-    if (saleRequestDto.getProducts() != null) {
-      products =
-          saleRequestDto.getProducts().stream()
-              .map(
-                  productPriceDiscountRequestDto ->
-                      productService.getProduct(productPriceDiscountRequestDto.getProductId()))
-              .toList();
-    }
-    return products;
+  private List<ProductPriceDiscount> getProductsFromSaleRequestDto(SaleRequestDto saleRequestDto) {
+    return saleRequestDto.getProducts().stream()
+        .map(
+            productDto -> {
+              ProductPriceDiscount productPriceDiscount = new ProductPriceDiscount();
+              productPriceDiscount.setProduct(productService.getProduct(productDto.getProductId()));
+              productPriceDiscount.setDiscount(productDto.getDiscount());
+              return productPriceDiscount;
+            })
+        .toList();
   }
 
   private void deleteSaleIfProductsAndResourcesAreEmpty(Sale sale) {
     if (sale.getProducts().isEmpty() && sale.getResources().isEmpty()) {
       logger.info("Deleting sale with ID: {} since the products list is empty.", sale.getId());
       saleRepository.deleteById(sale.getId());
-    } else saleRepository.save(sale);
-    logger.info("Saving sale with ID: {} since the products list is not empty.", sale.getId());
+    } else {
+      logger.info("Saving sale with ID: {} since the products list is not empty.", sale.getId());
+      saleRepository.save(sale);
+    }
   }
 
   private ProductReturnResponseDto validateSaleAfterReturnProduct(
@@ -195,10 +213,21 @@ public class SaleService {
         resourceToReturn, saleMapper.mapEntityToResponseDto(sale));
   }
 
-  private List<Product> removeProductFromSale(List<Product> products, Product productToRemove) {
-    logger.info("Removing product with ID: {} from sale.", productToRemove.getId());
-    products.remove(productToRemove);
-    return products;
+  private List<ProductPriceDiscount> removeProductFromSale(
+      List<ProductPriceDiscount> products, Product productToRemove) {
+    List<ProductPriceDiscount> updatedList = new ArrayList<>();
+
+    for (ProductPriceDiscount ppd : products) {
+      if (!ppd.getProduct().getId().equals(productToRemove.getId())) {
+        updatedList.add(ppd);
+      }
+    }
+
+    if (updatedList.size() < products.size()) {
+      logger.info("Removing product with ID: {} from sale.", productToRemove.getId());
+    }
+
+    return updatedList;
   }
 
   private List<PurchasedResourceInUser> getResourcesFromSaleRequestDto(

@@ -313,7 +313,6 @@ public class ProductService implements EntityFetcher {
     product.setAuthors(getAuthors(productRequestDto));
     product.setPartOfSale(null);
     product.setDescription(productRequestDto.getDescription());
-    product.setSalePrice(productRequestDto.getSalePrice());
     product.setProductionNumber(productRequestDto.getProductionNumber());
     product.setCatalogNumber(productRequestDto.getCatalogNumber());
     product.setProductsContent(new ArrayList<>());
