@@ -3,6 +3,7 @@ package jewellery.inventory.mapper;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
@@ -73,15 +74,20 @@ public class SaleMapper {
   }
 
   private List<ProductResponseDto> mapAllProductsToResponse(Sale sale) {
-    return sale.getProducts().stream()
-        .map(productSale -> productMapper.mapToProductResponseDto(productSale.getProduct()))
-        .toList();
+    if (sale.getProducts() != null) {
+      return sale.getProducts().stream()
+          .map(productSale -> productMapper.mapToProductResponseDto(productSale.getProduct()))
+          .toList();
+    }
+    return new ArrayList<>();
   }
 
   public List<PurchasedResourceInUserResponseDto> mapAllResourcesToResponse(Sale sale) {
     List<PurchasedResourceInUserResponseDto> result = new ArrayList<>();
-    for (PurchasedResourceInUser resource : sale.getResources()) {
-      result.add(getPurchasedResourceInUserResponseDto(sale, resource));
+    if (sale.getResources() != null) {
+      for (PurchasedResourceInUser resource : sale.getResources()) {
+        result.add(getPurchasedResourceInUserResponseDto(sale, resource));
+      }
     }
     return result;
   }
@@ -105,13 +111,12 @@ public class SaleMapper {
   }
 
   private BigDecimal getTotalPriceFromEntities(
-      List<ProductPriceDiscount> products, List<PurchasedResourceInUser> resources) {
-    BigDecimal totalPrice = BigDecimal.ZERO;
+      List<ProductPriceDiscount> productResponseDtoList, List<PurchasedResourceInUser> resources) {
 
-    totalPrice =
+    BigDecimal totalPrice =
         productResponseDtoList.stream()
             .map(ProductPriceDiscount::getSalePrice)
-            .reduce(totalPrice, BigDecimal::add);
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
 
     totalPrice =
         resources.stream()
@@ -129,7 +134,9 @@ public class SaleMapper {
     BigDecimal totalPrice = getTotalPriceFromEntities(products, resources);
 
     if (PERCENTAGE.equals(calculationType)) {
-      return totalDiscountAmount.divide(totalPrice).multiply(getBigDecimal("100"));
+      return totalDiscountAmount
+          .divide(totalPrice, MathContext.DECIMAL128)
+          .multiply(getBigDecimal("100"));
     } else if (AMOUNT.equals(calculationType)) {
       return totalPrice.subtract(totalDiscountAmount);
     }

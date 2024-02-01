@@ -61,14 +61,15 @@ public class SaleService {
     throwExceptionIfProductIsPartOfAnotherProduct(sale.getProducts());
     throwExceptionIfResourceIsNotOwned(saleRequestDto);
 
-    Sale createdSale = saleRepository.save(sale);
-    createdSale.setProducts(
-        productPriceDiscountService.createProductPriceDiscount(saleRequestDto, createdSale));
-    updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
+    saleRepository.save(sale);
+    sale.setProducts(
+            productPriceDiscountService.createProductPriceDiscount(saleRequestDto, sale));
+
+    updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), sale);
     removeQuantityFromResourcesInUser(sale);
-    setFieldsOfResourcesAfterSale(createdSale);
-    logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
-    return saleMapper.mapEntityToResponseDto(createdSale);
+    setFieldsOfResourcesAfterSale(sale);
+    logger.info("Sale created successfully. Sale ID: {}", sale.getId());
+    return saleMapper.mapEntityToResponseDto(sale);
   }
 
   private void throwExceptionIfSellerNotProductOwner(
@@ -121,16 +122,6 @@ public class SaleService {
     return saleRepository.findById(saleId).orElseThrow(() -> new SaleNotFoundException(saleId));
   }
 
-  private void throwExceptionIfSellerNotProductOwner(List<Product> products, UUID sellerId) {
-    for (Product product : products) {
-      if (!product.getOwner().getId().equals(sellerId)) {
-        logger.error(
-            "Seller with ID {} is not the owner of product with ID {}", sellerId, product.getId());
-        throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
-      }
-    }
-  }
-
   private void throwExceptionIfProductIsPartOfAnotherProduct(List<ProductPriceDiscount> products) {
     for (ProductPriceDiscount productPriceDiscount : products) {
       Product product = productPriceDiscount.getProduct();
@@ -174,15 +165,19 @@ public class SaleService {
   }
 
   private List<ProductPriceDiscount> getProductsFromSaleRequestDto(SaleRequestDto saleRequestDto) {
-    return saleRequestDto.getProducts().stream()
-        .map(
-            productDto -> {
-              ProductPriceDiscount productPriceDiscount = new ProductPriceDiscount();
-              productPriceDiscount.setProduct(productService.getProduct(productDto.getProductId()));
-              productPriceDiscount.setDiscount(productDto.getDiscount());
-              return productPriceDiscount;
-            })
-        .toList();
+    if (saleRequestDto.getProducts() != null) {
+      return saleRequestDto.getProducts().stream()
+          .map(
+              productDto -> {
+                ProductPriceDiscount productPriceDiscount = new ProductPriceDiscount();
+                productPriceDiscount.setProduct(
+                    productService.getProduct(productDto.getProductId()));
+                productPriceDiscount.setDiscount(productDto.getDiscount());
+                return productPriceDiscount;
+              })
+          .toList();
+    }
+    return new ArrayList<>();
   }
 
   private void deleteSaleIfProductsAndResourcesAreEmpty(Sale sale) {

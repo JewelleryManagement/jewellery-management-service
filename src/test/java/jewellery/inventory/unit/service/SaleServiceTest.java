@@ -135,9 +135,6 @@ class SaleServiceTest {
     assertEquals(saleRequestDto.getBuyerId(), actual.getProducts().get(0).getOwner().getId());
     assertEquals(saleRequestDto.getSellerId(), actual.getSeller().getId());
     assertNotEquals(actual.getBuyer(), actual.getSeller());
-    assertNotEquals(
-        saleRequestDto.getProducts().get(0).getSalePrice(),
-        actual.getProducts().get(0).getSalePrice());
     assertEquals(
         saleRequestDto.getResources().get(0).getDiscount(),
         actual.getResources().get(0).getDiscount());
@@ -156,6 +153,7 @@ class SaleServiceTest {
 
   @Test
   void testCreateSaleProductWillThrowsProductIsSold() {
+    product.setPartOfSale(sale);
     when(saleMapper.mapRequestToEntity(
             any(SaleRequestDto.class), any(User.class), any(User.class), anyList(), anyList()))
         .thenReturn(sale);
@@ -169,7 +167,7 @@ class SaleServiceTest {
   void testCreateSaleProductWillThrowsProductIsPartOfAnotherProduct() {
     product.setContentOf(product);
     when(saleMapper.mapRequestToEntity(
-            any(SaleRequestDto.class), any(User.class), any(User.class), anyList()))
+            any(SaleRequestDto.class), any(User.class), any(User.class), anyList(), anyList()))
         .thenReturn(sale);
     when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);

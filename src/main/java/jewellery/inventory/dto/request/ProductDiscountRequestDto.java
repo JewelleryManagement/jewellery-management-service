@@ -16,8 +16,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class ProductDiscountRequestDto {
-  @NotNull private UUID productId;
-  @NotNull
+  private UUID productId;
   @DecimalMin(value = "0")
   @DecimalMax(value = "100")
   private BigDecimal discount;}

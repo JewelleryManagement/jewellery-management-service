@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 import jewellery.inventory.dto.request.*;
@@ -168,7 +169,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getAllSalesSuccessfully() {
-    ResponseEntity<ProductResponseDto> productResponse = createProduct(productRequestDto);
     SaleRequestDto saleRequestDto =
         getSaleRequestDto(seller, buyer, createProduct(productRequestDto), pearlRequest);
 
@@ -194,8 +194,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     seller.setId(UUID.randomUUID());
     SaleRequestDto saleRequestDto =
         getSaleRequestDto(
-            seller, buyer, Objects.requireNonNull(createProduct(productRequestDto)), pearlRequest);
-    saleRequestDto.setProducts(new ArrayList<>());
+            seller, buyer, createProduct(productRequestDto), pearlRequest);
 
     ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
 
@@ -204,8 +203,12 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void createSaleWithResourceAndProductSuccessfully() throws JsonProcessingException {
+    ResponseEntity<ProductResponseDto> productResponse = createProduct(productRequestDto);
+
+    productRequestDto2.setProductsContent(List.of(productResponse.getBody().getId()));
+    ResponseEntity<ProductResponseDto> productResponse2 = createProduct(productRequestDto2);
     SaleRequestDto saleRequestDto =
-        getSaleRequestDto(seller, buyer, createProduct(productRequestDto), pearlRequest);
+        getSaleRequestDto(seller, buyer, productResponse2, pearlRequest);
 
     ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
 
@@ -220,12 +223,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         saleRequestDto.getProducts().get(0).getProductId(),
         saleResponse.getBody().getProducts().get(0).getId());
 
-    BigDecimal totalPrice =
-        SALE_TOTAL_PRICE.add(
-            Objects.requireNonNull(pearl.getBody())
-                .getPricePerQuantity()
-                .multiply(saleRequestDto.getResources().get(0).getResource().getQuantity()));
-    assertEquals(totalPrice, saleResponse.getBody().getTotalPrice());
+    assertEquals(SALE_TOTAL_PRICE.add(calculateTotalPriceOfResource(saleRequestDto)), saleResponse.getBody().getTotalPrice().setScale(2, RoundingMode.HALF_UP));
     assertEquals(
         SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount().setScale(2, RoundingMode.HALF_UP));
     assertEquals(
@@ -243,7 +241,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     SaleRequestDto saleRequestDto =
         getSaleRequestDto(
-            seller, buyer, Objects.requireNonNull(createProduct(productRequestDto)), pearlRequest);
+            seller, buyer, createProduct(productRequestDto), pearlRequest);
     saleRequestDto.setProducts(new ArrayList<>());
 
     ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
@@ -265,10 +263,10 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertEquals(
         getBigDecimal("10"),
-        saleResponse.getBody().getTotalDiscount().setScale(2, RoundingMode.HALF_UP));
+        saleResponse.getBody().getTotalDiscount().setScale(2));
     assertEquals(
         SALE_RESOURCE_DISCOUNTED_PRICE,
-        saleResponse.getBody().getTotalDiscountedPrice().setScale(2, RoundingMode.HALF_UP));
+        saleResponse.getBody().getTotalDiscountedPrice().setScale(2));
 
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);

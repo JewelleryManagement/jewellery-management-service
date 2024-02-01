@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS purchased_resources;
-
 CREATE TABLE IF NOT EXISTS public.purchased_resources (
     id UUID PRIMARY KEY,
     resource_id UUID,
