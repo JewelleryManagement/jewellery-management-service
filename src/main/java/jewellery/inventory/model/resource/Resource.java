@@ -8,6 +8,7 @@ import jewellery.inventory.model.ResourceInUser;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.apache.commons.lang3.builder.ToStringExclude;
 
 @Entity
 @Data

@@ -142,6 +142,7 @@ class SaleServiceTest {
     assertEquals(
         saleRequestDto.getResources().get(0).getDiscount(),
         actual.getResources().get(0).getDiscount());
+    assertEquals(saleResponseDto.getTotalDiscount(), actual.getTotalDiscount());
   }
 
   @Test
@@ -261,7 +262,7 @@ class SaleServiceTest {
         .thenReturn(resourceInUser);
 
     assertEquals(BigDecimal.TEN, resourceInUser.getQuantity());
-    assertEquals(BigDecimal.ONE, purchasedResourceInUser.getQuantity());
+    assertEquals(getBigDecimal("5"), purchasedResourceInUser.getQuantity());
     assertEquals(1, sale.getResources().size());
 
     when(saleService.returnResource(sale.getId(), purchasedResourceInUser.getResource().getId()))
@@ -273,7 +274,7 @@ class SaleServiceTest {
 
     assertNotNull(actualReturnResourceResponse);
     assertEquals(0, sale.getResources().size());
-    assertEquals(BigDecimal.valueOf(11), resourceInUser.getQuantity());
+    assertEquals(getBigDecimal("15"), resourceInUser.getQuantity());
   }
 
   @Test

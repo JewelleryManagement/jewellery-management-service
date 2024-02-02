@@ -1,8 +1,10 @@
 package jewellery.inventory.helper;
 
+import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
+
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -120,7 +122,9 @@ public class SaleTestHelper {
               BigDecimal discount =
                   Optional.ofNullable(resource.getDiscount()).orElse(BigDecimal.ZERO);
               dto.setTotalDiscountedPrice(dto.getTotalDiscountedPrice().add(salePrice));
-              dto.setTotalDiscount(dto.getTotalDiscount().add(discount));
+              dto.setTotalDiscount((dto.getTotalDiscount().add(discount))
+                      .divide(salePrice, MathContext.DECIMAL128)
+                      .multiply(getBigDecimal("100")));
             });
   }
 
@@ -133,17 +137,19 @@ public class SaleTestHelper {
               BigDecimal discount =
                   Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
               dto.setTotalDiscountedPrice(dto.getTotalDiscountedPrice().add(salePrice));
-              dto.setTotalDiscount(dto.getTotalDiscount().add(discount));
+              dto.setTotalDiscount((dto.getTotalDiscount().add(discount))
+                      .divide(salePrice, MathContext.DECIMAL128)
+                      .multiply(getBigDecimal("100")));
             });
   }
 
   public static PurchasedResourceInUser createPurchasedResource(BigDecimal price) {
     return PurchasedResourceInUser.builder()
         .id(UUID.randomUUID())
-        .salePrice(BigDecimal.TEN)
+        .salePrice(getBigDecimal("100"))
         .resource(createResource(price))
-        .discount(BigDecimal.TEN)
-        .quantity(BigDecimal.ONE)
+        .discount(getBigDecimal("10"))
+        .quantity(getBigDecimal("5"))
         .build();
   }
 
@@ -173,36 +179,36 @@ public class SaleTestHelper {
         .id(UUID.randomUUID())
         .clazz("Pearl")
         .quantityType("Gram")
-        .pricePerQuantity(BigDecimal.TEN)
+        .pricePerQuantity(getBigDecimal("20"))
         .build();
   }
 
   private static ResourceQuantityResponseDto createResourceQuantityResponseDto() {
     return ResourceQuantityResponseDto.builder()
         .resource(createResourceResponseDto())
-        .quantity(BigDecimal.TEN)
+        .quantity(getBigDecimal("10"))
         .build();
   }
 
   public static PurchasedResourceInUserResponseDto createPurchasedResourceResponseDto(Sale sale) {
     return PurchasedResourceInUserResponseDto.builder()
         .resource(createResourceQuantityResponseDto())
-        .discount(BigDecimal.TEN)
-        .salePrice(BigDecimal.ONE)
+        .discount(getBigDecimal("10"))
+        .salePrice(getBigDecimal("100"))
         .build();
   }
 
   private static ResourceQuantityRequestDto createResourceQuantityRequest() {
     ResourceQuantityRequestDto requestDto = new ResourceQuantityRequestDto();
-    requestDto.setResourceId(createResource(BigDecimal.TEN).getId());
-    requestDto.setQuantity(BigDecimal.TEN);
+    requestDto.setResourceId(createResource(getBigDecimal("20")).getId());
+    requestDto.setQuantity(getBigDecimal("10"));
     return requestDto;
   }
 
   public static PurchasedResourceInUserRequestDto createPurchasedResourceRequestDto() {
     return PurchasedResourceInUserRequestDto.builder()
         .resource(createResourceQuantityRequest())
-        .discount(BigDecimal.TEN)
+        .discount(getBigDecimal("10"))
         .build();
   }
 
@@ -212,7 +218,7 @@ public class SaleTestHelper {
     resourceInUser.setQuantity(BigDecimal.TEN);
     resourceInUser.setOwner(UserTestHelper.createTestUserWithId());
     resourceInUser.setId(UUID.randomUUID());
-    resourceInUser.setDealPrice(BigDecimal.TEN);
+    resourceInUser.setDealPrice(getBigDecimal("500"));
     return resourceInUser;
   }
 
