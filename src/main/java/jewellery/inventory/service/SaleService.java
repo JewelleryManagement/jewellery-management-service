@@ -1,6 +1,6 @@
 package jewellery.inventory.service;
 
-import java.util.ArrayList;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
@@ -28,7 +28,6 @@ public class SaleService {
   private final SaleMapper saleMapper;
   private final ProductService productService;
   private final UserService userService;
-  private final ProductPriceDiscountService productPriceDiscountService;
 
   public List<SaleResponseDto> getAllSales() {
     logger.debug("Fetching all Sales");
@@ -37,6 +36,7 @@ public class SaleService {
   }
 
   @LogCreateEvent(eventType = EventType.SALE_CREATE)
+  @Transactional
   public SaleResponseDto createSale(SaleRequestDto saleRequestDto) {
     Sale sale =
         saleMapper.mapRequestToEntity(
@@ -50,7 +50,14 @@ public class SaleService {
     throwExceptionIfProductIsPartOfAnotherProduct(sale.getProducts());
 
     Sale createdSale = saleRepository.save(sale);
-    createdSale.setProducts(productPriceDiscountService.createProductPriceDiscount(saleRequestDto, createdSale));
+
+    for (int i = 0; i < sale.getProducts().size(); i++) {
+      sale.getProducts()
+          .get(i)
+          .setSalePrice(productService.getProductSalePrice(sale.getProducts().get(i).getProduct()));
+      sale.getProducts().get(i).setSale(createdSale);
+    }
+
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
     logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
     return saleMapper.mapEntityToResponseDto(createdSale);
@@ -76,10 +83,12 @@ public class SaleService {
     throwExceptionIfProductNotSold(productToReturn);
 
     Sale sale = getSale(productToReturn.getPartOfSale().getId());
-    sale.setProducts(removeProductFromSale(sale.getProducts(), productToReturn));
+
+    sale.getProducts()
+        .removeIf(
+            productPriceDiscount -> productPriceDiscount.getProduct().getId().equals(productId));
 
     productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
-    productPriceDiscountService.deleteProductPriceDiscount(sale.getId(), productToReturn.getId());
     deleteSaleIfProductsIsEmpty(sale);
     logger.info("Product returned successfully. Product ID: {}", productId);
     return validateSaleAfterReturnProduct(sale, productToReturn);
@@ -160,21 +169,5 @@ public class SaleService {
     }
     return productService.getProductReturnResponseDto(
         saleMapper.mapEntityToResponseDto(sale), productToReturn);
-  }
-
-  private List<ProductPriceDiscount> removeProductFromSale(List<ProductPriceDiscount> products, Product productToRemove) {
-    List<ProductPriceDiscount> updatedList = new ArrayList<>();
-
-    for (ProductPriceDiscount ppd : products) {
-      if (!ppd.getProduct().getId().equals(productToRemove.getId())) {
-        updatedList.add(ppd);
-      }
-    }
-
-    if (updatedList.size() < products.size()) {
-      logger.info("Removing product with ID: {} from sale.", productToRemove.getId());
-    }
-
-    return updatedList;
   }
 }

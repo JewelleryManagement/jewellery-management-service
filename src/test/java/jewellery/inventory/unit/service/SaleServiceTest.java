@@ -28,7 +28,6 @@ import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.*;
-import jewellery.inventory.service.ProductPriceDiscountService;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.SaleService;
 import jewellery.inventory.service.UserService;
@@ -47,7 +46,6 @@ class SaleServiceTest {
   @Mock private UserService userService;
   @Mock private ProductService productService;
   @Mock private SaleMapper saleMapper;
-  @Mock private ProductPriceDiscountService productPriceDiscountService;
   private User seller;
   private User buyer;
   private Product product;

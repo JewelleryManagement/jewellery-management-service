@@ -11,8 +11,8 @@ CREATE TABLE public.product_price_discount (
     sale_id UUID,
     sale_price DECIMAL(10, 2),
     discount DECIMAL(10, 2),
-    FOREIGN KEY (product_id) REFERENCES Product(id),
-    FOREIGN KEY (sale_id) REFERENCES Sale(id)
+    FOREIGN KEY (product_id) REFERENCES product(id),
+    FOREIGN KEY (sale_id) REFERENCES sale(id)
 );
 
 INSERT INTO public.product_price_discount (id, product_id, sale_id, sale_price, discount)
