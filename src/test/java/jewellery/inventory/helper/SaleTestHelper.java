@@ -24,6 +24,7 @@ import jewellery.inventory.model.ProductPriceDiscount;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
+import org.jetbrains.annotations.NotNull;
 
 public class SaleTestHelper {
 
@@ -83,17 +84,34 @@ public class SaleTestHelper {
     dto.setTotalDiscount(BigDecimal.ZERO);
     dto.setProducts(List.of(productResponseDto));
 
-    sale.getProducts()
-        .forEach(
-            product -> {
-              BigDecimal salePrice =
-                  Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
-              BigDecimal discount =
-                  Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
-              dto.setTotalDiscountedPrice(dto.getTotalDiscountedPrice().add(salePrice));
-              dto.setTotalDiscount(dto.getTotalDiscount().add(discount));
-            });
+    calculateProductsDiscounts(sale, dto);
+    calculateResourcesDiscounts(sale, dto);
 
+    dto.setProducts(createProductsResponse(sale, dto));
+    dto.setResources(createResourcesResponse(sale));
+
+    return dto;
+  }
+
+  @NotNull
+  private static List<ProductResponseDto> createProductsResponse(Sale sale, SaleResponseDto dto) {
+    List<ProductResponseDto> productResponseDtos =
+        sale.getProducts().stream()
+            .map(product -> createProductResponseDto(dto.getBuyer()))
+            .collect(Collectors.toList());
+    return productResponseDtos;
+  }
+
+  @NotNull
+  private static List<PurchasedResourceInUserResponseDto> createResourcesResponse(Sale sale) {
+    List<PurchasedResourceInUserResponseDto> resourcesResponse =
+        sale.getResources().stream()
+            .map(resource -> createPurchasedResourceResponseDto(sale))
+            .toList();
+    return resourcesResponse;
+  }
+
+  private static void calculateResourcesDiscounts(Sale sale, SaleResponseDto dto) {
     sale.getResources()
         .forEach(
             resource -> {
@@ -104,22 +122,19 @@ public class SaleTestHelper {
               dto.setTotalDiscountedPrice(dto.getTotalDiscountedPrice().add(salePrice));
               dto.setTotalDiscount(dto.getTotalDiscount().add(discount));
             });
+  }
 
-    List<ProductResponseDto> productResponseDtos =
-        sale.getProducts().stream()
-            .map(product -> createProductResponseDto(dto.getBuyer()))
-            .collect(Collectors.toList());
-
-    dto.setProducts(productResponseDtos);
-
-    List<PurchasedResourceInUserResponseDto> resourcesResponse =
-        sale.getResources().stream()
-            .map(resource -> createPurchasedResourceResponseDto(sale))
-            .toList();
-
-    dto.setResources(resourcesResponse);
-
-    return dto;
+  private static void calculateProductsDiscounts(Sale sale, SaleResponseDto dto) {
+    sale.getProducts()
+        .forEach(
+            product -> {
+              BigDecimal salePrice =
+                  Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
+              BigDecimal discount =
+                  Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
+              dto.setTotalDiscountedPrice(dto.getTotalDiscountedPrice().add(salePrice));
+              dto.setTotalDiscount(dto.getTotalDiscount().add(discount));
+            });
   }
 
   public static PurchasedResourceInUser createPurchasedResource(BigDecimal price) {
