@@ -68,20 +68,6 @@ public class SaleTestHelper {
     return productRequest;
   }
 
-  public static List<Product> getProductsList(Product product) {
-    List<Product> products = new ArrayList<>();
-    products.add(product);
-    return products;
-  }
-
-  public static List<Product> getProductsList(Product product, Product otherProduct) {
-    List<Product> products = new ArrayList<>();
-    products.add(product);
-    otherProduct.setId(UUID.randomUUID());
-    products.add(otherProduct);
-    return products;
-  }
-
   public static SaleResponseDto getSaleResponseDto(
       Sale sale, ProductPriceDiscount productPriceDiscount) {
     SaleResponseDto dto = new SaleResponseDto();
@@ -161,7 +147,7 @@ public class SaleTestHelper {
   public static Resource createResource(BigDecimal price) {
     return Resource.builder()
         .id(UUID.randomUUID())
-        .quantityType("carat")
+        .quantityType("Gram")
         .pricePerQuantity(price)
         .clazz("Pearl")
         .build();
@@ -171,7 +157,7 @@ public class SaleTestHelper {
     return ResourceResponseDto.builder()
         .id(UUID.randomUUID())
         .clazz("Pearl")
-        .quantityType("carat")
+        .quantityType("Gram")
         .pricePerQuantity(BigDecimal.TEN)
         .build();
   }

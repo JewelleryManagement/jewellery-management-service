@@ -55,6 +55,7 @@ class SaleServiceTest {
   @Mock private SaleRepository saleRepository;
   @Mock private UserService userService;
   @Mock private ProductService productService;
+  @Mock private ResourceService resourceService;
   @Mock private ProductRepository productRepository;
   @Mock private PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   @Mock private SaleMapper saleMapper;
@@ -71,6 +72,7 @@ class SaleServiceTest {
   private SaleResponseDto saleResponseDto;
   private PurchasedResourceInUser purchasedResourceInUser;
   private PurchasedResourceInUserRequestDto purchasedResourceInUserRequestDto;
+  private Resource resource;
 
   @BeforeEach
   void setUp() {
@@ -78,6 +80,7 @@ class SaleServiceTest {
     seller.setId(UUID.randomUUID());
     buyer = createSecondTestUser();
     product = getTestProduct(seller, new Resource());
+    resource = SaleTestHelper.createResource(BigDecimal.TEN);
     purchasedResourceInUser = SaleTestHelper.createPurchasedResource(BigDecimal.TEN);
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, List.of(purchasedResourceInUser));
     ProductResponseDto productResponseDto =
@@ -119,6 +122,7 @@ class SaleServiceTest {
 
   @Test
   void testCreateSaleSuccessfully() {
+    when(resourceService.getResourceById(any())).thenReturn(resource);
     when(saleMapper.mapRequestToEntity(
             any(SaleRequestDto.class), any(User.class), any(User.class), anyList(), anyList()))
         .thenReturn(sale);
@@ -142,6 +146,7 @@ class SaleServiceTest {
 
   @Test
   void testCreateSaleProductWillThrowsProductOwnerNotSeller() {
+    when(resourceService.getResourceById(any())).thenReturn(resource);
     when(saleMapper.mapRequestToEntity(
             any(SaleRequestDto.class), any(User.class), any(User.class), anyList(), anyList()))
         .thenReturn(sale);
@@ -153,6 +158,7 @@ class SaleServiceTest {
 
   @Test
   void testCreateSaleProductWillThrowsProductIsSold() {
+    when(resourceService.getResourceById(any())).thenReturn(resource);
     product.setPartOfSale(sale);
     when(saleMapper.mapRequestToEntity(
             any(SaleRequestDto.class), any(User.class), any(User.class), anyList(), anyList()))
@@ -165,6 +171,7 @@ class SaleServiceTest {
 
   @Test
   void testCreateSaleProductWillThrowsProductIsPartOfAnotherProduct() {
+    when(resourceService.getResourceById(any())).thenReturn(resource);
     product.setContentOf(product);
     when(saleMapper.mapRequestToEntity(
             any(SaleRequestDto.class), any(User.class), any(User.class), anyList(), anyList()))

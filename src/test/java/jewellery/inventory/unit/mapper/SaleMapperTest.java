@@ -4,18 +4,15 @@ import static jewellery.inventory.helper.ProductTestHelper.getTestProduct;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.PurchasedResourceInUserRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.helper.SaleTestHelper;
@@ -27,7 +24,6 @@ import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceRepository;
-import jewellery.inventory.service.ResourceService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +38,6 @@ class SaleMapperTest {
   @Mock private UserMapper userMapper;
   @Mock private ResourceMapper resourceMapper;
   @Mock private ProductMapper productMapper;
-  @Mock private ResourceService resourceService;
   @Mock private ResourceRepository resourceRepository;
   @Mock private PurchasedResourceInUserMapper purchasedResourceInUserMapper;
   private User seller;
@@ -56,7 +51,6 @@ class SaleMapperTest {
   private ProductPriceDiscount productPriceDiscount;
   private PurchasedResourceInUser purchasedResourceInUser;
   private PurchasedResourceInUserRequestDto purchasedResourceInUserRequestDto;
-  private Resource resource;
 
   @BeforeEach
   void setUp() {
@@ -79,14 +73,11 @@ class SaleMapperTest {
             buyer.getId(),
             productDiscountRequestDtoList,
             List.of(purchasedResourceInUserRequestDto));
-    resource = SaleTestHelper.createResource(BigDecimal.TEN);
-    PurchasedResourceInUserResponseDto purchasedResourceInUserResponseDto =
-        SaleTestHelper.createPurchasedResourceResponseDto(sale);
+    SaleTestHelper.createPurchasedResourceResponseDto(sale);
   }
 
   @Test
   void testMapRequestToEntity() {
-    when(resourceService.getResourceById(any(UUID.class))).thenReturn(resource);
     Sale actual =
         saleMapper.mapRequestToEntity(
             saleRequestDto,
@@ -104,7 +95,6 @@ class SaleMapperTest {
 
   @Test
   void testMapEntityToResponseDto() {
-    when(resourceService.getResourceById(any(UUID.class))).thenReturn(resource);
     Sale sale =
         saleMapper.mapRequestToEntity(
             saleRequestDto,
@@ -127,7 +117,6 @@ class SaleMapperTest {
 
   @Test
   void testMappingWithZeroSalePriceThrowsArithmeticException() {
-    when(resourceService.getResourceById(any(UUID.class))).thenReturn(resource);
     Sale sale =
         saleMapper.mapRequestToEntity(
             saleRequestDto,

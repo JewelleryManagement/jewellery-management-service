@@ -17,8 +17,6 @@ import jewellery.inventory.model.ProductPriceDiscount;
 import jewellery.inventory.model.PurchasedResourceInUser;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
-import jewellery.inventory.model.resource.Resource;
-import jewellery.inventory.service.ResourceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +26,6 @@ public class SaleMapper {
   private final UserMapper userMapper;
   private final ProductMapper productMapper;
   private final ResourceMapper resourceMapper;
-  private final ResourceService resourceService;
   private static final String AMOUNT = "amount";
   private static final String PERCENTAGE = "percentage";
 
@@ -59,7 +56,7 @@ public class SaleMapper {
     sale.setBuyer(buyer);
     sale.setSeller(seller);
     sale.setProducts(products);
-    sale.setResources(setResourcesFields(saleRequestDto, resources));
+    sale.setResources(resources);
     sale.setDate(saleRequestDto.getDate());
     return sale;
   }
@@ -173,23 +170,5 @@ public class SaleMapper {
               salePrice.multiply(discountRate).divide(getBigDecimal("100"), RoundingMode.HALF_UP));
     }
     return discountAmount;
-  }
-
-  private List<PurchasedResourceInUser> setResourcesFields(
-      SaleRequestDto saleRequestDto, List<PurchasedResourceInUser> resources) {
-    for (int i = 0; i < resources.size(); i++) {
-      if (saleRequestDto.getResources() != null) {
-        Resource resource =
-            resourceService.getResourceById(
-                saleRequestDto.getResources().get(i).getResource().getResourceId());
-        resources.get(i).setResource(resource);
-        resources.get(i).setSalePrice(resource.getPricePerQuantity());
-        resources.get(i).setDiscount(saleRequestDto.getResources().get(i).getDiscount());
-        resources
-            .get(i)
-            .setQuantity(saleRequestDto.getResources().get(i).getResource().getQuantity());
-      }
-    }
-    return resources;
   }
 }

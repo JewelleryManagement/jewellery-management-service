@@ -18,6 +18,7 @@ import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
+import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.PurchasedResourceInUserRepository;
 import jewellery.inventory.repository.SaleRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class SaleService {
   private final UserService userService;
   private final PurchasedResourceInUserMapper purchasedResourceInUserMapper;
   private final ProductPriceDiscountService productPriceDiscountService;
+  private final ResourceService resourceService;
 
   public List<SaleResponseDto> getAllSales() {
     logger.debug("Fetching all Sales");
@@ -224,17 +226,18 @@ public class SaleService {
     return updatedList;
   }
 
-  private List<PurchasedResourceInUser> getResourcesFromSaleRequestDto(
-      SaleRequestDto saleRequestDto) {
-    logger.info("Getting resources from sale request.");
-    List<PurchasedResourceInUserRequestDto> resources = saleRequestDto.getResources();
-    if (resources != null) {
-      List<PurchasedResourceInUser> purchasedResourceInUsers =
-          resources.stream().map(purchasedResourceInUserMapper::toPurchasedResourceInUser).toList();
-      return purchasedResourceInUserRepository.saveAll(purchasedResourceInUsers);
-    }
-    return new ArrayList<>();
-  }
+  //  private List<PurchasedResourceInUser> getResourcesFromSaleRequestDto(
+  //      SaleRequestDto saleRequestDto) {
+  //    logger.info("Getting resources from sale request.");
+  //    List<PurchasedResourceInUserRequestDto> resources = saleRequestDto.getResources();
+  //    if (resources != null) {
+  //      List<PurchasedResourceInUser> purchasedResourceInUsers =
+  //
+  // resources.stream().map(purchasedResourceInUserMapper::toPurchasedResourceInUser).toList();
+  //      return purchasedResourceInUserRepository.saveAll(purchasedResourceInUsers);
+  //    }
+  //    return new ArrayList<>();
+  //  }
 
   private void setFieldsOfResourcesAfterSale(Sale sale) {
     List<PurchasedResourceInUser> resources = sale.getResources();
@@ -288,5 +291,28 @@ public class SaleService {
             resource.getResource().getResourceId());
       }
     }
+  }
+
+  private List<PurchasedResourceInUser> getResourcesFromSaleRequestDto(
+      SaleRequestDto saleRequestDto) {
+    List<PurchasedResourceInUser> resources = new ArrayList<>();
+    if (saleRequestDto.getResources() != null) {
+      for (int i = 0; i < saleRequestDto.getResources().size(); i++) {
+        PurchasedResourceInUser purchasedResourceInUser = new PurchasedResourceInUser();
+        Resource resource =
+            resourceService.getResourceById(
+                saleRequestDto.getResources().get(i).getResource().getResourceId());
+        purchasedResourceInUser.setResource(resource);
+        purchasedResourceInUser.setSalePrice(
+            resource
+                .getPricePerQuantity()
+                .multiply(saleRequestDto.getResources().get(i).getResource().getQuantity()));
+        purchasedResourceInUser.setDiscount(saleRequestDto.getResources().get(i).getDiscount());
+        purchasedResourceInUser.setQuantity(
+            saleRequestDto.getResources().get(i).getResource().getQuantity());
+        resources.add(purchasedResourceInUser);
+      }
+    }
+    return resources;
   }
 }
