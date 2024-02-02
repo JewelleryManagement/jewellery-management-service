@@ -50,17 +50,19 @@ public class SaleService {
     throwExceptionIfProductIsPartOfAnotherProduct(sale.getProducts());
 
     Sale createdSale = saleRepository.save(sale);
-
-    for (int i = 0; i < sale.getProducts().size(); i++) {
-      sale.getProducts()
-          .get(i)
-          .setSalePrice(productService.getProductSalePrice(sale.getProducts().get(i).getProduct()));
-      sale.getProducts().get(i).setSale(createdSale);
-    }
-
+    setProductPriceAndSale(createdSale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
     logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
     return saleMapper.mapEntityToResponseDto(createdSale);
+  }
+
+  private void setProductPriceAndSale(Sale sale){
+    for (int i = 0; i < sale.getProducts().size(); i++) {
+      sale.getProducts()
+              .get(i)
+              .setSalePrice(productService.getProductSalePrice(sale.getProducts().get(i).getProduct()));
+      sale.getProducts().get(i).setSale(sale);
+    }
   }
 
   private void throwExceptionIfSellerNotProductOwner(
