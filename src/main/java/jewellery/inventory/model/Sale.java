@@ -17,6 +17,7 @@ public class Sale {
   @Id @GeneratedValue private UUID id;
   @ManyToOne private User seller;
   @ManyToOne private User buyer;
+  @ManyToOne private Organization organizationSeller;
 
   @OneToMany(mappedBy = "partOfSale")
   private List<Product> products;

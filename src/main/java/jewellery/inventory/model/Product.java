@@ -45,4 +45,5 @@ public class Product {
   private BigDecimal salePrice;
   private BigDecimal discount;
   @ManyToOne private Sale partOfSale;
+  @ManyToOne private Organization organization;
 }
