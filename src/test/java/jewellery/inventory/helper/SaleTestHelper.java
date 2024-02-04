@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.Product;
@@ -25,6 +26,17 @@ public class SaleTestHelper {
     sale.setProducts(products);
     sale.setDate(LocalDate.now());
     return sale;
+  }
+  public static ProductReturnResponseDto createProductReturnResponseDto(SaleResponseDto saleResponseDto,Product product,User user){
+    ProductReturnResponseDto dto =new ProductReturnResponseDto();
+    ProductResponseDto productResponseDto=new ProductResponseDto();
+    productResponseDto.setId(product.getId());
+    productResponseDto.setPartOfSale(null);
+    productResponseDto.setOwner(createUserResponseDto(user));
+    dto.setReturnedProduct(productResponseDto);
+    dto.setSaleAfter(null);
+    dto.setDate(LocalDate.now());
+    return dto;
   }
 
   public static SaleRequestDto createSaleRequest(

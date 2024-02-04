@@ -52,6 +52,7 @@ class SaleServiceTest {
   private SaleRequestDto saleRequestDto;
   private SaleRequestDto saleRequestDtoSellerNotOwner;
   private SaleResponseDto saleResponseDto;
+  private ProductReturnResponseDto productReturnResponseDto;
 
   @BeforeEach
   void setUp() {
@@ -72,6 +73,7 @@ class SaleServiceTest {
     ProductPriceDiscount productPriceDiscount =
         SaleTestHelper.createTestProductPriceDiscount(product, sale);
     saleResponseDto = SaleTestHelper.getSaleResponseDto(sale, productPriceDiscount);
+    productReturnResponseDto = SaleTestHelper.createProductReturnResponseDto(saleResponseDto,product,buyer);
   }
 
   @Test
@@ -175,7 +177,7 @@ class SaleServiceTest {
 
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
     when(saleRepository.findById(any(UUID.class))).thenReturn(Optional.of(sale));
-
+    when(saleService.returnProduct(product.getId())).thenReturn(productReturnResponseDto);
     ProductReturnResponseDto result = saleService.returnProduct(product.getId());
 
     assertNull(result.getSaleAfter());
