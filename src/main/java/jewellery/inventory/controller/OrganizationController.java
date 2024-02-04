@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
+import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.model.Organization;
 import jewellery.inventory.service.OrganizationService;
 import lombok.AllArgsConstructor;
@@ -42,6 +43,9 @@ public class OrganizationController {
   @GetMapping("/{id}")
   public OrganizationResponseDto show(@PathVariable UUID id) {
     Optional<Organization> organization = organizationService.show(id);
+    if(organization.isEmpty()) {
+      throw new NotFoundException("Organization not found");
+    }
     return new OrganizationResponseDto(organization.get());
   }
 
