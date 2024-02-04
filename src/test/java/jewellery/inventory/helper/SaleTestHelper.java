@@ -2,7 +2,6 @@ package jewellery.inventory.helper;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -10,7 +9,6 @@ import java.util.stream.Collectors;
 import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.Product;

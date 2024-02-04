@@ -52,7 +52,6 @@ class SaleServiceTest {
   private SaleRequestDto saleRequestDto;
   private SaleRequestDto saleRequestDtoSellerNotOwner;
   private SaleResponseDto saleResponseDto;
-  private ProductPriceDiscount productPriceDiscount;
 
   @BeforeEach
   void setUp() {
@@ -60,8 +59,8 @@ class SaleServiceTest {
     seller.setId(UUID.randomUUID());
     buyer = createSecondTestUser();
     product = getTestProduct(seller, new Resource());
-    productPriceDiscount = SaleTestHelper.createTestProductPriceDiscount(product, sale);
-    sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, List.of(productPriceDiscount));
+    ProductPriceDiscount productPriceDiscount1 = SaleTestHelper.createTestProductPriceDiscount(product, sale);
+    sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, List.of(productPriceDiscount1));
     ProductDiscountRequestDto productDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(product.getId(), getBigDecimal("10"));
     saleRequestDto =
