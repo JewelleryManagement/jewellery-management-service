@@ -18,7 +18,8 @@ import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 
 public class SaleTestHelper {
-  public static Sale createSaleWithTodayDate(User seller, User buyer,List<ProductPriceDiscount> products) {
+  public static Sale createSaleWithTodayDate(
+      User seller, User buyer, List<ProductPriceDiscount> products) {
     Sale sale = new Sale();
     sale.setId(UUID.randomUUID());
     sale.setSeller(seller);
@@ -27,9 +28,11 @@ public class SaleTestHelper {
     sale.setDate(LocalDate.now());
     return sale;
   }
-  public static ProductReturnResponseDto createProductReturnResponseDto(SaleResponseDto saleResponseDto,Product product,User user){
-    ProductReturnResponseDto dto =new ProductReturnResponseDto();
-    ProductResponseDto productResponseDto=new ProductResponseDto();
+
+  public static ProductReturnResponseDto createProductReturnResponseDto(
+       Product product, User user) {
+    ProductReturnResponseDto dto = new ProductReturnResponseDto();
+    ProductResponseDto productResponseDto = new ProductResponseDto();
     productResponseDto.setId(product.getId());
     productResponseDto.setPartOfSale(null);
     productResponseDto.setOwner(createUserResponseDto(user));
@@ -56,14 +59,16 @@ public class SaleTestHelper {
     productRequest.setDiscount(discount);
     return productRequest;
   }
-  public static SaleResponseDto getSaleResponseDto(Sale sale,ProductPriceDiscount productPriceDiscount) {
+
+  public static SaleResponseDto getSaleResponseDto(
+      Sale sale, ProductPriceDiscount productPriceDiscount) {
     SaleResponseDto dto = new SaleResponseDto();
     UserResponseDto userResponseDtoSeller = createUserResponseDto(sale.getSeller());
     UserResponseDto userResponseDtoBuyer = createUserResponseDto(sale.getBuyer());
 
     dto.setSeller(userResponseDtoSeller);
     dto.setBuyer(userResponseDtoBuyer);
-    ProductResponseDto productResponseDto =new ProductResponseDto();
+    ProductResponseDto productResponseDto = new ProductResponseDto();
     productResponseDto.setId(productPriceDiscount.getId());
     dto.setTotalPrice(productPriceDiscount.getSalePrice());
     dto.setTotalDiscountedPrice(productPriceDiscount.getSalePrice());
@@ -102,6 +107,7 @@ public class SaleTestHelper {
     productResponseDto.setOwner(owner);
     return productResponseDto;
   }
+
   public static ProductPriceDiscount createTestProductPriceDiscount(Product product, Sale sale) {
     ProductPriceDiscount productPriceDiscount = new ProductPriceDiscount();
     productPriceDiscount.setDiscount(BigDecimal.ZERO);

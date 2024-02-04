@@ -73,7 +73,7 @@ class SaleServiceTest {
     ProductPriceDiscount productPriceDiscount =
         SaleTestHelper.createTestProductPriceDiscount(product, sale);
     saleResponseDto = SaleTestHelper.getSaleResponseDto(sale, productPriceDiscount);
-    productReturnResponseDto = SaleTestHelper.createProductReturnResponseDto(saleResponseDto,product,buyer);
+    productReturnResponseDto = SaleTestHelper.createProductReturnResponseDto(product,buyer);
   }
 
   @Test
