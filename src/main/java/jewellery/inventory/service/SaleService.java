@@ -56,11 +56,11 @@ public class SaleService {
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
 
-  private void setProductPriceDiscountSalePriceAndSale(Sale sale){
+  private void setProductPriceDiscountSalePriceAndSale(Sale sale) {
     for (int i = 0; i < sale.getProducts().size(); i++) {
       sale.getProducts()
-              .get(i)
-              .setSalePrice(productService.getProductSalePrice(sale.getProducts().get(i).getProduct()));
+          .get(i)
+          .setSalePrice(productService.getProductSalePrice(sale.getProducts().get(i).getProduct()));
       sale.getProducts().get(i).setSale(sale);
     }
   }

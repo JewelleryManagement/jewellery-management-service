@@ -19,21 +19,12 @@ import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 
 public class SaleTestHelper {
-
-  public static ProductReturnResponseDto getProductReturnResponseDto(
-      SaleResponseDto sale, ProductResponseDto product) {
-    ProductReturnResponseDto productReturn = new ProductReturnResponseDto();
-    productReturn.setSaleAfter(sale);
-    productReturn.setReturnedProduct(product);
-    productReturn.setDate(LocalDate.now());
-    return productReturn;
-  }
-
-  public static Sale createSaleWithTodayDate(User seller, User buyer) {
+  public static Sale createSaleWithTodayDate(User seller, User buyer,List<ProductPriceDiscount> products) {
     Sale sale = new Sale();
     sale.setId(UUID.randomUUID());
     sale.setSeller(seller);
     sale.setBuyer(buyer);
+    sale.setProducts(products);
     sale.setDate(LocalDate.now());
     return sale;
   }
@@ -44,6 +35,7 @@ public class SaleTestHelper {
     saleRequest.setSellerId(sellerId);
     saleRequest.setBuyerId(buyerId);
     saleRequest.setProducts(products);
+    saleRequest.setDate(LocalDate.now());
     return saleRequest;
   }
 
@@ -54,21 +46,6 @@ public class SaleTestHelper {
     productRequest.setDiscount(discount);
     return productRequest;
   }
-
-  public static List<Product> getProductsList(Product product) {
-    List<Product> products = new ArrayList<>();
-    products.add(product);
-    return products;
-  }
-
-  public static List<Product> getProductsList(Product product, Product otherProduct) {
-    List<Product> products = new ArrayList<>();
-    products.add(product);
-    otherProduct.setId(UUID.randomUUID());
-    products.add(otherProduct);
-    return products;
-  }
-
   public static SaleResponseDto getSaleResponseDto(Sale sale,ProductPriceDiscount productPriceDiscount) {
     SaleResponseDto dto = new SaleResponseDto();
     UserResponseDto userResponseDtoSeller = createUserResponseDto(sale.getSeller());

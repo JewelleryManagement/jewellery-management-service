@@ -53,10 +53,10 @@ class SaleMapperTest {
     product = getTestProduct(seller, new Resource());
     sellerResponseDto = createTestUserResponseDto(seller);
     buyerResponseDto = createTestUserResponseDto(buyer);
-    sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer);
+    productPriceDiscount = SaleTestHelper.createTestProductPriceDiscount(product, sale);
+    sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer,List.of(productPriceDiscount));
     productDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(product.getId(), getBigDecimal("1000"));
-    productPriceDiscount = SaleTestHelper.createTestProductPriceDiscount(product, sale);
     List<ProductDiscountRequestDto> productDiscountRequestDtoList = new ArrayList<>();
     productDiscountRequestDtoList.add(productDiscountRequestDto);
     saleRequestDto =

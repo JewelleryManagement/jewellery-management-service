@@ -81,23 +81,6 @@ public class ProductTestHelper {
     return testProduct;
   }
 
-  public static ProductResponseDto getReturnedProductResponseDto(
-      Product product, UserResponseDto owner) {
-    ProductResponseDto productResponseDto = new ProductResponseDto();
-    productResponseDto.setId(product.getId());
-    productResponseDto.setAuthors(null);
-    productResponseDto.setOwner(owner);
-    productResponseDto.setResourcesContent(null);
-    productResponseDto.setProductsContent(null);
-    productResponseDto.setContentOf(null);
-    productResponseDto.setDescription("description");
-    productResponseDto.setSalePrice(getBigDecimal("1000"));
-    productResponseDto.setPartOfSale(null);
-    productResponseDto.setCatalogNumber("Catalog Number");
-    productResponseDto.setProductionNumber("Production Number");
-    return productResponseDto;
-  }
-
   @NotNull
   private static ResourceInProduct getResourceInProduct(Resource pearl) {
     ResourceInProduct resourceInProduct = new ResourceInProduct();
