@@ -71,7 +71,7 @@ class SaleServiceTest {
     saleRequestDtoSellerNotOwner =
         SaleTestHelper.createSaleRequest(
             buyer.getId(), buyer.getId(), List.of(productDiscountRequestDto));
-    saleResponseDto = SaleTestHelper.getSaleResponseDto(sale, productPriceDiscount);
+    saleResponseDto = SaleTestHelper.getSaleResponseDto(sale);
     productReturnResponseDto = SaleTestHelper.createProductReturnResponseDto(product, buyer);
   }
 

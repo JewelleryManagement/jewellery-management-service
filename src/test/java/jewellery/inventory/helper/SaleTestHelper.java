@@ -62,7 +62,7 @@ public class SaleTestHelper {
   }
 
   public static SaleResponseDto getSaleResponseDto(
-      Sale sale, ProductPriceDiscount productPriceDiscount) {
+      Sale sale) {
     SaleResponseDto dto = new SaleResponseDto();
     UserResponseDto userResponseDtoSeller = createUserResponseDto(sale.getSeller());
     UserResponseDto userResponseDtoBuyer = createUserResponseDto(sale.getBuyer());
@@ -70,22 +70,23 @@ public class SaleTestHelper {
     dto.setSeller(userResponseDtoSeller);
     dto.setBuyer(userResponseDtoBuyer);
     ProductResponseDto productResponseDto = new ProductResponseDto();
-    productResponseDto.setId(productPriceDiscount.getId());
-    dto.setTotalPrice(productPriceDiscount.getSalePrice());
-    dto.setTotalDiscountedPrice(productPriceDiscount.getSalePrice());
+    dto.setTotalDiscountedPrice(sale.getProducts().get(0).getSalePrice());
     dto.setTotalDiscount(BigDecimal.ZERO);
     dto.setProducts(List.of(productResponseDto));
 
-    sale.getProducts()
-        .forEach(
-            product -> {
-              BigDecimal salePrice =
-                  Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
-              BigDecimal discount =
-                  Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
+    BigDecimal totalDiscountedPriceSum = sale.getProducts().stream()
+            .map(product -> {
+              BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
+              BigDecimal discount = Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
+
               dto.setTotalDiscountedPrice(dto.getTotalDiscountedPrice().add(salePrice));
               dto.setTotalDiscount(dto.getTotalDiscount().add(discount));
-            });
+
+              return dto.getTotalDiscountedPrice();
+            })
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    dto.setTotalPrice(totalDiscountedPriceSum);
 
     List<ProductResponseDto> productResponseDtos =
         sale.getProducts().stream()
