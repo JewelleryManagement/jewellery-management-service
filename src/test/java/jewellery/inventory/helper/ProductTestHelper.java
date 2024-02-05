@@ -50,7 +50,7 @@ public class ProductTestHelper {
     productRequestDto.setCatalogNumber("1111");
     productRequestDto.setProductionNumber("1234");
     productRequestDto.setDescription("Test");
-    productRequestDto.setAdditionalPrice(BigDecimal.ZERO);
+    productRequestDto.setAdditionalPrice(BigDecimal.TEN);
     productRequestDto.setOwnerId(user.getId());
     productRequestDto.setAuthors(List.of(user.getId()));
     productRequestDto.setResourcesContent(listOfResourcesInProduct);
@@ -76,6 +76,7 @@ public class ProductTestHelper {
     testProduct.setResourcesContent(List.of(getResourceInProduct(pearl)));
     testProduct.setProductsContent(null);
     testProduct.setContentOf(null);
+    testProduct.setAdditionalPrice(BigDecimal.TEN);
     return testProduct;
   }
 
