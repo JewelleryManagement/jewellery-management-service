@@ -1,6 +1,8 @@
 package jewellery.inventory.service;
 
 import jakarta.transaction.Transactional;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
@@ -86,9 +88,10 @@ public class SaleService {
 
     Sale sale = getSale(productToReturn.getPartOfSale().getId());
 
-    sale.getProducts()
-        .removeIf(
-            productPriceDiscount -> productPriceDiscount.getProduct().getId().equals(productId));
+    List<ProductPriceDiscount> products = new ArrayList<>(sale.getProducts());
+    products.removeIf(
+        productPriceDiscount -> productPriceDiscount.getProduct().getId().equals(productId));
+    sale.setProducts(products);
 
     productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
     deleteSaleIfProductsIsEmpty(sale);
