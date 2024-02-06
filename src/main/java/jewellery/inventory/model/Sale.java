@@ -18,7 +18,7 @@ public class Sale {
   @ManyToOne private User seller;
   @ManyToOne private User buyer;
 
-  @OneToMany(mappedBy = "sale", cascade = CascadeType.REMOVE)
+  @OneToMany(mappedBy = "sale", orphanRemoval = true,cascade = CascadeType.PERSIST)
   private List<ProductPriceDiscount> products;
 
   @OneToMany(mappedBy = "partOfSale")

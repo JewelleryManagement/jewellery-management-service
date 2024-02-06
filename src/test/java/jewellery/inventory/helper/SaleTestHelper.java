@@ -5,6 +5,7 @@ import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -40,14 +41,31 @@ public class SaleTestHelper {
   }
 
   public static Sale createSaleWithTodayDate(
-      User seller, User buyer, List<PurchasedResourceInUser> resources) {
+      User seller,
+      User buyer,
+      List<ProductPriceDiscount> products,
+      List<PurchasedResourceInUser> resources) {
     Sale sale = new Sale();
     sale.setId(UUID.randomUUID());
     sale.setSeller(seller);
     sale.setBuyer(buyer);
+    sale.setProducts(new ArrayList<>(products));
     sale.setResources(resources);
     sale.setDate(LocalDate.now());
     return sale;
+  }
+
+  public static ProductReturnResponseDto createProductReturnResponseDto(
+      Product product, User user) {
+    ProductReturnResponseDto dto = new ProductReturnResponseDto();
+    ProductResponseDto productResponseDto = new ProductResponseDto();
+    productResponseDto.setId(product.getId());
+    productResponseDto.setPartOfSale(null);
+    productResponseDto.setOwner(createUserResponseDto(user));
+    dto.setReturnedProduct(productResponseDto);
+    dto.setSaleAfter(null);
+    dto.setDate(LocalDate.now());
+    return dto;
   }
 
   public static SaleRequestDto createSaleRequest(
@@ -60,6 +78,7 @@ public class SaleTestHelper {
     saleRequest.setBuyerId(buyerId);
     saleRequest.setProducts(products);
     saleRequest.setResources(resources);
+    saleRequest.setDate(LocalDate.now());
     return saleRequest;
   }
 
@@ -71,8 +90,7 @@ public class SaleTestHelper {
     return productRequest;
   }
 
-  public static SaleResponseDto getSaleResponseDto(
-      Sale sale, ProductPriceDiscount productPriceDiscount) {
+  public static SaleResponseDto getSaleResponseDto(Sale sale) {
     SaleResponseDto dto = new SaleResponseDto();
     UserResponseDto userResponseDtoSeller = createUserResponseDto(sale.getSeller());
     UserResponseDto userResponseDtoBuyer = createUserResponseDto(sale.getBuyer());
@@ -80,9 +98,7 @@ public class SaleTestHelper {
     dto.setSeller(userResponseDtoSeller);
     dto.setBuyer(userResponseDtoBuyer);
     ProductResponseDto productResponseDto = new ProductResponseDto();
-    productResponseDto.setId(productPriceDiscount.getId());
-    dto.setTotalPrice(productPriceDiscount.getSalePrice());
-    dto.setTotalDiscountedPrice(productPriceDiscount.getSalePrice());
+    dto.setTotalDiscountedPrice(sale.getProducts().get(0).getSalePrice());
     dto.setTotalDiscount(BigDecimal.ZERO);
     dto.setProducts(List.of(productResponseDto));
 
@@ -97,11 +113,9 @@ public class SaleTestHelper {
 
   @NotNull
   private static List<ProductResponseDto> createProductsResponse(Sale sale, SaleResponseDto dto) {
-    List<ProductResponseDto> productResponseDtos =
-        sale.getProducts().stream()
-            .map(product -> createProductResponseDto(dto.getBuyer()))
-            .collect(Collectors.toList());
-    return productResponseDtos;
+    return sale.getProducts().stream()
+        .map(product -> createProductResponseDto(dto.getBuyer()))
+        .collect(Collectors.toList());
   }
 
   @NotNull
@@ -122,7 +136,8 @@ public class SaleTestHelper {
               BigDecimal discount =
                   Optional.ofNullable(resource.getDiscount()).orElse(BigDecimal.ZERO);
               dto.setTotalDiscountedPrice(dto.getTotalDiscountedPrice().add(salePrice));
-              dto.setTotalDiscount((dto.getTotalDiscount().add(discount))
+              dto.setTotalDiscount(
+                  (dto.getTotalDiscount().add(discount))
                       .divide(salePrice, MathContext.DECIMAL128)
                       .multiply(getBigDecimal("100")));
             });
@@ -137,7 +152,8 @@ public class SaleTestHelper {
               BigDecimal discount =
                   Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
               dto.setTotalDiscountedPrice(dto.getTotalDiscountedPrice().add(salePrice));
-              dto.setTotalDiscount((dto.getTotalDiscount().add(discount))
+              dto.setTotalDiscount(
+                  (dto.getTotalDiscount().add(discount))
                       .divide(salePrice, MathContext.DECIMAL128)
                       .multiply(getBigDecimal("100")));
             });

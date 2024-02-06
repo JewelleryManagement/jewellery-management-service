@@ -47,7 +47,6 @@ class SaleMapperTest {
   private Product product;
   private Sale sale;
   private SaleRequestDto saleRequestDto;
-  private ProductDiscountRequestDto productDiscountRequestDto;
   private ProductPriceDiscount productPriceDiscount;
   private PurchasedResourceInUser purchasedResourceInUser;
   private PurchasedResourceInUserRequestDto purchasedResourceInUserRequestDto;
@@ -60,10 +59,12 @@ class SaleMapperTest {
     sellerResponseDto = createTestUserResponseDto(seller);
     buyerResponseDto = createTestUserResponseDto(buyer);
     purchasedResourceInUser = SaleTestHelper.createPurchasedResource(getBigDecimal("10"));
-    sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, List.of(purchasedResourceInUser));
-    productDiscountRequestDto =
-        SaleTestHelper.createProductPriceDiscountRequest(product.getId(), getBigDecimal("1000"));
     productPriceDiscount = SaleTestHelper.createTestProductPriceDiscount(product, sale);
+    sale =
+        SaleTestHelper.createSaleWithTodayDate(
+            seller, buyer, List.of(productPriceDiscount), List.of(purchasedResourceInUser));
+    ProductDiscountRequestDto productDiscountRequestDto =
+        SaleTestHelper.createProductPriceDiscountRequest(product.getId(), getBigDecimal("1000"));
     List<ProductDiscountRequestDto> productDiscountRequestDtoList = new ArrayList<>();
     productDiscountRequestDtoList.add(productDiscountRequestDto);
     purchasedResourceInUserRequestDto = SaleTestHelper.createPurchasedResourceRequestDto();

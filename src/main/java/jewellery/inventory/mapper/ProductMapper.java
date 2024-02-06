@@ -28,15 +28,7 @@ public class ProductMapper {
     productResponseDto.setId(product.getId());
     if (product.getPartOfSale() != null && !product.getPartOfSale().getProducts().isEmpty()) {
       productResponseDto.setPartOfSale(product.getPartOfSale().getId());
-      productResponseDto.setSalePrice(
-          product.getPartOfSale().getProducts().stream()
-              .filter(
-                  productPriceDiscount ->
-                      product.getId().equals(productPriceDiscount.getProduct().getId()))
-              .findFirst()
-              .orElseThrow(
-                  () -> new NoSuchElementException("No matching productPriceDiscount found"))
-              .getSalePrice());
+      productResponseDto.setSalePrice(getPriceFromSale(product));
     } else {
       productResponseDto.setSalePrice(calculateTotalPrice(product));
     }
@@ -52,6 +44,15 @@ public class ProductMapper {
     setProductsToResponse(product, productResponseDto);
 
     return productResponseDto;
+  }
+  private BigDecimal getPriceFromSale(Product product) {
+    return product.getPartOfSale().getProducts().stream()
+        .filter(
+            productPriceDiscount ->
+                product.getId().equals(productPriceDiscount.getProduct().getId()))
+        .findFirst()
+        .orElseThrow(() -> new NoSuchElementException("No matching productPriceDiscount found"))
+        .getSalePrice();
   }
 
   private List<UserResponseDto> getAuthorsResponse(Product product) {

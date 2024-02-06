@@ -1,6 +1,7 @@
 package jewellery.inventory.service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -75,6 +76,10 @@ public class ProductService implements EntityFetcher {
   public ProductReturnResponseDto getProductReturnResponseDto(
       SaleResponseDto sale, Product product) {
     return productMapper.mapToProductReturnResponseDto(sale, product);
+  }
+
+  public BigDecimal getProductSalePrice(Product product){
+    return productMapper.mapToProductResponseDto(product).getSalePrice();
   }
 
   public List<ProductResponseDto> getAllProducts() {

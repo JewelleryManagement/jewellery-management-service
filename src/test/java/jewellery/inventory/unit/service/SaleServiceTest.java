@@ -7,14 +7,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.util.*;
 import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.PurchasedResourceInUserRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
-import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
@@ -37,7 +36,6 @@ import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.*;
-import jewellery.inventory.service.ProductPriceDiscountService;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.SaleService;
 import jewellery.inventory.service.UserService;
@@ -61,15 +59,14 @@ class SaleServiceTest {
   @Mock private SaleMapper saleMapper;
   @Mock private PurchasedResourceInUserMapper purchasedResourceInUserMapper;
   @Mock private ResourceInUserService resourceInUserService;
-  @Mock private ProductPriceDiscountService productPriceDiscountService;
   private User seller;
   private User buyer;
   private Product product;
   private Sale sale;
-  private ProductReturnResponseDto productReturnResponseDto;
   private SaleRequestDto saleRequestDto;
   private SaleRequestDto saleRequestDtoSellerNotOwner;
   private SaleResponseDto saleResponseDto;
+  private ProductReturnResponseDto productReturnResponseDto;
   private PurchasedResourceInUser purchasedResourceInUser;
   private PurchasedResourceInUserRequestDto purchasedResourceInUserRequestDto;
   private Resource resource;
@@ -82,11 +79,11 @@ class SaleServiceTest {
     product = getTestProduct(seller, new Resource());
     resource = SaleTestHelper.createResource(BigDecimal.TEN);
     purchasedResourceInUser = SaleTestHelper.createPurchasedResource(BigDecimal.TEN);
-    sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, List.of(purchasedResourceInUser));
-    ProductResponseDto productResponseDto =
-        getReturnedProductResponseDto(product, createTestUserResponseDto(buyer));
-    productReturnResponseDto =
-        SaleTestHelper.getProductReturnResponseDto(saleResponseDto, productResponseDto);
+    ProductPriceDiscount productPriceDiscount =
+        SaleTestHelper.createTestProductPriceDiscount(product, sale);
+    sale =
+        SaleTestHelper.createSaleWithTodayDate(
+            seller, buyer, List.of(productPriceDiscount), List.of(purchasedResourceInUser));
     ProductDiscountRequestDto productDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(product.getId(), getBigDecimal("10"));
     purchasedResourceInUserRequestDto = SaleTestHelper.createPurchasedResourceRequestDto();
@@ -102,11 +99,8 @@ class SaleServiceTest {
             buyer.getId(),
             List.of(productDiscountRequestDto),
             List.of(purchasedResourceInUserRequestDto));
-    ProductPriceDiscount productPriceDiscount =
-        SaleTestHelper.createTestProductPriceDiscount(product, sale);
-    productPriceDiscount.setProduct(product);
-    sale.setProducts(List.of(productPriceDiscount));
-    saleResponseDto = SaleTestHelper.getSaleResponseDto(sale, productPriceDiscount);
+    saleResponseDto = SaleTestHelper.getSaleResponseDto(sale);
+    productReturnResponseDto = SaleTestHelper.createProductReturnResponseDto(product, buyer);
   }
 
   @Test
@@ -207,7 +201,7 @@ class SaleServiceTest {
   }
 
   @Test
-  void testReturnProductSuccessfullyWithTwoProducts() {
+  void testReturnProductSuccessfully() {
     product.setPartOfSale(sale);
     Product productBeforeReturn = product;
 
@@ -217,15 +211,13 @@ class SaleServiceTest {
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
     when(saleRepository.findById(any(UUID.class))).thenReturn(Optional.of(sale));
     when(saleService.returnProduct(product.getId())).thenReturn(productReturnResponseDto);
+    ProductReturnResponseDto result = saleService.returnProduct(product.getId());
 
-    ProductReturnResponseDto productReturnResponseDto = saleService.returnProduct(product.getId());
-
-    assertNull(productReturnResponseDto.getSaleAfter());
-    assertNotNull(productReturnResponseDto.getReturnedProduct());
-    assertNull(productReturnResponseDto.getReturnedProduct().getPartOfSale());
+    assertNull(result.getSaleAfter());
+    assertNotNull(result.getReturnedProduct());
+    assertNull(result.getReturnedProduct().getPartOfSale());
     assertNotEquals(
-        productReturnResponseDto.getReturnedProduct().getOwner().getId(),
-        productBeforeReturn.getOwner().getId());
+        result.getReturnedProduct().getOwner().getId(), productBeforeReturn.getOwner().getId());
   }
 
   @Test

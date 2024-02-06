@@ -1,5 +1,7 @@
 package jewellery.inventory.service;
 
+import jakarta.transaction.Transactional;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -25,7 +27,6 @@ import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +39,6 @@ public class SaleService {
   private final ResourceInUserService resourceInUserService;
   private final UserService userService;
   private final PurchasedResourceInUserMapper purchasedResourceInUserMapper;
-  private final ProductPriceDiscountService productPriceDiscountService;
   private final ResourceService resourceService;
 
   public List<SaleResponseDto> getAllSales() {
@@ -63,14 +63,22 @@ public class SaleService {
     throwExceptionIfProductIsPartOfAnotherProduct(sale.getProducts());
     throwExceptionIfResourceIsNotOwned(saleRequestDto);
 
-    saleRepository.save(sale);
-    sale.setProducts(productPriceDiscountService.createProductPriceDiscount(saleRequestDto, sale));
-
-    updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), sale);
+    Sale createdSale = saleRepository.save(sale);
+    setProductPriceDiscountSalePriceAndSale(createdSale);
+    updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
     removeQuantityFromResourcesInUser(sale);
     setFieldsOfResourcesAfterSale(sale);
-    logger.info("Sale created successfully. Sale ID: {}", sale.getId());
-    return saleMapper.mapEntityToResponseDto(sale);
+    logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
+    return saleMapper.mapEntityToResponseDto(createdSale);
+  }
+
+  private void setProductPriceDiscountSalePriceAndSale(Sale sale) {
+    for (int i = 0; i < sale.getProducts().size(); i++) {
+      sale.getProducts()
+          .get(i)
+          .setSalePrice(productService.getProductSalePrice(sale.getProducts().get(i).getProduct()));
+      sale.getProducts().get(i).setSale(sale);
+    }
   }
 
   private void throwExceptionIfSellerNotProductOwner(
@@ -93,10 +101,12 @@ public class SaleService {
     throwExceptionIfProductNotSold(productToReturn);
 
     Sale sale = getSale(productToReturn.getPartOfSale().getId());
-    sale.setProducts(removeProductFromSale(sale.getProducts(), productToReturn));
+
+    sale.getProducts()
+        .removeIf(
+            productPriceDiscount -> productPriceDiscount.getProduct().getId().equals(productId));
 
     productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
-    productPriceDiscountService.deleteProductPriceDiscount(sale.getId(), productToReturn.getId());
     deleteSaleIfProductsAndResourcesAreEmpty(sale);
     logger.info("Product returned successfully. Product ID: {}", productId);
     return validateSaleAfterReturnProduct(sale, productToReturn);
@@ -225,19 +235,6 @@ public class SaleService {
 
     return updatedList;
   }
-
-  //  private List<PurchasedResourceInUser> getResourcesFromSaleRequestDto(
-  //      SaleRequestDto saleRequestDto) {
-  //    logger.info("Getting resources from sale request.");
-  //    List<PurchasedResourceInUserRequestDto> resources = saleRequestDto.getResources();
-  //    if (resources != null) {
-  //      List<PurchasedResourceInUser> purchasedResourceInUsers =
-  //
-  // resources.stream().map(purchasedResourceInUserMapper::toPurchasedResourceInUser).toList();
-  //      return purchasedResourceInUserRepository.saveAll(purchasedResourceInUsers);
-  //    }
-  //    return new ArrayList<>();
-  //  }
 
   private void setFieldsOfResourcesAfterSale(Sale sale) {
     List<PurchasedResourceInUser> resources = sale.getResources();

@@ -8,9 +8,7 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
-import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
-import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
@@ -52,7 +50,7 @@ public class ProductTestHelper {
     productRequestDto.setCatalogNumber("1111");
     productRequestDto.setProductionNumber("1234");
     productRequestDto.setDescription("Test");
-    productRequestDto.setAdditionalPrice(BigDecimal.ZERO);
+    productRequestDto.setAdditionalPrice(BigDecimal.TEN);
     productRequestDto.setOwnerId(user.getId());
     productRequestDto.setAuthors(List.of(user.getId()));
     productRequestDto.setResourcesContent(listOfResourcesInProduct);
@@ -78,24 +76,8 @@ public class ProductTestHelper {
     testProduct.setResourcesContent(List.of(getResourceInProduct(pearl)));
     testProduct.setProductsContent(null);
     testProduct.setContentOf(null);
+    testProduct.setAdditionalPrice(BigDecimal.TEN);
     return testProduct;
-  }
-
-  public static ProductResponseDto getReturnedProductResponseDto(
-      Product product, UserResponseDto owner) {
-    ProductResponseDto productResponseDto = new ProductResponseDto();
-    productResponseDto.setId(product.getId());
-    productResponseDto.setAuthors(null);
-    productResponseDto.setOwner(owner);
-    productResponseDto.setResourcesContent(null);
-    productResponseDto.setProductsContent(null);
-    productResponseDto.setContentOf(null);
-    productResponseDto.setDescription("description");
-    productResponseDto.setSalePrice(getBigDecimal("1000"));
-    productResponseDto.setPartOfSale(null);
-    productResponseDto.setCatalogNumber("Catalog Number");
-    productResponseDto.setProductionNumber("Production Number");
-    return productResponseDto;
   }
 
   @NotNull
