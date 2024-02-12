@@ -3,7 +3,6 @@ package jewellery.inventory.mapper;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.NoSuchElementException;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
@@ -46,13 +45,7 @@ public class ProductMapper {
     return productResponseDto;
   }
   private BigDecimal getPriceFromSale(Product product) {
-    return product.getPartOfSale().getProducts().stream()
-        .filter(
-            productPriceDiscount ->
-                product.getId().equals(productPriceDiscount.getProduct().getId()))
-        .findFirst()
-        .orElseThrow(() -> new NoSuchElementException("No matching productPriceDiscount found"))
-        .getSalePrice();
+    return product.getPartOfSale().getSalePrice();
   }
 
   private List<UserResponseDto> getAuthorsResponse(Product product) {

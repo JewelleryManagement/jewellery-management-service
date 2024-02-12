@@ -53,6 +53,7 @@ class SaleServiceTest {
   private SaleRequestDto saleRequestDtoSellerNotOwner;
   private SaleResponseDto saleResponseDto;
   private ProductReturnResponseDto productReturnResponseDto;
+  private ProductPriceDiscount productPriceDiscount;
 
   @BeforeEach
   void setUp() {
@@ -60,9 +61,10 @@ class SaleServiceTest {
     seller.setId(UUID.randomUUID());
     buyer = createSecondTestUser();
     product = getTestProduct(seller, new Resource());
-    ProductPriceDiscount productPriceDiscount =
+    productPriceDiscount =
         SaleTestHelper.createTestProductPriceDiscount(product, sale);
     sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, List.of(productPriceDiscount));
+    productPriceDiscount.setSale(sale);
     ProductDiscountRequestDto productDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(product.getId(), getBigDecimal("10"));
     saleRequestDto =
@@ -121,7 +123,7 @@ class SaleServiceTest {
 
   @Test
   void testCreateSaleProductWillThrowsProductIsSold() {
-    product.setPartOfSale(sale);
+    product.setPartOfSale(new ProductPriceDiscount());
     when(saleMapper.mapRequestToEntity(
             any(SaleRequestDto.class), any(User.class), any(User.class), anyList()))
         .thenReturn(sale);
@@ -160,7 +162,7 @@ class SaleServiceTest {
 
   @Test
   void testReturnProductWillThrowsSaleNotFoundException() {
-    product.setPartOfSale(new Sale());
+    product.setPartOfSale(productPriceDiscount);
     UUID productId = product.getId();
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
     assertThrows(SaleNotFoundException.class, () -> saleService.returnProduct(productId));
@@ -168,7 +170,7 @@ class SaleServiceTest {
 
   @Test
   void testReturnProductSuccessfully() {
-    product.setPartOfSale(sale);
+    product.setPartOfSale(productPriceDiscount);
     Product productBeforeReturn = product;
 
     assertEquals(1, sale.getProducts().size());

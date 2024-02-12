@@ -1,9 +1,8 @@
 ALTER TABLE public.product
-ADD COLUMN additional_price DECIMAL(10, 2);
-
-ALTER TABLE public.product
-DROP COLUMN sale_price CASCADE,
-DROP COLUMN discount CASCADE;
+ADD COLUMN additional_price DECIMAL(10, 2),
+DROP COLUMN IF EXISTS part_of_sale_id CASCADE,
+DROP COLUMN IF EXISTS sale_price CASCADE,
+DROP COLUMN IF EXISTS discount CASCADE;
 
 CREATE TABLE public.product_price_discount (
     id UUID PRIMARY KEY,
@@ -15,5 +14,8 @@ CREATE TABLE public.product_price_discount (
     FOREIGN KEY (sale_id) REFERENCES sale(id)
 );
 
-INSERT INTO public.product_price_discount (id, product_id, sale_id, sale_price, discount)
-VALUES ('434ebade-3dad-4d13-888e-765e56635f05','e0f72130-f83d-4ca7-845b-aa82f2bb9a22', '38839f01-ed22-4a15-86eb-125d7cceafd9', 5.0, 0.0);
+ALTER TABLE public.product
+ADD COLUMN IF NOT EXISTS part_of_sale_id UUID,
+ADD CONSTRAINT fk_product_price_discount_id FOREIGN KEY (part_of_sale_id) REFERENCES public.product_price_discount(id);
+
+DELETE FROM Sale;

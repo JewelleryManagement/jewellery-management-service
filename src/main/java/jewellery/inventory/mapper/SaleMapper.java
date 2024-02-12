@@ -2,6 +2,7 @@ package jewellery.inventory.mapper;
 
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -69,11 +70,12 @@ public class SaleMapper {
     }
 
     if (PERCENTAGE.equals(calculationType)) {
-      return totalDiscountAmount.divide(totalPrice).multiply(getBigDecimal("100"));
+      return totalDiscountAmount
+          .divide(totalPrice, 4, RoundingMode.HALF_UP)
+          .multiply(getBigDecimal("100"));
     } else if (AMOUNT.equals(calculationType)) {
       return totalPrice.subtract(totalDiscountAmount);
     }
-
     throw new IllegalArgumentException("Invalid calculation type");
   }
 }

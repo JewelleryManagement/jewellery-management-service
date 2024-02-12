@@ -86,7 +86,7 @@ public class SaleService {
     throwExceptionIfProductIsPartOfAnotherProduct(productToReturn);
     throwExceptionIfProductNotSold(productToReturn);
 
-    Sale sale = getSale(productToReturn.getPartOfSale().getId());
+    Sale sale = getSale(productToReturn.getPartOfSale().getSale().getId());
 
     sale.getProducts()
         .removeIf(

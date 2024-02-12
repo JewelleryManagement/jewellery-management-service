@@ -45,14 +45,12 @@ abstract class AuthenticatedIntegrationTestBase {
 
   @Autowired private ImageService imageService;
   @Autowired private ImageRepository imageRepository;
-  @Autowired private ProductPriceDiscountRepository productPriceDiscountRepository;
 
   protected HttpHeaders headers;
 
   @BeforeEach
   void setup() {
     deleteAllImages();
-    productPriceDiscountRepository.deleteAll();
     productRepository.deleteAll();
     saleRepository.deleteAll();
     userRepository.deleteAll();

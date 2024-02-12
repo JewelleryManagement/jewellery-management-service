@@ -78,7 +78,7 @@ public class ProductService implements EntityFetcher {
     return productMapper.mapToProductReturnResponseDto(sale, product);
   }
 
-  public BigDecimal getProductSalePrice(Product product){
+  public BigDecimal getProductSalePrice(Product product) {
     return ProductMapper.calculateTotalPrice(product);
   }
 
@@ -106,7 +106,17 @@ public class ProductService implements EntityFetcher {
 
   public void updateProductOwnerAndSale(Product product, User newOwner, Sale sale) {
     updateProductOwnerRecursively(product, newOwner);
-    product.setPartOfSale(sale);
+    if (sale == null) {
+      product.setPartOfSale(null);
+    } else {
+      sale.getProducts()
+          .forEach(
+              productPriceDiscount -> {
+                if (productPriceDiscount.getProduct().equals(product)) {
+                  product.setPartOfSale(productPriceDiscount);
+                }
+              });
+    }
     logger.debug(
         "Updated product owner and sale for product with ID: {}. New owner with ID: {}, Sale with ID: {}",
         product.getId(),
