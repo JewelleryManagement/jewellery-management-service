@@ -26,7 +26,7 @@ public class ProductMapper {
 
     ProductResponseDto productResponseDto = new ProductResponseDto();
     productResponseDto.setId(product.getId());
-    if (product.getPartOfSale() != null && !product.getPartOfSale().getProducts().isEmpty()) {
+    if (product.getPartOfSale() != null) {
       productResponseDto.setPartOfSale(product.getPartOfSale().getId());
       productResponseDto.setSalePrice(getPriceFromSale(product));
     } else {
@@ -100,7 +100,7 @@ public class ProductMapper {
     }
   }
 
-  private static BigDecimal calculateTotalPrice(Product product) {
+  public static BigDecimal calculateTotalPrice(Product product) {
     return calculateTotalPrice(product, BigDecimal.ZERO);
   }
 

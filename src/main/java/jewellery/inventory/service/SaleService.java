@@ -2,6 +2,7 @@ package jewellery.inventory.service;
 
 import jakarta.transaction.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
@@ -58,12 +59,12 @@ public class SaleService {
   }
 
   private void setProductPriceDiscountSalePriceAndSale(Sale sale) {
-    for (int i = 0; i < sale.getProducts().size(); i++) {
-      sale.getProducts()
-          .get(i)
-          .setSalePrice(productService.getProductSalePrice(sale.getProducts().get(i).getProduct()));
-      sale.getProducts().get(i).setSale(sale);
-    }
+    sale.getProducts().forEach(productDto -> {
+      Product product = productDto.getProduct();
+      BigDecimal salePrice = productService.getProductSalePrice(product);
+      productDto.setSalePrice(salePrice);
+      productDto.setSale(sale);
+    });
   }
 
   private void throwExceptionIfSellerNotProductOwner(

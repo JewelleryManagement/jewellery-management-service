@@ -79,7 +79,7 @@ public class ProductService implements EntityFetcher {
   }
 
   public BigDecimal getProductSalePrice(Product product){
-    return productMapper.mapToProductResponseDto(product).getSalePrice();
+    return ProductMapper.calculateTotalPrice(product);
   }
 
   public List<ProductResponseDto> getAllProducts() {
