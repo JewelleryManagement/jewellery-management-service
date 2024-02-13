@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 import jewellery.inventory.dto.request.*;
@@ -34,9 +33,9 @@ import org.springframework.http.ResponseEntity;
 
 class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
-  private static final BigDecimal SALE_TOTAL_PRICE = getBigDecimal("10000");
+  private static final BigDecimal SALE_TOTAL_PRICE = getBigDecimal("505");
   private static final BigDecimal SALE_DISCOUNT = getBigDecimal("10");
-  private static final BigDecimal SALE_DISCOUNTED_PRICE = getBigDecimal("9000");
+  private static final BigDecimal SALE_DISCOUNTED_PRICE = getBigDecimal("454.50");
   private User seller;
   private User buyer;
   private PreciousStone preciousStone;
@@ -176,12 +175,10 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(),
         saleResponse.getBody().getProducts().get(0).getId());
-    assertEquals(SALE_TOTAL_PRICE, saleResponse.getBody().getTotalPrice());
+    assertEquals(SALE_TOTAL_PRICE, saleResponse.getBody().getTotalPrice().setScale(2));
+    assertEquals(SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount().setScale(2));
     assertEquals(
-        SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount().setScale(2, RoundingMode.HALF_UP));
-    assertEquals(
-        SALE_DISCOUNTED_PRICE,
-        saleResponse.getBody().getTotalDiscountedPrice().setScale(2, RoundingMode.HALF_UP));
+        SALE_DISCOUNTED_PRICE, saleResponse.getBody().getTotalDiscountedPrice().setScale(2));
 
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
@@ -217,13 +214,11 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     saleRequestDto.setBuyerId(buyer.getId());
     saleRequestDto.setSellerId(seller.getId());
     saleRequestDto.setDate(LocalDate.now());
-    ProductPriceDiscountRequestDto productPriceDiscountRequestDto =
-        new ProductPriceDiscountRequestDto();
-    productPriceDiscountRequestDto.setProductId(productResponse.getBody().getId());
-    productPriceDiscountRequestDto.setSalePrice(SALE_TOTAL_PRICE);
-    productPriceDiscountRequestDto.setDiscount(SALE_DISCOUNT);
-    List<ProductPriceDiscountRequestDto> list = new ArrayList<>();
-    list.add(productPriceDiscountRequestDto);
+    ProductDiscountRequestDto productDiscountRequestDto = new ProductDiscountRequestDto();
+    productDiscountRequestDto.setProductId(productResponse.getBody().getId());
+    productDiscountRequestDto.setDiscount(SALE_DISCOUNT);
+    List<ProductDiscountRequestDto> list = new ArrayList<>();
+    list.add(productDiscountRequestDto);
     saleRequestDto.setProducts(list);
     return saleRequestDto;
   }

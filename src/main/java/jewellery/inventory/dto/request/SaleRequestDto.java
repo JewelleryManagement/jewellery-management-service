@@ -21,7 +21,7 @@ public class SaleRequestDto {
   @NotNull private UUID sellerId;
   @NotNull private UUID buyerId;
 
-  @Valid @NotEmpty private List<ProductPriceDiscountRequestDto> products;
+  @Valid @NotEmpty private List<ProductDiscountRequestDto> products;
 
   @NotNull
   @PastOrPresent(message = "Date must be in the past or present")

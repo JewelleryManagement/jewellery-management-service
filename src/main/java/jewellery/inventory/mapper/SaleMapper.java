@@ -1,15 +1,13 @@
 package jewellery.inventory.mapper;
 
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
-
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.*;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
-import jewellery.inventory.model.Product;
+import jewellery.inventory.model.ProductPriceDiscount;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +27,7 @@ public class SaleMapper {
     saleResponseDto.setSeller(userMapper.toUserResponse(sale.getSeller()));
     saleResponseDto.setBuyer(userMapper.toUserResponse(sale.getBuyer()));
     saleResponseDto.setProducts(mapAllProductsToResponse(sale));
-    saleResponseDto.setTotalPrice(getTotalPriceFromEntity(sale.getProducts()));
+    saleResponseDto.setTotalPrice(getTotalPriceFromEntities(sale.getProducts()));
     saleResponseDto.setTotalDiscount(calculateDiscount(sale.getProducts(), PERCENTAGE));
     saleResponseDto.setTotalDiscountedPrice(calculateDiscount(sale.getProducts(), AMOUNT));
     saleResponseDto.setDate(sale.getDate());
@@ -37,64 +35,47 @@ public class SaleMapper {
   }
 
   public Sale mapRequestToEntity(
-      SaleRequestDto saleRequestDto, User seller, User buyer, List<Product> products) {
+      SaleRequestDto saleRequestDto, User seller, User buyer, List<ProductPriceDiscount> products) {
     Sale sale = new Sale();
     sale.setBuyer(buyer);
     sale.setSeller(seller);
-    sale.setProducts(setProductPriceAndDiscount(saleRequestDto, products));
+    sale.setProducts(products);
     sale.setDate(saleRequestDto.getDate());
     return sale;
   }
 
   private List<ProductResponseDto> mapAllProductsToResponse(Sale sale) {
-    List<ProductResponseDto> productResponseDtos = new ArrayList<>();
-    for (Product product : sale.getProducts()) {
-      ProductResponseDto productResponseDto = productMapper.mapToProductResponseDto(product);
-      productResponseDtos.add(productResponseDto);
-    }
-    return productResponseDtos;
+    return sale.getProducts().stream()
+        .map(productSale -> productMapper.mapToProductResponseDto(productSale.getProduct()))
+        .toList();
   }
 
-  private BigDecimal getTotalPriceFromEntity(List<Product> products) {
-    BigDecimal totalPrice = BigDecimal.ZERO;
-    for (Product product : products) {
-      totalPrice = totalPrice.add(product.getSalePrice());
-    }
-    return totalPrice;
+  public BigDecimal getTotalPriceFromEntities(List<ProductPriceDiscount> productResponseDtoList) {
+    return productResponseDtoList.stream()
+        .map(ProductPriceDiscount::getSalePrice)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
-  private BigDecimal calculateDiscount(List<Product> products, String calculationType) {
+  private BigDecimal calculateDiscount(
+      List<ProductPriceDiscount> products, String calculationType) {
     BigDecimal totalDiscountAmount = BigDecimal.ZERO;
     BigDecimal totalPrice = BigDecimal.ZERO;
 
-    for (Product product : products) {
-      BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
-      BigDecimal discountRate = Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
-      BigDecimal discountAmount =
-          salePrice.multiply(
-              discountRate.divide(getBigDecimal("100"), RoundingMode.HALF_UP));
+    for (ProductPriceDiscount product : products) {
+      BigDecimal salePrice = product.getSalePrice();
+      BigDecimal discountRate = product.getDiscount();
+      BigDecimal discountAmount = salePrice.multiply(discountRate.divide(getBigDecimal("100")));
       totalDiscountAmount = totalDiscountAmount.add(discountAmount);
       totalPrice = totalPrice.add(salePrice);
     }
 
-    if (PERCENTAGE.equals(calculationType) && !totalPrice.equals(BigDecimal.ZERO)) {
-      return (totalDiscountAmount.divide(totalPrice, MathContext.DECIMAL128))
+    if (PERCENTAGE.equals(calculationType)) {
+      return totalDiscountAmount
+          .divide(totalPrice, 4, RoundingMode.HALF_UP)
           .multiply(getBigDecimal("100"));
     } else if (AMOUNT.equals(calculationType)) {
       return totalPrice.subtract(totalDiscountAmount);
     }
-
     throw new IllegalArgumentException("Invalid calculation type");
-  }
-
-  private List<Product> setProductPriceAndDiscount(
-      SaleRequestDto saleRequestDto, List<Product> products) {
-    for (int i = 0; i < products.size(); i++) {
-      if (saleRequestDto.getProducts().get(i).getSalePrice() != null) {
-        products.get(i).setSalePrice(saleRequestDto.getProducts().get(i).getSalePrice());
-        products.get(i).setDiscount(saleRequestDto.getProducts().get(i).getDiscount());
-      }
-    }
-    return products;
   }
 }
