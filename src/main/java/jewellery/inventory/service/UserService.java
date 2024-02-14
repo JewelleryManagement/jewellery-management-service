@@ -79,7 +79,6 @@ public class UserService implements EntityFetcher {
 
   private void validateUserEmail(User user) {
     if (isEmailUsedByOtherUser(user.getEmail(), user.getId())) {
-      logger.error("Duplicate email detected: {}", user.getEmail());
       throw new DuplicateEmailException(user.getEmail());
     }
   }

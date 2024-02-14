@@ -1,6 +1,7 @@
 package jewellery.inventory.service;
 
 import jakarta.transaction.Transactional;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -72,12 +73,14 @@ public class SaleService {
   }
 
   private void setProductPriceDiscountSalePriceAndSale(Sale sale) {
-    for (int i = 0; i < sale.getProducts().size(); i++) {
-      sale.getProducts()
-          .get(i)
-          .setSalePrice(productService.getProductSalePrice(sale.getProducts().get(i).getProduct()));
-      sale.getProducts().get(i).setSale(sale);
-    }
+    sale.getProducts()
+        .forEach(
+            productDto -> {
+              Product product = productDto.getProduct();
+              BigDecimal salePrice = productService.getProductSalePrice(product);
+              productDto.setSalePrice(salePrice);
+              productDto.setSale(sale);
+            });
   }
 
   private void throwExceptionIfSellerNotProductOwner(
@@ -85,8 +88,6 @@ public class SaleService {
     for (ProductPriceDiscount productPriceDiscount : products) {
       Product product = productPriceDiscount.getProduct();
       if (!product.getOwner().getId().equals(sellerId)) {
-        logger.error(
-            "Seller with ID {} is not the owner of product with ID {}", sellerId, product.getId());
         throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
       }
     }
@@ -143,14 +144,12 @@ public class SaleService {
 
   private void throwExceptionIfProductIsPartOfAnotherProduct(Product product) {
     if (product.getContentOf() != null) {
-      logger.error("Product with ID {} is part of another product.", product.getId());
       throw new ProductIsContentException(product.getId());
     }
   }
 
   private void throwExceptionIfProductNotSold(Product product) {
     if (product.getPartOfSale() == null) {
-      logger.error("Product with ID {} is not sold.", product.getId());
       throw new ProductNotSoldException(product.getId());
     }
   }

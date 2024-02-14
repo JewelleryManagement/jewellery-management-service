@@ -13,9 +13,6 @@ CREATE TABLE public.product_price_discount (
     FOREIGN KEY (product_id) REFERENCES product(id),
     FOREIGN KEY (sale_id) REFERENCES sale(id)
 );
-
 ALTER TABLE public.product
 ADD COLUMN IF NOT EXISTS part_of_sale_id UUID,
 ADD CONSTRAINT fk_product_price_discount_id FOREIGN KEY (part_of_sale_id) REFERENCES public.product_price_discount(id);
-
-DELETE FROM Sale;

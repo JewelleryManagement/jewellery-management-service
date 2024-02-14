@@ -15,10 +15,7 @@ import jewellery.inventory.helper.ProductTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.mapper.UserMapper;
-import jewellery.inventory.model.Product;
-import jewellery.inventory.model.ResourceInUser;
-import jewellery.inventory.model.Sale;
-import jewellery.inventory.model.User;
+import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.ImageService;
@@ -90,7 +87,7 @@ class ProductServiceTest {
 
   @Test
   void testTransferProductThrowsExceptionWhenProductIsSold() {
-    product.setPartOfSale(new Sale());
+    product.setPartOfSale(new ProductPriceDiscount());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
     assertThrows(
@@ -262,7 +259,7 @@ class ProductServiceTest {
 
   @Test
   void testDeleteProductShouldThrowExceptionWhenProductIsSold() {
-    product.setPartOfSale(new Sale());
+    product.setPartOfSale(new ProductPriceDiscount());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
     assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
@@ -286,8 +283,7 @@ class ProductServiceTest {
 
   @Test
   void deleteProductShouldThrowExceptionWhenProductIsSold() {
-    product.setPartOfSale(new Sale());
-
+    product.setPartOfSale(new ProductPriceDiscount());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
     assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
@@ -308,7 +304,7 @@ class ProductServiceTest {
   void updateProductShouldThrowWhenProductIsSold() {
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-    product.setPartOfSale(new Sale());
+    product.setPartOfSale(new ProductPriceDiscount());
     assertThrows(ProductIsSoldException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
   }
 
