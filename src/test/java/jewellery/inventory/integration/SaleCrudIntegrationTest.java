@@ -108,12 +108,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     SaleRequestDto saleRequestDto = getSaleRequestDto(seller, buyer, productResponse, pearlRequest);
     ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
 
-    ResponseEntity<ResourceReturnResponseDto> response =
-        this.testRestTemplate.exchange(
-            getSaleReturnResourceUrl(saleResponse.getBody().getId(), pearl.getBody().getId()),
-            HttpMethod.PUT,
-            null,
-            ResourceReturnResponseDto.class);
+    ResponseEntity<ResourceReturnResponseDto> response = getResourceReturnResponse(saleResponse);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
@@ -138,21 +133,23 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         saleResponse.getBody().getProducts().get(0).getOwner(),
         productResponse.getBody().getOwner());
 
-    ResponseEntity<ProductReturnResponseDto> response =
-        returnProductFromSale(productResponse.getBody().getId());
 
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertNotNull(response.getBody());
-    assertNull(response.getBody().getSaleAfter());
-    assertNull(response.getBody().getReturnedProduct().getPartOfSale());
-    assertEquals(
-        productResponse.getBody().getOwner(), response.getBody().getReturnedProduct().getOwner());
-    assertEquals(response.getBody().getDate(), LocalDate.now());
+        ResponseEntity<ProductReturnResponseDto> response =
+            returnProductFromSale(productResponse.getBody().getId());
 
-    Map<String, Object> expectedEventPayload =
-        getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertNull(response.getBody().getSaleAfter());
+        assertNull(response.getBody().getReturnedProduct().getPartOfSale());
+        assertEquals(
+            productResponse.getBody().getOwner(),
+     response.getBody().getReturnedProduct().getOwner());
+        assertEquals(response.getBody().getDate(), LocalDate.now());
 
-    systemEventTestHelper.assertEventWasLogged(SALE_RETURN_PRODUCT, expectedEventPayload);
+        Map<String, Object> expectedEventPayload =
+            getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
+
+        systemEventTestHelper.assertEventWasLogged(SALE_RETURN_PRODUCT, expectedEventPayload);
   }
 
   @Test
@@ -193,8 +190,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void createSaleShouldThrowWhenResourceNotOwned() {
     seller.setId(UUID.randomUUID());
     SaleRequestDto saleRequestDto =
-        getSaleRequestDto(
-            seller, buyer, createProduct(productRequestDto), pearlRequest);
+        getSaleRequestDto(seller, buyer, createProduct(productRequestDto), pearlRequest);
 
     ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
 
@@ -223,7 +219,9 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         saleRequestDto.getProducts().get(0).getProductId(),
         saleResponse.getBody().getProducts().get(0).getId());
 
-    assertEquals(SALE_TOTAL_PRICE.add(calculateTotalPriceOfResource(saleRequestDto)), saleResponse.getBody().getTotalPrice().setScale(2, RoundingMode.HALF_UP));
+    assertEquals(
+        SALE_TOTAL_PRICE.add(calculateTotalPriceOfResource(saleRequestDto)),
+        saleResponse.getBody().getTotalPrice().setScale(2, RoundingMode.HALF_UP));
     assertEquals(
         SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount().setScale(2, RoundingMode.HALF_UP));
     assertEquals(
@@ -240,8 +238,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void createSaleWithResourcesOnlySuccessfully() throws JsonProcessingException {
 
     SaleRequestDto saleRequestDto =
-        getSaleRequestDto(
-            seller, buyer, createProduct(productRequestDto), pearlRequest);
+        getSaleRequestDto(seller, buyer, createProduct(productRequestDto), pearlRequest);
     saleRequestDto.setProducts(new ArrayList<>());
 
     ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
@@ -261,9 +258,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(
         calculateTotalPriceOfResource(saleRequestDto), saleResponse.getBody().getTotalPrice());
 
-    assertEquals(
-        getBigDecimal("10"),
-        saleResponse.getBody().getTotalDiscount().setScale(2));
+    assertEquals(getBigDecimal("10"), saleResponse.getBody().getTotalDiscount().setScale(2));
     assertEquals(
         SALE_RESOURCE_DISCOUNTED_PRICE,
         saleResponse.getBody().getTotalDiscountedPrice().setScale(2));
@@ -457,5 +452,14 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return Objects.requireNonNull(pearl.getBody())
         .getPricePerQuantity()
         .multiply(saleRequestDto.getResources().get(0).getResource().getQuantity());
+  }
+
+  private ResponseEntity<ResourceReturnResponseDto> getResourceReturnResponse(
+      ResponseEntity<SaleResponseDto> saleResponse) {
+    return this.testRestTemplate.exchange(
+        getSaleReturnResourceUrl(saleResponse.getBody().getId(), pearl.getBody().getId()),
+        HttpMethod.PUT,
+        null,
+        ResourceReturnResponseDto.class);
   }
 }

@@ -72,27 +72,6 @@ public class SaleService {
     return saleMapper.mapEntityToResponseDto(createdSale);
   }
 
-  private void setProductPriceDiscountSalePriceAndSale(Sale sale) {
-    sale.getProducts()
-        .forEach(
-            productDto -> {
-              Product product = productDto.getProduct();
-              BigDecimal salePrice = productService.getProductSalePrice(product);
-              productDto.setSalePrice(salePrice);
-              productDto.setSale(sale);
-            });
-  }
-
-  private void throwExceptionIfSellerNotProductOwner(
-      List<ProductPriceDiscount> products, UUID sellerId) {
-    for (ProductPriceDiscount productPriceDiscount : products) {
-      Product product = productPriceDiscount.getProduct();
-      if (!product.getOwner().getId().equals(sellerId)) {
-        throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
-      }
-    }
-  }
-
   @LogCreateEvent(eventType = EventType.SALE_RETURN_PRODUCT)
   public ProductReturnResponseDto returnProduct(UUID productId) {
     Product productToReturn = productService.getProduct(productId);
@@ -100,7 +79,7 @@ public class SaleService {
     throwExceptionIfProductIsPartOfAnotherProduct(productToReturn);
     throwExceptionIfProductNotSold(productToReturn);
 
-    Sale sale = getSale(productToReturn.getPartOfSale().getId());
+    Sale sale = getSale(productToReturn.getPartOfSale().getSale().getId());
 
     sale.getProducts()
         .removeIf(
@@ -217,23 +196,6 @@ public class SaleService {
         resourceToReturn, saleMapper.mapEntityToResponseDto(sale));
   }
 
-  private List<ProductPriceDiscount> removeProductFromSale(
-      List<ProductPriceDiscount> products, Product productToRemove) {
-    List<ProductPriceDiscount> updatedList = new ArrayList<>();
-
-    for (ProductPriceDiscount ppd : products) {
-      if (!ppd.getProduct().getId().equals(productToRemove.getId())) {
-        updatedList.add(ppd);
-      }
-    }
-
-    if (updatedList.size() < products.size()) {
-      logger.info("Removing product with ID: {} from sale.", productToRemove.getId());
-    }
-
-    return updatedList;
-  }
-
   private void setFieldsOfResourcesAfterSale(Sale sale) {
     List<PurchasedResourceInUser> resources = sale.getResources();
     resources.forEach(
@@ -309,5 +271,26 @@ public class SaleService {
       }
     }
     return resources;
+  }
+
+  private void setProductPriceDiscountSalePriceAndSale(Sale sale) {
+    sale.getProducts()
+            .forEach(
+                    productDto -> {
+                      Product product = productDto.getProduct();
+                      BigDecimal salePrice = productService.getProductSalePrice(product);
+                      productDto.setSalePrice(salePrice);
+                      productDto.setSale(sale);
+                    });
+  }
+
+  private void throwExceptionIfSellerNotProductOwner(
+          List<ProductPriceDiscount> products, UUID sellerId) {
+    for (ProductPriceDiscount productPriceDiscount : products) {
+      Product product = productPriceDiscount.getProduct();
+      if (!product.getOwner().getId().equals(sellerId)) {
+        throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
+      }
+    }
   }
 }

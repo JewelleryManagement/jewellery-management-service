@@ -81,9 +81,9 @@ class SaleServiceTest {
     resource = SaleTestHelper.createResource(BigDecimal.TEN);
     purchasedResourceInUser = SaleTestHelper.createPurchasedResource(BigDecimal.TEN);
     productPriceDiscount = SaleTestHelper.createTestProductPriceDiscount(product, sale);
-    sale = SaleTestHelper.createSaleWithTodayDate(
+    sale =
+        SaleTestHelper.createSaleWithTodayDate(
             seller, buyer, List.of(productPriceDiscount), List.of(purchasedResourceInUser));
-    sale = SaleTestHelper.createSaleWithTodayDate(seller, buyer, List.of(productPriceDiscount));
     productPriceDiscount.setSale(sale);
     ProductDiscountRequestDto productDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(product.getId(), getBigDecimal("10"));
@@ -210,7 +210,7 @@ class SaleServiceTest {
     assertNotNull(productBeforeReturn.getPartOfSale());
 
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
-    when(saleRepository.findById(any(UUID.class))).thenReturn(Optional.of(sale));
+    when(saleRepository.findById(product.getPartOfSale().getSale().getId())).thenReturn(Optional.of(sale));
     when(saleService.returnProduct(product.getId())).thenReturn(productReturnResponseDto);
     ProductReturnResponseDto result = saleService.returnProduct(product.getId());
 
@@ -218,7 +218,7 @@ class SaleServiceTest {
     assertNotNull(result.getReturnedProduct());
     assertNull(result.getReturnedProduct().getPartOfSale());
     assertNotEquals(
-        result.getReturnedProduct().getOwner().getId(), productBeforeReturn.getOwner().getId());
+            result.getReturnedProduct().getOwner().getId(), productBeforeReturn.getOwner().getId());
   }
 
   @Test
