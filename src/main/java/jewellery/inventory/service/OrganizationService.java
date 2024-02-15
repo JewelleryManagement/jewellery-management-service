@@ -1,10 +1,11 @@
 package jewellery.inventory.service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
+import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
+import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInOrganization;
@@ -27,13 +28,24 @@ public class OrganizationService {
   private final ProductRepository productRepository;
   private final UserInOrganizationRepository userInOrganizationRepository;
   private final SaleRepository saleRepository;
+  private final OrganizationMapper organizationMapper;
 
-  public List<Organization> all() {
+  private List<Organization> all() {
     return organizationRepository.findAll();
   }
 
-  public Optional<Organization> show(UUID id) {
-    return organizationRepository.findById(id);
+  private Organization getOrganization(UUID id) {
+    return organizationRepository
+        .findById(id)
+        .orElseThrow(() -> new OrganizationNotFoundException(id));
+  }
+
+  public List<OrganizationResponseDto> getAllOrganizationsResponses() {
+    return all().stream().map(organizationMapper::toResponse).toList();
+  }
+
+  public OrganizationResponseDto getOrganizationResponse(UUID id) {
+    return organizationMapper.toResponse(getOrganization(id));
   }
 
   public OrganizationResponseDto create(OrganizationRequestDto organizationRequestDto) {
@@ -41,14 +53,14 @@ public class OrganizationService {
 
     // TODO This repository calls should be refactored. Set like this only temporary - TBD
     List<ResourceInOrganization> resourceInOrganizations =
-      resourceInOrganizationRepository.findAll();
+        resourceInOrganizationRepository.findAll();
     List<Product> productsOwned = productRepository.findAll();
     organization.setProductsOwned(productsOwned);
-    List<UserInOrganization> userInOrganizations =
-      userInOrganizationRepository.findAll();
+    List<UserInOrganization> userInOrganizations = userInOrganizationRepository.findAll();
     List<Sale> sales = saleRepository.findAll();
 
-    // TODO This can be moved in separate mapper like everything else. Also I have an idea for another approach - TBD
+    // TODO This can be moved in separate mapper like everything else. Also I have an idea for
+    // another approach - TBD
     organization.setName(organizationRequestDto.getName());
     organization.setAddress(organizationRequestDto.getAddress());
     organization.setNote(organizationRequestDto.getNote());
@@ -60,5 +72,4 @@ public class OrganizationService {
 
     return new OrganizationResponseDto(organization);
   }
-
 }
