@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import jewellery.inventory.dto.request.ProductDiscountRequestDto;
-import jewellery.inventory.dto.request.PurchasedResourceInUserRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
+import jewellery.inventory.dto.request.resource.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
@@ -49,7 +49,7 @@ class SaleMapperTest {
   private SaleRequestDto saleRequestDto;
   private ProductPriceDiscount productPriceDiscount;
   private PurchasedResourceInUser purchasedResourceInUser;
-  private PurchasedResourceInUserRequestDto purchasedResourceInUserRequestDto;
+  private PurchasedResourceQuantityRequestDto purchasedResourceQuantityRequestDto;
 
   @BeforeEach
   void setUp() {
@@ -67,14 +67,14 @@ class SaleMapperTest {
         SaleTestHelper.createProductPriceDiscountRequest(product.getId(), getBigDecimal("1000"));
     List<ProductDiscountRequestDto> productDiscountRequestDtoList = new ArrayList<>();
     productDiscountRequestDtoList.add(productDiscountRequestDto);
-    purchasedResourceInUserRequestDto = SaleTestHelper.createPurchasedResourceRequestDto();
+    purchasedResourceQuantityRequestDto = SaleTestHelper.createPurchasedResourceRequestDto();
     saleRequestDto =
         SaleTestHelper.createSaleRequest(
             seller.getId(),
             buyer.getId(),
             productDiscountRequestDtoList,
-            List.of(purchasedResourceInUserRequestDto));
-    SaleTestHelper.createPurchasedResourceResponseDto(sale);
+            List.of(purchasedResourceQuantityRequestDto));
+    SaleTestHelper.createPurchasedResourceResponseDto();
   }
 
   @Test
@@ -112,7 +112,8 @@ class SaleMapperTest {
     Assertions.assertEquals(saleResponseDto.getSeller().getId(), sale.getSeller().getId());
     Assertions.assertEquals(saleResponseDto.getBuyer().getId(), sale.getBuyer().getId());
     Assertions.assertEquals(saleResponseDto.getProducts().size(), sale.getProducts().size());
-    Assertions.assertEquals(saleResponseDto.getResources().size(), sale.getResources().size());
+    Assertions.assertEquals(
+        saleResponseDto.getResources().getResources().size(), sale.getResources().size());
     assertEquals(saleResponseDto.getDate(), sale.getDate());
   }
 

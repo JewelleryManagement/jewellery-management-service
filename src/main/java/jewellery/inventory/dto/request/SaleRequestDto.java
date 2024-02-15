@@ -7,6 +7,8 @@ import jakarta.validation.constraints.PastOrPresent;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+
+import jewellery.inventory.dto.request.resource.PurchasedResourceQuantityRequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +21,7 @@ import lombok.Setter;
 public class SaleRequestDto {
   @NotNull private UUID sellerId;
   @NotNull private UUID buyerId;
-  @Valid private List<PurchasedResourceInUserRequestDto> resources;
+  @Valid private List<PurchasedResourceQuantityRequestDto> resources;
   @Valid private List<ProductDiscountRequestDto> products;
 
   @NotNull

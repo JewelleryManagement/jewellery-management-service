@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
-import jewellery.inventory.dto.request.PurchasedResourceInUserRequestDto;
+import jewellery.inventory.dto.request.resource.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
@@ -242,10 +242,10 @@ public class SaleService {
 
   private void throwExceptionIfResourceIsNotOwned(SaleRequestDto saleRequestDto) {
     if (saleRequestDto.getResources() != null) {
-      for (PurchasedResourceInUserRequestDto resource : saleRequestDto.getResources()) {
+      for (PurchasedResourceQuantityRequestDto resource : saleRequestDto.getResources()) {
         resourceInUserService.findResourceInUserOrThrow(
             userService.getUser(saleRequestDto.getSellerId()),
-            resource.getResource().getResourceId());
+            resource.getResourceAndQuantity().getResourceId());
       }
     }
   }
@@ -258,15 +258,15 @@ public class SaleService {
         PurchasedResourceInUser purchasedResourceInUser = new PurchasedResourceInUser();
         Resource resource =
             resourceService.getResourceById(
-                saleRequestDto.getResources().get(i).getResource().getResourceId());
+                saleRequestDto.getResources().get(i).getResourceAndQuantity().getResourceId());
         purchasedResourceInUser.setResource(resource);
         purchasedResourceInUser.setSalePrice(
             resource
                 .getPricePerQuantity()
-                .multiply(saleRequestDto.getResources().get(i).getResource().getQuantity()));
+                .multiply(saleRequestDto.getResources().get(i).getResourceAndQuantity().getQuantity()));
         purchasedResourceInUser.setDiscount(saleRequestDto.getResources().get(i).getDiscount());
         purchasedResourceInUser.setQuantity(
-            saleRequestDto.getResources().get(i).getResource().getQuantity());
+            saleRequestDto.getResources().get(i).getResourceAndQuantity().getQuantity());
         resources.add(purchasedResourceInUser);
       }
     }

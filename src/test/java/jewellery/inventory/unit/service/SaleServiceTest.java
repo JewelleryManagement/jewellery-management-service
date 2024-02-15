@@ -12,11 +12,11 @@ import static org.mockito.Mockito.*;
 import java.math.BigDecimal;
 import java.util.*;
 import jewellery.inventory.dto.request.ProductDiscountRequestDto;
-import jewellery.inventory.dto.request.PurchasedResourceInUserRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
+import jewellery.inventory.dto.request.resource.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
-import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.resource.PurchasedResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
 import jewellery.inventory.exception.not_found.ResourceNotFoundInSaleException;
 import jewellery.inventory.exception.not_found.SaleNotFoundException;
@@ -69,7 +69,7 @@ class SaleServiceTest {
   private ProductReturnResponseDto productReturnResponseDto;
   private ProductPriceDiscount productPriceDiscount;
   private PurchasedResourceInUser purchasedResourceInUser;
-  private PurchasedResourceInUserRequestDto purchasedResourceInUserRequestDto;
+  private PurchasedResourceQuantityRequestDto purchasedResourceQuantityRequestDto;
   private Resource resource;
 
   @BeforeEach
@@ -87,19 +87,19 @@ class SaleServiceTest {
     productPriceDiscount.setSale(sale);
     ProductDiscountRequestDto productDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(product.getId(), getBigDecimal("10"));
-    purchasedResourceInUserRequestDto = SaleTestHelper.createPurchasedResourceRequestDto();
+    purchasedResourceQuantityRequestDto = SaleTestHelper.createPurchasedResourceRequestDto();
     saleRequestDto =
         SaleTestHelper.createSaleRequest(
             seller.getId(),
             buyer.getId(),
             List.of(productDiscountRequestDto),
-            List.of(purchasedResourceInUserRequestDto));
+            List.of(purchasedResourceQuantityRequestDto));
     saleRequestDtoSellerNotOwner =
         SaleTestHelper.createSaleRequest(
             buyer.getId(),
             buyer.getId(),
             List.of(productDiscountRequestDto),
-            List.of(purchasedResourceInUserRequestDto));
+            List.of(purchasedResourceQuantityRequestDto));
     saleResponseDto = SaleTestHelper.getSaleResponseDto(sale);
     productReturnResponseDto = SaleTestHelper.createProductReturnResponseDto(product, buyer);
   }
@@ -136,7 +136,7 @@ class SaleServiceTest {
     assertNotEquals(actual.getBuyer(), actual.getSeller());
     assertEquals(
         saleRequestDto.getResources().get(0).getDiscount(),
-        actual.getResources().get(0).getDiscount());
+        actual.getResources().getResources().get(0).getDiscount());
     assertEquals(saleResponseDto.getTotalDiscount(), actual.getTotalDiscount());
   }
 
@@ -210,7 +210,8 @@ class SaleServiceTest {
     assertNotNull(productBeforeReturn.getPartOfSale());
 
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
-    when(saleRepository.findById(product.getPartOfSale().getSale().getId())).thenReturn(Optional.of(sale));
+    when(saleRepository.findById(product.getPartOfSale().getSale().getId()))
+        .thenReturn(Optional.of(sale));
     when(saleService.returnProduct(product.getId())).thenReturn(productReturnResponseDto);
     ProductReturnResponseDto result = saleService.returnProduct(product.getId());
 
@@ -218,7 +219,7 @@ class SaleServiceTest {
     assertNotNull(result.getReturnedProduct());
     assertNull(result.getReturnedProduct().getPartOfSale());
     assertNotEquals(
-            result.getReturnedProduct().getOwner().getId(), productBeforeReturn.getOwner().getId());
+        result.getReturnedProduct().getOwner().getId(), productBeforeReturn.getOwner().getId());
   }
 
   @Test
@@ -274,19 +275,19 @@ class SaleServiceTest {
   void testGetAllPurchasedResourcesSuccessfully() {
 
     User user = UserTestHelper.createTestUserWithId();
-    PurchasedResourceInUserResponseDto purchasedResourceInUserResponseDto =
-        SaleTestHelper.createPurchasedResourceResponseDto(new Sale());
+    PurchasedResourceQuantityResponseDto purchasedResourceQuantityResponseDto =
+        SaleTestHelper.createPurchasedResourceResponseDto();
 
     when(resourceInUserService.getAllPurchasedResources(user.getId()))
-        .thenReturn(List.of(purchasedResourceInUserResponseDto));
-    List<PurchasedResourceInUserResponseDto> actualResponse =
+        .thenReturn(List.of(purchasedResourceQuantityResponseDto));
+    List<PurchasedResourceQuantityResponseDto> actualResponse =
         resourceInUserService.getAllPurchasedResources(user.getId());
 
     assertNotNull(actualResponse);
     assertEquals(1, actualResponse.size());
 
     assertEquals(
-        purchasedResourceInUserResponseDto.getResource().getResource().getId(),
-        actualResponse.get(0).getResource().getResource().getId());
+        purchasedResourceQuantityResponseDto.getResourceAndQuantity().getResource().getId(),
+        actualResponse.get(0).getResourceAndQuantity().getResource().getId());
   }
 }

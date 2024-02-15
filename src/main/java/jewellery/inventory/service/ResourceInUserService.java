@@ -11,10 +11,10 @@ import jewellery.inventory.aspect.annotation.*;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
-import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
+import jewellery.inventory.dto.response.resource.PurchasedResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
@@ -25,6 +25,7 @@ import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.mapper.ResourcesInUserMapper;
 import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.EventType;
+import jewellery.inventory.model.PurchasedResourceInUser;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
@@ -128,10 +129,10 @@ public class ResourceInUserService implements EntityFetcher {
     userRepository.save(user);
   }
 
-  public List<PurchasedResourceInUserResponseDto> getAllPurchasedResources(UUID userId) {
+  public List<PurchasedResourceQuantityResponseDto> getAllPurchasedResources(UUID userId) {
     User user = userService.getUser(userId);
     return purchasedResourceInUserRepository.findAllByOwnerId(user.getId()).stream()
-        .map(purchasedResourceInUserMapper::toPurchaseResourceInUserResponse)
+        .map(purchasedResourceInUserMapper::toPurchasedResourceQuantityResponseDto)
         .toList();
   }
 

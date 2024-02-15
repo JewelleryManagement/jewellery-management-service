@@ -14,9 +14,11 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 import jewellery.inventory.dto.request.*;
+import jewellery.inventory.dto.request.resource.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
+import jewellery.inventory.dto.response.resource.PurchasedResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.model.User;
@@ -133,23 +135,21 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         saleResponse.getBody().getProducts().get(0).getOwner(),
         productResponse.getBody().getOwner());
 
+    ResponseEntity<ProductReturnResponseDto> response =
+        returnProductFromSale(productResponse.getBody().getId());
 
-        ResponseEntity<ProductReturnResponseDto> response =
-            returnProductFromSale(productResponse.getBody().getId());
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertNull(response.getBody().getSaleAfter());
+    assertNull(response.getBody().getReturnedProduct().getPartOfSale());
+    assertEquals(
+        productResponse.getBody().getOwner(), response.getBody().getReturnedProduct().getOwner());
+    assertEquals(response.getBody().getDate(), LocalDate.now());
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertNull(response.getBody().getSaleAfter());
-        assertNull(response.getBody().getReturnedProduct().getPartOfSale());
-        assertEquals(
-            productResponse.getBody().getOwner(),
-     response.getBody().getReturnedProduct().getOwner());
-        assertEquals(response.getBody().getDate(), LocalDate.now());
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
 
-        Map<String, Object> expectedEventPayload =
-            getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
-
-        systemEventTestHelper.assertEventWasLogged(SALE_RETURN_PRODUCT, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(SALE_RETURN_PRODUCT, expectedEventPayload);
   }
 
   @Test
@@ -213,7 +213,8 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(saleRequestDto.getSellerId(), saleResponse.getBody().getSeller().getId());
     assertEquals(saleRequestDto.getDate(), saleResponse.getBody().getDate());
     assertEquals(
-        saleRequestDto.getResources().size(), saleResponse.getBody().getResources().size());
+        saleRequestDto.getResources().size(),
+        saleResponse.getBody().getResources().getResources().size());
     assertEquals(saleRequestDto.getProducts().size(), saleResponse.getBody().getProducts().size());
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(),
@@ -250,10 +251,18 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(saleRequestDto.getSellerId(), saleResponse.getBody().getSeller().getId());
     assertEquals(saleRequestDto.getDate(), saleResponse.getBody().getDate());
     assertEquals(
-        saleRequestDto.getResources().size(), saleResponse.getBody().getResources().size());
+        saleRequestDto.getResources().size(),
+        saleResponse.getBody().getResources().getResources().size());
     assertEquals(
-        saleRequestDto.getResources().get(0).getResource().getResourceId(),
-        saleResponse.getBody().getResources().get(0).getResource().getResource().getId());
+        saleRequestDto.getResources().get(0).getResourceAndQuantity().getResourceId(),
+        saleResponse
+            .getBody()
+            .getResources()
+            .getResources()
+            .get(0)
+            .getResourceAndQuantity()
+            .getResource()
+            .getId());
 
     assertEquals(
         calculateTotalPriceOfResource(saleRequestDto), saleResponse.getBody().getTotalPrice());
@@ -328,12 +337,13 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
 
-    List<PurchasedResourceInUserResponseDto> resources =
+    List<PurchasedResourceQuantityResponseDto> resources =
         objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
     assertEquals(1, resources.size());
-    for (PurchasedResourceInUserResponseDto resource : resources) {
-      assertEquals(resource.getResource().getResource().getId(), pearl.getBody().getId());
+    for (PurchasedResourceQuantityResponseDto resource : resources) {
+      assertEquals(
+          resource.getResourceAndQuantity().getResource().getId(), pearl.getBody().getId());
     }
   }
 
@@ -368,10 +378,10 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     saleRequestDto.setBuyerId(buyer.getId());
     saleRequestDto.setSellerId(seller.getId());
     saleRequestDto.setDate(LocalDate.now());
-    PurchasedResourceInUserRequestDto purchasedResourceInUserRequestDto =
+    PurchasedResourceQuantityRequestDto purchasedResourceQuantityRequestDto =
         getPurchasedResourceInUserRequestDto(pearlInUserRequest);
-    List<PurchasedResourceInUserRequestDto> resources = new ArrayList<>();
-    resources.add(purchasedResourceInUserRequestDto);
+    List<PurchasedResourceQuantityRequestDto> resources = new ArrayList<>();
+    resources.add(purchasedResourceQuantityRequestDto);
     saleRequestDto.setResources(resources);
     ProductDiscountRequestDto productDiscountRequestDto = new ProductDiscountRequestDto();
     productDiscountRequestDto.setProductId(productResponse.getBody().getId());
@@ -383,10 +393,10 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @NotNull
-  private static PurchasedResourceInUserRequestDto getPurchasedResourceInUserRequestDto(
+  private static PurchasedResourceQuantityRequestDto getPurchasedResourceInUserRequestDto(
       ResourceInUserRequestDto pearlRequest) {
-    return PurchasedResourceInUserRequestDto.builder()
-        .resource(getResourceQuantityRequestDto(pearlRequest))
+    return PurchasedResourceQuantityRequestDto.builder()
+        .resourceAndQuantity(getResourceQuantityRequestDto(pearlRequest))
         .discount(SALE_DISCOUNT)
         .build();
   }
@@ -451,7 +461,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private BigDecimal calculateTotalPriceOfResource(SaleRequestDto saleRequestDto) {
     return Objects.requireNonNull(pearl.getBody())
         .getPricePerQuantity()
-        .multiply(saleRequestDto.getResources().get(0).getResource().getQuantity());
+        .multiply(saleRequestDto.getResources().get(0).getResourceAndQuantity().getQuantity());
   }
 
   private ResponseEntity<ResourceReturnResponseDto> getResourceReturnResponse(

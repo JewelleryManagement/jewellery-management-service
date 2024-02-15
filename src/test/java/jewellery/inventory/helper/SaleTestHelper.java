@@ -10,15 +10,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
+import jewellery.inventory.dto.request.resource.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
-import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.dto.response.resource.PurchasedResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.resource.PurchasedResourceResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.model.*;
@@ -72,7 +73,7 @@ public class SaleTestHelper {
       UUID sellerId,
       UUID buyerId,
       List<ProductDiscountRequestDto> products,
-      List<PurchasedResourceInUserRequestDto> resources) {
+      List<PurchasedResourceQuantityRequestDto> resources) {
     SaleRequestDto saleRequest = new SaleRequestDto();
     saleRequest.setSellerId(sellerId);
     saleRequest.setBuyerId(buyerId);
@@ -119,12 +120,19 @@ public class SaleTestHelper {
   }
 
   @NotNull
-  private static List<PurchasedResourceInUserResponseDto> createResourcesResponse(Sale sale) {
-    List<PurchasedResourceInUserResponseDto> resourcesResponse =
-        sale.getResources().stream()
-            .map(resource -> createPurchasedResourceResponseDto(sale))
-            .toList();
-    return resourcesResponse;
+  private static PurchasedResourceResponseDto createResourcesResponse(Sale sale) {
+    List<PurchasedResourceQuantityResponseDto> resourcesResponse =
+        sale.getResources().stream().map(resource -> createPurchasedResourceResponseDto()).toList();
+    return getPurchasedResourceResponseDto(sale, resourcesResponse);
+  }
+
+  @NotNull
+  private static PurchasedResourceResponseDto getPurchasedResourceResponseDto(
+      Sale sale, List<PurchasedResourceQuantityResponseDto> resourcesResponse) {
+    PurchasedResourceResponseDto purchasedResourceResponseDto = new PurchasedResourceResponseDto();
+    purchasedResourceResponseDto.setOwner(createUserResponseDto(sale.getBuyer()));
+    purchasedResourceResponseDto.setResources(resourcesResponse);
+    return purchasedResourceResponseDto;
   }
 
   private static void calculateResourcesDiscounts(Sale sale, SaleResponseDto dto) {
@@ -206,9 +214,9 @@ public class SaleTestHelper {
         .build();
   }
 
-  public static PurchasedResourceInUserResponseDto createPurchasedResourceResponseDto(Sale sale) {
-    return PurchasedResourceInUserResponseDto.builder()
-        .resource(createResourceQuantityResponseDto())
+  public static PurchasedResourceQuantityResponseDto createPurchasedResourceResponseDto() {
+    return PurchasedResourceQuantityResponseDto.builder()
+        .resourceAndQuantity(createResourceQuantityResponseDto())
         .discount(getBigDecimal("10"))
         .salePrice(getBigDecimal("100"))
         .build();
@@ -221,9 +229,9 @@ public class SaleTestHelper {
     return requestDto;
   }
 
-  public static PurchasedResourceInUserRequestDto createPurchasedResourceRequestDto() {
-    return PurchasedResourceInUserRequestDto.builder()
-        .resource(createResourceQuantityRequest())
+  public static PurchasedResourceQuantityRequestDto createPurchasedResourceRequestDto() {
+    return PurchasedResourceQuantityRequestDto.builder()
+        .resourceAndQuantity(createResourceQuantityRequest())
         .discount(getBigDecimal("10"))
         .build();
   }

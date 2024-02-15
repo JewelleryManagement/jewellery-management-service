@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
-import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
+import jewellery.inventory.dto.response.resource.PurchasedResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
@@ -86,7 +86,7 @@ public class ResourceInUserController {
   @Operation(summary = "Get all purchased resources")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/purchased/{userId}")
-  public List<PurchasedResourceInUserResponseDto> getAllPurchasedResources(
+  public List<PurchasedResourceQuantityResponseDto> getAllPurchasedResources(
       @PathVariable("userId") UUID userId) {
     return resourceAvailabilityService.getAllPurchasedResources(userId);
   }

@@ -8,8 +8,9 @@ import java.time.LocalDate;
 import java.util.*;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.dto.response.PurchasedResourceInUserResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.resource.PurchasedResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.resource.PurchasedResourceResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
 import jewellery.inventory.model.ProductPriceDiscount;
@@ -78,23 +79,30 @@ public class SaleMapper {
     return new ArrayList<>();
   }
 
-  public List<PurchasedResourceInUserResponseDto> mapAllResourcesToResponse(Sale sale) {
-    List<PurchasedResourceInUserResponseDto> result = new ArrayList<>();
+  public PurchasedResourceResponseDto mapAllResourcesToResponse(Sale sale) {
+    List<PurchasedResourceQuantityResponseDto> resources = new ArrayList<>();
     if (sale.getResources() != null) {
       for (PurchasedResourceInUser resource : sale.getResources()) {
-        result.add(getPurchasedResourceInUserResponseDto(sale, resource));
+        resources.add(getPurchasedResourceInUserResponseDto(resource));
       }
     }
-    return result;
+    return getPurchasedResourceResponseDto(sale, resources);
   }
 
-  private PurchasedResourceInUserResponseDto getPurchasedResourceInUserResponseDto(
-      Sale sale, PurchasedResourceInUser resource) {
-    return PurchasedResourceInUserResponseDto.builder()
-        .resource(getResourceQuantityResponseDto(resource))
+  private PurchasedResourceResponseDto getPurchasedResourceResponseDto(
+      Sale sale, List<PurchasedResourceQuantityResponseDto> resources) {
+    PurchasedResourceResponseDto purchasedResourceResponseDto = new PurchasedResourceResponseDto();
+    purchasedResourceResponseDto.setOwner(userMapper.toUserResponse(sale.getBuyer()));
+    purchasedResourceResponseDto.setResources(resources);
+    return purchasedResourceResponseDto;
+  }
+
+  private PurchasedResourceQuantityResponseDto getPurchasedResourceInUserResponseDto(
+      PurchasedResourceInUser resource) {
+    return PurchasedResourceQuantityResponseDto.builder()
+        .resourceAndQuantity(getResourceQuantityResponseDto(resource))
         .salePrice(resource.getSalePrice())
         .discount(resource.getDiscount())
-        .owner(userMapper.toUserResponse(sale.getBuyer()))
         .build();
   }
 
