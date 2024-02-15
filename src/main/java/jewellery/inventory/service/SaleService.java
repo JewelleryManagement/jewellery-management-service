@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
-import jewellery.inventory.dto.request.resource.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
+import jewellery.inventory.dto.request.resource.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
@@ -17,6 +17,7 @@ import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductNotSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
+import jewellery.inventory.exception.sale.SaleImpossibleException;
 import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
@@ -50,6 +51,9 @@ public class SaleService {
   @LogCreateEvent(eventType = EventType.SALE_CREATE)
   @Transactional
   public SaleResponseDto createSale(SaleRequestDto saleRequestDto) {
+
+    throwExceptionWhenNoResourcesAndProductsInRequest(saleRequestDto);
+
     Sale sale =
         saleMapper.mapRequestToEntity(
             saleRequestDto,
@@ -263,7 +267,8 @@ public class SaleService {
         purchasedResourceInUser.setSalePrice(
             resource
                 .getPricePerQuantity()
-                .multiply(saleRequestDto.getResources().get(i).getResourceAndQuantity().getQuantity()));
+                .multiply(
+                    saleRequestDto.getResources().get(i).getResourceAndQuantity().getQuantity()));
         purchasedResourceInUser.setDiscount(saleRequestDto.getResources().get(i).getDiscount());
         purchasedResourceInUser.setQuantity(
             saleRequestDto.getResources().get(i).getResourceAndQuantity().getQuantity());
@@ -275,22 +280,30 @@ public class SaleService {
 
   private void setProductPriceDiscountSalePriceAndSale(Sale sale) {
     sale.getProducts()
-            .forEach(
-                    productDto -> {
-                      Product product = productDto.getProduct();
-                      BigDecimal salePrice = productService.getProductSalePrice(product);
-                      productDto.setSalePrice(salePrice);
-                      productDto.setSale(sale);
-                    });
+        .forEach(
+            productDto -> {
+              Product product = productDto.getProduct();
+              BigDecimal salePrice = productService.getProductSalePrice(product);
+              productDto.setSalePrice(salePrice);
+              productDto.setSale(sale);
+            });
   }
 
   private void throwExceptionIfSellerNotProductOwner(
-          List<ProductPriceDiscount> products, UUID sellerId) {
+      List<ProductPriceDiscount> products, UUID sellerId) {
     for (ProductPriceDiscount productPriceDiscount : products) {
       Product product = productPriceDiscount.getProduct();
       if (!product.getOwner().getId().equals(sellerId)) {
         throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
       }
+    }
+  }
+
+  private static void throwExceptionWhenNoResourcesAndProductsInRequest(
+      SaleRequestDto saleRequestDto) {
+    if ((saleRequestDto.getProducts() == null || saleRequestDto.getProducts().isEmpty())
+        && (saleRequestDto.getResources() == null || saleRequestDto.getResources().isEmpty())) {
+      throw new SaleImpossibleException();
     }
   }
 }
