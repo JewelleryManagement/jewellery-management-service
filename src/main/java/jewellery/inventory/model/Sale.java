@@ -17,6 +17,7 @@ public class Sale {
   @Id @GeneratedValue private UUID id;
   @ManyToOne private User seller;
   @ManyToOne private User buyer;
+  @JoinColumn(name = "organization_seller_id")
   @ManyToOne private Organization organizationSeller;
 
   @OneToMany(mappedBy = "partOfSale")

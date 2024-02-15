@@ -30,7 +30,7 @@ public class OrganizationService {
   private final SaleRepository saleRepository;
   private final OrganizationMapper organizationMapper;
 
-  private List<Organization> all() {
+  private List<Organization> getAll() {
     return organizationRepository.findAll();
   }
 
@@ -41,14 +41,14 @@ public class OrganizationService {
   }
 
   public List<OrganizationResponseDto> getAllOrganizationsResponses() {
-    return all().stream().map(organizationMapper::toResponse).toList();
+    return getAll().stream().map(organizationMapper::toResponse).toList();
   }
 
   public OrganizationResponseDto getOrganizationResponse(UUID id) {
     return organizationMapper.toResponse(getOrganization(id));
   }
 
-  public OrganizationResponseDto create(OrganizationRequestDto organizationRequestDto) {
+  public void create(OrganizationRequestDto organizationRequestDto) {
     Organization organization = new Organization();
 
     // TODO This repository calls should be refactored. Set like this only temporary - TBD
@@ -70,6 +70,6 @@ public class OrganizationService {
 
     organizationRepository.save(organization);
 
-    return new OrganizationResponseDto(organization);
+   // return new OrganizationResponseDto(organization);
   }
 }
