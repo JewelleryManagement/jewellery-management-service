@@ -5,7 +5,7 @@ import jewellery.inventory.dto.response.UserQuantityResponseDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcePurchaseResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;

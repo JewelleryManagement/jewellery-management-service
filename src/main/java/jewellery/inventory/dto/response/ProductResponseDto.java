@@ -1,7 +1,7 @@
 package jewellery.inventory.dto.response;
 
 import java.math.BigDecimal;
-import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
+
 import lombok.*;
 
 import java.util.List;

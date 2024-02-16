@@ -7,7 +7,7 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
+import jewellery.inventory.dto.response.ResourceReturnResponseDto;
 import jewellery.inventory.service.SaleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

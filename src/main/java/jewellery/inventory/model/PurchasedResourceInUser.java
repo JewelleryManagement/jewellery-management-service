@@ -22,5 +22,7 @@ public class PurchasedResourceInUser {
   private BigDecimal quantity;
   private BigDecimal salePrice;
   private BigDecimal discount;
-  @ManyToOne private Sale partOfSale;
+  @ManyToOne
+  @JoinColumn(name = "partOfSale_id")
+  private Sale partOfSale;
 }

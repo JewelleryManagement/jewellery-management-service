@@ -16,18 +16,17 @@ import jewellery.inventory.dto.request.resource.PurchasedResourceQuantityRequest
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
+import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.PurchasedResourcesResponseDto;
+import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.dto.response.resource.PurchasedResourceQuantityResponseDto;
-import jewellery.inventory.dto.response.resource.PurchasedResourceResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ProductPriceDiscount;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
-import jewellery.inventory.model.resource.Resource;
 import org.jetbrains.annotations.NotNull;
 
 public class SaleTestHelper {
@@ -51,7 +50,7 @@ public class SaleTestHelper {
     sale.setSeller(seller);
     sale.setBuyer(buyer);
     sale.setProducts(new ArrayList<>(products));
-    sale.setResources(resources);
+    sale.setResources(new ArrayList<>(resources));
     sale.setDate(LocalDate.now());
     return sale;
   }
@@ -120,19 +119,20 @@ public class SaleTestHelper {
   }
 
   @NotNull
-  private static PurchasedResourceResponseDto createResourcesResponse(Sale sale) {
+  private static PurchasedResourcesResponseDto createResourcesResponse(Sale sale) {
     List<PurchasedResourceQuantityResponseDto> resourcesResponse =
         sale.getResources().stream().map(resource -> createPurchasedResourceResponseDto()).toList();
     return getPurchasedResourceResponseDto(sale, resourcesResponse);
   }
 
   @NotNull
-  private static PurchasedResourceResponseDto getPurchasedResourceResponseDto(
+  private static PurchasedResourcesResponseDto getPurchasedResourceResponseDto(
       Sale sale, List<PurchasedResourceQuantityResponseDto> resourcesResponse) {
-    PurchasedResourceResponseDto purchasedResourceResponseDto = new PurchasedResourceResponseDto();
-    purchasedResourceResponseDto.setOwner(createUserResponseDto(sale.getBuyer()));
-    purchasedResourceResponseDto.setResources(resourcesResponse);
-    return purchasedResourceResponseDto;
+    PurchasedResourcesResponseDto purchasedResourcesResponseDto =
+        new PurchasedResourcesResponseDto();
+    purchasedResourcesResponseDto.setOwner(createUserResponseDto(sale.getBuyer()));
+    purchasedResourcesResponseDto.setResources(resourcesResponse);
+    return purchasedResourcesResponseDto;
   }
 
   private static void calculateResourcesDiscounts(Sale sale, SaleResponseDto dto) {
@@ -171,7 +171,7 @@ public class SaleTestHelper {
     return PurchasedResourceInUser.builder()
         .id(UUID.randomUUID())
         .salePrice(getBigDecimal("100"))
-        .resource(createResource(price))
+        .resource(ResourceTestHelper.getPearl(price))
         .discount(getBigDecimal("10"))
         .quantity(getBigDecimal("5"))
         .build();
@@ -189,27 +189,11 @@ public class SaleTestHelper {
     return productResponseDto;
   }
 
-  public static Resource createResource(BigDecimal price) {
-    return Resource.builder()
-        .id(UUID.randomUUID())
-        .quantityType("Gram")
-        .pricePerQuantity(price)
-        .clazz("Pearl")
-        .build();
-  }
-
-  private static ResourceResponseDto createResourceResponseDto() {
-    return ResourceResponseDto.builder()
-        .id(UUID.randomUUID())
-        .clazz("Pearl")
-        .quantityType("Gram")
-        .pricePerQuantity(getBigDecimal("20"))
-        .build();
-  }
-
   private static ResourceQuantityResponseDto createResourceQuantityResponseDto() {
+    ResourceResponseDto resourceResponseDto = ResourceTestHelper.getPearlResponseDto();
+    resourceResponseDto.setPricePerQuantity(getBigDecimal("20"));
     return ResourceQuantityResponseDto.builder()
-        .resource(createResourceResponseDto())
+        .resource(resourceResponseDto)
         .quantity(getBigDecimal("10"))
         .build();
   }
@@ -224,7 +208,7 @@ public class SaleTestHelper {
 
   private static ResourceQuantityRequestDto createResourceQuantityRequest() {
     ResourceQuantityRequestDto requestDto = new ResourceQuantityRequestDto();
-    requestDto.setResourceId(createResource(getBigDecimal("20")).getId());
+    requestDto.setResourceId(ResourceTestHelper.getPearl(getBigDecimal("20")).getId());
     requestDto.setQuantity(getBigDecimal("10"));
     return requestDto;
   }
@@ -238,7 +222,7 @@ public class SaleTestHelper {
 
   public static ResourceInUser createResourceInUser(BigDecimal price) {
     ResourceInUser resourceInUser = new ResourceInUser();
-    resourceInUser.setResource(createResource(price));
+    resourceInUser.setResource(ResourceTestHelper.getPearl(price));
     resourceInUser.setQuantity(BigDecimal.TEN);
     resourceInUser.setOwner(UserTestHelper.createTestUserWithId());
     resourceInUser.setId(UUID.randomUUID());

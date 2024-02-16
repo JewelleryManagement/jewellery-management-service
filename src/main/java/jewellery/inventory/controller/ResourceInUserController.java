@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
-import jewellery.inventory.dto.response.resource.PurchasedResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;

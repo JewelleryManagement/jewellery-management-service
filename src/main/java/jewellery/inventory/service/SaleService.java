@@ -9,8 +9,8 @@ import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.request.resource.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
+import jewellery.inventory.dto.response.ResourceReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
 import jewellery.inventory.exception.not_found.ResourceNotFoundInSaleException;
 import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
@@ -101,15 +101,23 @@ public class SaleService {
     Sale sale = getSale(saleId);
     PurchasedResourceInUser resourceToReturn = getPurchasedResource(resourceId, saleId);
 
-    sale.setResources(removeResourceFromSale(sale.getResources(), resourceToReturn));
     returnResourceFromSaleToUser(sale, resourceToReturn);
-
-    purchasedResourceInUserRepository.delete(resourceToReturn);
+    removeResourceFromSale(sale, resourceToReturn);
 
     deleteSaleIfProductsAndResourcesAreEmpty(sale);
     logger.info("Resource returned successfully. Resource ID: {}", resourceId);
 
     return validateSaleAfterReturnResource(sale, resourceToReturn);
+  }
+
+  private static void removeResourceFromSale(Sale sale, PurchasedResourceInUser resourceToReturn) {
+    sale.getResources()
+        .removeIf(
+            purchasedResource ->
+                purchasedResource
+                    .getResource()
+                    .getId()
+                    .equals(resourceToReturn.getResource().getId()));
   }
 
   private Sale getSale(UUID saleId) {
@@ -194,7 +202,7 @@ public class SaleService {
   private ResourceReturnResponseDto validateSaleAfterReturnResource(
       Sale sale, PurchasedResourceInUser resourceToReturn) {
     if (sale.getResources().isEmpty() && sale.getProducts().isEmpty()) {
-      return saleMapper.mapToResourceReturnResponseDto(resourceToReturn, null);
+      sale = null;
     }
     return saleMapper.mapToResourceReturnResponseDto(
         resourceToReturn, saleMapper.mapEntityToResponseDto(sale));
@@ -258,24 +266,28 @@ public class SaleService {
       SaleRequestDto saleRequestDto) {
     List<PurchasedResourceInUser> resources = new ArrayList<>();
     if (saleRequestDto.getResources() != null) {
-      for (int i = 0; i < saleRequestDto.getResources().size(); i++) {
-        PurchasedResourceInUser purchasedResourceInUser = new PurchasedResourceInUser();
-        Resource resource =
-            resourceService.getResourceById(
-                saleRequestDto.getResources().get(i).getResourceAndQuantity().getResourceId());
-        purchasedResourceInUser.setResource(resource);
-        purchasedResourceInUser.setSalePrice(
-            resource
-                .getPricePerQuantity()
-                .multiply(
-                    saleRequestDto.getResources().get(i).getResourceAndQuantity().getQuantity()));
-        purchasedResourceInUser.setDiscount(saleRequestDto.getResources().get(i).getDiscount());
-        purchasedResourceInUser.setQuantity(
-            saleRequestDto.getResources().get(i).getResourceAndQuantity().getQuantity());
+      for (PurchasedResourceQuantityRequestDto resourceRequest : saleRequestDto.getResources()) {
+        PurchasedResourceInUser purchasedResourceInUser =
+            getPurchasedResourceInUser(resourceRequest);
         resources.add(purchasedResourceInUser);
       }
     }
     return resources;
+  }
+
+  private PurchasedResourceInUser getPurchasedResourceInUser(
+      PurchasedResourceQuantityRequestDto resourceRequest) {
+    PurchasedResourceInUser purchasedResourceInUser = new PurchasedResourceInUser();
+    Resource resource =
+        resourceService.getResourceById(resourceRequest.getResourceAndQuantity().getResourceId());
+    purchasedResourceInUser.setResource(resource);
+    purchasedResourceInUser.setSalePrice(
+        resource
+            .getPricePerQuantity()
+            .multiply(resourceRequest.getResourceAndQuantity().getQuantity()));
+    purchasedResourceInUser.setDiscount(resourceRequest.getDiscount());
+    purchasedResourceInUser.setQuantity(resourceRequest.getResourceAndQuantity().getQuantity());
+    return purchasedResourceInUser;
   }
 
   private void setProductPriceDiscountSalePriceAndSale(Sale sale) {

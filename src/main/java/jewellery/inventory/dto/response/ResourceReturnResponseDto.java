@@ -1,6 +1,7 @@
-package jewellery.inventory.dto.response.resource;
+package jewellery.inventory.dto.response;
 
 import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 

@@ -1,7 +1,7 @@
 package jewellery.inventory.mapper;
 
 import jewellery.inventory.dto.request.resource.PurchasedResourceQuantityRequestDto;
-import jewellery.inventory.dto.response.resource.PurchasedResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
 import jewellery.inventory.model.PurchasedResourceInUser;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

@@ -18,8 +18,8 @@ import jewellery.inventory.dto.request.resource.PurchasedResourceQuantityRequest
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
-import jewellery.inventory.dto.response.resource.PurchasedResourceQuantityResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
+import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.ResourceReturnResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Pearl;

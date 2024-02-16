@@ -7,11 +7,11 @@ import java.math.RoundingMode;
 import java.util.*;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.PurchasedResourcesResponseDto;
+import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.ResourceReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
-import jewellery.inventory.dto.response.resource.PurchasedResourceQuantityResponseDto;
-import jewellery.inventory.dto.response.resource.PurchasedResourceResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceReturnResponseDto;
 import jewellery.inventory.model.ProductPriceDiscount;
 import jewellery.inventory.model.PurchasedResourceInUser;
 import jewellery.inventory.model.Sale;
@@ -30,6 +30,10 @@ public class SaleMapper {
 
   public SaleResponseDto mapEntityToResponseDto(Sale sale) {
     SaleResponseDto saleResponseDto = new SaleResponseDto();
+
+    if (sale == null) {
+      return null;
+    }
     saleResponseDto.setId(sale.getId());
     saleResponseDto.setSeller(userMapper.toUserResponse(sale.getSeller()));
     saleResponseDto.setBuyer(userMapper.toUserResponse(sale.getBuyer()));
@@ -77,7 +81,7 @@ public class SaleMapper {
     return new ArrayList<>();
   }
 
-  public PurchasedResourceResponseDto mapAllResourcesToResponse(Sale sale) {
+  public PurchasedResourcesResponseDto mapAllResourcesToResponse(Sale sale) {
     List<PurchasedResourceQuantityResponseDto> resources = new ArrayList<>();
     if (sale.getResources() != null) {
       for (PurchasedResourceInUser resource : sale.getResources()) {
@@ -87,12 +91,13 @@ public class SaleMapper {
     return getPurchasedResourceResponseDto(sale, resources);
   }
 
-  private PurchasedResourceResponseDto getPurchasedResourceResponseDto(
+  private PurchasedResourcesResponseDto getPurchasedResourceResponseDto(
       Sale sale, List<PurchasedResourceQuantityResponseDto> resources) {
-    PurchasedResourceResponseDto purchasedResourceResponseDto = new PurchasedResourceResponseDto();
-    purchasedResourceResponseDto.setOwner(userMapper.toUserResponse(sale.getBuyer()));
-    purchasedResourceResponseDto.setResources(resources);
-    return purchasedResourceResponseDto;
+    PurchasedResourcesResponseDto purchasedResourcesResponseDto =
+        new PurchasedResourcesResponseDto();
+    purchasedResourcesResponseDto.setOwner(userMapper.toUserResponse(sale.getBuyer()));
+    purchasedResourcesResponseDto.setResources(resources);
+    return purchasedResourcesResponseDto;
   }
 
   private PurchasedResourceQuantityResponseDto getPurchasedResourceInUserResponseDto(

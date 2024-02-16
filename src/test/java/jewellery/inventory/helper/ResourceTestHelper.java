@@ -69,6 +69,21 @@ public class ResourceTestHelper {
         .build();
   }
 
+  public static Resource getPearl(BigDecimal price) {
+    return Pearl.builder()
+            .id(RESOURCE_ID)
+            .clazz(CLAZZ_PEARL)
+            .quantityType(QUANTITY_TYPE_UNIT)
+            .type(TYPE_PEARL)
+            .size(SIZE)
+            .quality(QUALITY)
+            .color(COLOR_PEARL)
+            .shape(SHAPE_PEARL)
+            .pricePerQuantity(price)
+            .note(NOTE)
+            .build();
+  }
+
   public static Resource getMetal() {
     return Metal.builder()
         .id(RESOURCE_ID)
