@@ -24,7 +24,7 @@ import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductNotSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
-import jewellery.inventory.exception.sale.SaleImpossibleException;
+import jewellery.inventory.exception.sale.EmptySaleException;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.helper.UserTestHelper;
@@ -298,10 +298,10 @@ class SaleServiceTest {
   void testCreateSaleShouldThrowWhenResourcesAndProductsInRequestAreNullOrEmpty() {
     saleRequestDto.setProducts(null);
     saleRequestDto.setResources(null);
-    assertThrows(SaleImpossibleException.class, () -> saleService.createSale(saleRequestDto));
+    assertThrows(EmptySaleException.class, () -> saleService.createSale(saleRequestDto));
 
     saleRequestDto.setProducts(new ArrayList<>());
     saleRequestDto.setResources(new ArrayList<>());
-    assertThrows(SaleImpossibleException.class, () -> saleService.createSale(saleRequestDto));
+    assertThrows(EmptySaleException.class, () -> saleService.createSale(saleRequestDto));
   }
 }

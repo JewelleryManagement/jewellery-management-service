@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
-import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
+import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.ResourceReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
@@ -17,7 +17,7 @@ import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductNotSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
-import jewellery.inventory.exception.sale.SaleImpossibleException;
+import jewellery.inventory.exception.sale.EmptySaleException;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
@@ -50,7 +50,7 @@ public class SaleService {
   @Transactional
   public SaleResponseDto createSale(SaleRequestDto saleRequestDto) {
 
-    throwExceptionWhenNoResourcesAndProductsInRequest(saleRequestDto);
+    throwExceptionIfNoResourcesAndProductsInRequest(saleRequestDto);
 
     Sale sale =
         saleMapper.mapRequestToEntity(
@@ -180,10 +180,10 @@ public class SaleService {
 
   private void deleteSaleIfProductsAndResourcesAreEmpty(Sale sale) {
     if (sale.getProducts().isEmpty() && sale.getResources().isEmpty()) {
-      logger.info("Deleting sale with ID: {} since the products list is empty.", sale.getId());
+      logger.info("Deleting sale with ID: {} since the both products list and resources list are empty.", sale.getId());
       saleRepository.deleteById(sale.getId());
     } else {
-      logger.info("Saving sale with ID: {} since the products list is not empty.", sale.getId());
+      logger.info("Saving sale with ID: {} since the products list or the resources list are not empty.", sale.getId());
       saleRepository.save(sale);
     }
   }
@@ -297,11 +297,11 @@ public class SaleService {
     }
   }
 
-  private static void throwExceptionWhenNoResourcesAndProductsInRequest(
+  private static void throwExceptionIfNoResourcesAndProductsInRequest(
       SaleRequestDto saleRequestDto) {
     if ((saleRequestDto.getProducts() == null || saleRequestDto.getProducts().isEmpty())
         && (saleRequestDto.getResources() == null || saleRequestDto.getResources().isEmpty())) {
-      throw new SaleImpossibleException();
+      throw new EmptySaleException();
     }
   }
 }

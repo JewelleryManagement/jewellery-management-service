@@ -18,7 +18,7 @@ import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQu
 import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.product.*;
-import jewellery.inventory.exception.sale.SaleImpossibleException;
+import jewellery.inventory.exception.sale.EmptySaleException;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -57,7 +57,7 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler({
-    SaleImpossibleException.class,
+    EmptySaleException.class,
     InvalidResourceQuantityException.class,
     DuplicateException.class,
     MultipartFileContentTypeException.class,
