@@ -14,5 +14,4 @@ import java.time.LocalDate;
 public class ResourceReturnResponseDto {
     private ResourceResponseDto returnedResource;
     private SaleResponseDto saleAfter;
-    private LocalDate date;
 }

@@ -4,7 +4,6 @@ import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.util.*;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -66,7 +65,6 @@ public class SaleMapper {
     return ResourceReturnResponseDto.builder()
         .returnedResource(resourceMapper.toResourceResponse(resourceToReturn.getResource()))
         .saleAfter(sale)
-        .date(LocalDate.now())
         .build();
   }
 
