@@ -2,7 +2,8 @@ package jewellery.inventory.unit.service;
 
 import static jewellery.inventory.helper.ResourceTestHelper.getPreciousStone;
 import static jewellery.inventory.helper.ResourceTestHelper.provideResources;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
