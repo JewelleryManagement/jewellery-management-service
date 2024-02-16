@@ -14,7 +14,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 import jewellery.inventory.dto.request.*;
-import jewellery.inventory.dto.request.resource.PurchasedResourceQuantityRequestDto;
+import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;

@@ -12,7 +12,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
-import jewellery.inventory.dto.request.resource.PurchasedResourceQuantityRequestDto;
+import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;

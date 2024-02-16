@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.dto.request.SaleRequestDto;
-import jewellery.inventory.dto.request.resource.PurchasedResourceQuantityRequestDto;
+import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.ResourceReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
@@ -18,7 +18,6 @@ import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductNotSoldException;
 import jewellery.inventory.exception.product.UserNotOwnerException;
 import jewellery.inventory.exception.sale.SaleImpossibleException;
-import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
@@ -39,7 +38,6 @@ public class SaleService {
   private final ProductService productService;
   private final ResourceInUserService resourceInUserService;
   private final UserService userService;
-  private final PurchasedResourceInUserMapper purchasedResourceInUserMapper;
   private final ResourceService resourceService;
 
   public List<SaleResponseDto> getAllSales() {
@@ -232,18 +230,6 @@ public class SaleService {
     return purchasedResourceInUserRepository
         .findByResourceIdAndPartOfSaleId(resourceId, saleId)
         .orElseThrow(() -> new ResourceNotFoundInSaleException(resourceId, saleId));
-  }
-
-  private List<PurchasedResourceInUser> removeResourceFromSale(
-      List<PurchasedResourceInUser> resources, PurchasedResourceInUser resourceToRemove) {
-    List<PurchasedResourceInUser> result = new ArrayList<>();
-    for (PurchasedResourceInUser resource : resources) {
-      if (!resource.getId().equals(resourceToRemove.getId())) {
-        result.add(resource);
-      }
-    }
-    logger.info("Removing resource with ID: {} from sale.", resourceToRemove.getResource().getId());
-    return result;
   }
 
   private void returnResourceFromSaleToUser(Sale sale, PurchasedResourceInUser resourceToReturn) {
