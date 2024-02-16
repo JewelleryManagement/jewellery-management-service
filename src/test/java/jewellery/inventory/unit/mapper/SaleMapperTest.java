@@ -105,6 +105,7 @@ class SaleMapperTest {
             List.of(purchasedResourceInUser));
     when(userMapper.toUserResponse(seller)).thenReturn(sellerResponseDto);
     when(userMapper.toUserResponse(buyer)).thenReturn(buyerResponseDto);
+    when(productMapper.mapToProductResponseDto(product)).thenReturn(new ProductResponseDto());
 
     SaleResponseDto saleResponseDto = saleMapper.mapEntityToResponseDto(sale);
 

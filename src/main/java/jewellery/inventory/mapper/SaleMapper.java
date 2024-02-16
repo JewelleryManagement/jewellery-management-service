@@ -74,9 +74,13 @@ public class SaleMapper {
 
   private List<ProductResponseDto> mapAllProductsToResponse(Sale sale) {
     if (sale.getProducts() != null) {
-      return sale.getProducts().stream()
-          .map(productSale -> productMapper.mapToProductResponseDto(productSale.getProduct()))
-          .toList();
+      List<ProductResponseDto> result = new ArrayList<>();
+      for (ProductPriceDiscount productPriceDiscount : sale.getProducts()) {
+        ProductResponseDto productResponseDto = productMapper.mapToProductResponseDto(productPriceDiscount.getProduct());
+        productResponseDto.setDiscount(productPriceDiscount.getDiscount());
+        result.add(productResponseDto);
+      }
+      return result;
     }
     return new ArrayList<>();
   }
