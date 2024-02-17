@@ -41,14 +41,16 @@ public class OrganizationService {
 
   public OrganizationResponseDto create(OrganizationRequestDto organizationRequestDto) {
     Organization organization = organizationMapper.toEntity(organizationRequestDto);
+    Organization createdOrganization = organizationRepository.save(organization);
 
     UserInOrganization userInOrganizationOwner = new UserInOrganization();
     User user = userService.getUser(authService.getCurrentUser().getId());
     userInOrganizationOwner.setUser(user);
     userInOrganizationOwner.setOrganization(organization);
+    userInOrganizationOwner.setOrganizationPermission(
+        Arrays.asList(OrganizationPermission.values()));
 
     organization.setUserInOrganizations(List.of(userInOrganizationOwner));
-    Organization createdOrganization = organizationRepository.save(organization);
 
     return organizationMapper.toResponse(createdOrganization);
   }

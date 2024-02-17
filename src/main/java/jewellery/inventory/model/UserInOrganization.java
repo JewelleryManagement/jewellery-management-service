@@ -20,19 +20,13 @@ import lombok.ToString;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "user_in_organization")
 public class UserInOrganization {
-
-  @Id
-  @GeneratedValue
-  private UUID id;
-  @ManyToOne
-  private User user;
+  @Id @GeneratedValue private UUID id;
+  @ManyToOne private User user;
   @ManyToOne
   @JoinColumn(name = "organization_id")
   private Organization organization;
-  @ElementCollection(targetClass = OrganizationPermission.class)
-  @CollectionTable
-  @Enumerated(EnumType.STRING)
+  @Column(name = "organization_permission")
   private List<OrganizationPermission> organizationPermission;
-
 }
