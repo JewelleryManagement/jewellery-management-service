@@ -1,21 +1,14 @@
 package jewellery.inventory.service;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.mapper.OrganizationMapper;
-import jewellery.inventory.model.Organization;
-import jewellery.inventory.model.Product;
-import jewellery.inventory.model.ResourceInOrganization;
-import jewellery.inventory.model.Sale;
-import jewellery.inventory.model.UserInOrganization;
-import jewellery.inventory.repository.OrganizationRepository;
-import jewellery.inventory.repository.ProductRepository;
-import jewellery.inventory.repository.ResourceInOrganizationRepository;
-import jewellery.inventory.repository.SaleRepository;
-import jewellery.inventory.repository.UserInOrganizationRepository;
+import jewellery.inventory.model.*;
+import jewellery.inventory.repository.*;
+import jewellery.inventory.service.security.AuthService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,11 +17,9 @@ import org.springframework.stereotype.Service;
 public class OrganizationService {
 
   private final OrganizationRepository organizationRepository;
-  private final ResourceInOrganizationRepository resourceInOrganizationRepository;
-  private final ProductRepository productRepository;
-  private final UserInOrganizationRepository userInOrganizationRepository;
-  private final SaleRepository saleRepository;
   private final OrganizationMapper organizationMapper;
+  private final AuthService authService;
+  private final UserService userService;
 
   private List<Organization> getAll() {
     return organizationRepository.findAll();
@@ -48,28 +39,17 @@ public class OrganizationService {
     return organizationMapper.toResponse(getOrganization(id));
   }
 
-  public void create(OrganizationRequestDto organizationRequestDto) {
-    Organization organization = new Organization();
+  public OrganizationResponseDto create(OrganizationRequestDto organizationRequestDto) {
+    Organization organization = organizationMapper.toEntity(organizationRequestDto);
 
-    // TODO This repository calls should be refactored. Set like this only temporary - TBD
-    List<ResourceInOrganization> resourceInOrganizations =
-        resourceInOrganizationRepository.findAll();
-    List<Product> productsOwned = productRepository.findAll();
-    organization.setProductsOwned(productsOwned);
-    List<UserInOrganization> userInOrganizations = userInOrganizationRepository.findAll();
-    List<Sale> sales = saleRepository.findAll();
+    UserInOrganization userInOrganizationOwner = new UserInOrganization();
+    User user = userService.getUser(authService.getCurrentUser().getId());
+    userInOrganizationOwner.setUser(user);
+    userInOrganizationOwner.setOrganization(organization);
 
-    // TODO This can be moved in separate mapper like everything else. Also I have an idea for
-    // another approach - TBD
-    organization.setName(organizationRequestDto.getName());
-    organization.setAddress(organizationRequestDto.getAddress());
-    organization.setNote(organizationRequestDto.getNote());
-    organization.setResourceInOrganization(resourceInOrganizations);
-    organization.setUserInOrganizations(userInOrganizations);
-    organization.setSales(sales);
+    organization.setUserInOrganizations(List.of(userInOrganizationOwner));
+    Organization createdOrganization = organizationRepository.save(organization);
 
-    organizationRepository.save(organization);
-
-   // return new OrganizationResponseDto(organization);
+    return organizationMapper.toResponse(createdOrganization);
   }
 }

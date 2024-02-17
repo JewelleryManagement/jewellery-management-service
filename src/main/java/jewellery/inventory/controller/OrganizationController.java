@@ -1,17 +1,15 @@
 package jewellery.inventory.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.service.OrganizationService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/organizations")
@@ -34,11 +32,11 @@ public class OrganizationController {
     return organizationService.getOrganizationResponse(id);
   }
 
-//  @Operation(summary = "Create a new operation")
-//  @ResponseStatus(HttpStatus.CREATED)
-//  @PostMapping
-//  public OrganizationResponseDto create(@RequestBody @Valid OrganizationRequestDto organizationRequestDto){
-//    return organizationService.create(organizationRequestDto);
-//  }
+  @Operation(summary = "Create a new operation")
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping
+  public OrganizationResponseDto create(@RequestBody @Valid OrganizationRequestDto organizationRequestDto){
+    return organizationService.create(organizationRequestDto);
+  }
 
 }

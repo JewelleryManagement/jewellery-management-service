@@ -1,13 +1,7 @@
 package jewellery.inventory.model;
 
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
+
 import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -34,6 +28,7 @@ public class UserInOrganization {
   @ManyToOne
   private User user;
   @ManyToOne
+  @JoinColumn(name = "organization_id")
   private Organization organization;
   @ElementCollection(targetClass = OrganizationPermission.class)
   @CollectionTable
