@@ -6,11 +6,11 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Build and copy to S3
+name: Build and push jms-be to docker hub
 
 on:
   push:
-    branches: [ "*" ]
+    branches: [ "main" ]
 
 permissions:
   id-token: write
