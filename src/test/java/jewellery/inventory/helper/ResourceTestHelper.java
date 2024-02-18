@@ -55,6 +55,10 @@ public class ResourceTestHelper {
   private ResourceTestHelper() {}
 
   public static Resource getPearl() {
+    return getPearl(PRICE_PER_QUANTITY);
+  }
+
+  public static Resource getPearl(BigDecimal price) {
     return Pearl.builder()
         .id(RESOURCE_ID)
         .clazz(CLAZZ_PEARL)
@@ -64,7 +68,7 @@ public class ResourceTestHelper {
         .quality(QUALITY)
         .color(COLOR_PEARL)
         .shape(SHAPE_PEARL)
-        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .pricePerQuantity(price)
         .note(NOTE)
         .build();
   }
@@ -143,7 +147,7 @@ public class ResourceTestHelper {
         .build();
   }
 
-  private static ResourceRequestDto getPearlRequestDto() {
+  public static ResourceRequestDto getPearlRequestDto() {
     return PearlRequestDto.builder()
         .clazz(CLAZZ_PEARL)
         .quantityType(QUANTITY_TYPE_UNIT)

@@ -252,7 +252,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     assertEquals(
-        productRequestDto.getResourcesContent().get(0).getId(),
+        productRequestDto.getResourcesContent().get(0).getResourceId(),
         productResponseDto.getResourcesContent().get(0).getResource().getId());
     assertEquals(productRequestDto.getOwnerId(), productResponseDto.getOwner().getId());
     assertEquals(productRequestDto.getProductionNumber(), productResponseDto.getProductionNumber());

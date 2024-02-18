@@ -60,7 +60,7 @@ public class ProductTestHelper {
 
   public static ResourceQuantityRequestDto getResourceQuantityRequestDto(Resource pearl) {
     ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
-    resourceQuantityRequestDto.setId(pearl.getId());
+    resourceQuantityRequestDto.setResourceId(pearl.getId());
     resourceQuantityRequestDto.setQuantity(getBigDecimal("5"));
     return resourceQuantityRequestDto;
   }
@@ -97,7 +97,7 @@ public class ProductTestHelper {
         .getResourcesAndQuantities()
         .forEach(
             r -> {
-              resourceQuantityRequestDto.setId(r.getResource().getId());
+              resourceQuantityRequestDto.setResourceId(r.getResource().getId());
               resourceQuantityRequestDto.setQuantity(getBigDecimal("5"));
               listOfResourcesInProduct.add(resourceQuantityRequestDto);
             });

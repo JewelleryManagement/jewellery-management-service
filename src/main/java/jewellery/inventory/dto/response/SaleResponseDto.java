@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +20,11 @@ public class SaleResponseDto {
   private UserResponseDto seller;
   private UserResponseDto buyer;
   private List<ProductResponseDto> products;
+  private PurchasedResourcesResponseDto resources;
+
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
   private LocalDate date;
+
   private BigDecimal totalPrice;
   private BigDecimal totalDiscountedPrice;
   private BigDecimal totalDiscount;

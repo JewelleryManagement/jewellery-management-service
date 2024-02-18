@@ -21,6 +21,9 @@ public class Sale {
   @OneToMany(mappedBy = "sale", orphanRemoval = true, cascade = CascadeType.PERSIST)
   private List<ProductPriceDiscount> products;
 
+  @OneToMany(mappedBy = "partOfSale", orphanRemoval = true, cascade = CascadeType.PERSIST)
+  private List<PurchasedResourceInUser> resources;
+
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   private LocalDate date;
 }

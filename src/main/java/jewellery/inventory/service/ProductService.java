@@ -384,7 +384,7 @@ public class ProductService implements EntityFetcher {
         owner.getId(),
         product.getId());
 
-    ResourceInUser resourceInUser = getResourceInUser(owner, incomingResourceInProduct.getId());
+    ResourceInUser resourceInUser = getResourceInUser(owner, incomingResourceInProduct.getResourceId());
     resourceInUserService.removeQuantityFromResourceNoLog(
         owner.getId(),
         resourceInUser.getResource().getId(),
@@ -401,7 +401,7 @@ public class ProductService implements EntityFetcher {
   private ResourceInProduct getResourceInProduct(
       ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
     return resourceInProductRepository
-        .findByResourceIdAndProductId(incomingResourceInProduct.getId(), product.getId())
+        .findByResourceIdAndProductId(incomingResourceInProduct.getResourceId(), product.getId())
         .orElse(null);
   }
 
