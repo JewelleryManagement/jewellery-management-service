@@ -3,6 +3,7 @@ package jewellery.inventory.service;
 import static jewellery.inventory.model.EventType.RESOURCE_REMOVE_QUANTITY;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
@@ -13,11 +14,13 @@ import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
+import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
 import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.mapper.ResourcesInUserMapper;
 import jewellery.inventory.mapper.UserMapper;
@@ -25,6 +28,7 @@ import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
+import jewellery.inventory.repository.PurchasedResourceInUserRepository;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
@@ -44,6 +48,9 @@ public class ResourceInUserService implements EntityFetcher {
   private final ResourcesInUserMapper resourcesInUserMapper;
   private final UserMapper userMapper;
   private final ResourceMapper resourceMapper;
+  private final PurchasedResourceInUserRepository purchasedResourceInUserRepository;
+  private final PurchasedResourceInUserMapper purchasedResourceInUserMapper;
+  private final UserService userService;
   private static final BigDecimal EPSILON = new BigDecimal("1e-10");
 
   @Transactional
@@ -121,6 +128,13 @@ public class ResourceInUserService implements EntityFetcher {
     userRepository.save(user);
   }
 
+  public List<PurchasedResourceQuantityResponseDto> getAllPurchasedResources(UUID userId) {
+    User user = userService.getUser(userId);
+    return purchasedResourceInUserRepository.findAllByOwnerId(user.getId()).stream()
+        .map(purchasedResourceInUserMapper::toPurchasedResourceQuantityResponseDto)
+        .toList();
+  }
+
   public ResourceOwnedByUsersResponseDto getUsersAndQuantities(UUID resourceId) {
     Resource resource = findResourceById(resourceId);
     return resourcesInUserMapper.toResourcesOwnedByUsersResponseDto(resource);
@@ -140,7 +154,7 @@ public class ResourceInUserService implements EntityFetcher {
     return null;
   }
 
-  private ResourceInUser getResourceInUser(User user, Resource resource) {
+  public ResourceInUser getResourceInUser(User user, Resource resource) {
     logger.debug("Getting resource in user. User: {}, Resource: {}", user, resource);
     return findResourceInUser(user, resource.getId())
         .orElseGet(() -> createAndAddNewResourceInUser(user, resource, BigDecimal.ZERO));
@@ -156,7 +170,7 @@ public class ResourceInUserService implements EntityFetcher {
     return resourceInUser;
   }
 
-  private ResourceInUser removeQuantityFromResource(
+  public ResourceInUser removeQuantityFromResource(
       ResourceInUser resourceInUser, BigDecimal quantityToRemove) {
 
     BigDecimal totalQuantity = resourceInUser.getQuantity();
@@ -185,7 +199,7 @@ public class ResourceInUserService implements EntityFetcher {
     return newQuantity.compareTo(BigDecimal.ZERO) < 0;
   }
 
-  private ResourceInUser findResourceInUserOrThrow(User previousOwner, UUID resourceId) {
+  public ResourceInUser findResourceInUserOrThrow(User previousOwner, UUID resourceId) {
     return findResourceInUser(previousOwner, resourceId)
         .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, previousOwner.getId()));
   }

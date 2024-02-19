@@ -1,6 +1,7 @@
 package jewellery.inventory.service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -77,6 +78,10 @@ public class ProductService implements EntityFetcher {
     return productMapper.mapToProductReturnResponseDto(sale, product);
   }
 
+  public BigDecimal getProductSalePrice(Product product) {
+    return ProductMapper.calculateTotalPrice(product);
+  }
+
   public List<ProductResponseDto> getAllProducts() {
     List<Product> products = productRepository.findAll();
     logger.debug("Fetching all products");
@@ -101,7 +106,17 @@ public class ProductService implements EntityFetcher {
 
   public void updateProductOwnerAndSale(Product product, User newOwner, Sale sale) {
     updateProductOwnerRecursively(product, newOwner);
-    product.setPartOfSale(sale);
+    if (sale == null) {
+      product.setPartOfSale(null);
+    } else {
+      sale.getProducts()
+          .forEach(
+              productPriceDiscount -> {
+                if (productPriceDiscount.getProduct().equals(product)) {
+                  product.setPartOfSale(productPriceDiscount);
+                }
+              });
+    }
     logger.debug(
         "Updated product owner and sale for product with ID: {}. New owner with ID: {}, Sale with ID: {}",
         product.getId(),
@@ -301,7 +316,6 @@ public class ProductService implements EntityFetcher {
     product.setAuthors(getAuthors(productRequestDto));
     product.setPartOfSale(null);
     product.setDescription(productRequestDto.getDescription());
-    product.setSalePrice(productRequestDto.getSalePrice());
     product.setProductionNumber(productRequestDto.getProductionNumber());
     product.setCatalogNumber(productRequestDto.getCatalogNumber());
     product.setProductsContent(new ArrayList<>());
@@ -370,7 +384,7 @@ public class ProductService implements EntityFetcher {
         owner.getId(),
         product.getId());
 
-    ResourceInUser resourceInUser = getResourceInUser(owner, incomingResourceInProduct.getId());
+    ResourceInUser resourceInUser = getResourceInUser(owner, incomingResourceInProduct.getResourceId());
     resourceInUserService.removeQuantityFromResourceNoLog(
         owner.getId(),
         resourceInUser.getResource().getId(),
@@ -387,7 +401,7 @@ public class ProductService implements EntityFetcher {
   private ResourceInProduct getResourceInProduct(
       ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
     return resourceInProductRepository
-        .findByResourceIdAndProductId(incomingResourceInProduct.getId(), product.getId())
+        .findByResourceIdAndProductId(incomingResourceInProduct.getResourceId(), product.getId())
         .orElse(null);
   }
 

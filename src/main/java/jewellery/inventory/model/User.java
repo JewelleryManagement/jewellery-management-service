@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -53,10 +55,13 @@ public class User implements UserDetails {
   @ToString.Exclude
   private List<ResourceInUser> resourcesOwned = new ArrayList<>();
 
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PurchasedResourceInUser> purchasedResources = new ArrayList<>();
+
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
   private List<UserInOrganization> userInOrganizations;
 
-  @Override
+    @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
     return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
   }

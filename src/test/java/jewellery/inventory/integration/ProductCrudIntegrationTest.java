@@ -252,7 +252,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     assertEquals(
-        productRequestDto.getResourcesContent().get(0).getId(),
+        productRequestDto.getResourcesContent().get(0).getResourceId(),
         productResponseDto.getResourcesContent().get(0).getResource().getId());
     assertEquals(productRequestDto.getOwnerId(), productResponseDto.getOwner().getId());
     assertEquals(productRequestDto.getProductionNumber(), productResponseDto.getProductionNumber());
@@ -276,7 +276,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ProductResponseDto responseBody = response.getBody();
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertEquals(productRequestDto.getOwnerId(), responseBody.getOwner().getId());
-    assertEquals(productRequestDto.getSalePrice(), responseBody.getSalePrice());
     assertEquals(
         productRequestDto.getResourcesContent().size(), responseBody.getResourcesContent().size());
     assertEquals(productRequestDto.getCatalogNumber(), responseBody.getCatalogNumber());

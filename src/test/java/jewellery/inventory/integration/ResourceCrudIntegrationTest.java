@@ -7,6 +7,7 @@ import static jewellery.inventory.model.EventType.RESOURCE_CREATE;
 import static jewellery.inventory.model.EventType.RESOURCE_DELETE;
 import static jewellery.inventory.model.EventType.RESOURCE_UPDATE;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
-import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ResourceMapper;
@@ -236,13 +237,14 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     List<ResourceResponseDto> updatedResources = getResourcesWithRequest();
     updatedResources.forEach(resourceResponseDto -> resourceResponseDto.setId(null));
 
-    assertEquals(
+    List<ResourceResponseDto> mappedDtos =
         updatedInputDtos.stream()
             .map(
                 resourceRequestDto ->
                     resourceMapper.toResourceResponse(
                         resourceMapper.toResourceEntity(resourceRequestDto)))
-            .toList(),
-        updatedResources);
+            .toList();
+
+    assertThat(mappedDtos).containsExactlyInAnyOrderElementsOf(updatedResources);
   }
 }
