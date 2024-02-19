@@ -9,10 +9,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.List;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+
+import lombok.*;
 
 @Entity
 @Getter
@@ -35,6 +33,7 @@ public class Organization {
   @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
   private List<Product> productsOwned;
   @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
+  @ToString.Exclude
   private List<UserInOrganization> userInOrganizations;
   @OneToMany(mappedBy = "organizationSeller", cascade = CascadeType.ALL)
   private List<Sale> sales;

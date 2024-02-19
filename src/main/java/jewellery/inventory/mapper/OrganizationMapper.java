@@ -20,6 +20,7 @@ public class OrganizationMapper {
   public OrganizationResponseDto toResponse(Organization organization) {
     OrganizationResponseDto organizationResponseDto = new OrganizationResponseDto();
 
+    organizationResponseDto.setId(organization.getId());
     organizationResponseDto.setName(organization.getName());
     organizationResponseDto.setAddress(organization.getAddress());
     organizationResponseDto.setNote(organization.getNote());

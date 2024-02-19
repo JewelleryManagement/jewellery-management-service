@@ -20,6 +20,7 @@ public class OrganizationService {
   private final OrganizationMapper organizationMapper;
   private final AuthService authService;
   private final UserService userService;
+  private final UserInOrganizationRepository userInOrganizationRepository;
 
   private List<Organization> getAll() {
     return organizationRepository.findAll();
@@ -41,7 +42,7 @@ public class OrganizationService {
 
   public OrganizationResponseDto create(OrganizationRequestDto organizationRequestDto) {
     Organization organization = organizationMapper.toEntity(organizationRequestDto);
-    Organization createdOrganization = organizationRepository.save(organization);
+    organization = organizationRepository.save(organization);
 
     UserInOrganization userInOrganizationOwner = new UserInOrganization();
     User user = userService.getUser(authService.getCurrentUser().getId());
@@ -51,7 +52,8 @@ public class OrganizationService {
         Arrays.asList(OrganizationPermission.values()));
 
     organization.setUserInOrganizations(List.of(userInOrganizationOwner));
+    userInOrganizationRepository.save(userInOrganizationOwner);
 
-    return organizationMapper.toResponse(createdOrganization);
+    return organizationMapper.toResponse(organization);
   }
 }
