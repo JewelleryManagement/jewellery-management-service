@@ -18,8 +18,8 @@ public class OrganizationResponseDto {
   private String name;
   private String address;
   private String note;
-  private List<ResourceInOrganization> resourceInOrganization;
-  private List<Product> productsOwned;
-  private List<UserInOrganization> userInOrganizations;
-  private List<Sale> sales;
+  private List<ResourceInOrganizationResponseDto> resourceInOrganization;
+  private List<ProductResponseDto> productsOwned;
+  private List<UserInOrganizationResponseDto> userInOrganizations;
+  private List<SaleResponseDto> sales;
 }
