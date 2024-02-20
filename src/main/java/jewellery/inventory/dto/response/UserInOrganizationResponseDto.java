@@ -1,12 +1,9 @@
 package jewellery.inventory.dto.response;
 
-import jakarta.persistence.*;
-import jewellery.inventory.model.OrganizationPermission;
-import jewellery.inventory.model.User;
-import lombok.Data;
-
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.model.OrganizationPermission;
+import lombok.Data;
 
 @Data
 public class UserInOrganizationResponseDto {
