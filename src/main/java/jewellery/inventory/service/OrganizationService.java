@@ -11,7 +11,6 @@ import jewellery.inventory.repository.*;
 import jewellery.inventory.service.security.AuthService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -41,20 +40,20 @@ public class OrganizationService {
     return organizationMapper.toResponse(getOrganization(id));
   }
 
-  @Transactional
   public OrganizationResponseDto create(OrganizationRequestDto organizationRequestDto) {
     Organization organization = organizationMapper.toEntity(organizationRequestDto);
+    organization.setUserInOrganizations(List.of(getUserInOrganizationOwner(organization)));
+    organization = organizationRepository.save(organization);
+    return organizationMapper.toResponse(organization);
+  }
 
+  private UserInOrganization getUserInOrganizationOwner(Organization organization) {
     UserInOrganization userInOrganizationOwner = new UserInOrganization();
     User user = userService.getUser(authService.getCurrentUser().getId());
     userInOrganizationOwner.setUser(user);
     userInOrganizationOwner.setOrganization(organization);
     userInOrganizationOwner.setOrganizationPermission(
         Arrays.asList(OrganizationPermission.values()));
-
-    organization.setUserInOrganizations(List.of(userInOrganizationOwner));
-    organization = organizationRepository.save(organization);
-
-    return organizationMapper.toResponse(organization);
+    return userInOrganizationOwner;
   }
 }
