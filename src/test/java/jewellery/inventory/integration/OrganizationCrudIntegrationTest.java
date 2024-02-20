@@ -8,11 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import io.micrometer.common.lang.Nullable;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.model.Organization;
-import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
@@ -25,7 +25,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return "/organizations";
   }
   private String getOrganizationByIdUrl(UUID id) {
-    return "/products/" + id;
+    return "/organizations/" + id;
   }
 
   private Organization organization;
@@ -37,21 +37,21 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     organizationRequestDto = getTestOrganizationRequest();
   }
 
-    @Test
-    void getOrganizationsSuccessfully() {
-      ResponseEntity<List<ProductResponseDto>> response =
-              this.testRestTemplate.exchange(
-                      getBaseOrganizationsUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
+  @Test
+  void getOrganizationsSuccessfully() {
+    ResponseEntity<List<ProductResponseDto>> response =
+        this.testRestTemplate.exchange(
+            getBaseOrganizationsUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
 
-      assertEquals(response.getStatusCode(),HttpStatusCode.valueOf(200) );
-      assertNotNull(response.getBody());
+    assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(200));
+    assertNotNull(response.getBody());
   }
 
   @Test
   void getOrganizationByIdNotFound() {
     ResponseEntity<OrganizationResponseDto> response =
         this.testRestTemplate.getForEntity(
-                getOrganizationByIdUrl(Objects.requireNonNull(organization).getId()),
+            getOrganizationByIdUrl(Objects.requireNonNull(organization).getId()),
             OrganizationResponseDto.class);
 
     assertEquals(response.getStatusCode(),HttpStatusCode.valueOf(404));
