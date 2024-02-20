@@ -1,30 +1,32 @@
 package jewellery.inventory.unit.mapper;
 
-import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganization;
-import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizationRequest;
+import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.mapper.OrganizationMapper;
+import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.Organization;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
  class OrganizationMapperTest {
   @InjectMocks private OrganizationMapper organizationMapper;
+  @Mock private UserMapper userMapper;
   private Organization organization;
   private OrganizationRequestDto organizationRequestDto;
 
   @BeforeEach
   void setUp() {
-    organization = getTestOrganization();
+    organization = getTestOrganizationWithUserInOrganizations();
     organizationRequestDto = getTestOrganizationRequest();
   }
 
