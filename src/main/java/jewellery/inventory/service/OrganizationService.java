@@ -20,7 +20,6 @@ public class OrganizationService {
   private final OrganizationMapper organizationMapper;
   private final AuthService authService;
   private final UserService userService;
-  private final UserInOrganizationRepository userInOrganizationRepository;
 
   private List<Organization> getAll() {
     return organizationRepository.findAll();
