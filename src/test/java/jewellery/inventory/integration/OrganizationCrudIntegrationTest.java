@@ -1,14 +1,13 @@
 package jewellery.inventory.integration;
 
-import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganization;
-import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizationRequest;
+import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import io.micrometer.common.lang.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import io.micrometer.common.lang.Nullable;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -56,13 +55,13 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertEquals(response.getStatusCode(),HttpStatusCode.valueOf(404));
 }
+@Test
+void createOrganizationSuccessfully(){
+  ResponseEntity<OrganizationResponseDto> response=
+   testRestTemplate.postForEntity(
+            getBaseOrganizationsUrl(), organizationRequestDto, OrganizationResponseDto.class);
 
-  @Nullable
-  private OrganizationResponseDto createOrganizationsWithRequest(OrganizationRequestDto dto) {
-    ResponseEntity<OrganizationResponseDto> response =
-        this.testRestTemplate.postForEntity(
-            getBaseOrganizationsUrl(), dto, OrganizationResponseDto.class);
-
-    return response.getBody();
-  }
+  assertEquals(response.getStatusCode(),HttpStatusCode.valueOf(201));
+  assertNotNull(response.getBody());
+}
 }

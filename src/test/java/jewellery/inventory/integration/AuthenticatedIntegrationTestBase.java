@@ -6,9 +6,12 @@ import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.common.lang.Nullable;
 import java.io.IOException;
 import java.util.Collections;
+import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.helper.SystemEventTestHelper;
+import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.Image;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.*;
@@ -21,6 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -62,6 +66,9 @@ abstract class AuthenticatedIntegrationTestBase {
     User adminUser = createTestUserWithId();
     setupMockSecurityContext(adminUser);
     setupTestRestTemplateWithAuthHeaders();
+    User adminDifferent = createUserInDatabase(UserTestHelper.createDifferentTestUserRequest());
+    setupMockSecurityContext(adminDifferent);
+    setupTestRestTemplateWithAuthHeaders();
   }
 
   private void deleteAllImages() {
@@ -100,5 +107,12 @@ abstract class AuthenticatedIntegrationTestBase {
                   request.getHeaders().addAll(headers);
                   return execution.execute(request, body);
                 }));
+  }
+
+  @Nullable
+  private User createUserInDatabase(UserRequestDto userRequestDto) {
+    ResponseEntity<User> createUser =
+        this.testRestTemplate.postForEntity("/users", userRequestDto, User.class);
+    return createUser.getBody();
   }
 }
