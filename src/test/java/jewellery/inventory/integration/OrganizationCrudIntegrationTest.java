@@ -4,7 +4,6 @@ import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import io.micrometer.common.lang.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
