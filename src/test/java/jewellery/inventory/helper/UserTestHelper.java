@@ -76,11 +76,12 @@ public class UserTestHelper {
     userRequest.setRole(Role.ADMIN);
     return userRequest;
   }
+
   public static UserRequestDto createDifferentTestUserRequest() {
     UserRequestDto userRequest = new UserRequestDto();
-    userRequest.setFirstName(FIRST_NAME+"different");
-    userRequest.setLastName(LAST_NAME+"different");
-    userRequest.setEmail("+different"+ USER_EMAIL);
+    userRequest.setFirstName(FIRST_NAME + "different");
+    userRequest.setLastName(LAST_NAME + "different");
+    userRequest.setEmail("+different" + USER_EMAIL);
     userRequest.setPassword(USER_PASSWORD);
     userRequest.setRole(Role.ADMIN);
     return userRequest;

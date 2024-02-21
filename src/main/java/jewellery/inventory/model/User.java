@@ -26,7 +26,7 @@ public class User implements UserDetails {
   private UUID id;
 
   @ManyToMany(mappedBy = "authors")
-  private transient List<Product> authoredProducts;
+  private List<Product> authoredProducts;
 
   @Column(nullable = false)
   private String firstName;
@@ -51,17 +51,16 @@ public class User implements UserDetails {
   private Role role = Role.USER;
 
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-  private  List<Product> productsOwned = new ArrayList<>();
+  private List<Product> productsOwned = new ArrayList<>();
 
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
-  @ToString.Exclude
-  private  List<ResourceInUser> resourcesOwned = new ArrayList<>();
+  private List<ResourceInUser> resourcesOwned = new ArrayList<>();
 
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
-  private  List<PurchasedResourceInUser> purchasedResources = new ArrayList<>();
+  private List<PurchasedResourceInUser> purchasedResources = new ArrayList<>();
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-  private  List<UserInOrganization> userInOrganizations;
+  private List<UserInOrganization> userInOrganizations;
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {

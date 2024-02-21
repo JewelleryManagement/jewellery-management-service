@@ -14,7 +14,7 @@ CREATE TABLE public.user_in_organization (
     CONSTRAINT fk_org_user_in_org FOREIGN KEY (organization_id) REFERENCES organizations(id)
 );
 
-CREATE TABLE resource_in_organization (
+CREATE TABLE public.resource_in_organization (
     id UUID PRIMARY KEY,
     organization_id UUID,
     resource_id UUID,

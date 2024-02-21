@@ -95,7 +95,6 @@ class OrganizationServiceTest {
     OrganizationResponseDto actual = organizationService.create(organizationRequestDto);
     assertNotNull(actual);
     assertEquals(actual, organizationResponseDto);
-    assertEquals(actual.getUserInOrganizations(), organizationResponseDto.getUserInOrganizations());
   }
 
   @Test

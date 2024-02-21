@@ -32,7 +32,7 @@ public class OrganizationTestHelper {
     userInOrganization.setUser(new User());
     userInOrganization.setOrganization(organization);
     userInOrganization.setOrganizationPermission(List.of(OrganizationPermission.values()));
-    organization.setUserInOrganizations(List.of(userInOrganization));
+    organization.setUsersInOrganization(List.of(userInOrganization));
     return organization;
   }
 

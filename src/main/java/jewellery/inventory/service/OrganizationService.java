@@ -24,18 +24,6 @@ public class OrganizationService {
   private final AuthService authService;
   private final UserService userService;
 
-  private List<Organization> getAll() {
-    logger.debug("Fetching all organizations");
-    return organizationRepository.findAll();
-  }
-
-  private Organization getOrganization(UUID id) {
-    logger.info("Get organization by ID: {}", id);
-    return organizationRepository
-        .findById(id)
-        .orElseThrow(() -> new OrganizationNotFoundException(id));
-  }
-
   public List<OrganizationResponseDto> getAllOrganizationsResponses() {
     logger.debug("Fetching all organizationsResponses");
     return getAll().stream().map(organizationMapper::toResponse).toList();
@@ -49,13 +37,13 @@ public class OrganizationService {
   @LogCreateEvent(eventType = EventType.ORGANIZATION_CREATE)
   public OrganizationResponseDto create(OrganizationRequestDto organizationRequestDto) {
     Organization organization = organizationMapper.toEntity(organizationRequestDto);
-    organization.setUserInOrganizations(List.of(getUserInOrganizationOwner(organization)));
+    makeCurrentUserOwner(organization);
     organization = organizationRepository.save(organization);
     logger.info("Organization created with ID: {}", organization.getId());
     return organizationMapper.toResponse(organization);
   }
 
-  private UserInOrganization getUserInOrganizationOwner(Organization organization) {
+  private void makeCurrentUserOwner(Organization organization) {
     UserInOrganization userInOrganizationOwner = new UserInOrganization();
     User user = userService.getUser(authService.getCurrentUser().getId());
     userInOrganizationOwner.setUser(user);
@@ -63,6 +51,16 @@ public class OrganizationService {
     userInOrganizationOwner.setOrganizationPermission(
         Arrays.asList(OrganizationPermission.values()));
     logger.info("Created UserInOrganization for Organization ID: {}", organization.getId());
-    return userInOrganizationOwner;
+    organization.setUsersInOrganization(List.of(userInOrganizationOwner));
+  }
+
+  private List<Organization> getAll() {
+    return organizationRepository.findAll();
+  }
+
+  private Organization getOrganization(UUID id) {
+    return organizationRepository
+        .findById(id)
+        .orElseThrow(() -> new OrganizationNotFoundException(id));
   }
 }

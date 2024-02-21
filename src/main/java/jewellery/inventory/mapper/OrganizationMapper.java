@@ -2,19 +2,13 @@ package jewellery.inventory.mapper;
 
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
-import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
 import jewellery.inventory.model.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Component
 @AllArgsConstructor
 public class OrganizationMapper {
-
-  private UserMapper userMapper;
 
   public Organization toEntity(OrganizationRequestDto dto) {
     Organization organization = new Organization();
@@ -26,25 +20,10 @@ public class OrganizationMapper {
 
   public OrganizationResponseDto toResponse(Organization organization) {
     OrganizationResponseDto organizationResponseDto = new OrganizationResponseDto();
-
     organizationResponseDto.setId(organization.getId());
     organizationResponseDto.setName(organization.getName());
     organizationResponseDto.setAddress(organization.getAddress());
     organizationResponseDto.setNote(organization.getNote());
-    List<UserInOrganizationResponseDto> list = new ArrayList<>();
-
-    for (int i = 0; i < organization.getUserInOrganizations().size(); i++) {
-      UserInOrganizationResponseDto dto = new UserInOrganizationResponseDto();
-      dto.setId(organization.getUserInOrganizations().get(i).getId());
-      dto.setOrganizationId(organization.getId());
-      dto.setUser(
-          userMapper.toUserResponse(organization.getUserInOrganizations().get(i).getUser()));
-      dto.setOrganizationPermission(
-          organization.getUserInOrganizations().get(i).getOrganizationPermission());
-      list.add(dto);
-    }
-    organizationResponseDto.setUserInOrganizations(list);
-
     return organizationResponseDto;
   }
 }
