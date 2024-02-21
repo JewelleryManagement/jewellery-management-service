@@ -28,5 +28,3 @@ SET price_per_quantity=20;
 
 UPDATE public.resource_in_user
 SET quantity=100;
-
-
