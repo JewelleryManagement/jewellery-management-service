@@ -4,6 +4,7 @@ import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import io.micrometer.common.lang.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -22,6 +23,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private String getBaseOrganizationsUrl() {
     return "/organizations";
   }
+
   private String getOrganizationByIdUrl(UUID id) {
     return "/organizations/" + id;
   }
@@ -52,15 +54,36 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             getOrganizationByIdUrl(Objects.requireNonNull(organization).getId()),
             OrganizationResponseDto.class);
 
-    assertEquals(response.getStatusCode(),HttpStatusCode.valueOf(404));
-}
-@Test
-void createOrganizationSuccessfully(){
-  ResponseEntity<OrganizationResponseDto> response=
-   testRestTemplate.postForEntity(
+    assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(404));
+  }
+
+  @Test
+  void getOrganizationByIdSuccessfully() {
+    UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
+
+    ResponseEntity<OrganizationResponseDto> response =
+        this.testRestTemplate.getForEntity(
+            getOrganizationByIdUrl(organizationId), OrganizationResponseDto.class);
+
+    assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(200));
+  }
+
+  @Test
+  void createOrganizationSuccessfully() {
+    ResponseEntity<OrganizationResponseDto> response =
+        testRestTemplate.postForEntity(
             getBaseOrganizationsUrl(), organizationRequestDto, OrganizationResponseDto.class);
 
-  assertEquals(response.getStatusCode(),HttpStatusCode.valueOf(201));
-  assertNotNull(response.getBody());
-}
+    assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(201));
+    assertNotNull(response.getBody());
+  }
+
+  @Nullable
+  private OrganizationResponseDto createOrganizationsWithRequest(OrganizationRequestDto dto) {
+    ResponseEntity<OrganizationResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseOrganizationsUrl(), dto, OrganizationResponseDto.class);
+
+    return response.getBody();
+  }
 }
