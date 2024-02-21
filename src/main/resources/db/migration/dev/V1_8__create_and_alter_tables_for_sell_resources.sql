@@ -23,3 +23,10 @@ ALTER TABLE purchased_resources
     FOREIGN KEY (owner_id)
     REFERENCES public.users(id);
 
+UPDATE public.resource
+SET price_per_quantity=20;
+
+UPDATE public.resource_in_user
+SET quantity=100;
+
+
