@@ -30,7 +30,7 @@ public class OrganizationService {
   }
 
   public OrganizationResponseDto getOrganizationResponse(UUID id) {
-    logger.info("Get organizationResponse by ID: {}", id);
+    logger.debug("Get organizationResponse by ID: {}", id);
     return organizationMapper.toResponse(getOrganization(id));
   }
 
