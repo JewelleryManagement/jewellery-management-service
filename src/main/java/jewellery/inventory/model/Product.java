@@ -43,6 +43,9 @@ public class Product {
   private String productionNumber;
   private String description;
   private BigDecimal additionalPrice;
+
   @OneToOne(mappedBy = "product", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private ProductPriceDiscount partOfSale;
+
+  @ManyToOne private Organization organization;
 }

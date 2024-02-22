@@ -1,15 +1,15 @@
 package jewellery.inventory.model;
 
 import jakarta.persistence.*;
+
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -37,7 +37,9 @@ public class User implements UserDetails {
   @Column(unique = true)
   private String email;
 
-  @Column(unique = true) private String password;
+  @Column(unique = true)
+  private String password;
+
   @Column private String address;
   @Column private String phone;
   @Column private String phone2;
@@ -56,6 +58,9 @@ public class User implements UserDetails {
 
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<PurchasedResourceInUser> purchasedResources = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  private List<UserInOrganization> userInOrganizations;
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
