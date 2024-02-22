@@ -149,7 +149,7 @@ public class SaleMapper {
           .divide(totalPrice, 4, RoundingMode.HALF_UP)
           .multiply(getBigDecimal("100"));
     } else if (AMOUNT.equals(calculationType)) {
-      return totalPrice.subtract(totalDiscountAmount);
+      return (totalPrice.subtract(totalDiscountAmount)).setScale(2, RoundingMode.HALF_UP);
     }
     throw new IllegalArgumentException("Invalid calculation type");
   }

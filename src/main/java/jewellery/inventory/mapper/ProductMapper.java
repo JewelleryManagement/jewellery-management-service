@@ -1,6 +1,7 @@
 package jewellery.inventory.mapper;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -44,6 +45,7 @@ public class ProductMapper {
 
     return productResponseDto;
   }
+
   private BigDecimal getPriceFromSale(Product product) {
     return product.getPartOfSale().getSalePrice();
   }
@@ -116,6 +118,6 @@ public class ProductMapper {
       }
     }
 
-    return totalPrice;
+    return totalPrice.setScale(2, RoundingMode.HALF_UP);
   }
 }
