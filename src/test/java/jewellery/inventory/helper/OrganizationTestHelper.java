@@ -11,22 +11,26 @@ import jewellery.inventory.model.User;
 import jewellery.inventory.model.UserInOrganization;
 
 public class OrganizationTestHelper {
+  private static final String ORGANIZATION_NAME = "Test Name";
+  private static final String ORGANIZATION_ADDRESS = "Test Note";
+  private static final String ORGANIZATION_NOTE="Test Note";
+
 
   public static Organization getTestOrganization() {
     Organization organization = new Organization();
     organization.setId(UUID.randomUUID());
-    organization.setName("Test Name");
-    organization.setAddress("Test Address");
-    organization.setNote("Test Note");
+    organization.setName(ORGANIZATION_NAME);
+    organization.setAddress(ORGANIZATION_ADDRESS);
+    organization.setNote(ORGANIZATION_NOTE);
     return organization;
   }
 
   public static Organization getTestOrganizationWithUserInOrganizations() {
     Organization organization = new Organization();
     organization.setId(UUID.randomUUID());
-    organization.setName("Test Name");
-    organization.setAddress("Test Address");
-    organization.setNote("Test Note");
+    organization.setName(ORGANIZATION_NAME);
+    organization.setAddress(ORGANIZATION_ADDRESS);
+    organization.setNote(ORGANIZATION_NOTE);
     UserInOrganization userInOrganization = new UserInOrganization();
     userInOrganization.setId(UUID.randomUUID());
     userInOrganization.setUser(new User());
@@ -38,9 +42,9 @@ public class OrganizationTestHelper {
 
   public static OrganizationRequestDto getTestOrganizationRequest() {
     OrganizationRequestDto organization = new OrganizationRequestDto();
-    organization.setName("Test Name");
-    organization.setAddress("Test Address");
-    organization.setNote("Test Note");
+    organization.setName(ORGANIZATION_NAME);
+    organization.setAddress(ORGANIZATION_ADDRESS);
+    organization.setNote(ORGANIZATION_NOTE);
     return organization;
   }
 
