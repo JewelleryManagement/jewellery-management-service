@@ -34,6 +34,7 @@ public class OrganizationService {
     logger.debug("Get organizationResponse by ID: {}", id);
     return organizationMapper.toResponse(getOrganization(id));
   }
+
   @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_CREATE)
   public OrganizationResponseDto addUserInOrganization(
       UUID organizationId, UserInOrganizationRequestDto userInOrganizationRequestDto) {
@@ -45,6 +46,21 @@ public class OrganizationService {
         createUserInOrganization(userInOrganizationRequestDto, organization);
     addUserToOrganization(userInOrganization, organization);
 
+    return organizationMapper.toResponse(organization);
+  }
+
+  @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_DELETE)
+  public OrganizationResponseDto deleteUserInOrganization(UUID userId, UUID organizationId) {
+    Organization organization = getOrganization(organizationId);
+    User currentUser = userService.getUser(authService.getCurrentUser().getId());
+    User userForDelete = userService.getUser(userId);
+    validateUserPermission(currentUser, organization);
+
+    organization
+        .getUsersInOrganization()
+        .removeIf(userInOrg -> userInOrg.getUser().equals(userForDelete));
+
+    organizationRepository.save(organization);
     return organizationMapper.toResponse(organization);
   }
 

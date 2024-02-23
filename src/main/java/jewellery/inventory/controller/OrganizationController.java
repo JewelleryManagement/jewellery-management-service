@@ -47,6 +47,14 @@ public class OrganizationController {
   public OrganizationResponseDto addUserInOrganization(
       @PathVariable UUID organizationId,
       @RequestBody @Valid UserInOrganizationRequestDto userInOrganizationRequestDto) {
-    return organizationService.addUserInOrganization(organizationId,userInOrganizationRequestDto);
+    return organizationService.addUserInOrganization(organizationId, userInOrganizationRequestDto);
+  }
+
+  @Operation(summary = "Delete a user in organization")
+  @ResponseStatus(HttpStatus.CREATED)
+  @DeleteMapping("{organizationId}/users/{userId}")
+  public OrganizationResponseDto deleteUserInOrganization(
+      @PathVariable UUID organizationId, @PathVariable UUID userId) {
+    return organizationService.deleteUserInOrganization(userId, organizationId);
   }
 }
