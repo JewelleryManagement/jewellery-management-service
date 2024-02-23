@@ -17,6 +17,7 @@ import jewellery.inventory.exception.image.MultipartFileSizeException;
 import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
 import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
+import jewellery.inventory.exception.organization.UserNotHaveUserPermission;
 import jewellery.inventory.exception.product.*;
 import jewellery.inventory.exception.sale.EmptySaleException;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
@@ -83,7 +84,8 @@ public class GlobalExceptionHandler {
     UserNotOwnerException.class,
     ProductOwnerEqualsRecipientException.class,
     ProductNotSoldException.class,
-    ProductPartOfItselfException.class
+    ProductPartOfItselfException.class,
+    UserNotHaveUserPermission.class
   })
   public ResponseEntity<Object> handleEntityConstraintConflict(RuntimeException ex) {
     return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), ex);
