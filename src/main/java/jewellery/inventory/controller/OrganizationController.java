@@ -5,8 +5,10 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
+import jewellery.inventory.dto.request.UpdateUserPermissionsRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
+import jewellery.inventory.model.OrganizationPermission;
 import jewellery.inventory.service.OrganizationService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -51,10 +53,25 @@ public class OrganizationController {
   }
 
   @Operation(summary = "Delete a user in organization")
-  @ResponseStatus(HttpStatus.CREATED)
+  @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("{organizationId}/users/{userId}")
   public OrganizationResponseDto deleteUserInOrganization(
       @PathVariable UUID organizationId, @PathVariable UUID userId) {
     return organizationService.deleteUserInOrganization(userId, organizationId);
+  }
+
+  @Operation(summary = "Update a user permissions in organization")
+  @ResponseStatus(HttpStatus.OK)
+  @PutMapping("{organizationId}/users/{userId}")
+  public OrganizationResponseDto updateUserPermissionsInOrganization(
+      @PathVariable UUID organizationId,
+      @PathVariable UUID userId,
+      @RequestBody @Valid UpdateUserPermissionsRequest updateUserPermissionsRequest) {
+
+    List<OrganizationPermission> organizationPermissions =
+        updateUserPermissionsRequest.getOrganizationPermissions();
+
+    return organizationService.updateUserPermissionsInOrganization(
+        organizationId, userId, organizationPermissions);
   }
 }

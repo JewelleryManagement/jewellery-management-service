@@ -24,6 +24,7 @@ public class OrganizationService {
   private final OrganizationMapper organizationMapper;
   private final AuthService authService;
   private final UserService userService;
+  private final UserInOrganizationRepository userInOrganizationRepository;
 
   public List<OrganizationResponseDto> getAllOrganizationsResponses() {
     logger.debug("Fetching all organizationsResponses");
@@ -33,6 +34,18 @@ public class OrganizationService {
   public OrganizationResponseDto getOrganizationResponse(UUID id) {
     logger.debug("Get organizationResponse by ID: {}", id);
     return organizationMapper.toResponse(getOrganization(id));
+  }
+
+  public OrganizationResponseDto updateUserPermissionsInOrganization(
+      UUID organizationId, UUID userId, List<OrganizationPermission> organizationPermissionList) {
+    Organization organization = getOrganization(organizationId);
+    User currentUser = userService.getUser(authService.getCurrentUser().getId());
+    User userForUpdate = userService.getUser(userId);
+
+    validateUserPermission(currentUser, organization);
+    changeUserPermissionInOrganization(organization, userForUpdate, organizationPermissionList);
+
+    return organizationMapper.toResponse(organization);
   }
 
   @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_CREATE)
@@ -62,21 +75,6 @@ public class OrganizationService {
 
     organizationRepository.save(organization);
     return organizationMapper.toResponse(organization);
-  }
-
-  private UserInOrganization createUserInOrganization(
-      UserInOrganizationRequestDto requestDto, Organization organization) {
-    UserInOrganization userInOrganization = new UserInOrganization();
-    userInOrganization.setUser(userService.getUser(requestDto.getUserId()));
-    userInOrganization.setOrganization(organization);
-    userInOrganization.setOrganizationPermission(requestDto.getOrganizationPermission());
-    return userInOrganization;
-  }
-
-  private void addUserToOrganization(
-      UserInOrganization userInOrganization, Organization organization) {
-    organization.getUsersInOrganization().add(userInOrganization);
-    organizationRepository.save(organization);
   }
 
   @LogCreateEvent(eventType = EventType.ORGANIZATION_CREATE)
@@ -123,5 +121,36 @@ public class OrganizationService {
                     && userInOrganization
                         .getOrganizationPermission()
                         .contains(OrganizationPermission.MANAGE_USERS));
+  }
+
+  private UserInOrganization createUserInOrganization(
+      UserInOrganizationRequestDto requestDto, Organization organization) {
+    UserInOrganization userInOrganization = new UserInOrganization();
+    userInOrganization.setUser(userService.getUser(requestDto.getUserId()));
+    userInOrganization.setOrganization(organization);
+    userInOrganization.setOrganizationPermission(requestDto.getOrganizationPermission());
+    userInOrganizationRepository.save(userInOrganization);
+    return userInOrganization;
+  }
+
+  private void addUserToOrganization(
+      UserInOrganization userInOrganization, Organization organization) {
+    organization.getUsersInOrganization().add(userInOrganization);
+    organizationRepository.save(organization);
+  }
+
+  private void changeUserPermissionInOrganization(
+      Organization organization,
+      User userForUpdate,
+      List<OrganizationPermission> organizationPermissionList) {
+    organization
+        .getUsersInOrganization()
+        .forEach(
+            userInOrg -> {
+              if (userInOrg.getUser().equals(userForUpdate)) {
+                userInOrg.setOrganizationPermission(organizationPermissionList);
+                userInOrganizationRepository.save(userInOrg);
+              }
+            });
   }
 }
