@@ -7,4 +7,8 @@ public class BigDecimalUtil {
   public static BigDecimal getBigDecimal(String value) {
     return new BigDecimal(value).setScale(2, RoundingMode.HALF_UP);
   }
+
+  public static BigDecimal getBigDecimal(BigDecimal value) {
+    return value.setScale(2, RoundingMode.HALF_UP);
+  }
 }

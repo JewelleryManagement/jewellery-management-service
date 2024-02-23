@@ -15,6 +15,7 @@ import jewellery.inventory.model.ProductPriceDiscount;
 import jewellery.inventory.model.PurchasedResourceInUser;
 import jewellery.inventory.model.Sale;
 import jewellery.inventory.model.User;
+import jewellery.inventory.utils.BigDecimalUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -75,7 +76,8 @@ public class SaleMapper {
     if (sale.getProducts() != null) {
       List<ProductResponseDto> result = new ArrayList<>();
       for (ProductPriceDiscount productPriceDiscount : sale.getProducts()) {
-        ProductResponseDto productResponseDto = productMapper.mapToProductResponseDto(productPriceDiscount.getProduct());
+        ProductResponseDto productResponseDto =
+            productMapper.mapToProductResponseDto(productPriceDiscount.getProduct());
         productResponseDto.setDiscount(productPriceDiscount.getDiscount());
         result.add(productResponseDto);
       }
@@ -135,11 +137,12 @@ public class SaleMapper {
     BigDecimal totalPrice = getTotalPriceFromEntities(products, resources);
 
     if (PERCENTAGE.equals(calculationType)) {
-      return totalDiscountAmount
-          .divide(totalPrice, 4, RoundingMode.HALF_UP)
-          .multiply(getBigDecimal("100"));
+      return BigDecimalUtil.getBigDecimal(
+          totalDiscountAmount
+              .divide(totalPrice, 4, RoundingMode.HALF_UP)
+              .multiply(getBigDecimal("100")));
     } else if (AMOUNT.equals(calculationType)) {
-      return totalPrice.subtract(totalDiscountAmount);
+      return BigDecimalUtil.getBigDecimal((totalPrice.subtract(totalDiscountAmount)));
     }
     throw new IllegalArgumentException("Invalid calculation type");
   }
@@ -169,9 +172,8 @@ public class SaleMapper {
       BigDecimal salePrice = Optional.ofNullable(resource.getSalePrice()).orElse(BigDecimal.ZERO);
       BigDecimal discountRate = Optional.ofNullable(resource.getDiscount()).orElse(BigDecimal.ZERO);
       discountAmount =
-          discountAmount.add(
-              salePrice.multiply(discountRate).divide(getBigDecimal("100"), RoundingMode.HALF_UP));
+          discountAmount.add(salePrice.multiply(discountRate).divide(getBigDecimal("100")));
     }
-    return discountAmount;
+    return BigDecimalUtil.getBigDecimal(discountAmount);
   }
 }
