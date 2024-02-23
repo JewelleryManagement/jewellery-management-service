@@ -68,7 +68,7 @@ public class OrganizationController {
       @PathVariable UUID userId,
       @RequestBody @Valid UpdateUserPermissionsRequest updateUserPermissionsRequest) {
     return organizationService.updateUserPermissionsInOrganization(
-        organizationId, userId, updateUserPermissionsRequest.getOrganizationPermissions());
+        organizationId, userId, updateUserPermissionsRequest.getOrganizationPermission());
   }
 
   @Operation(summary = "Get all users in organization")
