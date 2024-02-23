@@ -27,6 +27,8 @@ import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.repository.UserRepository;
 import jewellery.inventory.service.ResourceInUserService;
+import jewellery.inventory.service.ResourceService;
+import jewellery.inventory.service.UserService;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +40,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ResourceInUserServiceTest {
   @Mock private UserRepository userRepository;
+  @Mock private UserService userService;
+  @Mock private ResourceService resourceService;
   @InjectMocks private ResourceInUserService resourceInUserService;
   @Mock private ResourceRepository resourceRepository;
   @Mock private ResourceInUserRepository resourceInUserRepository;
@@ -78,16 +82,16 @@ class ResourceInUserServiceTest {
   @Test
   void willAddResourceToUser() {
     user.setResourcesOwned(new ArrayList<>());
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(resourceRepository.findById(resourceId)).thenReturn(Optional.of(resource));
+    when(userService.getUser(userId)).thenReturn(user);
+    when(resourceService.getResourceById(resourceId)).thenReturn(resource);
 
     ResourcePurchaseRequestDto purchaseRequestDto =
         createResourcePurchaseRequest(userId, resourceId, getBigDecimal("16"), TEST_DEAL_PRICE);
 
     resourceInUserService.addResourceToUser(purchaseRequestDto);
 
-    verify(userRepository, times(1)).findById(userId);
-    verify(resourceRepository, times(1)).findById(resourceId);
+    verify(userService, times(1)).getUser(userId);
+    verify(resourceService, times(1)).getResourceById(resourceId);
     verify(resourceInUserRepository, times(1)).save(any(ResourceInUser.class));
   }
 
@@ -95,12 +99,12 @@ class ResourceInUserServiceTest {
   void willThrowUserNotFoundExceptionWhenAddResourceToUserAndUserNonexistent() {
     ResourcePurchaseRequestDto requestDto =
         createResourcePurchaseRequest(userId, resourceId, getBigDecimal("10"), TEST_DEAL_PRICE);
-    when(userRepository.findById(userId)).thenReturn(Optional.empty());
+    when(userService.getUser(userId)).thenThrow(UserNotFoundException.class);
 
     assertThrows(
         UserNotFoundException.class, () -> resourceInUserService.addResourceToUser(requestDto));
 
-    verify(userRepository, times(1)).findById(userId);
+    verify(userService, times(1)).getUser(userId);
     verify(resourceRepository, never()).findById(resourceId);
     verify(resourceInUserRepository, never()).save(any(ResourceInUser.class));
   }
@@ -109,41 +113,41 @@ class ResourceInUserServiceTest {
   void willThrowResourceNotFoundExceptionWhenAddResourceToUserAndResourceNotFound() {
     ResourcePurchaseRequestDto requestDto =
         createResourcePurchaseRequest(userId, resourceId, getBigDecimal("10"), TEST_DEAL_PRICE);
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(resourceRepository.findById(resourceId)).thenReturn(Optional.empty());
+    when(userService.getUser(userId)).thenReturn(user);
+    when(resourceService.getResourceById(resourceId)).thenThrow(ResourceNotFoundException.class);
 
     assertThrows(
         ResourceNotFoundException.class, () -> resourceInUserService.addResourceToUser(requestDto));
 
-    verify(userRepository, times(1)).findById(userId);
-    verify(resourceRepository, times(1)).findById(resourceId);
+    verify(userService, times(1)).getUser(userId);
+    verify(resourceService, times(1)).getResourceById(resourceId);
   }
 
   @Test
   void willGetResourceInUserSuccessfully() {
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(userService.getUser(userId)).thenReturn(user);
     when(resourcesInUserMapper.toResourcesInUserResponseDto(user))
         .thenReturn(ResourcesInUserResponseDto.builder().build());
 
     resourceInUserService.getAllResourcesFromUser(userId);
 
-    verify(userRepository, times(1)).findById(userId);
+    verify(userService, times(1)).getUser(userId);
     verify(resourcesInUserMapper, times(1)).toResourcesInUserResponseDto(user);
   }
 
   @Test
   void willThrowUserNotFoundExceptionWhenGetResourceInUserForNonexistentUser() {
-    when(userRepository.findById(userId)).thenReturn(Optional.empty());
+    when(userService.getUser(userId)).thenThrow(UserNotFoundException.class);
 
     assertThrows(
         UserNotFoundException.class, () -> resourceInUserService.getAllResourcesFromUser(userId));
 
-    verify(userRepository, times(1)).findById(userId);
+    verify(userService, times(1)).getUser(userId);
   }
 
   @Test
   void willThrowUserNotFoundExceptionWhenRemovingResourceFromNonexistentUser() {
-    when(userRepository.findById(userId)).thenReturn(Optional.empty());
+    when(userService.getUser(userId)).thenThrow(UserNotFoundException.class);
 
     assertThrows(
         UserNotFoundException.class,
@@ -151,13 +155,13 @@ class ResourceInUserServiceTest {
             resourceInUserService.removeQuantityFromResource(
                 userId, resourceId, getBigDecimal("10")));
 
-    verify(userRepository, times(1)).findById(userId);
+    verify(userService, times(1)).getUser(userId);
   }
 
   @Test
   void willThrowResourceInUserNotFoundExceptionWhenRemoveQuantityOfNotOwnedResource() {
     user.setResourcesOwned(List.of());
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(userService.getUser(userId)).thenReturn(user);
 
     assertThrows(
         ResourceInUserNotFoundException.class,
@@ -165,12 +169,12 @@ class ResourceInUserServiceTest {
             resourceInUserService.removeQuantityFromResource(
                 userId, resourceId, getBigDecimal("10")));
 
-    verify(userRepository, times(1)).findById(userId);
+    verify(userService, times(1)).getUser(userId);
   }
 
   @Test
   void willThrowInsufficientResourceQuantityExceptionWhenRemoveQuantityMoreThanAvailable() {
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(userService.getUser(userId)).thenReturn(user);
 
     assertThrows(
         InsufficientResourceQuantityException.class,
@@ -178,19 +182,19 @@ class ResourceInUserServiceTest {
             resourceInUserService.removeQuantityFromResource(
                 userId, resourceId, getBigDecimal("10")));
 
-    verify(userRepository, times(1)).findById(userId);
+    verify(userService, times(1)).getUser(userId);
   }
 
   @Test
   void willRemoveQuantityFromResourceInUserSuccessfully() {
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(userService.getUser(userId)).thenReturn(user);
     final BigDecimal initialQuantity = resourceInUser.getQuantity();
     final BigDecimal quantityToRemove = getBigDecimal("2");
 
     resourceInUserService.removeQuantityFromResource(userId, resourceId, quantityToRemove);
 
-    verify(userRepository, times(1)).findById(userId);
-    verify(userRepository, times(1)).save(any(User.class));
+    verify(userService, times(1)).getUser(userId);
+    verify(userService, times(1)).saveUser(any(User.class));
 
     BigDecimal expectedQuantity = initialQuantity.subtract(quantityToRemove);
     assertEquals(expectedQuantity, resourceInUser.getQuantity());
@@ -198,81 +202,81 @@ class ResourceInUserServiceTest {
 
   @Test
   void willRemoveResourceFromResourceInUserSuccessfullyWhenExactQuantityPassed() {
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(userService.getUser(userId)).thenReturn(user);
 
     resourceInUserService.removeQuantityFromResource(userId, resourceId, INITIAL_QUANTITY);
 
-    verify(userRepository, times(1)).findById(userId);
-    verify(userRepository, times(1)).save(any(User.class));
+    verify(userService, times(1)).getUser(userId);
+    verify(userService, times(1)).saveUser(any(User.class));
     assertTrue(user.getResourcesOwned().isEmpty());
   }
 
   @Test
   void willRemoveResourceInUserSuccessfully() {
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(userService.getUser(userId)).thenReturn(user);
 
     resourceInUserService.removeResourceFromUser(userId, resourceId);
 
-    verify(userRepository, times(1)).findById(userId);
-    verify(userRepository, times(1)).save(any(User.class));
+    verify(userService, times(1)).getUser(userId);
+    verify(userService, times(1)).saveUser(any(User.class));
   }
 
   @Test
   void willThrowUserNotFoundExceptionWhenRemoveFromNonexistentUser() {
-    when(userRepository.findById(userId)).thenReturn(Optional.empty());
+    when(userService.getUser(userId)).thenThrow(UserNotFoundException.class);
 
     assertThrows(
         UserNotFoundException.class,
         () -> resourceInUserService.removeResourceFromUser(userId, resourceId));
 
-    verify(userRepository, times(1)).findById(userId);
-    verify(userRepository, never()).save(any(User.class));
+    verify(userService, times(1)).getUser(userId);
+    verify(userService, never()).saveUser(any(User.class));
   }
 
   @Test
   void willThrowResourceInUserNotFoundExceptionWhenRemoveResourceNotOwnedByUser() {
     UUID nonExistentResourceId = UUID.randomUUID();
 
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(userService.getUser(userId)).thenReturn(user);
 
     assertThrows(
         ResourceInUserNotFoundException.class,
         () -> resourceInUserService.removeResourceFromUser(userId, nonExistentResourceId));
 
-    verify(userRepository, times(1)).findById(userId);
-    verify(userRepository, never()).save(any(User.class));
+    verify(userService, times(1)).getUser(userId);
+    verify(userService, never()).saveUser(any(User.class));
   }
 
   @Test
   void willThrowUserNotFoundExceptionWhenTransferFromNonexistentUser() {
-    when(userRepository.findById(userId)).thenReturn(Optional.empty());
+    when(userService.getUser(userId)).thenThrow(UserNotFoundException.class);
 
     assertThrows(
         UserNotFoundException.class,
         () -> resourceInUserService.transferResources(getTransferResourceRequestDto()));
 
-    verify(userRepository, times(1)).findById(userId);
-    verify(userRepository, never()).save(any(User.class));
+    verify(userService, times(1)).getUser(userId);
+    verify(userService, never()).saveUser(any(User.class));
   }
 
   @Test
   void
       willThrowInsufficientResourceQuantityExceptionWhenTransferResourceIsLessThanResourceInUser() {
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(userRepository.findById(secondUserId)).thenReturn(Optional.of(secondUser));
+    when(userService.getUser(userId)).thenReturn(user);
+    when(userService.getUser(secondUserId)).thenReturn(secondUser);
 
     assertThrows(
         InsufficientResourceQuantityException.class,
         () -> resourceInUserService.transferResources(getTransferResourceRequestDto()));
 
-    verify(userRepository, times(1)).findById(userId);
-    verify(userRepository, never()).save(any(User.class));
+    verify(userService, times(1)).getUser(userId);
+    verify(userService, never()).saveUser(any(User.class));
   }
 
   @Test
   void willThrowResourceInUserNotFoundExceptionWhenTransferResourceNotOwnedByUser() {
-    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(userRepository.findById(secondUserId)).thenReturn(Optional.of(secondUser));
+    when(userService.getUser(userId)).thenReturn(user);
+    when(userService.getUser(secondUserId)).thenReturn(secondUser);
 
     TransferResourceRequestDto transferResourceRequestDto = getTransferResourceRequestDto();
     transferResourceRequestDto.setTransferredResourceId(UUID.randomUUID());
@@ -281,8 +285,8 @@ class ResourceInUserServiceTest {
         ResourceInUserNotFoundException.class,
         () -> resourceInUserService.transferResources(transferResourceRequestDto));
 
-    verify(userRepository, times(1)).findById(userId);
-    verify(userRepository, never()).save(any(User.class));
+    verify(userService, times(1)).getUser(userId);
+    verify(userService, never()).saveUser(any(User.class));
   }
 
   @NotNull
