@@ -8,7 +8,6 @@ import java.util.*;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
-import jewellery.inventory.dto.response.PurchasedResourcesResponseDto;
 import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.ResourceReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
