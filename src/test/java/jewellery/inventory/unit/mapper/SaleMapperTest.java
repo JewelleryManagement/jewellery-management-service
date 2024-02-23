@@ -114,7 +114,7 @@ class SaleMapperTest {
     Assertions.assertEquals(saleResponseDto.getBuyer().getId(), sale.getBuyer().getId());
     Assertions.assertEquals(saleResponseDto.getProducts().size(), sale.getProducts().size());
     Assertions.assertEquals(
-        saleResponseDto.getResources().getResources().size(), sale.getResources().size());
+        saleResponseDto.getResources().size(), sale.getResources().size());
     assertEquals(saleResponseDto.getDate(), sale.getDate());
   }
 
