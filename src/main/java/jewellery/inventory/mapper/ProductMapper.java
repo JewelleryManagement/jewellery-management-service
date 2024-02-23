@@ -11,6 +11,7 @@ import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.resource.ResourceInProduct;
+import jewellery.inventory.utils.BigDecimalUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -36,14 +37,14 @@ public class ProductMapper {
     productResponseDto.setOwner(userMapper.toUserResponse(product.getOwner()));
     productResponseDto.setProductionNumber(product.getProductionNumber());
     productResponseDto.setCatalogNumber(product.getCatalogNumber());
-    productResponseDto.setAdditionalPrice(product.getAdditionalPrice());
-
+    productResponseDto.setAdditionalPrice(BigDecimalUtil.getBigDecimal(product.getAdditionalPrice()));
     setContentProductToResponse(product, productResponseDto);
     setResourcesToResponse(product, productResponseDto);
     setProductsToResponse(product, productResponseDto);
 
     return productResponseDto;
   }
+
   private BigDecimal getPriceFromSale(Product product) {
     return product.getPartOfSale().getSalePrice();
   }
@@ -116,6 +117,6 @@ public class ProductMapper {
       }
     }
 
-    return totalPrice;
+    return BigDecimalUtil.getBigDecimal(totalPrice);
   }
 }

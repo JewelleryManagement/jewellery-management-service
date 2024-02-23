@@ -50,7 +50,7 @@ public class ProductTestHelper {
     productRequestDto.setCatalogNumber("1111");
     productRequestDto.setProductionNumber("1234");
     productRequestDto.setDescription("Test");
-    productRequestDto.setAdditionalPrice(BigDecimal.TEN);
+    productRequestDto.setAdditionalPrice(BigDecimal.ZERO);
     productRequestDto.setOwnerId(user.getId());
     productRequestDto.setAuthors(List.of(user.getId()));
     productRequestDto.setResourcesContent(listOfResourcesInProduct);

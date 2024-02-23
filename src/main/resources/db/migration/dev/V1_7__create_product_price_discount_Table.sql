@@ -1,5 +1,5 @@
 ALTER TABLE public.product
-ADD COLUMN additional_price DECIMAL(10, 2),
+ADD COLUMN additional_price DECIMAL(10, 2) DEFAULT 0 NOT NULL,
 DROP COLUMN IF EXISTS part_of_sale_id CASCADE,
 DROP COLUMN IF EXISTS sale_price CASCADE,
 DROP COLUMN IF EXISTS discount CASCADE;
