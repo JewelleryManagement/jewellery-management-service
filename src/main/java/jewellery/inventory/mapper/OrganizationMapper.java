@@ -35,10 +35,10 @@ public class OrganizationMapper {
       Organization organization) {
     List<UserInOrganizationResponseDto> list = new ArrayList<>();
     for (int i = 0; i < organization.getUsersInOrganization().size(); i++) {
-      UserInOrganizationResponseDto user =
-          new UserInOrganizationResponseDto(
-              organization.getUsersInOrganization().get(i).getUser().getId(),
-              organization.getUsersInOrganization().get(i).getOrganizationPermission());
+      UserInOrganizationResponseDto user = new UserInOrganizationResponseDto();
+      user.setUserId(organization.getUsersInOrganization().get(i).getId());
+      user.setOrganizationPermissions(
+          organization.getUsersInOrganization().get(i).getOrganizationPermission());
       list.add(user);
     }
     return list;

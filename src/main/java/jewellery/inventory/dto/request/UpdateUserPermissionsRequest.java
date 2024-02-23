@@ -8,5 +8,5 @@ import java.util.List;
 
 @Data
 public class UpdateUserPermissionsRequest {
-  @NotEmpty private List<OrganizationPermission> organizationPermissions;
+  @NotEmpty private List<OrganizationPermission> organizationPermission;
 }
