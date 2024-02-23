@@ -34,7 +34,7 @@ public class OrganizationService {
     logger.debug("Get organizationResponse by ID: {}", id);
     return organizationMapper.toResponse(getOrganization(id));
   }
-
+  @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_CREATE)
   public OrganizationResponseDto addUserInOrganization(
       UUID organizationId, UserInOrganizationRequestDto userInOrganizationRequestDto) {
     Organization organization = getOrganization(organizationId);
