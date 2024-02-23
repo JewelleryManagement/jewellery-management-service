@@ -19,7 +19,7 @@ public class ProductRequestDto {
   @NotEmpty @Valid List<ResourceQuantityRequestDto> resourcesContent;
   private List<UUID> productsContent;
   private String description;
-  private BigDecimal additionalPrice;
+  @NotNull private BigDecimal additionalPrice;
   @NotNull private String catalogNumber;
   @NotNull private String productionNumber;
 }
