@@ -2,9 +2,13 @@ package jewellery.inventory.mapper;
 
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
+import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
 import jewellery.inventory.model.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @AllArgsConstructor
@@ -25,5 +29,18 @@ public class OrganizationMapper {
     organizationResponseDto.setAddress(organization.getAddress());
     organizationResponseDto.setNote(organization.getNote());
     return organizationResponseDto;
+  }
+
+  public List<UserInOrganizationResponseDto> toUserInOrganizationResponseDtoResponse(
+      Organization organization) {
+    List<UserInOrganizationResponseDto> list = new ArrayList<>();
+    for (int i = 0; i < organization.getUsersInOrganization().size(); i++) {
+      UserInOrganizationResponseDto user =
+          new UserInOrganizationResponseDto(
+              organization.getUsersInOrganization().get(i).getUser().getId(),
+              organization.getUsersInOrganization().get(i).getOrganizationPermission());
+      list.add(user);
+    }
+    return list;
   }
 }

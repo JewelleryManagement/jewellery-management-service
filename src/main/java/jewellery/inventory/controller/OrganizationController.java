@@ -8,7 +8,7 @@ import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.UpdateUserPermissionsRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
-import jewellery.inventory.model.OrganizationPermission;
+import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
 import jewellery.inventory.service.OrganizationService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -67,11 +67,14 @@ public class OrganizationController {
       @PathVariable UUID organizationId,
       @PathVariable UUID userId,
       @RequestBody @Valid UpdateUserPermissionsRequest updateUserPermissionsRequest) {
-
-    List<OrganizationPermission> organizationPermissions =
-        updateUserPermissionsRequest.getOrganizationPermissions();
-
     return organizationService.updateUserPermissionsInOrganization(
-        organizationId, userId, organizationPermissions);
+        organizationId, userId, updateUserPermissionsRequest.getOrganizationPermissions());
+  }
+
+  @Operation(summary = "Get all users in organization")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("{organizationId}/users")
+  public List<UserInOrganizationResponseDto> getAllUsersInOrganization(@PathVariable UUID organizationId) {
+    return organizationService.getAllUsersInOrganization(organizationId);
   }
 }

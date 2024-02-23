@@ -2,8 +2,8 @@ package jewellery.inventory.exception.organization;
 
 import java.util.UUID;
 
-public class UserNotHaveUserPermission extends RuntimeException {
-  public UserNotHaveUserPermission(UUID userId, UUID organizationId) {
+public class UserNotHaveUserPermissionException extends RuntimeException {
+  public UserNotHaveUserPermissionException(UUID userId, UUID organizationId) {
     super(
         "The User with id "
             + userId

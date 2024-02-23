@@ -5,8 +5,10 @@ import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
+import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
-import jewellery.inventory.exception.organization.UserNotHaveUserPermission;
+import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
+import jewellery.inventory.exception.organization.UserNotHaveUserPermissionException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.*;
@@ -34,6 +36,13 @@ public class OrganizationService {
   public OrganizationResponseDto getOrganizationResponse(UUID id) {
     logger.debug("Get organizationResponse by ID: {}", id);
     return organizationMapper.toResponse(getOrganization(id));
+  }
+
+  public List<UserInOrganizationResponseDto> getAllUsersInOrganization(UUID organizationId) {
+    Organization organization = getOrganization(organizationId);
+    User currentUser = userService.getUser(authService.getCurrentUser().getId());
+    validateUserInOrganization(currentUser,organization);
+    return organizationMapper.toUserInOrganizationResponseDtoResponse(organization);
   }
 
   public OrganizationResponseDto updateUserPermissionsInOrganization(
@@ -109,7 +118,16 @@ public class OrganizationService {
 
   private void validateUserPermission(User user, Organization organization) {
     if (!hasManageUsersPermission(user, organization)) {
-      throw new UserNotHaveUserPermission(user.getId(), organization.getId());
+      throw new UserNotHaveUserPermissionException(user.getId(), organization.getId());
+    }
+  }
+
+  private void validateUserInOrganization(User currentUser, Organization organization) {
+    boolean isUserInOrganization = organization.getUsersInOrganization().stream()
+            .anyMatch(userInOrganization -> userInOrganization.getUser().equals(currentUser));
+
+    if (!isUserInOrganization) {
+      throw new UserIsNotPartOfOrganizationException(currentUser.getId(),organization.getId());
     }
   }
 
