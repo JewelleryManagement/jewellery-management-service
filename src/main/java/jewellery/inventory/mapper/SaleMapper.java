@@ -8,7 +8,6 @@ import java.util.*;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
-import jewellery.inventory.dto.response.PurchasedResourcesResponseDto;
 import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.ResourceReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
@@ -85,23 +84,14 @@ public class SaleMapper {
     return new ArrayList<>();
   }
 
-  public PurchasedResourcesResponseDto mapAllResourcesToResponse(Sale sale) {
+  public List<PurchasedResourceQuantityResponseDto> mapAllResourcesToResponse(Sale sale) {
     List<PurchasedResourceQuantityResponseDto> resources = new ArrayList<>();
     if (sale.getResources() != null) {
       for (PurchasedResourceInUser resource : sale.getResources()) {
         resources.add(getPurchasedResourceInUserResponseDto(resource));
       }
     }
-    return getPurchasedResourceResponseDto(sale, resources);
-  }
-
-  private PurchasedResourcesResponseDto getPurchasedResourceResponseDto(
-      Sale sale, List<PurchasedResourceQuantityResponseDto> resources) {
-    PurchasedResourcesResponseDto purchasedResourcesResponseDto =
-        new PurchasedResourcesResponseDto();
-    purchasedResourcesResponseDto.setOwner(userMapper.toUserResponse(sale.getBuyer()));
-    purchasedResourcesResponseDto.setResources(resources);
-    return purchasedResourcesResponseDto;
+    return resources;
   }
 
   private PurchasedResourceQuantityResponseDto getPurchasedResourceInUserResponseDto(

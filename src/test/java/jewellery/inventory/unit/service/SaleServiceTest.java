@@ -139,7 +139,7 @@ class SaleServiceTest {
     assertNotEquals(actual.getBuyer(), actual.getSeller());
     assertEquals(
         saleRequestDto.getResources().get(0).getDiscount(),
-        actual.getResources().getResources().get(0).getDiscount());
+        actual.getResources().get(0).getDiscount());
     assertEquals(saleResponseDto.getTotalDiscount(), actual.getTotalDiscount());
   }
 

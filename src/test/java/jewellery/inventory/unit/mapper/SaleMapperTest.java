@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import jewellery.inventory.dto.request.ProductDiscountRequestDto;
-import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
+import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
@@ -114,7 +114,7 @@ class SaleMapperTest {
     Assertions.assertEquals(saleResponseDto.getBuyer().getId(), sale.getBuyer().getId());
     Assertions.assertEquals(saleResponseDto.getProducts().size(), sale.getProducts().size());
     Assertions.assertEquals(
-        saleResponseDto.getResources().getResources().size(), sale.getResources().size());
+        saleResponseDto.getResources().size(), sale.getResources().size());
     assertEquals(saleResponseDto.getDate(), sale.getDate());
   }
 

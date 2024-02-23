@@ -180,10 +180,14 @@ public class SaleService {
 
   private void deleteSaleIfProductsAndResourcesAreEmpty(Sale sale) {
     if (sale.getProducts().isEmpty() && sale.getResources().isEmpty()) {
-      logger.info("Deleting sale with ID: {} since the both products list and resources list are empty.", sale.getId());
+      logger.info(
+          "Deleting sale with ID: {} since the both products list and resources list are empty.",
+          sale.getId());
       saleRepository.deleteById(sale.getId());
     } else {
-      logger.info("Saving sale with ID: {} since the products list or the resources list are not empty.", sale.getId());
+      logger.info(
+          "Saving sale with ID: {} since the products list or the resources list are not empty.",
+          sale.getId());
       saleRepository.save(sale);
     }
   }

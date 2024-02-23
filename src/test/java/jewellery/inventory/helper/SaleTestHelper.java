@@ -11,13 +11,12 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import jewellery.inventory.dto.request.ProductDiscountRequestDto;
-import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
+import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
-import jewellery.inventory.dto.response.PurchasedResourcesResponseDto;
 import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
@@ -30,15 +29,6 @@ import jewellery.inventory.model.User;
 import org.jetbrains.annotations.NotNull;
 
 public class SaleTestHelper {
-
-  public static ProductReturnResponseDto getProductReturnResponseDto(
-      SaleResponseDto sale, ProductResponseDto product) {
-    ProductReturnResponseDto productReturn = new ProductReturnResponseDto();
-    productReturn.setSaleAfter(sale);
-    productReturn.setReturnedProduct(product);
-    productReturn.setDate(LocalDate.now());
-    return productReturn;
-  }
 
   public static Sale createSaleWithTodayDate(
       User seller,
@@ -119,20 +109,10 @@ public class SaleTestHelper {
   }
 
   @NotNull
-  private static PurchasedResourcesResponseDto createResourcesResponse(Sale sale) {
-    List<PurchasedResourceQuantityResponseDto> resourcesResponse =
-        sale.getResources().stream().map(resource -> createPurchasedResourceResponseDto()).toList();
-    return getPurchasedResourceResponseDto(sale, resourcesResponse);
-  }
-
-  @NotNull
-  private static PurchasedResourcesResponseDto getPurchasedResourceResponseDto(
-      Sale sale, List<PurchasedResourceQuantityResponseDto> resourcesResponse) {
-    PurchasedResourcesResponseDto purchasedResourcesResponseDto =
-        new PurchasedResourcesResponseDto();
-    purchasedResourcesResponseDto.setOwner(createUserResponseDto(sale.getBuyer()));
-    purchasedResourcesResponseDto.setResources(resourcesResponse);
-    return purchasedResourcesResponseDto;
+  private static List<PurchasedResourceQuantityResponseDto> createResourcesResponse(Sale sale) {
+    return sale.getResources().stream()
+        .map(resource -> createPurchasedResourceResponseDto())
+        .toList();
   }
 
   private static void calculateResourcesDiscounts(Sale sale, SaleResponseDto dto) {

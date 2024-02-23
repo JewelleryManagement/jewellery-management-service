@@ -214,7 +214,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(saleRequestDto.getDate(), saleResponse.getBody().getDate());
     assertEquals(
         saleRequestDto.getResources().size(),
-        saleResponse.getBody().getResources().getResources().size());
+        saleResponse.getBody().getResources().size());
     assertEquals(saleRequestDto.getProducts().size(), saleResponse.getBody().getProducts().size());
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(),
@@ -252,12 +252,11 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(saleRequestDto.getDate(), saleResponse.getBody().getDate());
     assertEquals(
         saleRequestDto.getResources().size(),
-        saleResponse.getBody().getResources().getResources().size());
+        saleResponse.getBody().getResources().size());
     assertEquals(
         saleRequestDto.getResources().get(0).getResourceAndQuantity().getResourceId(),
         saleResponse
             .getBody()
-            .getResources()
             .getResources()
             .get(0)
             .getResourceAndQuantity()
