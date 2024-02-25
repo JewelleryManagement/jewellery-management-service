@@ -9,13 +9,20 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
+import jewellery.inventory.dto.request.UpdateUserPermissionsRequest;
+import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
+import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
+import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.Organization;
+import jewellery.inventory.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
@@ -30,11 +37,17 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private Organization organization;
   private OrganizationRequestDto organizationRequestDto;
+  private UpdateUserPermissionsRequest updateUserPermissionsRequest;
+  private User user;
+  private UserInOrganizationRequestDto userInOrganizationRequestDto;
 
   @BeforeEach
   void setUp() {
     organization = getTestOrganization();
     organizationRequestDto = getTestOrganizationRequest();
+    updateUserPermissionsRequest = getTestUpdateUserPermissionsRequest();
+    user = createUserInDatabase(UserTestHelper.createTestUserRequest());
+    userInOrganizationRequestDto = getTestUserInOrganizationRequest(user.getId());
   }
 
   @Test
@@ -69,6 +82,35 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
+  void getAllUsersInOrganizationSuccessfully() {
+    UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
+
+    ParameterizedTypeReference<List<UserInOrganizationResponseDto>> responseType =
+        new ParameterizedTypeReference<List<UserInOrganizationResponseDto>>() {};
+
+    ResponseEntity<List<UserInOrganizationResponseDto>> response =
+        this.testRestTemplate.exchange(
+            getOrganizationByIdUrl(organizationId) + "/users", HttpMethod.GET, null, responseType);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+  }
+
+  @Test
+  void AddUserInOrganizationSuccessfully() {
+    UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
+
+    ResponseEntity<OrganizationResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getOrganizationByIdUrl(organizationId) + "/users",
+            userInOrganizationRequestDto,
+            OrganizationResponseDto.class);
+
+    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    assertNotNull(response.getBody());
+  }
+
+  @Test
   void createOrganizationSuccessfully() {
     ResponseEntity<OrganizationResponseDto> response =
         testRestTemplate.postForEntity(
@@ -85,5 +127,12 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             getBaseOrganizationsUrl(), dto, OrganizationResponseDto.class);
 
     return response.getBody();
+  }
+
+  @Nullable
+  private User createUserInDatabase(UserRequestDto userRequestDto) {
+    ResponseEntity<User> createUser =
+        this.testRestTemplate.postForEntity("/users", userRequestDto, User.class);
+    return createUser.getBody();
   }
 }

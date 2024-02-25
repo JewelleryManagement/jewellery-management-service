@@ -1,8 +1,11 @@
 package jewellery.inventory.helper;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
+import jewellery.inventory.dto.request.UpdateUserPermissionsRequest;
+import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.ExecutorResponseDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.model.Organization;
@@ -13,8 +16,7 @@ import jewellery.inventory.model.UserInOrganization;
 public class OrganizationTestHelper {
   private static final String ORGANIZATION_NAME = "Test Name";
   private static final String ORGANIZATION_ADDRESS = "Test Note";
-  private static final String ORGANIZATION_NOTE="Test Note";
-
+  private static final String ORGANIZATION_NOTE = "Test Note";
 
   public static Organization getTestOrganization() {
     Organization organization = new Organization();
@@ -46,6 +48,19 @@ public class OrganizationTestHelper {
     organization.setAddress(ORGANIZATION_ADDRESS);
     organization.setNote(ORGANIZATION_NOTE);
     return organization;
+  }
+
+  public static UserInOrganizationRequestDto getTestUserInOrganizationRequest(UUID userId){
+    UserInOrganizationRequestDto request =new UserInOrganizationRequestDto();
+    request.setUserId(userId);
+    request.setOrganizationPermission(Arrays.asList(OrganizationPermission.values()));
+    return request;
+  }
+
+  public static UpdateUserPermissionsRequest getTestUpdateUserPermissionsRequest() {
+    UpdateUserPermissionsRequest request =new UpdateUserPermissionsRequest();
+    request.setOrganizationPermission(Arrays.asList(OrganizationPermission.values()));
+    return request;
   }
 
   public static ExecutorResponseDto getTestExecutor(User user) {
