@@ -27,6 +27,7 @@ public class UserInOrganization {
   @ManyToOne
   @JoinColumn(name = "organization_id")
   private Organization organization;
+  @Enumerated(EnumType.STRING)
   @Column(name = "organization_permission")
   private List<OrganizationPermission> organizationPermission;
 }
