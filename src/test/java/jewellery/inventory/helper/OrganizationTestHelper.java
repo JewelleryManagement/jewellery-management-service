@@ -79,12 +79,6 @@ public class OrganizationTestHelper {
     return request;
   }
 
-  public static UpdateUserPermissionsRequest getTestUpdateUserPermissionsRequest() {
-    UpdateUserPermissionsRequest request = new UpdateUserPermissionsRequest();
-    request.setOrganizationPermission(Arrays.asList(OrganizationPermission.values()));
-    return request;
-  }
-
   public static ExecutorResponseDto getTestExecutor(User user) {
     ExecutorResponseDto responseDto = new ExecutorResponseDto();
     responseDto.setId(user.getId());

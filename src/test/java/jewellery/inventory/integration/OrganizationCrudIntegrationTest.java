@@ -1,6 +1,7 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.OrganizationTestHelper.*;
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -9,7 +10,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
-import jewellery.inventory.dto.request.UpdateUserPermissionsRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
@@ -35,9 +35,16 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return "/organizations/" + id;
   }
 
+  private String getOrganizationUsersUrl(UUID organization, UUID user) {
+    return "/organizations/" + organization + "/users/" + user;
+  }
+
+  private String getOrganizationUsersUrl(UUID organization) {
+    return "/organizations/" + organization + "/users";
+  }
+
   private Organization organization;
   private OrganizationRequestDto organizationRequestDto;
-  private UpdateUserPermissionsRequest updateUserPermissionsRequest;
   private User user;
   private UserInOrganizationRequestDto userInOrganizationRequestDto;
 
@@ -45,7 +52,6 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void setUp() {
     organization = getTestOrganization();
     organizationRequestDto = getTestOrganizationRequest();
-    updateUserPermissionsRequest = getTestUpdateUserPermissionsRequest();
     user = createUserInDatabase(UserTestHelper.createTestUserRequest());
     userInOrganizationRequestDto = getTestUserInOrganizationRequest(user.getId());
   }
@@ -90,10 +96,25 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     ResponseEntity<List<UserInOrganizationResponseDto>> response =
         this.testRestTemplate.exchange(
-            getOrganizationByIdUrl(organizationId) + "/users", HttpMethod.GET, null, responseType);
+            getOrganizationUsersUrl(organizationId), HttpMethod.GET, null, responseType);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
+  }
+
+  @Test
+  void deleteUserInOrganizationSuccessfully() {
+    UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
+
+    ResponseEntity<OrganizationResponseDto> response =
+        this.testRestTemplate.exchange(
+            getOrganizationUsersUrl(organizationId, user.getId()),
+            HttpMethod.DELETE,
+            null,
+            OrganizationResponseDto.class);
+
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    assertNull(response.getBody());
   }
 
   @Test
@@ -102,7 +123,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     ResponseEntity<OrganizationResponseDto> response =
         this.testRestTemplate.postForEntity(
-            getOrganizationByIdUrl(organizationId) + "/users",
+            getOrganizationUsersUrl(organizationId),
             userInOrganizationRequestDto,
             OrganizationResponseDto.class);
 
