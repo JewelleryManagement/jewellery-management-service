@@ -12,6 +12,7 @@ import jewellery.inventory.dto.response.ExecutorResponseDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
+import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.exception.organization.UserNotHaveUserPermissionException;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.mapper.OrganizationMapper;
@@ -187,5 +188,17 @@ class OrganizationServiceTest {
                 organizationWithUser.getId(),
                 user.getId(),
                 List.of(OrganizationPermission.DESTROY_ORGANIZATION)));
+  }
+  @Test
+  void getUsersInOrganizationThrowsExceptionWhenUserIsNotPartOfOrganizationException() {
+    when(organizationRepository.findById(organizationWithUser.getId()))
+            .thenReturn(Optional.of(organizationWithUser));
+    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(userService.getUser(any(UUID.class))).thenReturn(new User());
+
+    assertThrows(
+            UserIsNotPartOfOrganizationException.class,
+            () ->
+                    organizationService.getAllUsersInOrganization(organizationWithUser.getId()));
   }
 }
