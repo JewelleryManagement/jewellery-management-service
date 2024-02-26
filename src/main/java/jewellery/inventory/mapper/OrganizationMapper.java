@@ -36,7 +36,7 @@ public class OrganizationMapper {
     List<UserInOrganizationResponseDto> list = new ArrayList<>();
     for (int i = 0; i < organization.getUsersInOrganization().size(); i++) {
       UserInOrganizationResponseDto user = new UserInOrganizationResponseDto();
-      user.setUserId(organization.getUsersInOrganization().get(i).getId());
+      user.setUserId(organization.getUsersInOrganization().get(i).getUser().getId());
       user.setOrganizationPermissions(
           organization.getUsersInOrganization().get(i).getOrganizationPermission());
       list.add(user);
