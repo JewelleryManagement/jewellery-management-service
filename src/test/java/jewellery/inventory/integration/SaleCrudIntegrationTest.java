@@ -229,6 +229,8 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         SALE_PRODUCT_DISCOUNTED_PRICE.add(SALE_RESOURCE_DISCOUNTED_PRICE),
         saleResponse.getBody().getTotalDiscountedPrice().setScale(2, RoundingMode.HALF_UP));
 
+    assertEquals(saleResponse.getBody().getProducts().get(0).getPartOfSale(), saleResponse.getBody().getId());
+
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
 
