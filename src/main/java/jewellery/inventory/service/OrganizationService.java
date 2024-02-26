@@ -40,18 +40,16 @@ public class OrganizationService {
 
   public List<UserInOrganizationResponseDto> getAllUsersInOrganization(UUID organizationId) {
     Organization organization = getOrganization(organizationId);
-    User currentUser = userService.getUser(authService.getCurrentUser().getId());
-    validateUserInOrganization(currentUser,organization);
+    validateUserInOrganization(organization);
     return organizationMapper.toUserInOrganizationResponseDtoResponse(organization);
   }
 
   public OrganizationResponseDto updateUserPermissionsInOrganization(
       UUID organizationId, UUID userId, List<OrganizationPermission> organizationPermissionList) {
     Organization organization = getOrganization(organizationId);
-    User currentUser = userService.getUser(authService.getCurrentUser().getId());
     User userForUpdate = userService.getUser(userId);
 
-    validateUserPermission(currentUser, organization);
+    validateUserPermission(organization);
     changeUserPermissionInOrganization(organization, userForUpdate, organizationPermissionList);
 
     return organizationMapper.toResponse(organization);
@@ -61,8 +59,7 @@ public class OrganizationService {
   public OrganizationResponseDto addUserInOrganization(
       UUID organizationId, UserInOrganizationRequestDto userInOrganizationRequestDto) {
     Organization organization = getOrganization(organizationId);
-    User currentUser = userService.getUser(authService.getCurrentUser().getId());
-    validateUserPermission(currentUser, organization);
+    validateUserPermission(organization);
 
     UserInOrganization userInOrganization =
         createUserInOrganization(userInOrganizationRequestDto, organization);
@@ -74,9 +71,8 @@ public class OrganizationService {
   @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_DELETE)
   public OrganizationResponseDto deleteUserInOrganization(UUID userId, UUID organizationId) {
     Organization organization = getOrganization(organizationId);
-    User currentUser = userService.getUser(authService.getCurrentUser().getId());
     User userForDelete = userService.getUser(userId);
-    validateUserPermission(currentUser, organization);
+    validateUserPermission(organization);
 
     organization
         .getUsersInOrganization()
@@ -116,18 +112,21 @@ public class OrganizationService {
         .orElseThrow(() -> new OrganizationNotFoundException(id));
   }
 
-  private void validateUserPermission(User user, Organization organization) {
-    if (!hasManageUsersPermission(user, organization)) {
-      throw new UserNotHaveUserPermissionException(user.getId(), organization.getId());
+  private void validateUserPermission(Organization organization) {
+    User currentUser = userService.getUser(authService.getCurrentUser().getId());
+    if (!hasManageUsersPermission(currentUser, organization)) {
+      throw new UserNotHaveUserPermissionException(currentUser.getId(), organization.getId());
     }
   }
 
-  private void validateUserInOrganization(User currentUser, Organization organization) {
-    boolean isUserInOrganization = organization.getUsersInOrganization().stream()
+  private void validateUserInOrganization(Organization organization) {
+    User currentUser = userService.getUser(authService.getCurrentUser().getId());
+    boolean isUserInOrganization =
+        organization.getUsersInOrganization().stream()
             .anyMatch(userInOrganization -> userInOrganization.getUser().equals(currentUser));
 
     if (!isUserInOrganization) {
-      throw new UserIsNotPartOfOrganizationException(currentUser.getId(),organization.getId());
+      throw new UserIsNotPartOfOrganizationException(currentUser.getId(), organization.getId());
     }
   }
 
