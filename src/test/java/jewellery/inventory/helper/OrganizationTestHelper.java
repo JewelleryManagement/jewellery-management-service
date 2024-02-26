@@ -1,8 +1,7 @@
 package jewellery.inventory.helper;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.UpdateUserPermissionsRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
@@ -25,6 +24,29 @@ public class OrganizationTestHelper {
     organization.setAddress(ORGANIZATION_ADDRESS);
     organization.setNote(ORGANIZATION_NOTE);
     return organization;
+  }
+
+  public static Organization getTestOrganizationWithUser(User user) {
+    Organization organization = new Organization();
+    organization.setId(UUID.randomUUID());
+    organization.setName(ORGANIZATION_NAME);
+    organization.setAddress(ORGANIZATION_ADDRESS);
+    organization.setNote(ORGANIZATION_NOTE);
+
+    UserInOrganization userInOrganization = createUserInOrganization(user, organization);
+    List<UserInOrganization> usersInOrganizationList = new ArrayList<>();
+    usersInOrganizationList.add(userInOrganization);
+    organization.setUsersInOrganization(usersInOrganizationList);
+    return organization;
+  }
+
+  private static UserInOrganization createUserInOrganization(User user, Organization organization) {
+    UserInOrganization userInOrganization = new UserInOrganization();
+    userInOrganization.setOrganization(organization);
+    userInOrganization.setUser(user);
+    userInOrganization.setOrganizationPermission(List.of(OrganizationPermission.values()));
+
+    return userInOrganization;
   }
 
   public static Organization getTestOrganizationWithUserInOrganizations() {
@@ -50,15 +72,15 @@ public class OrganizationTestHelper {
     return organization;
   }
 
-  public static UserInOrganizationRequestDto getTestUserInOrganizationRequest(UUID userId){
-    UserInOrganizationRequestDto request =new UserInOrganizationRequestDto();
+  public static UserInOrganizationRequestDto getTestUserInOrganizationRequest(UUID userId) {
+    UserInOrganizationRequestDto request = new UserInOrganizationRequestDto();
     request.setUserId(userId);
     request.setOrganizationPermission(Arrays.asList(OrganizationPermission.values()));
     return request;
   }
 
   public static UpdateUserPermissionsRequest getTestUpdateUserPermissionsRequest() {
-    UpdateUserPermissionsRequest request =new UpdateUserPermissionsRequest();
+    UpdateUserPermissionsRequest request = new UpdateUserPermissionsRequest();
     request.setOrganizationPermission(Arrays.asList(OrganizationPermission.values()));
     return request;
   }

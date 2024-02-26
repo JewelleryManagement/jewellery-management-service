@@ -38,6 +38,8 @@ class OrganizationServiceTest {
   @Mock private UserService userService;
 
   private Organization organization;
+  private Organization organizationWithUser;
+
   private User user;
   private OrganizationRequestDto organizationRequestDto;
   private OrganizationResponseDto organizationResponseDto;
@@ -48,6 +50,7 @@ class OrganizationServiceTest {
     organization = getTestOrganization();
     organizationRequestDto = getTestOrganizationRequest();
     user = UserTestHelper.createSecondTestUser();
+    organizationWithUser = getTestOrganizationWithUser(user);
     executorResponseDto = getTestExecutor(user);
     organizationResponseDto = getTestOrganizationResponseDto(organization);
   }
@@ -93,6 +96,22 @@ class OrganizationServiceTest {
     when(organizationMapper.toResponse(organization)).thenReturn(organizationResponseDto);
 
     OrganizationResponseDto actual = organizationService.create(organizationRequestDto);
+    assertNotNull(actual);
+    assertEquals(actual, organizationResponseDto);
+  }
+
+  @Test
+  void DeleteUserInOrganizationSuccessfully() {
+    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(userService.getUser(any(UUID.class))).thenReturn(user);
+    when(organizationRepository.save(organizationWithUser)).thenReturn(organizationWithUser);
+    when(organizationRepository.findById(organizationWithUser.getId()))
+        .thenReturn(Optional.of(organizationWithUser));
+
+    when(organizationMapper.toResponse(organizationWithUser)).thenReturn(organizationResponseDto);
+
+    OrganizationResponseDto actual =
+        organizationService.deleteUserInOrganization(user.getId(), organizationWithUser.getId());
     assertNotNull(actual);
     assertEquals(actual, organizationResponseDto);
   }
