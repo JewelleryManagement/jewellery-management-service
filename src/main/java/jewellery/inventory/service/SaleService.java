@@ -21,6 +21,7 @@ import jewellery.inventory.exception.sale.EmptySaleException;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
+import jewellery.inventory.repository.ProductPriceDiscountRepository;
 import jewellery.inventory.repository.PurchasedResourceInUserRepository;
 import jewellery.inventory.repository.SaleRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class SaleService {
   private final ResourceInUserService resourceInUserService;
   private final UserService userService;
   private final ResourceService resourceService;
+  private final ProductPriceDiscountRepository productPriceDiscountRepository;
 
   public List<SaleResponseDto> getAllSales() {
     logger.debug("Fetching all Sales");
@@ -66,6 +68,8 @@ public class SaleService {
     throwExceptionIfResourceIsNotOwned(saleRequestDto);
 
     Sale createdSale = saleRepository.save(sale);
+
+    setSubProductsInSale(sale);
     setProductPriceDiscountSalePriceAndSale(createdSale);
     updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
     removeQuantityFromResourcesInUser(sale);
@@ -82,6 +86,8 @@ public class SaleService {
     throwExceptionIfProductNotSold(productToReturn);
 
     Sale sale = getSale(productToReturn.getPartOfSale().getSale().getId());
+
+    removeContentProductsFromSale(productToReturn, sale);
 
     sale.getProducts()
         .removeIf(
@@ -306,6 +312,43 @@ public class SaleService {
     if ((saleRequestDto.getProducts() == null || saleRequestDto.getProducts().isEmpty())
         && (saleRequestDto.getResources() == null || saleRequestDto.getResources().isEmpty())) {
       throw new EmptySaleException();
+    }
+  }
+
+  private void setSubProductsInSale(Sale sale) {
+    if (sale.getProducts() != null) {
+      for (ProductPriceDiscount saleProduct : sale.getProducts()) {
+        setSubProductsInSaleRecursively(saleProduct.getProduct(), sale);
+      }
+    }
+  }
+
+  private void setSubProductsInSaleRecursively(Product parent, Sale sale) {
+    if (parent.getProductsContent() != null) {
+      for (Product subProduct : parent.getProductsContent()) {
+        getProductPriceDiscount(subProduct, sale);
+        if (subProduct.getProductsContent() != null) {
+          setSubProductsInSaleRecursively(subProduct, sale);
+        }
+      }
+    }
+  }
+
+  private void getProductPriceDiscount(Product subProduct, Sale sale) {
+    ProductPriceDiscount productPriceDiscount = new ProductPriceDiscount();
+    productPriceDiscount.setSale(sale);
+    productPriceDiscount.setProduct(subProduct);
+    productPriceDiscountRepository.save(productPriceDiscount);
+  }
+
+  private void removeContentProductsFromSale(Product product, Sale sale) {
+    if (product.getProductsContent() != null) {
+      for (Product subProduct : product.getProductsContent()) {
+        sale.getProducts().removeIf(p -> p.getProduct().getId().equals(subProduct.getId()));
+        if (subProduct.getProductsContent() != null) {
+          removeContentProductsFromSale(subProduct, sale);
+        }
+      }
     }
   }
 }
