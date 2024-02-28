@@ -24,6 +24,7 @@ import jewellery.inventory.service.ResourceInUserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -309,18 +310,40 @@ class ProductServiceTest {
   }
 
   @Test
-  void testUpdateProductShouldThrowExceptionWhenProductIsPartOfProduct() {
-    product.setContentOf(new Product());
-    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-    assertThrows(ProductIsContentException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
-  }
-
-  @Test
   void testUpdateProductShouldThrowWhenProductIsPartOfItself() {
     productRequestDto.setProductsContent(List.of(product.getId()));
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
     assertThrows(ProductPartOfItselfException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
+  }
+
+  @Test
+  void testUpdateProductSuccessfullyWhenProductIsPartOfAnotherProduct() {
+    Product innerProduct = getTestProduct(user,pearl);
+    innerProduct.setContentOf(product);
+    when(productRepository.findById(innerProduct.getId())).thenReturn(Optional.of(innerProduct));
+    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+    when(resourceInUserRepository
+            .findByResourceIdAndOwnerId(pearl.getId(), user.getId())).thenReturn(Optional.of(resourceInUser));
+
+    productService.updateProduct(innerProduct.getId(), productRequestDto);
+
+    verify(productRepository, times(1)).findById(innerProduct.getId());
+    verify(userRepository,times(2)).findById(user.getId());
+    verify(resourceInUserRepository, times(1))
+            .findByResourceIdAndOwnerId(pearl.getId(), user.getId());
+    verify(productRepository, times(1)).save(innerProduct);
+  }
+
+  @Test
+  void updateInnerProductShouldThrowWhenProductIsSold() {
+    product.setPartOfSale(new ProductPriceDiscount());
+
+    Product innerProduct = getTestProduct(user,pearl);
+    innerProduct.setContentOf(product);
+
+    when(productRepository.findById(innerProduct.getId())).thenReturn(Optional.of(innerProduct));
+    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+    assertThrows(ProductIsSoldException.class, () -> productService.updateProduct(innerProduct.getId(), productRequestDto));
   }
 }
