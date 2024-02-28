@@ -11,7 +11,7 @@ import static jewellery.inventory.helper.ProductTestHelper.getTestProduct;
 import static jewellery.inventory.helper.UserTestHelper.createTestUser;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ProductTest {
+class ProductTest {
     private Product testProductOne;
     private Product testProductTwo;
     private Product testProductThree;
