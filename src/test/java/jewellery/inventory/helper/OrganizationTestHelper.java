@@ -7,6 +7,7 @@ import jewellery.inventory.dto.request.UpdateUserPermissionsRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.ExecutorResponseDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
+import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
 import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.OrganizationPermission;
 import jewellery.inventory.model.User;
@@ -95,5 +96,14 @@ public class OrganizationTestHelper {
     responseDto.setAddress(organization.getAddress());
     responseDto.setNote(organization.getNote());
     return responseDto;
+  }
+
+  public static UserInOrganizationResponseDto getTestUserInOrganizationResponseDto(
+      Organization organization) {
+    UserInOrganizationResponseDto dto = new UserInOrganizationResponseDto();
+    dto.setUserId(organization.getUsersInOrganization().get(0).getUser().getId());
+    dto.setOrganizationPermissions(
+        organization.getUsersInOrganization().get(0).getOrganizationPermission());
+    return dto;
   }
 }

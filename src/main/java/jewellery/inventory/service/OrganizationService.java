@@ -1,14 +1,18 @@
 package jewellery.inventory.service;
 
 import java.util.*;
+
+import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
+import jewellery.inventory.aspect.annotation.LogDeleteEvent;
+import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
-import jewellery.inventory.exception.organization.UserNotHaveUserPermissionException;
+import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.*;
@@ -20,7 +24,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
-public class OrganizationService {
+public class OrganizationService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(OrganizationService.class);
   private final OrganizationRepository organizationRepository;
   private final OrganizationMapper organizationMapper;
@@ -44,38 +48,40 @@ public class OrganizationService {
     return organizationMapper.toUserInOrganizationResponseDtoResponse(organization);
   }
 
-  public OrganizationResponseDto updateUserPermissionsInOrganization(
+  @LogUpdateEvent(eventType = EventType.ORGANIZATION_USER_UPDATE)
+  public UserInOrganizationResponseDto updateUserPermissionsInOrganization(
       UUID organizationId, UUID userId, List<OrganizationPermission> organizationPermissionList) {
     Organization organization = getOrganization(organizationId);
     User userForUpdate = userService.getUser(userId);
 
-    validateUserPermission(organization);
+    validateUserPermission(organization, OrganizationPermission.MANAGE_USERS);
     changeUserPermissionInOrganization(organization, userForUpdate, organizationPermissionList);
     logger.info(
         "Successfully updated user permissions in the organization. Organization ID: {}, User ID: {}",
         organizationId,
         userId);
-    return organizationMapper.toResponse(organization);
+    return organizationMapper.toUserInOrganizationResponseDtoResponse(organization, userId);
   }
 
   @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_CREATE)
-  public OrganizationResponseDto addUserInOrganization(
+  public UserInOrganizationResponseDto addUserInOrganization(
       UUID organizationId, UserInOrganizationRequestDto userInOrganizationRequestDto) {
     Organization organization = getOrganization(organizationId);
-    validateUserPermission(organization);
+    validateUserPermission(organization, OrganizationPermission.MANAGE_USERS);
 
     UserInOrganization userInOrganization =
         createUserInOrganization(userInOrganizationRequestDto, organization);
     addUserToOrganization(userInOrganization, organization);
 
-    return organizationMapper.toResponse(organization);
+    return organizationMapper.toUserInOrganizationResponseDtoResponse(
+        organization, userInOrganizationRequestDto.getUserId());
   }
 
-  @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_DELETE)
-  public OrganizationResponseDto deleteUserInOrganization(UUID userId, UUID organizationId) {
+  @LogDeleteEvent(eventType = EventType.ORGANIZATION_USER_DELETE)
+  public void deleteUserInOrganization(UUID userId, UUID organizationId) {
     Organization organization = getOrganization(organizationId);
     User userForDelete = userService.getUser(userId);
-    validateUserPermission(organization);
+    validateUserPermission(organization, OrganizationPermission.MANAGE_USERS);
 
     organization
         .getUsersInOrganization()
@@ -86,7 +92,6 @@ public class OrganizationService {
         "Successfully deleted user in the organization. Organization ID: {}, User ID: {}",
         organizationId,
         userForDelete.getId());
-    return organizationMapper.toResponse(organization);
   }
 
   @LogCreateEvent(eventType = EventType.ORGANIZATION_CREATE)
@@ -119,10 +124,12 @@ public class OrganizationService {
         .orElseThrow(() -> new OrganizationNotFoundException(id));
   }
 
-  private void validateUserPermission(Organization organization) {
+  private void validateUserPermission(
+      Organization organization, OrganizationPermission permission) {
     User currentUser = userService.getUser(authService.getCurrentUser().getId());
-    if (!hasManageUsersPermission(currentUser, organization)) {
-      throw new UserNotHaveUserPermissionException(currentUser.getId(), organization.getId());
+    if (!hasPermission(currentUser, organization, permission)) {
+      throw new MissingOrganizationPermissionException(
+          currentUser.getId(), organization.getId(), permission);
     }
     logger.debug(
         "User permission validation successful. User ID: {}, Organization ID: {}",
@@ -145,14 +152,13 @@ public class OrganizationService {
         organization.getId());
   }
 
-  private boolean hasManageUsersPermission(User user, Organization organization) {
+  private boolean hasPermission(
+      User user, Organization organization, OrganizationPermission permission) {
     return organization.getUsersInOrganization().stream()
         .anyMatch(
             userInOrganization ->
                 userInOrganization.getUser().equals(user)
-                    && userInOrganization
-                        .getOrganizationPermission()
-                        .contains(OrganizationPermission.MANAGE_USERS));
+                    && userInOrganization.getOrganizationPermission().contains(permission));
   }
 
   private UserInOrganization createUserInOrganization(
@@ -184,19 +190,28 @@ public class OrganizationService {
       Organization organization,
       User userForUpdate,
       List<OrganizationPermission> organizationPermissionList) {
-    organization
-        .getUsersInOrganization()
-        .forEach(
+
+    organization.getUsersInOrganization().stream()
+        .filter(userInOrg -> userInOrg.getUser().equals(userForUpdate))
+        .findFirst()
+        .ifPresent(
             userInOrg -> {
-              if (userInOrg.getUser().equals(userForUpdate)) {
-                userInOrg.setOrganizationPermission(organizationPermissionList);
-                userInOrganizationRepository.save(userInOrg);
-                logger.info(
-                    "User permissions successfully changed in organization. User ID: {}, Organization ID: {}, New Permissions: {}",
-                    userForUpdate.getId(),
-                    organization.getId(),
-                    organizationPermissionList);
-              }
+              userInOrg.setOrganizationPermission(organizationPermissionList);
+              userInOrganizationRepository.save(userInOrg);
+              logger.info(
+                  "User permissions successfully changed in organization. User ID: {}, Organization ID: {}, New Permissions: {}",
+                  userForUpdate.getId(),
+                  organization.getId(),
+                  organizationPermissionList);
             });
+  }
+
+  @Override
+  public Object fetchEntity(Object... ids) {
+    Organization organization = organizationRepository.findById((UUID) ids[0]).orElse(null);
+    if (organization == null) {
+      return null;
+    }
+    return organizationMapper.toResponse(organization);
   }
 }

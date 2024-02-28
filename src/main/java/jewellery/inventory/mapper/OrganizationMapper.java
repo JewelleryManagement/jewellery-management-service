@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @AllArgsConstructor
@@ -33,14 +34,34 @@ public class OrganizationMapper {
 
   public List<UserInOrganizationResponseDto> toUserInOrganizationResponseDtoResponse(
       Organization organization) {
-    List<UserInOrganizationResponseDto> list = new ArrayList<>();
-    for (int i = 0; i < organization.getUsersInOrganization().size(); i++) {
-      UserInOrganizationResponseDto user = new UserInOrganizationResponseDto();
-      user.setUserId(organization.getUsersInOrganization().get(i).getUser().getId());
-      user.setOrganizationPermissions(
-          organization.getUsersInOrganization().get(i).getOrganizationPermission());
-      list.add(user);
-    }
-    return list;
+    List<UserInOrganizationResponseDto> userResponseDtoList = new ArrayList<>();
+
+    organization
+        .getUsersInOrganization()
+        .forEach(
+            userInOrg -> {
+              UserInOrganizationResponseDto userResponseDto = new UserInOrganizationResponseDto();
+              userResponseDto.setUserId(userInOrg.getUser().getId());
+              userResponseDto.setOrganizationPermissions(userInOrg.getOrganizationPermission());
+              userResponseDtoList.add(userResponseDto);
+            });
+
+    return userResponseDtoList;
+  }
+
+  public UserInOrganizationResponseDto toUserInOrganizationResponseDtoResponse(
+      Organization organization, UUID userId) {
+    UserInOrganizationResponseDto userResponseDto = new UserInOrganizationResponseDto();
+
+    organization.getUsersInOrganization().stream()
+        .filter(userInOrg -> userInOrg.getUser().getId().equals(userId))
+        .findFirst()
+        .ifPresent(
+            userInOrg -> {
+              userResponseDto.setUserId(userInOrg.getUser().getId());
+              userResponseDto.setOrganizationPermissions(userInOrg.getOrganizationPermission());
+            });
+
+    return userResponseDto;
   }
 }

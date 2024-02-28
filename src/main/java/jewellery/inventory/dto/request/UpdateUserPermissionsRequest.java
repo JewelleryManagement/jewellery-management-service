@@ -1,12 +1,10 @@
 package jewellery.inventory.dto.request;
 
-import jakarta.validation.constraints.NotEmpty;
+import java.util.List;
 import jewellery.inventory.model.OrganizationPermission;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 public class UpdateUserPermissionsRequest {
-  @NotEmpty private List<OrganizationPermission> organizationPermission;
+  private List<OrganizationPermission> organizationPermission;
 }

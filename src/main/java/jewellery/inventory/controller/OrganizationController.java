@@ -46,7 +46,7 @@ public class OrganizationController {
   @Operation(summary = "Add a user in organization")
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/{organizationId}/users")
-  public OrganizationResponseDto addUserInOrganization(
+  public UserInOrganizationResponseDto addUserInOrganization(
       @PathVariable UUID organizationId,
       @RequestBody @Valid UserInOrganizationRequestDto userInOrganizationRequestDto) {
     return organizationService.addUserInOrganization(organizationId, userInOrganizationRequestDto);
@@ -55,15 +55,15 @@ public class OrganizationController {
   @Operation(summary = "Delete a user in organization")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("{organizationId}/users/{userId}")
-  public OrganizationResponseDto deleteUserInOrganization(
+  public void deleteUserInOrganization(
       @PathVariable UUID organizationId, @PathVariable UUID userId) {
-    return organizationService.deleteUserInOrganization(userId, organizationId);
+    organizationService.deleteUserInOrganization(userId, organizationId);
   }
 
   @Operation(summary = "Update a user permissions in organization")
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("{organizationId}/users/{userId}")
-  public OrganizationResponseDto updateUserPermissionsInOrganization(
+  public UserInOrganizationResponseDto updateUserPermissionsInOrganization(
       @PathVariable UUID organizationId,
       @PathVariable UUID userId,
       @RequestBody @Valid UpdateUserPermissionsRequest updateUserPermissionsRequest) {
@@ -74,7 +74,8 @@ public class OrganizationController {
   @Operation(summary = "Get all users in organization")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("{organizationId}/users")
-  public List<UserInOrganizationResponseDto> getAllUsersInOrganization(@PathVariable UUID organizationId) {
+  public List<UserInOrganizationResponseDto> getAllUsersInOrganization(
+      @PathVariable UUID organizationId) {
     return organizationService.getAllUsersInOrganization(organizationId);
   }
 }

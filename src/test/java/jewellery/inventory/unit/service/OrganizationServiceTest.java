@@ -4,7 +4,7 @@ import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizationRequest;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.*;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
@@ -12,8 +12,8 @@ import jewellery.inventory.dto.response.ExecutorResponseDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
+import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
-import jewellery.inventory.exception.organization.UserNotHaveUserPermissionException;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.Organization;
@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,6 +46,7 @@ class OrganizationServiceTest {
   private User user;
   private OrganizationRequestDto organizationRequestDto;
   private OrganizationResponseDto organizationResponseDto;
+  private UserInOrganizationResponseDto userInOrganizationResponseDto;
   private ExecutorResponseDto executorResponseDto;
 
   @BeforeEach
@@ -55,6 +57,7 @@ class OrganizationServiceTest {
     organizationWithUser = getTestOrganizationWithUser(user);
     executorResponseDto = getTestExecutor(user);
     organizationResponseDto = getTestOrganizationResponseDto(organization);
+    userInOrganizationResponseDto = getTestUserInOrganizationResponseDto(organizationWithUser);
   }
 
   @Test
@@ -115,7 +118,7 @@ class OrganizationServiceTest {
         organizationService.getAllUsersInOrganization(organizationWithUser.getId());
 
     assertNotNull(actual);
-    assertEquals(actual.size(), 0);
+    assertEquals(0, actual.size());
   }
 
   @Test
@@ -124,32 +127,18 @@ class OrganizationServiceTest {
         .thenReturn(Optional.of(organizationWithUser));
     when(authService.getCurrentUser()).thenReturn(executorResponseDto);
     when(userService.getUser(any(UUID.class))).thenReturn(user);
-    when(organizationMapper.toResponse(organizationWithUser)).thenReturn(organizationResponseDto);
+    when(organizationMapper.toUserInOrganizationResponseDtoResponse(
+            organizationWithUser, user.getId()))
+        .thenReturn(userInOrganizationResponseDto);
 
-    OrganizationResponseDto actual =
+    UserInOrganizationResponseDto actual =
         organizationService.updateUserPermissionsInOrganization(
             organizationWithUser.getId(),
             user.getId(),
             List.of(OrganizationPermission.DESTROY_ORGANIZATION));
 
     assertNotNull(actual);
-    assertEquals(actual, organizationResponseDto);
-  }
-
-  @Test
-  void deleteUserInOrganizationSuccessfully() {
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(any(UUID.class))).thenReturn(user);
-    when(organizationRepository.save(organizationWithUser)).thenReturn(organizationWithUser);
-    when(organizationRepository.findById(organizationWithUser.getId()))
-        .thenReturn(Optional.of(organizationWithUser));
-
-    when(organizationMapper.toResponse(organizationWithUser)).thenReturn(organizationResponseDto);
-
-    OrganizationResponseDto actual =
-        organizationService.deleteUserInOrganization(user.getId(), organizationWithUser.getId());
-    assertNotNull(actual);
-    assertEquals(actual, organizationResponseDto);
+    assertEquals(actual, userInOrganizationResponseDto);
   }
 
   @Test
@@ -168,7 +157,7 @@ class OrganizationServiceTest {
         .thenReturn(Optional.of(organizationWithUser));
 
     assertThrows(
-        UserNotHaveUserPermissionException.class,
+        MissingOrganizationPermissionException.class,
         () ->
             organizationService.deleteUserInOrganization(
                 user.getId(), organizationWithUser.getId()));
@@ -182,7 +171,7 @@ class OrganizationServiceTest {
     when(userService.getUser(any(UUID.class))).thenReturn(new User());
 
     assertThrows(
-        UserNotHaveUserPermissionException.class,
+        MissingOrganizationPermissionException.class,
         () ->
             organizationService.updateUserPermissionsInOrganization(
                 organizationWithUser.getId(),
@@ -192,13 +181,12 @@ class OrganizationServiceTest {
   @Test
   void getUsersInOrganizationThrowsExceptionWhenUserIsNotPartOfOrganizationException() {
     when(organizationRepository.findById(organizationWithUser.getId()))
-            .thenReturn(Optional.of(organizationWithUser));
+        .thenReturn(Optional.of(organizationWithUser));
     when(authService.getCurrentUser()).thenReturn(executorResponseDto);
     when(userService.getUser(any(UUID.class))).thenReturn(new User());
 
     assertThrows(
-            UserIsNotPartOfOrganizationException.class,
-            () ->
-                    organizationService.getAllUsersInOrganization(organizationWithUser.getId()));
+        UserIsNotPartOfOrganizationException.class,
+        () -> organizationService.getAllUsersInOrganization(organizationWithUser.getId()));
   }
 }
