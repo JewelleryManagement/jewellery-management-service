@@ -1,15 +1,16 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.OrganizationTestHelper.*;
+import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
+import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
+import static jewellery.inventory.model.EventType.*;
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.micrometer.common.lang.Nullable;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.UpdateUserPermissionsRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
@@ -20,7 +21,6 @@ import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.OrganizationPermission;
 import jewellery.inventory.model.User;
-import jewellery.inventory.model.UserInOrganization;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
@@ -130,6 +130,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
+
   @Test
   void updateUserInOrganizationSuccessfully() {
     UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
@@ -137,37 +138,48 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     UpdateUserPermissionsRequest request = new UpdateUserPermissionsRequest();
     request.setOrganizationPermission(Arrays.asList(OrganizationPermission.values()));
 
-    ResponseEntity<OrganizationResponseDto> response = this.testRestTemplate.exchange(
+    ResponseEntity<UserInOrganizationResponseDto> response =
+        this.testRestTemplate.exchange(
             getOrganizationUsersUrl(organizationId, user.getId()),
             HttpMethod.PUT,
             new HttpEntity<>(request),
-            OrganizationResponseDto.class);
+                UserInOrganizationResponseDto.class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
   }
 
   @Test
-  void addUserInOrganizationSuccessfully() {
+  void addUserInOrganizationSuccessfully() throws JsonProcessingException {
     UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
 
-    ResponseEntity<UserInOrganization> response =
+    ResponseEntity<UserInOrganizationResponseDto> response =
         this.testRestTemplate.postForEntity(
             getOrganizationUsersUrl(organizationId),
             userInOrganizationRequestDto,
-                UserInOrganization.class);
+            UserInOrganizationResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     assertNotNull(response.getBody());
+
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_USER_CREATE, expectedEventPayload);
   }
 
   @Test
-  void createOrganizationSuccessfully() {
+  void createOrganizationSuccessfully() throws JsonProcessingException {
     ResponseEntity<OrganizationResponseDto> response =
         testRestTemplate.postForEntity(
             getBaseOrganizationsUrl(), organizationRequestDto, OrganizationResponseDto.class);
 
     assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(201));
     assertNotNull(response.getBody());
+
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_CREATE, expectedEventPayload);
   }
 
   @Nullable
