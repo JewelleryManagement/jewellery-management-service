@@ -51,7 +51,10 @@ public class OrganizationService {
 
     validateUserPermission(organization);
     changeUserPermissionInOrganization(organization, userForUpdate, organizationPermissionList);
-
+    logger.info(
+        "Successfully updated user permissions in the organization. Organization ID: {}, User ID: {}",
+        organizationId,
+        userId);
     return organizationMapper.toResponse(organization);
   }
 
@@ -79,6 +82,10 @@ public class OrganizationService {
         .removeIf(userInOrg -> userInOrg.getUser().equals(userForDelete));
 
     organizationRepository.save(organization);
+    logger.info(
+        "Successfully deleted user in the organization. Organization ID: {}, User ID: {}",
+        organizationId,
+        userForDelete.getId());
     return organizationMapper.toResponse(organization);
   }
 
@@ -117,6 +124,10 @@ public class OrganizationService {
     if (!hasManageUsersPermission(currentUser, organization)) {
       throw new UserNotHaveUserPermissionException(currentUser.getId(), organization.getId());
     }
+    logger.debug(
+        "User permission validation successful. User ID: {}, Organization ID: {}",
+        currentUser.getId(),
+        organization.getId());
   }
 
   private void validateUserInOrganization(Organization organization) {
@@ -128,6 +139,10 @@ public class OrganizationService {
     if (!isUserInOrganization) {
       throw new UserIsNotPartOfOrganizationException(currentUser.getId(), organization.getId());
     }
+    logger.debug(
+        "User permission validation successful. User ID: {}, Organization ID: {}",
+        currentUser.getId(),
+        organization.getId());
   }
 
   private boolean hasManageUsersPermission(User user, Organization organization) {
@@ -147,12 +162,21 @@ public class OrganizationService {
     userInOrganization.setOrganization(organization);
     userInOrganization.setOrganizationPermission(requestDto.getOrganizationPermission());
     userInOrganizationRepository.save(userInOrganization);
+    logger.debug(
+        "Successfully created user in organization. User ID: {}, Organization ID: {}, Organization Permission: {}",
+        userInOrganization.getUser().getId(),
+        userInOrganization.getOrganization().getId(),
+        userInOrganization.getOrganizationPermission());
     return userInOrganization;
   }
 
   private void addUserToOrganization(
       UserInOrganization userInOrganization, Organization organization) {
     organization.getUsersInOrganization().add(userInOrganization);
+    logger.info(
+        "Successfully added user in the organization. Organization ID: {}, User ID: {}",
+        organization.getId(),
+        userInOrganization.getUser().getId());
     organizationRepository.save(organization);
   }
 
@@ -167,6 +191,11 @@ public class OrganizationService {
               if (userInOrg.getUser().equals(userForUpdate)) {
                 userInOrg.setOrganizationPermission(organizationPermissionList);
                 userInOrganizationRepository.save(userInOrg);
+                logger.info(
+                    "User permissions successfully changed in organization. User ID: {}, Organization ID: {}, New Permissions: {}",
+                    userForUpdate.getId(),
+                    organization.getId(),
+                    organizationPermissionList);
               }
             });
   }
