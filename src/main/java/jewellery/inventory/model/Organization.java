@@ -33,7 +33,7 @@ public class Organization {
   @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
   private List<Product> productsOwned;
 
-  @OneToMany(mappedBy = "organization", orphanRemoval = true, cascade = CascadeType.PERSIST)
+  @OneToMany(mappedBy = "organization", orphanRemoval = true, cascade = CascadeType.ALL)
   private List<UserInOrganization> usersInOrganization;
 
   @OneToMany(mappedBy = "organizationSeller", cascade = CascadeType.ALL)
