@@ -39,11 +39,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class ResourceInUserServiceTest {
-  @Mock private UserRepository userRepository;
   @Mock private UserService userService;
   @Mock private ResourceService resourceService;
   @InjectMocks private ResourceInUserService resourceInUserService;
-  @Mock private ResourceRepository resourceRepository;
   @Mock private ResourceInUserRepository resourceInUserRepository;
   @Mock private ResourcesInUserMapper resourcesInUserMapper;
   private User user;
@@ -105,7 +103,7 @@ class ResourceInUserServiceTest {
         UserNotFoundException.class, () -> resourceInUserService.addResourceToUser(requestDto));
 
     verify(userService, times(1)).getUser(userId);
-    verify(resourceRepository, never()).findById(resourceId);
+    verify(resourceService, never()).getResourceById(resourceId);
     verify(resourceInUserRepository, never()).save(any(ResourceInUser.class));
   }
 
