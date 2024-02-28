@@ -24,8 +24,6 @@ import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceInUserRepository;
-import jewellery.inventory.repository.ResourceRepository;
-import jewellery.inventory.repository.UserRepository;
 import jewellery.inventory.service.ResourceInUserService;
 import jewellery.inventory.service.ResourceService;
 import jewellery.inventory.service.UserService;
