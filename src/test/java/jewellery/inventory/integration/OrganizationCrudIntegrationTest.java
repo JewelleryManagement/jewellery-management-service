@@ -118,7 +118,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void AddUserInOrganizationSuccessfully() {
+  void аddUserInOrganizationSuccessfully() {
     UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
 
     ResponseEntity<OrganizationResponseDto> response =
