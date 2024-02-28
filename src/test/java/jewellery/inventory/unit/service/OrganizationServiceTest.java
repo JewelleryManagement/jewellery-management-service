@@ -96,7 +96,7 @@ class OrganizationServiceTest {
   void createOrganizationSuccessfully() {
     when(organizationMapper.toEntity(organizationRequestDto)).thenReturn(organization);
     when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(any(UUID.class))).thenReturn(user);
+    when(userService.getUser(user.getId())).thenReturn(user);
     when(organizationRepository.save(organization)).thenReturn(organization);
     when(organizationMapper.toResponse(organization)).thenReturn(organizationResponseDto);
 
@@ -110,7 +110,7 @@ class OrganizationServiceTest {
     when(organizationRepository.findById(organizationWithUser.getId()))
         .thenReturn(Optional.of(organizationWithUser));
     when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(any(UUID.class))).thenReturn(user);
+    when(userService.getUser(user.getId())).thenReturn(user);
     when(organizationMapper.toUserInOrganizationResponseDtoResponse(organizationWithUser))
         .thenReturn(new ArrayList<>());
 
@@ -126,7 +126,7 @@ class OrganizationServiceTest {
     when(organizationRepository.findById(organizationWithUser.getId()))
         .thenReturn(Optional.of(organizationWithUser));
     when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(any(UUID.class))).thenReturn(user);
+    when(userService.getUser(user.getId())).thenReturn(user);
     when(organizationMapper.toUserInOrganizationResponseDtoResponse(
             organizationWithUser, user.getId()))
         .thenReturn(userInOrganizationResponseDto);
@@ -152,7 +152,7 @@ class OrganizationServiceTest {
   @Test
   void deleteUserInOrganizationThrowsExceptionWhenNoManageUsersPermission() {
     when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(any(UUID.class))).thenReturn(new User());
+    when(userService.getUser(executorResponseDto.getId())).thenReturn(new User());
     when(organizationRepository.findById(organizationWithUser.getId()))
         .thenReturn(Optional.of(organizationWithUser));
 
@@ -168,7 +168,7 @@ class OrganizationServiceTest {
     when(organizationRepository.findById(organizationWithUser.getId()))
         .thenReturn(Optional.of(organizationWithUser));
     when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(any(UUID.class))).thenReturn(new User());
+    when(userService.getUser(executorResponseDto.getId())).thenReturn(new User());
 
     assertThrows(
         MissingOrganizationPermissionException.class,
@@ -178,6 +178,7 @@ class OrganizationServiceTest {
                 user.getId(),
                 List.of(OrganizationPermission.DESTROY_ORGANIZATION)));
   }
+
   @Test
   void getUsersInOrganizationThrowsExceptionWhenUserIsNotPartOfOrganizationException() {
     when(organizationRepository.findById(organizationWithUser.getId()))
