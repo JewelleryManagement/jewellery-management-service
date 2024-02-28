@@ -28,12 +28,7 @@ public class OrganizationTestHelper {
   }
 
   public static Organization getTestOrganizationWithUser(User user) {
-    Organization organization = new Organization();
-    organization.setId(UUID.randomUUID());
-    organization.setName(ORGANIZATION_NAME);
-    organization.setAddress(ORGANIZATION_ADDRESS);
-    organization.setNote(ORGANIZATION_NOTE);
-
+    Organization organization = getTestOrganization();
     UserInOrganization userInOrganization = createUserInOrganization(user, organization);
     List<UserInOrganization> usersInOrganizationList = new ArrayList<>();
     usersInOrganizationList.add(userInOrganization);
@@ -51,11 +46,7 @@ public class OrganizationTestHelper {
   }
 
   public static Organization getTestOrganizationWithUserInOrganizations() {
-    Organization organization = new Organization();
-    organization.setId(UUID.randomUUID());
-    organization.setName(ORGANIZATION_NAME);
-    organization.setAddress(ORGANIZATION_ADDRESS);
-    organization.setNote(ORGANIZATION_NOTE);
+    Organization organization = getTestOrganization();
     UserInOrganization userInOrganization = new UserInOrganization();
     userInOrganization.setId(UUID.randomUUID());
     userInOrganization.setUser(new User());

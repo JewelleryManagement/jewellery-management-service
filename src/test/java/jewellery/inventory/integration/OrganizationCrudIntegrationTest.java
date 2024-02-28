@@ -6,25 +6,25 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.micrometer.common.lang.Nullable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
+import jewellery.inventory.dto.request.UpdateUserPermissionsRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
-import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.Organization;
+import jewellery.inventory.model.OrganizationPermission;
 import jewellery.inventory.model.User;
+import jewellery.inventory.model.UserInOrganization;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 
 class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private String getBaseOrganizationsUrl() {
@@ -58,7 +58,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getOrganizationsSuccessfully() {
-    ResponseEntity<List<ProductResponseDto>> response =
+    ResponseEntity<List<OrganizationResponseDto>> response =
         this.testRestTemplate.exchange(
             getBaseOrganizationsUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
 
@@ -118,14 +118,43 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void addUserInOrganizationSuccessfully() {
+  void updateUserInOrganizationWithNullPermissions() {
     UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
 
     ResponseEntity<OrganizationResponseDto> response =
+        this.testRestTemplate.exchange(
+            getOrganizationUsersUrl(organizationId, user.getId()),
+            HttpMethod.PUT,
+            null,
+            OrganizationResponseDto.class);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
+  @Test
+  void updateUserInOrganizationSuccessfully() {
+    UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
+
+    UpdateUserPermissionsRequest request = new UpdateUserPermissionsRequest();
+    request.setOrganizationPermission(Arrays.asList(OrganizationPermission.values()));
+
+    ResponseEntity<OrganizationResponseDto> response = this.testRestTemplate.exchange(
+            getOrganizationUsersUrl(organizationId, user.getId()),
+            HttpMethod.PUT,
+            new HttpEntity<>(request),
+            OrganizationResponseDto.class);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+  }
+
+  @Test
+  void addUserInOrganizationSuccessfully() {
+    UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
+
+    ResponseEntity<UserInOrganization> response =
         this.testRestTemplate.postForEntity(
             getOrganizationUsersUrl(organizationId),
             userInOrganizationRequestDto,
-            OrganizationResponseDto.class);
+                UserInOrganization.class);
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     assertNotNull(response.getBody());
