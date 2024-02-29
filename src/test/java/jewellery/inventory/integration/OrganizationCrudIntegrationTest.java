@@ -2,9 +2,7 @@ package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
-import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.model.EventType.*;
-import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -15,8 +13,7 @@ import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.UpdateUserPermissionsRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
-import jewellery.inventory.dto.response.OrganizationResponseDto;
-import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.OrganizationPermission;
@@ -52,7 +49,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void setUp() {
     organization = getTestOrganization();
     organizationRequestDto = getTestOrganizationRequest();
-    user = createUserInDatabase(UserTestHelper.createTestUserRequest());
+    user = createUserInDatabase(UserTestHelper.createDifferentUserRequest());
     userInOrganizationRequestDto = getTestUserInOrganizationRequest(user.getId());
   }
 
@@ -91,12 +88,12 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void getAllUsersInOrganizationSuccessfully() {
     UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
 
-    ParameterizedTypeReference<List<UserInOrganizationResponseDto>> responseType =
-        new ParameterizedTypeReference<List<UserInOrganizationResponseDto>>() {};
-
-    ResponseEntity<List<UserInOrganizationResponseDto>> response =
+    ResponseEntity<OrganizationMembersResponseDto> response =
         this.testRestTemplate.exchange(
-            getOrganizationUsersUrl(organizationId), HttpMethod.GET, null, responseType);
+            getOrganizationUsersUrl(organizationId),
+            HttpMethod.GET,
+            null,
+            OrganizationMembersResponseDto.class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
@@ -105,16 +102,16 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
   void deleteUserInOrganizationSuccessfully() {
     UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
+    addUserInOrganization(organizationId);
 
-    ResponseEntity<OrganizationResponseDto> response =
+    ResponseEntity<HttpStatus> response =
         this.testRestTemplate.exchange(
             getOrganizationUsersUrl(organizationId, user.getId()),
             HttpMethod.DELETE,
             null,
-            OrganizationResponseDto.class);
+            HttpStatus.class);
 
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-    assertNull(response.getBody());
   }
 
   @Test
@@ -134,29 +131,31 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
   void updateUserInOrganizationSuccessfully() {
     UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
+    addUserInOrganization(organizationId);
 
     UpdateUserPermissionsRequest request = new UpdateUserPermissionsRequest();
     request.setOrganizationPermission(Arrays.asList(OrganizationPermission.values()));
 
-    ResponseEntity<UserInOrganizationResponseDto> response =
+    ResponseEntity<OrganizationSingleMemberResponseDto> response =
         this.testRestTemplate.exchange(
             getOrganizationUsersUrl(organizationId, user.getId()),
             HttpMethod.PUT,
             new HttpEntity<>(request),
-                UserInOrganizationResponseDto.class);
+            OrganizationSingleMemberResponseDto.class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
   }
 
   @Test
   void addUserInOrganizationSuccessfully() throws JsonProcessingException {
     UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
 
-    ResponseEntity<UserInOrganizationResponseDto> response =
+    ResponseEntity<OrganizationSingleMemberResponseDto> response =
         this.testRestTemplate.postForEntity(
             getOrganizationUsersUrl(organizationId),
             userInOrganizationRequestDto,
-            UserInOrganizationResponseDto.class);
+            OrganizationSingleMemberResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     assertNotNull(response.getBody());
@@ -196,5 +195,15 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResponseEntity<User> createUser =
         this.testRestTemplate.postForEntity("/users", userRequestDto, User.class);
     return createUser.getBody();
+  }
+
+  @Nullable
+  private OrganizationSingleMemberResponseDto addUserInOrganization(UUID organizationId) {
+    ResponseEntity<OrganizationSingleMemberResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getOrganizationUsersUrl(organizationId),
+            userInOrganizationRequestDto,
+            OrganizationSingleMemberResponseDto.class);
+    return response.getBody();
   }
 }

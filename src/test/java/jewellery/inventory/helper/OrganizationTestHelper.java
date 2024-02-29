@@ -3,11 +3,8 @@ package jewellery.inventory.helper;
 import java.util.*;
 
 import jewellery.inventory.dto.request.OrganizationRequestDto;
-import jewellery.inventory.dto.request.UpdateUserPermissionsRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
-import jewellery.inventory.dto.response.ExecutorResponseDto;
-import jewellery.inventory.dto.response.OrganizationResponseDto;
-import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.OrganizationPermission;
 import jewellery.inventory.model.User;
@@ -27,17 +24,20 @@ public class OrganizationTestHelper {
     return organization;
   }
 
-  public static Organization getTestOrganizationWithUser(User user) {
+  public static Organization getTestOrganizationWithUserWithAllPermissions(User user) {
     Organization organization = getTestOrganization();
-    UserInOrganization userInOrganization = createUserInOrganization(user, organization);
+    UserInOrganization userInOrganization =
+        createUserInOrganizationAllPermissions(user, organization);
     List<UserInOrganization> usersInOrganizationList = new ArrayList<>();
     usersInOrganizationList.add(userInOrganization);
     organization.setUsersInOrganization(usersInOrganizationList);
     return organization;
   }
 
-  private static UserInOrganization createUserInOrganization(User user, Organization organization) {
+  private static UserInOrganization createUserInOrganizationAllPermissions(
+      User user, Organization organization) {
     UserInOrganization userInOrganization = new UserInOrganization();
+    userInOrganization.setId(UUID.randomUUID());
     userInOrganization.setOrganization(organization);
     userInOrganization.setUser(user);
     userInOrganization.setOrganizationPermission(List.of(OrganizationPermission.values()));
@@ -89,12 +89,13 @@ public class OrganizationTestHelper {
     return responseDto;
   }
 
-  public static UserInOrganizationResponseDto getTestUserInOrganizationResponseDto(
-      Organization organization) {
-    UserInOrganizationResponseDto dto = new UserInOrganizationResponseDto();
-    dto.setUserId(organization.getUsersInOrganization().get(0).getUser().getId());
-    dto.setOrganizationPermissions(
+  public static UserInOrganization getTestUserInOrganization(Organization organization) {
+    UserInOrganization dto = new UserInOrganization();
+    dto.setOrganization(organization);
+    dto.setId(UUID.randomUUID());
+    dto.setUser(organization.getUsersInOrganization().get(0).getUser());
+    dto.setOrganizationPermission(
         organization.getUsersInOrganization().get(0).getOrganizationPermission());
     return dto;
   }
-}
+ }

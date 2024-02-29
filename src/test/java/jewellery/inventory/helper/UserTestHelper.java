@@ -22,6 +22,17 @@ public class UserTestHelper {
     return user;
   }
 
+  public static UserRequestDto getTestUserRequest(User user){
+    UserRequestDto userRequestDto=new UserRequestDto();
+    userRequestDto.setRole(user.getRole());
+    userRequestDto.setPassword(user.getPassword());
+    userRequestDto.setEmail(user.getEmail());
+    userRequestDto.setFirstName(user.getFirstName());
+    userRequestDto.setLastName(user.getLastName());
+    return userRequestDto;
+  }
+
+
   public static User createTestUser() {
     User user = new User();
     user.setFirstName(FIRST_NAME);

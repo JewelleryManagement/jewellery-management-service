@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import java.util.UUID;
 import jewellery.inventory.aspect.EventAspect;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
@@ -32,10 +31,10 @@ class EventAspectTest {
   }
 
   @Test
-  void logDeleteWillFailWhenServiceNotFetcher() throws Throwable {
+  void logDeleteWillFailWhenServiceNotFetcher() {
     when(proceedingJoinPointMock.getTarget()).thenReturn(new Object());
 
-    eventAspect.logDeletion(proceedingJoinPointMock, logDeletEventMock, UUID.randomUUID());
+    eventAspect.logDeletion(proceedingJoinPointMock, logDeletEventMock);
 
     verify(systemEventServiceMock, times(0)).logEvent(any(), any());
   }

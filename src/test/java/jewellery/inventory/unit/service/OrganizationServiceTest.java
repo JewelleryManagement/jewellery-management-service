@@ -8,20 +8,16 @@ import static org.mockito.Mockito.*;
 
 import java.util.*;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
-import jewellery.inventory.dto.response.ExecutorResponseDto;
-import jewellery.inventory.dto.response.OrganizationResponseDto;
-import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
-import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
-import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.Organization;
-import jewellery.inventory.model.OrganizationPermission;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.OrganizationRepository;
 import jewellery.inventory.repository.UserInOrganizationRepository;
 import jewellery.inventory.service.OrganizationService;
+import jewellery.inventory.service.UserInOrganizationService;
 import jewellery.inventory.service.UserService;
 import jewellery.inventory.service.security.AuthService;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,12 +25,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class OrganizationServiceTest {
   @InjectMocks private OrganizationService organizationService;
+  @Mock private UserInOrganizationService userInOrganizationService;
+
   @Mock private OrganizationRepository organizationRepository;
   @Mock private OrganizationMapper organizationMapper;
   @Mock private AuthService authService;
@@ -42,11 +39,9 @@ class OrganizationServiceTest {
   @Mock private UserInOrganizationRepository userInOrganizationRepository;
 
   private Organization organization;
-  private Organization organizationWithUser;
   private User user;
   private OrganizationRequestDto organizationRequestDto;
   private OrganizationResponseDto organizationResponseDto;
-  private UserInOrganizationResponseDto userInOrganizationResponseDto;
   private ExecutorResponseDto executorResponseDto;
 
   @BeforeEach
@@ -54,10 +49,8 @@ class OrganizationServiceTest {
     organization = getTestOrganization();
     organizationRequestDto = getTestOrganizationRequest();
     user = UserTestHelper.createSecondTestUser();
-    organizationWithUser = getTestOrganizationWithUser(user);
     executorResponseDto = getTestExecutor(user);
     organizationResponseDto = getTestOrganizationResponseDto(organization);
-    userInOrganizationResponseDto = getTestUserInOrganizationResponseDto(organizationWithUser);
   }
 
   @Test
@@ -106,88 +99,10 @@ class OrganizationServiceTest {
   }
 
   @Test
-  void getUsersInOrganizationSuccessfully() {
-    when(organizationRepository.findById(organizationWithUser.getId()))
-        .thenReturn(Optional.of(organizationWithUser));
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(user.getId())).thenReturn(user);
-    when(organizationMapper.toUserInOrganizationResponseDtoResponse(organizationWithUser))
-        .thenReturn(new ArrayList<>());
-
-    List<UserInOrganizationResponseDto> actual =
-        organizationService.getAllUsersInOrganization(organizationWithUser.getId());
-
-    assertNotNull(actual);
-    assertEquals(0, actual.size());
-  }
-
-  @Test
-  void updateUserPermissionsInOrganizationSuccessfully() {
-    when(organizationRepository.findById(organizationWithUser.getId()))
-        .thenReturn(Optional.of(organizationWithUser));
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(user.getId())).thenReturn(user);
-    when(organizationMapper.toUserInOrganizationResponseDtoResponse(
-            organizationWithUser, user.getId()))
-        .thenReturn(userInOrganizationResponseDto);
-
-    UserInOrganizationResponseDto actual =
-        organizationService.updateUserPermissionsInOrganization(
-            organizationWithUser.getId(),
-            user.getId(),
-            List.of(OrganizationPermission.DESTROY_ORGANIZATION));
-
-    assertNotNull(actual);
-    assertEquals(actual, userInOrganizationResponseDto);
-  }
-
-  @Test
   void testGetOrganizationShouldThrowWhenItsNotFound() {
     UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
     assertThrows(
         OrganizationNotFoundException.class,
         () -> organizationService.getOrganizationResponse(fakeId));
-  }
-
-  @Test
-  void deleteUserInOrganizationThrowsExceptionWhenNoManageUsersPermission() {
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(executorResponseDto.getId())).thenReturn(new User());
-    when(organizationRepository.findById(organizationWithUser.getId()))
-        .thenReturn(Optional.of(organizationWithUser));
-
-    assertThrows(
-        MissingOrganizationPermissionException.class,
-        () ->
-            organizationService.deleteUserInOrganization(
-                user.getId(), organizationWithUser.getId()));
-  }
-
-  @Test
-  void updateUserPermissionsInOrganizationThrowsExceptionWhenNoManageUsersPermission() {
-    when(organizationRepository.findById(organizationWithUser.getId()))
-        .thenReturn(Optional.of(organizationWithUser));
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(executorResponseDto.getId())).thenReturn(new User());
-
-    assertThrows(
-        MissingOrganizationPermissionException.class,
-        () ->
-            organizationService.updateUserPermissionsInOrganization(
-                organizationWithUser.getId(),
-                user.getId(),
-                List.of(OrganizationPermission.DESTROY_ORGANIZATION)));
-  }
-
-  @Test
-  void getUsersInOrganizationThrowsExceptionWhenUserIsNotPartOfOrganizationException() {
-    when(organizationRepository.findById(organizationWithUser.getId()))
-        .thenReturn(Optional.of(organizationWithUser));
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(any(UUID.class))).thenReturn(new User());
-
-    assertThrows(
-        UserIsNotPartOfOrganizationException.class,
-        () -> organizationService.getAllUsersInOrganization(organizationWithUser.getId()));
   }
 }

@@ -7,9 +7,11 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.UpdateUserPermissionsRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
+import jewellery.inventory.dto.response.OrganizationMembersResponseDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
-import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
+import jewellery.inventory.dto.response.OrganizationSingleMemberResponseDto;
 import jewellery.inventory.service.OrganizationService;
+import jewellery.inventory.service.UserInOrganizationService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class OrganizationController {
 
   private final OrganizationService organizationService;
+  private final UserInOrganizationService userInOrganizationService;
 
   @Operation(summary = "Get all organizations")
   @ResponseStatus(HttpStatus.OK)
@@ -46,10 +49,11 @@ public class OrganizationController {
   @Operation(summary = "Add a user in organization")
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/{organizationId}/users")
-  public UserInOrganizationResponseDto addUserInOrganization(
+  public OrganizationSingleMemberResponseDto addUserInOrganization(
       @PathVariable UUID organizationId,
       @RequestBody @Valid UserInOrganizationRequestDto userInOrganizationRequestDto) {
-    return organizationService.addUserInOrganization(organizationId, userInOrganizationRequestDto);
+    return userInOrganizationService.addUserInOrganization(
+        organizationId, userInOrganizationRequestDto);
   }
 
   @Operation(summary = "Delete a user in organization")
@@ -57,25 +61,25 @@ public class OrganizationController {
   @DeleteMapping("{organizationId}/users/{userId}")
   public void deleteUserInOrganization(
       @PathVariable UUID organizationId, @PathVariable UUID userId) {
-    organizationService.deleteUserInOrganization(userId, organizationId);
+    userInOrganizationService.deleteUserInOrganization(userId, organizationId);
   }
 
   @Operation(summary = "Update a user permissions in organization")
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("{organizationId}/users/{userId}")
-  public UserInOrganizationResponseDto updateUserPermissionsInOrganization(
+  public OrganizationSingleMemberResponseDto updateUserPermissionsInOrganization(
       @PathVariable UUID organizationId,
       @PathVariable UUID userId,
       @RequestBody @Valid UpdateUserPermissionsRequest updateUserPermissionsRequest) {
-    return organizationService.updateUserPermissionsInOrganization(
-        organizationId, userId, updateUserPermissionsRequest.getOrganizationPermission());
+    return userInOrganizationService.updateUserPermissionsInOrganization(
+        userId, organizationId, updateUserPermissionsRequest.getOrganizationPermission());
   }
 
   @Operation(summary = "Get all users in organization")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("{organizationId}/users")
-  public List<UserInOrganizationResponseDto> getAllUsersInOrganization(
+  public OrganizationMembersResponseDto getAllUsersInOrganization(
       @PathVariable UUID organizationId) {
-    return organizationService.getAllUsersInOrganization(organizationId);
+    return userInOrganizationService.getAllUsersInOrganization(organizationId);
   }
 }

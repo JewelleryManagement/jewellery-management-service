@@ -66,9 +66,7 @@ abstract class AuthenticatedIntegrationTestBase {
     User adminUser = createTestUserWithId();
     setupMockSecurityContext(adminUser);
     setupTestRestTemplateWithAuthHeaders();
-    User adminDifferent = createUserInDatabase(UserTestHelper.createDifferentTestUserRequest());
-    setupMockSecurityContext(adminDifferent);
-    setupTestRestTemplateWithAuthHeaders();
+    adminUser.setId(createUserInDatabase(UserTestHelper.getTestUserRequest(adminUser)).getId());
   }
 
   private void deleteAllImages() {

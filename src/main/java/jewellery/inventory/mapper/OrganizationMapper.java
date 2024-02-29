@@ -1,7 +1,9 @@
 package jewellery.inventory.mapper;
 
 import jewellery.inventory.dto.request.OrganizationRequestDto;
+import jewellery.inventory.dto.response.OrganizationMembersResponseDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
+import jewellery.inventory.dto.response.OrganizationSingleMemberResponseDto;
 import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
 import jewellery.inventory.model.*;
 import lombok.AllArgsConstructor;
@@ -32,7 +34,7 @@ public class OrganizationMapper {
     return organizationResponseDto;
   }
 
-  public List<UserInOrganizationResponseDto> toUserInOrganizationResponseDtoResponse(
+  private List<UserInOrganizationResponseDto> toUserInOrganizationResponseDtoResponse(
       Organization organization) {
     List<UserInOrganizationResponseDto> userResponseDtoList = new ArrayList<>();
 
@@ -49,7 +51,7 @@ public class OrganizationMapper {
     return userResponseDtoList;
   }
 
-  public UserInOrganizationResponseDto toUserInOrganizationResponseDtoResponse(
+  private UserInOrganizationResponseDto toUserInOrganizationResponseDtoResponse(
       Organization organization, UUID userId) {
     UserInOrganizationResponseDto userResponseDto = new UserInOrganizationResponseDto();
 
@@ -64,4 +66,18 @@ public class OrganizationMapper {
 
     return userResponseDto;
   }
+
+    public OrganizationMembersResponseDto toOrganizationMembersResponseDto(Organization organization) {
+        OrganizationMembersResponseDto membersResponseDto = new OrganizationMembersResponseDto();
+        membersResponseDto.setMembers(toUserInOrganizationResponseDtoResponse(organization));
+        membersResponseDto.setOrganization(toResponse(organization));
+        return membersResponseDto;
+    }
+
+    public OrganizationSingleMemberResponseDto toOrganizationSingleMemberResponseDto(UUID userId,Organization organization){
+        OrganizationSingleMemberResponseDto memberResponseDto = new OrganizationSingleMemberResponseDto();
+        memberResponseDto.setMember(toUserInOrganizationResponseDtoResponse(organization,userId));
+        memberResponseDto.setOrganization(toResponse(organization));
+        return memberResponseDto;
+    }
 }

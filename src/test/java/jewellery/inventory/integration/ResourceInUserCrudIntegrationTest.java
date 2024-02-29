@@ -186,7 +186,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
-    assertEquals(2, response.getBody().getUsersAndQuantities().size());
+    assertEquals(1, response.getBody().getUsersAndQuantities().size());
   }
 
   @Test
@@ -400,7 +400,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   }
 
   private UserResponseDto sendCreateUserRequest() {
-    UserRequestDto userRequest = createTestUserRequest();
+    UserRequestDto userRequest = createDifferentTestUserRequest();
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
     UserResponseDto createdUser = userResponseEntity.getBody();
