@@ -94,7 +94,7 @@ public class UserInOrganizationService implements EntityFetcher {
         userId);
   }
 
-  private void validateCurrentUserPermission(
+  public void validateCurrentUserPermission(
       Organization organization, OrganizationPermission permission) {
     User currentUser = userService.getUser(authService.getCurrentUser().getId());
     if (!hasPermission(currentUser, organization, permission)) {
