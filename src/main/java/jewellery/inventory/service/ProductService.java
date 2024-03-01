@@ -50,7 +50,6 @@ public class ProductService implements EntityFetcher {
     Product product = getProduct(id);
     User user = getUser(productUpdateRequestDto.getOwnerId());
     throwExceptionIfProductIsSold(product);
-    throwExceptionIfProductIsPartOfAnotherProduct(id, product);
     moveQuantityFromResourcesInProductToResourcesInUser(product);
     disassembleProductContent(product);
 
