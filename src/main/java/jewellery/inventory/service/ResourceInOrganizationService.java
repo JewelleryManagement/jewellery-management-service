@@ -1,11 +1,10 @@
 package jewellery.inventory.service;
 
-import static jewellery.inventory.model.EventType.RESOURCE_REMOVE_QUANTITY;
+import static jewellery.inventory.model.EventType.ORGANIZATION_REMOVE_RESOURCE;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
-
 import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
@@ -24,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class ResourceInOrganizationService implements EntityFetcher{
+public class ResourceInOrganizationService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(ResourceInOrganizationService.class);
   private final ResourceInOrganizationRepository resourceInOrganizationRepository;
   private final UserInOrganizationService userInOrganizationService;
@@ -49,13 +48,12 @@ public class ResourceInOrganizationService implements EntityFetcher{
     ResourceInOrganization resourceInOrganization =
         addResourceToOrganization(
             organization, resource, resourceInOrganizationRequestDto.getQuantity());
-    organization.getResourceInOrganization().add(resourceInOrganization);
 
-    return resourceInOrganizationMapper.toResourceInOrganizationResponseDto(organization);
+    return resourceInOrganizationMapper.toResourceInOrganizationResponse(resourceInOrganization);
   }
 
   @Transactional
-  @LogUpdateEvent(eventType = RESOURCE_REMOVE_QUANTITY)
+  @LogUpdateEvent(eventType = ORGANIZATION_REMOVE_RESOURCE)
   public ResourcesInOrganizationResponseDto removeQuantityFromResource(
       UUID organizationId, UUID resourceId, BigDecimal quantity) {
     return removeQuantityFromResourceNoLog(organizationId, resourceId, quantity);
@@ -68,11 +66,11 @@ public class ResourceInOrganizationService implements EntityFetcher{
         organization, OrganizationPermission.REMOVE_RESOURCE_QUANTITY);
 
     ResourceInOrganization resourceInOrganization =
-            findResourceInOrganizationOrThrow(organization, resourceId);
+        findResourceInOrganizationOrThrow(organization, resourceId);
     removeQuantityFromResource(resourceInOrganization, quantity);
 
     if (resourceInOrganization != null) {
-      return resourceInOrganizationMapper.toResourceInOrganizationResponseDto(organization);
+      return resourceInOrganizationMapper.toResourceInOrganizationResponse(resourceInOrganization);
     }
     return new ResourcesInOrganizationResponseDto();
   }
@@ -109,7 +107,8 @@ public class ResourceInOrganizationService implements EntityFetcher{
       if (ids[0] instanceof ResourceInOrganizationRequestDto resourceInOrganizationRequestDto) {
 
         return getResourceInOrganizationResponse(
-                resourceInOrganizationRequestDto.getOrganizationId(), resourceInOrganizationRequestDto.getResourceId());
+            resourceInOrganizationRequestDto.getOrganizationId(),
+            resourceInOrganizationRequestDto.getResourceId());
       } else {
         return getResourceInOrganizationResponse((UUID) ids[0], (UUID) ids[1]);
       }
@@ -179,10 +178,12 @@ public class ResourceInOrganizationService implements EntityFetcher{
     return resourceInOrganization;
   }
 
-  private ResourcesInOrganizationResponseDto getResourceInOrganizationResponse(UUID organizationId, UUID resourceId) {
+  private ResourcesInOrganizationResponseDto getResourceInOrganizationResponse(
+      UUID organizationId, UUID resourceId) {
     Organization organization = organizationService.getOrganization(organizationId);
     Resource resource = resourceService.getResourceById(resourceId);
-    ResourceInOrganization resourceInOrganization = getResourceInOrganization(organization, resource);
+    ResourceInOrganization resourceInOrganization =
+        getResourceInOrganization(organization, resource);
     if (resourceInOrganization != null) {
       return resourceInOrganizationMapper.toResourceInOrganizationResponseDto(organization);
     }
