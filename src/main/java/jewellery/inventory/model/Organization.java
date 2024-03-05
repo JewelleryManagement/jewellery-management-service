@@ -27,7 +27,7 @@ public class Organization {
   @Column private String address;
   @Column private String note;
 
-  @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ResourceInOrganization> resourceInOrganization;
 
   @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)

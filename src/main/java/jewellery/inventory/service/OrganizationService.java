@@ -35,11 +35,15 @@ public class OrganizationService implements EntityFetcher {
     return organizationMapper.toResponse(getOrganization(id));
   }
 
+  public Organization saveOrganization(Organization organization){
+    return organizationRepository.save(organization);
+  }
+
   @LogCreateEvent(eventType = EventType.ORGANIZATION_CREATE)
   public OrganizationResponseDto create(OrganizationRequestDto organizationRequestDto) {
     Organization organization = organizationMapper.toEntity(organizationRequestDto);
     makeCurrentUserOwner(organization);
-    organization = organizationRepository.save(organization);
+    organization = saveOrganization(organization);
     logger.info("Organization created with ID: {}", organization.getId());
     return organizationMapper.toResponse(organization);
   }

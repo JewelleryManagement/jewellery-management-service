@@ -1,11 +1,17 @@
 package jewellery.inventory.service;
 
+import static jewellery.inventory.model.EventType.RESOURCE_REMOVE_QUANTITY;
+
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
+
+import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
-import jewellery.inventory.dto.response.ResourceInOrganizationResponseDto;
+import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
+import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
+import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.mapper.ResourceInOrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
@@ -18,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class ResourceInOrganizationService {
+public class ResourceInOrganizationService implements EntityFetcher{
   private static final Logger logger = LogManager.getLogger(ResourceInOrganizationService.class);
   private final ResourceInOrganizationRepository resourceInOrganizationRepository;
   private final UserInOrganizationService userInOrganizationService;
@@ -26,9 +32,11 @@ public class ResourceInOrganizationService {
   private final ResourceService resourceService;
   private final ResourceInOrganizationMapper resourceInOrganizationMapper;
 
+  private static final BigDecimal EPSILON = new BigDecimal("1e-10");
+
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_ADD_RESOURCE)
   @Transactional
-  public ResourceInOrganizationResponseDto addResourceToOrganization(
+  public ResourcesInOrganizationResponseDto addResourceToOrganization(
       ResourceInOrganizationRequestDto resourceInOrganizationRequestDto) {
     Organization organization =
         organizationService.getOrganization(resourceInOrganizationRequestDto.getOrganizationId());
@@ -41,8 +49,87 @@ public class ResourceInOrganizationService {
     ResourceInOrganization resourceInOrganization =
         addResourceToOrganization(
             organization, resource, resourceInOrganizationRequestDto.getQuantity());
+    organization.getResourceInOrganization().add(resourceInOrganization);
 
-    return resourceInOrganizationMapper.toResourceInOrganizationResponse(resourceInOrganization);
+    return resourceInOrganizationMapper.toResourceInOrganizationResponseDto(organization);
+  }
+
+  @Transactional
+  @LogUpdateEvent(eventType = RESOURCE_REMOVE_QUANTITY)
+  public ResourcesInOrganizationResponseDto removeQuantityFromResource(
+      UUID organizationId, UUID resourceId, BigDecimal quantity) {
+    return removeQuantityFromResourceNoLog(organizationId, resourceId, quantity);
+  }
+
+  public ResourcesInOrganizationResponseDto removeQuantityFromResourceNoLog(
+      UUID organizationId, UUID resourceId, BigDecimal quantity) {
+    Organization organization = organizationService.getOrganization(organizationId);
+    userInOrganizationService.validateCurrentUserPermission(
+        organization, OrganizationPermission.REMOVE_RESOURCE_QUANTITY);
+
+    ResourceInOrganization resourceInOrganization =
+            findResourceInOrganizationOrThrow(organization, resourceId);
+    removeQuantityFromResource(resourceInOrganization, quantity);
+
+    if (resourceInOrganization != null) {
+      return resourceInOrganizationMapper.toResourceInOrganizationResponseDto(organization);
+    }
+    return new ResourcesInOrganizationResponseDto();
+  }
+
+  public void removeQuantityFromResource(
+      ResourceInOrganization resourceInOrganization, BigDecimal quantityToRemove) {
+
+    BigDecimal totalQuantity = resourceInOrganization.getQuantity();
+    BigDecimal newQuantity = totalQuantity.subtract(quantityToRemove);
+
+    if (isNegative(newQuantity)) {
+      throw new InsufficientResourceQuantityException(quantityToRemove, totalQuantity);
+    }
+
+    resourceInOrganization.setQuantity(newQuantity);
+    Organization organization = resourceInOrganization.getOrganization();
+    if (isApproachingZero(newQuantity)) {
+      organization.getResourceInOrganization().remove(resourceInOrganization);
+      resourceInOrganization = null;
+    }
+    organizationService.saveOrganization(organization);
+    logger.debug("ResourceInUser after quantity removal: {}", resourceInOrganization);
+  }
+
+  public ResourceInOrganization findResourceInOrganizationOrThrow(
+      Organization previousOwner, UUID resourceId) {
+    return findResourceInOrganization(previousOwner, resourceId)
+        .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, previousOwner.getId()));
+  }
+
+  @Override
+  public Object fetchEntity(Object... ids) {
+    if (ids != null && ids.length > 0) {
+      if (ids[0] instanceof ResourceInOrganizationRequestDto resourceInOrganizationRequestDto) {
+
+        return getResourceInOrganizationResponse(
+                resourceInOrganizationRequestDto.getOrganizationId(), resourceInOrganizationRequestDto.getResourceId());
+      } else {
+        return getResourceInOrganizationResponse((UUID) ids[0], (UUID) ids[1]);
+      }
+    }
+    return null;
+  }
+
+  public ResourcesInOrganizationResponseDto getAllResourcesFromOrganization(UUID organizationId) {
+    Organization organization = organizationService.getOrganization(organizationId);
+    userInOrganizationService.validateUserInOrganization(organization);
+
+    return resourceInOrganizationMapper.toResourceInOrganizationResponseDto(organization);
+  }
+
+  private boolean isApproachingZero(BigDecimal value) {
+    return value.abs().compareTo(EPSILON) < 0;
+  }
+
+  private boolean isNegative(BigDecimal value) {
+    return value.compareTo(BigDecimal.ZERO) < 0;
   }
 
   private Optional<ResourceInOrganization> findResourceInOrganization(
@@ -52,7 +139,7 @@ public class ResourceInOrganizationService {
         resourceId,
         organization.getId());
     return organization.getResourceInOrganization().stream()
-        .filter(resource -> resource.getOrganization().getId().equals(resourceId))
+        .filter(resource -> resource.getResource().getId().equals(resourceId))
         .findFirst();
   }
 
@@ -90,5 +177,15 @@ public class ResourceInOrganizationService {
     resourceInOrganizationRepository.save(resourceInOrganization);
     logger.debug("ResourceInOrganization after addition: {}", resource);
     return resourceInOrganization;
+  }
+
+  private ResourcesInOrganizationResponseDto getResourceInOrganizationResponse(UUID organizationId, UUID resourceId) {
+    Organization organization = organizationService.getOrganization(organizationId);
+    Resource resource = resourceService.getResourceById(resourceId);
+    ResourceInOrganization resourceInOrganization = getResourceInOrganization(organization, resource);
+    if (resourceInOrganization != null) {
+      return resourceInOrganizationMapper.toResourceInOrganizationResponseDto(organization);
+    }
+    return null;
   }
 }

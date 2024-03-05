@@ -107,7 +107,7 @@ public class UserInOrganizationService implements EntityFetcher {
         organization.getId());
   }
 
-  private void validateUserInOrganization(Organization organization) {
+  public void validateUserInOrganization(Organization organization) {
     User currentUser = userService.getUser(authService.getCurrentUser().getId());
     boolean isUserInOrganization =
         organization.getUsersInOrganization().stream()

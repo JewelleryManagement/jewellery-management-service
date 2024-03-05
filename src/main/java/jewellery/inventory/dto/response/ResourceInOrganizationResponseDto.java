@@ -3,11 +3,11 @@ package jewellery.inventory.dto.response;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-@Getter
-@Setter
-@ToString
-@EqualsAndHashCode
-@SuperBuilder
+import java.util.List;
+
+@Data
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 public class ResourceInOrganizationResponseDto {
     private OrganizationResponseDto owner;
