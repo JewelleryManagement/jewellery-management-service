@@ -8,8 +8,11 @@ import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
+import jewellery.inventory.dto.request.ResourcesInOrganizationPurchaseRequestDto;
+import jewellery.inventory.dto.response.ResourceInOrganizationPurchaseResponseDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
+import jewellery.inventory.exception.not_found.ResourceInOrganizationNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.mapper.ResourceInOrganizationMapper;
 import jewellery.inventory.model.*;
@@ -35,21 +38,26 @@ public class ResourceInOrganizationService implements EntityFetcher {
 
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_ADD_RESOURCE)
   @Transactional
-  public ResourcesInOrganizationResponseDto addResourceToOrganization(
-      ResourceInOrganizationRequestDto resourceInOrganizationRequestDto) {
+  public ResourceInOrganizationPurchaseResponseDto addResourceToOrganization(
+      ResourcesInOrganizationPurchaseRequestDto resourcesInOrganizationPurchaseRequestDto) {
     Organization organization =
-        organizationService.getOrganization(resourceInOrganizationRequestDto.getOrganizationId());
+        organizationService.getOrganization(
+            resourcesInOrganizationPurchaseRequestDto.getOrganizationId());
     userInOrganizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.ADD_RESOURCE_QUANTITY);
 
     Resource resource =
-        resourceService.getResourceById(resourceInOrganizationRequestDto.getResourceId());
+        resourceService.getResourceById(resourcesInOrganizationPurchaseRequestDto.getResourceId());
 
     ResourceInOrganization resourceInOrganization =
         addResourceToOrganization(
-            organization, resource, resourceInOrganizationRequestDto.getQuantity());
+            organization,
+            resource,
+            resourcesInOrganizationPurchaseRequestDto.getQuantity(),
+            resourcesInOrganizationPurchaseRequestDto.getDealPrice());
 
-    return resourceInOrganizationMapper.toResourceInOrganizationResponse(resourceInOrganization);
+    return resourceInOrganizationMapper.toResourceInOrganizationPurchaseResponse(
+        resourceInOrganization);
   }
 
   @Transactional
@@ -92,13 +100,13 @@ public class ResourceInOrganizationService implements EntityFetcher {
       resourceInOrganization = null;
     }
     organizationService.saveOrganization(organization);
-    logger.debug("ResourceInUser after quantity removal: {}", resourceInOrganization);
+    logger.debug("ResourceInOrganization after quantity removal: {}", resourceInOrganization);
   }
 
   public ResourceInOrganization findResourceInOrganizationOrThrow(
       Organization previousOwner, UUID resourceId) {
     return findResourceInOrganization(previousOwner, resourceId)
-        .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, previousOwner.getId()));
+        .orElseThrow(() -> new ResourceInOrganizationNotFoundException(resourceId, previousOwner.getId()));
   }
 
   @Override
@@ -157,22 +165,23 @@ public class ResourceInOrganizationService implements EntityFetcher {
   private ResourceInOrganization getResourceInOrganization(
       Organization organization, Resource resource) {
     logger.debug(
-        "Getting resource in user. Organization: {}, Resource: {}", organization, resource);
+        "Getting resource in organization. Organization: {}, Resource: {}", organization, resource);
     return findResourceInOrganization(organization, resource.getId())
         .orElseGet(
             () -> createAndAddNewResourceInOrganization(organization, resource, BigDecimal.ZERO));
   }
 
   private ResourceInOrganization addResourceToOrganization(
-      Organization organization, Resource resource, BigDecimal quantity) {
+      Organization organization, Resource resource, BigDecimal quantity, BigDecimal dealPrice) {
     logger.info(
-        "Adding resource to user. Organization: {}, Resource: {}, Quantity: {}",
+        "Adding resource to organization. Organization: {}, Resource: {}, Quantity: {}",
         organization,
         resource,
         quantity);
     ResourceInOrganization resourceInOrganization =
         getResourceInOrganization(organization, resource);
     resourceInOrganization.setQuantity(resourceInOrganization.getQuantity().add(quantity));
+    resourceInOrganization.setDealPrice(dealPrice);
     resourceInOrganizationRepository.save(resourceInOrganization);
     logger.debug("ResourceInOrganization after addition: {}", resource);
     return resourceInOrganization;

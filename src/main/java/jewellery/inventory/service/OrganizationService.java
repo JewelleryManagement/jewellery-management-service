@@ -23,7 +23,6 @@ public class OrganizationService implements EntityFetcher {
   private final OrganizationMapper organizationMapper;
   private final AuthService authService;
   private final UserService userService;
-  private final UserInOrganizationRepository userInOrganizationRepository;
 
   public List<OrganizationResponseDto> getAllOrganizationsResponses() {
     logger.debug("Fetching all organizationsResponses");
@@ -35,7 +34,7 @@ public class OrganizationService implements EntityFetcher {
     return organizationMapper.toResponse(getOrganization(id));
   }
 
-  public Organization saveOrganization(Organization organization){
+  public Organization saveOrganization(Organization organization) {
     return organizationRepository.save(organization);
   }
 
