@@ -8,12 +8,9 @@ import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
-import jewellery.inventory.dto.request.ResourcesInOrganizationPurchaseRequestDto;
-import jewellery.inventory.dto.response.ResourceInOrganizationPurchaseResponseDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInOrganizationNotFoundException;
-import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.mapper.ResourceInOrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
@@ -38,26 +35,24 @@ public class ResourceInOrganizationService implements EntityFetcher {
 
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_ADD_RESOURCE)
   @Transactional
-  public ResourceInOrganizationPurchaseResponseDto addResourceToOrganization(
-      ResourcesInOrganizationPurchaseRequestDto resourcesInOrganizationPurchaseRequestDto) {
+  public ResourcesInOrganizationResponseDto addResourceToOrganization(
+      ResourceInOrganizationRequestDto resourceInOrganizationRequestDto) {
     Organization organization =
-        organizationService.getOrganization(
-            resourcesInOrganizationPurchaseRequestDto.getOrganizationId());
+        organizationService.getOrganization(resourceInOrganizationRequestDto.getOrganizationId());
     userInOrganizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.ADD_RESOURCE_QUANTITY);
 
     Resource resource =
-        resourceService.getResourceById(resourcesInOrganizationPurchaseRequestDto.getResourceId());
+        resourceService.getResourceById(resourceInOrganizationRequestDto.getResourceId());
 
     ResourceInOrganization resourceInOrganization =
         addResourceToOrganization(
             organization,
             resource,
-            resourcesInOrganizationPurchaseRequestDto.getQuantity(),
-            resourcesInOrganizationPurchaseRequestDto.getDealPrice());
+            resourceInOrganizationRequestDto.getQuantity(),
+            resourceInOrganizationRequestDto.getDealPrice());
 
-    return resourceInOrganizationMapper.toResourceInOrganizationPurchaseResponse(
-        resourceInOrganization);
+    return resourceInOrganizationMapper.toResourceInOrganizationResponse(resourceInOrganization);
   }
 
   @Transactional
@@ -67,7 +62,41 @@ public class ResourceInOrganizationService implements EntityFetcher {
     return removeQuantityFromResourceNoLog(organizationId, resourceId, quantity);
   }
 
-  public ResourcesInOrganizationResponseDto removeQuantityFromResourceNoLog(
+  public ResourcesInOrganizationResponseDto getAllResourcesFromOrganization(UUID organizationId) {
+    Organization organization = organizationService.getOrganization(organizationId);
+    userInOrganizationService.validateUserInOrganization(organization);
+
+    return resourceInOrganizationMapper.toResourceInOrganizationResponseDto(organization);
+  }
+
+  @Override
+  public Object fetchEntity(Object... ids) {
+    if (ids != null && ids.length > 0) {
+      if (ids[0] instanceof ResourceInOrganizationRequestDto resourceInOrganizationRequestDto) {
+
+        return getResourceInOrganizationResponse(
+            resourceInOrganizationRequestDto.getOrganizationId(),
+            resourceInOrganizationRequestDto.getResourceId());
+      } else {
+        return getResourceInOrganizationResponse((UUID) ids[0], (UUID) ids[1]);
+      }
+    }
+    return null;
+  }
+
+  private ResourcesInOrganizationResponseDto getResourceInOrganizationResponse(
+      UUID organizationId, UUID resourceId) {
+    Organization organization = organizationService.getOrganization(organizationId);
+    Resource resource = resourceService.getResourceById(resourceId);
+    ResourceInOrganization resourceInOrganization =
+        getResourceInOrganization(organization, resource);
+    if (resourceInOrganization != null) {
+      return resourceInOrganizationMapper.toResourceInOrganizationResponseDto(organization);
+    }
+    return null;
+  }
+
+  private ResourcesInOrganizationResponseDto removeQuantityFromResourceNoLog(
       UUID organizationId, UUID resourceId, BigDecimal quantity) {
     Organization organization = organizationService.getOrganization(organizationId);
     userInOrganizationService.validateCurrentUserPermission(
@@ -83,7 +112,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
     return new ResourcesInOrganizationResponseDto();
   }
 
-  public void removeQuantityFromResource(
+  private void removeQuantityFromResource(
       ResourceInOrganization resourceInOrganization, BigDecimal quantityToRemove) {
 
     BigDecimal totalQuantity = resourceInOrganization.getQuantity();
@@ -103,32 +132,11 @@ public class ResourceInOrganizationService implements EntityFetcher {
     logger.debug("ResourceInOrganization after quantity removal: {}", resourceInOrganization);
   }
 
-  public ResourceInOrganization findResourceInOrganizationOrThrow(
+  private ResourceInOrganization findResourceInOrganizationOrThrow(
       Organization previousOwner, UUID resourceId) {
     return findResourceInOrganization(previousOwner, resourceId)
-        .orElseThrow(() -> new ResourceInOrganizationNotFoundException(resourceId, previousOwner.getId()));
-  }
-
-  @Override
-  public Object fetchEntity(Object... ids) {
-    if (ids != null && ids.length > 0) {
-      if (ids[0] instanceof ResourceInOrganizationRequestDto resourceInOrganizationRequestDto) {
-
-        return getResourceInOrganizationResponse(
-            resourceInOrganizationRequestDto.getOrganizationId(),
-            resourceInOrganizationRequestDto.getResourceId());
-      } else {
-        return getResourceInOrganizationResponse((UUID) ids[0], (UUID) ids[1]);
-      }
-    }
-    return null;
-  }
-
-  public ResourcesInOrganizationResponseDto getAllResourcesFromOrganization(UUID organizationId) {
-    Organization organization = organizationService.getOrganization(organizationId);
-    userInOrganizationService.validateUserInOrganization(organization);
-
-    return resourceInOrganizationMapper.toResourceInOrganizationResponseDto(organization);
+        .orElseThrow(
+            () -> new ResourceInOrganizationNotFoundException(resourceId, previousOwner.getId()));
   }
 
   private boolean isApproachingZero(BigDecimal value) {
@@ -185,17 +193,5 @@ public class ResourceInOrganizationService implements EntityFetcher {
     resourceInOrganizationRepository.save(resourceInOrganization);
     logger.debug("ResourceInOrganization after addition: {}", resource);
     return resourceInOrganization;
-  }
-
-  private ResourcesInOrganizationResponseDto getResourceInOrganizationResponse(
-      UUID organizationId, UUID resourceId) {
-    Organization organization = organizationService.getOrganization(organizationId);
-    Resource resource = resourceService.getResourceById(resourceId);
-    ResourceInOrganization resourceInOrganization =
-        getResourceInOrganization(organization, resource);
-    if (resourceInOrganization != null) {
-      return resourceInOrganizationMapper.toResourceInOrganizationResponseDto(organization);
-    }
-    return null;
   }
 }

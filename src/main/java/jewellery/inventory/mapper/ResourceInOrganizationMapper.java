@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
-import jewellery.inventory.dto.response.ResourceInOrganizationPurchaseResponseDto;
 import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
@@ -36,14 +35,6 @@ public interface ResourceInOrganizationMapper {
       expression =
           "java(toResourceQuantityResponseList(resourceInOrganization.getResource(), resourceInOrganization.getQuantity()))")
   ResourcesInOrganizationResponseDto toResourceInOrganizationResponse(
-      ResourceInOrganization resourceInOrganization);
-
-  @Mapping(source = "organization", target = "owner")
-  @Mapping(
-      target = "resourcesAndQuantities",
-      expression =
-          "java(toResourceQuantityResponseList(resourceInOrganization.getResource(), resourceInOrganization.getQuantity()))")
-  ResourceInOrganizationPurchaseResponseDto toResourceInOrganizationPurchaseResponse(
       ResourceInOrganization resourceInOrganization);
 
   default List<ResourceQuantityResponseDto> toResourceQuantityResponseList(

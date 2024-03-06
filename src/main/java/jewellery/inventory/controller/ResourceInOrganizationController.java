@@ -5,8 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import java.util.UUID;
-import jewellery.inventory.dto.request.ResourcesInOrganizationPurchaseRequestDto;
-import jewellery.inventory.dto.response.ResourceInOrganizationPurchaseResponseDto;
+import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.service.ResourceInOrganizationService;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +23,8 @@ public class ResourceInOrganizationController {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(summary = "Add resource to organization")
-  public ResourceInOrganizationPurchaseResponseDto addResourceToOrganization(
-      @RequestBody @Valid ResourcesInOrganizationPurchaseRequestDto request) {
+  public ResourcesInOrganizationResponseDto addResourceToOrganization(
+      @RequestBody @Valid ResourceInOrganizationRequestDto request) {
     return resourceInOrganizationService.addResourceToOrganization(request);
   }
 

@@ -17,4 +17,5 @@ public class ResourceInOrganizationRequestDto {
   @NotNull private UUID organizationId;
   @NotNull private UUID resourceId;
   @Positive private BigDecimal quantity;
+  @Positive private BigDecimal dealPrice;
 }
