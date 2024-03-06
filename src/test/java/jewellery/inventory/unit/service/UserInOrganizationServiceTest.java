@@ -65,7 +65,8 @@ class UserInOrganizationServiceTest {
         .thenReturn(new OrganizationMembersResponseDto());
 
     OrganizationMembersResponseDto actual =
-        userInOrganizationService.getAllUsersInOrganization(organizationWithUserAllPermission.getId());
+        userInOrganizationService.getAllUsersInOrganization(
+            organizationWithUserAllPermission.getId());
 
     assertNotNull(actual);
   }
@@ -74,6 +75,8 @@ class UserInOrganizationServiceTest {
   void updateUserPermissionsInOrganizationSuccessfully() {
     when(authService.getCurrentUser()).thenReturn(executorResponseDto);
     when(userService.getUser(user.getId())).thenReturn(user);
+    when(organizationService.getOrganization(organizationWithUserAllPermission.getId()))
+        .thenReturn(organizationWithUserAllPermission);
 
     when(userInOrganizationRepository.findByUserIdAndOrganizationId(
             organizationWithUserAllPermission.getUsersInOrganization().get(0).getUser().getId(),
@@ -117,6 +120,8 @@ class UserInOrganizationServiceTest {
 
     assertThrows(
         UserIsNotPartOfOrganizationException.class,
-        () -> userInOrganizationService.getAllUsersInOrganization(organizationWithUserAllPermission.getId()));
+        () ->
+            userInOrganizationService.getAllUsersInOrganization(
+                organizationWithUserAllPermission.getId()));
   }
 }
