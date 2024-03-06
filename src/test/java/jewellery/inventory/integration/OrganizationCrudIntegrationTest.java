@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.micrometer.common.lang.Nullable;
 import java.util.*;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
-import jewellery.inventory.dto.request.UpdateUserPermissionsRequest;
+import jewellery.inventory.dto.request.UpdateUserInOrganizationRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.*;
@@ -28,8 +28,8 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return "/organizations";
   }
 
-  private String getOrganizationByIdUrl(UUID id) {
-    return "/organizations/" + id;
+  private String getOrganizationByIdUrl(UUID organizationId) {
+    return "/organizations/" + organizationId;
   }
 
   private String getOrganizationUsersUrl(UUID organizationId, UUID userId) {
@@ -133,7 +133,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
     addUserInOrganization(organizationId);
 
-    UpdateUserPermissionsRequest request = new UpdateUserPermissionsRequest();
+    UpdateUserInOrganizationRequest request = new UpdateUserInOrganizationRequest();
     request.setOrganizationPermission(Arrays.asList(OrganizationPermission.values()));
 
     ResponseEntity<OrganizationSingleMemberResponseDto> response =

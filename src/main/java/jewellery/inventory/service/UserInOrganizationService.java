@@ -13,7 +13,6 @@ import jewellery.inventory.exception.organization.MissingOrganizationPermissionE
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
-import jewellery.inventory.repository.OrganizationRepository;
 import jewellery.inventory.repository.UserInOrganizationRepository;
 import jewellery.inventory.service.security.AuthService;
 import lombok.AllArgsConstructor;
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class UserInOrganizationService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(UserInOrganizationService.class);
-  private final OrganizationRepository organizationRepository;
   private final OrganizationMapper organizationMapper;
   private final AuthService authService;
   private final UserService userService;
@@ -89,7 +87,7 @@ public class UserInOrganizationService implements EntityFetcher {
       throw new UserIsNotPartOfOrganizationException(userId, organizationId);
     }
 
-    organizationRepository.save(organization);
+    organizationService.saveOrganization(organization);
     logger.info(
         "Successfully deleted user in the organization. Organization ID: {}, User ID: {}",
         organizationId,
@@ -155,7 +153,7 @@ public class UserInOrganizationService implements EntityFetcher {
         "Successfully added user in the organization. Organization ID: {}, User ID: {}",
         organization.getId(),
         userInOrganization.getUser().getId());
-    organizationRepository.save(organization);
+    organizationService.saveOrganization(organization);
   }
 
   private void changeUserPermissionInOrganization(

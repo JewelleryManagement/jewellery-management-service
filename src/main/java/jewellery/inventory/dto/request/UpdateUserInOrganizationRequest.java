@@ -5,6 +5,6 @@ import jewellery.inventory.model.OrganizationPermission;
 import lombok.Data;
 
 @Data
-public class UpdateUserPermissionsRequest {
+public class UpdateUserInOrganizationRequest {
   private List<OrganizationPermission> organizationPermission;
 }
