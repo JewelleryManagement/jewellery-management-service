@@ -33,7 +33,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
   void createUserSuccessfully() throws Exception {
 
-    UserRequestDto userRequest = createDifferentTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
 
     ResponseEntity<UserResponseDto> response =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
@@ -92,7 +92,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getAllUsersSuccessfully() {
-    UserRequestDto userRequest = createDifferentTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
 
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
@@ -113,7 +113,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getSpecificUserSuccessfully() {
-    UserRequestDto userRequest = createDifferentTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
     UserResponseDto createdUser = userResponseEntity.getBody();
@@ -141,7 +141,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void updateUserSuccessfully() throws JsonProcessingException {
-    UserRequestDto userRequest = createDifferentTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
     UserResponseDto createdUser = userResponseEntity.getBody();
@@ -207,7 +207,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void deleteUserSuccessfully() throws JsonProcessingException {
-    UserRequestDto userRequest = createDifferentTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
     UserResponseDto createdUser = userResponseEntity.getBody();

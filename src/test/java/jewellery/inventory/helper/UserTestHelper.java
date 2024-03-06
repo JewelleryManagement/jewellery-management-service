@@ -42,6 +42,16 @@ public class UserTestHelper {
     return user;
   }
 
+  public static User createTestAdminUser() {
+    User user = new User();
+    user.setFirstName("admin");
+    user.setLastName("admin");
+    user.setEmail("admin@example.com");
+    user.setPassword(USER_PASSWORD);
+    user.setRole(Role.ADMIN);
+    return user;
+  }
+
   public static User createUserFromUserUpdateRequestDto(UserUpdateRequestDto userUpdateRequestDto) {
     User user = new User();
     user.setFirstName(userUpdateRequestDto.getFirstName());
@@ -82,16 +92,6 @@ public class UserTestHelper {
     userRequest.setFirstName(FIRST_NAME);
     userRequest.setLastName(LAST_NAME);
     userRequest.setEmail(USER_EMAIL);
-    userRequest.setPassword(USER_PASSWORD);
-    userRequest.setRole(Role.ADMIN);
-    return userRequest;
-  }
-
-  public static UserRequestDto createDifferentTestUserRequest() {
-    UserRequestDto userRequest = new UserRequestDto();
-    userRequest.setFirstName(FIRST_NAME + "different");
-    userRequest.setLastName(LAST_NAME + "different");
-    userRequest.setEmail("+different" + USER_EMAIL);
     userRequest.setPassword(USER_PASSWORD);
     userRequest.setRole(Role.ADMIN);
     return userRequest;

@@ -34,7 +34,7 @@ public class OrganizationMapper {
     return organizationResponseDto;
   }
 
-  private List<UserInOrganizationResponseDto> toUserInOrganizationResponseDto(
+  private List<UserInOrganizationResponseDto> toUserInOrganizationListResponseDto(
       Organization organization) {
     List<UserInOrganizationResponseDto> userResponseDtoList = new ArrayList<>();
 
@@ -51,7 +51,7 @@ public class OrganizationMapper {
     return userResponseDtoList;
   }
 
-  private UserInOrganizationResponseDto toUserInOrganizationResponseDto(
+  private UserInOrganizationResponseDto toUserInOrganizationListResponseDto(
       Organization organization, UUID userId) {
     UserInOrganizationResponseDto userResponseDto = new UserInOrganizationResponseDto();
 
@@ -70,7 +70,7 @@ public class OrganizationMapper {
   public OrganizationMembersResponseDto toOrganizationMembersResponseDto(
       Organization organization) {
     OrganizationMembersResponseDto membersResponseDto = new OrganizationMembersResponseDto();
-    membersResponseDto.setMembers(toUserInOrganizationResponseDto(organization));
+    membersResponseDto.setMembers(toUserInOrganizationListResponseDto(organization));
     membersResponseDto.setOrganization(toResponse(organization));
     return membersResponseDto;
   }
@@ -79,7 +79,7 @@ public class OrganizationMapper {
       UUID userId, Organization organization) {
     OrganizationSingleMemberResponseDto memberResponseDto =
         new OrganizationSingleMemberResponseDto();
-    memberResponseDto.setMember(toUserInOrganizationResponseDto(organization, userId));
+    memberResponseDto.setMember(toUserInOrganizationListResponseDto(organization, userId));
     memberResponseDto.setOrganization(toResponse(organization));
     return memberResponseDto;
   }

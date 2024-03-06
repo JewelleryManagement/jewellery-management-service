@@ -1,6 +1,6 @@
 package jewellery.inventory.integration;
 
-import static jewellery.inventory.helper.UserTestHelper.createTestUserWithId;
+import static jewellery.inventory.helper.UserTestHelper.createTestAdminUser;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -63,7 +63,7 @@ abstract class AuthenticatedIntegrationTestBase {
     resourceInUserRepository.deleteAll();
     resourceInProductRepository.deleteAll();
     systemEventRepository.deleteAll();
-    User adminUser = createTestUserWithId();
+    User adminUser = createTestAdminUser();
     setupMockSecurityContext(adminUser);
     setupTestRestTemplateWithAuthHeaders();
     adminUser.setId(createUserInDatabase(UserTestHelper.getTestUserRequest(adminUser)).getId());

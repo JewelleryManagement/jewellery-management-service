@@ -49,10 +49,6 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     return buildUrl("resources", "availability", "transfer");
   }
 
-  private String getResourceAvailabilityUrl(UUID userId, UUID resourceId) {
-    return buildUrl("resources", "availability", userId.toString(), resourceId.toString());
-  }
-
   private String getBaseUserUrl() {
     return buildUrl("users");
   }
@@ -186,7 +182,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
-    assertEquals(1, response.getBody().getUsersAndQuantities().size());
+    assertEquals(2, response.getBody().getUsersAndQuantities().size());
   }
 
   @Test
@@ -400,7 +396,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   }
 
   private UserResponseDto sendCreateUserRequest() {
-    UserRequestDto userRequest = createDifferentTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
     UserResponseDto createdUser = userResponseEntity.getBody();

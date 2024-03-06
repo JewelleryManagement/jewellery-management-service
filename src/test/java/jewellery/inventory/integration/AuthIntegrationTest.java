@@ -33,7 +33,6 @@ class AuthIntegrationTest extends AuthenticatedIntegrationTestBase {
   @BeforeEach
   void setUp() {
     this.setup();
-    userRepository.deleteAll();
     createAndSaveTestUser();
   }
 

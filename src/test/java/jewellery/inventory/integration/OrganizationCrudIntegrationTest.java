@@ -49,7 +49,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void setUp() {
     organization = getTestOrganization();
     organizationRequestDto = getTestOrganizationRequest();
-    user = createUserInDatabase(UserTestHelper.createDifferentUserRequest());
+    user = createUserInDatabase(UserTestHelper.createTestUserRequest());
     userInOrganizationRequestDto = getTestUserInOrganizationRequest(user.getId());
   }
 
