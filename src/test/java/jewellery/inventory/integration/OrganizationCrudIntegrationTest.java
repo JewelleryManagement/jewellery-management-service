@@ -2,6 +2,7 @@ package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
+import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.model.EventType.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -16,7 +17,6 @@ import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.Organization;
-import jewellery.inventory.model.OrganizationPermission;
 import jewellery.inventory.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -100,18 +100,52 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void deleteUserInOrganizationSuccessfully() {
-    UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
-    addUserInOrganization(organizationId);
+  void deleteUserInOrganizationSuccessfully() throws JsonProcessingException {
+    OrganizationResponseDto organizationResponse =
+        createOrganizationsWithRequest(organizationRequestDto);
+
+    OrganizationSingleMemberResponseDto singleMemberResponseDto =
+        addUserInOrganization(organizationResponse.getId());
 
     ResponseEntity<HttpStatus> response =
         this.testRestTemplate.exchange(
-            getOrganizationUsersUrl(organizationId, user.getId()),
+            getOrganizationUsersUrl(organizationResponse.getId(), user.getId()),
             HttpMethod.DELETE,
             null,
             HttpStatus.class);
 
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(singleMemberResponseDto, objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_USER_DELETE, expectedEventPayload);
+  }
+
+  @Test
+  void updateUserInOrganizationSuccessfully() throws JsonProcessingException {
+    OrganizationResponseDto organizationResponse =
+        createOrganizationsWithRequest(organizationRequestDto);
+    OrganizationSingleMemberResponseDto singleMemberResponseDto =
+        addUserInOrganization(organizationResponse.getId());
+
+    UpdateUserInOrganizationRequest request = new UpdateUserInOrganizationRequest();
+    request.setOrganizationPermission(new ArrayList<>());
+
+    ResponseEntity<OrganizationSingleMemberResponseDto> response =
+        this.testRestTemplate.exchange(
+            getOrganizationUsersUrl(organizationResponse.getId(), user.getId()),
+            HttpMethod.PUT,
+            new HttpEntity<>(request),
+            OrganizationSingleMemberResponseDto.class);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+
+    Map<String, Object> expectedEventPayload =
+        getUpdateEventPayload(singleMemberResponseDto, response.getBody(), objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_USER_UPDATE, expectedEventPayload);
   }
 
   @Test
@@ -126,25 +160,6 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             OrganizationResponseDto.class);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-  }
-
-  @Test
-  void updateUserInOrganizationSuccessfully() {
-    UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
-    addUserInOrganization(organizationId);
-
-    UpdateUserInOrganizationRequest request = new UpdateUserInOrganizationRequest();
-    request.setOrganizationPermission(Arrays.asList(OrganizationPermission.values()));
-
-    ResponseEntity<OrganizationSingleMemberResponseDto> response =
-        this.testRestTemplate.exchange(
-            getOrganizationUsersUrl(organizationId, user.getId()),
-            HttpMethod.PUT,
-            new HttpEntity<>(request),
-            OrganizationSingleMemberResponseDto.class);
-
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertNotNull(response.getBody());
   }
 
   @Test
