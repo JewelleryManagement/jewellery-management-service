@@ -41,16 +41,15 @@ public class UserInOrganizationService implements EntityFetcher {
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_USER_UPDATE)
   public OrganizationSingleMemberResponseDto updateUserPermissionsInOrganization(
       UUID userId, UUID organizationId, List<OrganizationPermission> organizationPermissionList) {
+    validateCurrentUserPermission(
+        organizationService.getOrganization(organizationId), OrganizationPermission.MANAGE_USERS);
 
     UserInOrganization userInOrganization =
-        userInOrganizationRepository
-            .findByUserIdAndOrganizationId(userId, organizationId)
-            .orElseThrow(() -> new UserIsNotPartOfOrganizationException(userId, organizationId));
+        getUserInOrganizationByUserIdAndOrganizationId(userId, organizationId);
 
     Organization organization = userInOrganization.getOrganization();
     User userForUpdate = userInOrganization.getUser();
 
-    validateCurrentUserPermission(organization, OrganizationPermission.MANAGE_USERS);
     changeUserPermissionInOrganization(organization, userForUpdate, organizationPermissionList);
     logger.info(
         "Successfully updated user permissions in the organization. Organization ID: {}, User ID: {}",
@@ -62,8 +61,11 @@ public class UserInOrganizationService implements EntityFetcher {
   @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_CREATE)
   public OrganizationSingleMemberResponseDto addUserInOrganization(
       UUID organizationId, UserInOrganizationRequestDto userInOrganizationRequestDto) {
+
+    validateCurrentUserPermission(
+        organizationService.getOrganization(organizationId), OrganizationPermission.MANAGE_USERS);
+
     Organization organization = organizationService.getOrganization(organizationId);
-    validateCurrentUserPermission(organization, OrganizationPermission.MANAGE_USERS);
 
     UserInOrganization userInOrganization =
         createUserInOrganization(userInOrganizationRequestDto, organization);
@@ -174,6 +176,13 @@ public class UserInOrganizationService implements EntityFetcher {
                   organization.getId(),
                   organizationPermissionList);
             });
+  }
+
+  private UserInOrganization getUserInOrganizationByUserIdAndOrganizationId(
+      UUID userId, UUID organizationId) {
+    return userInOrganizationRepository
+        .findByUserIdAndOrganizationId(userId, organizationId)
+        .orElseThrow(() -> new UserIsNotPartOfOrganizationException(userId, organizationId));
   }
 
   @Override

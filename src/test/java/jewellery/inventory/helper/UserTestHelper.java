@@ -22,8 +22,8 @@ public class UserTestHelper {
     return user;
   }
 
-  public static UserRequestDto getTestUserRequest(User user){
-    UserRequestDto userRequestDto=new UserRequestDto();
+  public static UserRequestDto getTestUserRequest(User user) {
+    UserRequestDto userRequestDto = new UserRequestDto();
     userRequestDto.setRole(user.getRole());
     userRequestDto.setPassword(user.getPassword());
     userRequestDto.setEmail(user.getEmail());
@@ -31,7 +31,6 @@ public class UserTestHelper {
     userRequestDto.setLastName(user.getLastName());
     return userRequestDto;
   }
-
 
   public static User createTestUser() {
     User user = new User();

@@ -32,12 +32,12 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return "/organizations/" + id;
   }
 
-  private String getOrganizationUsersUrl(UUID organization, UUID user) {
-    return "/organizations/" + organization + "/users/" + user;
+  private String getOrganizationUsersUrl(UUID organizationId, UUID userId) {
+    return "/organizations/" + organizationId + "/users/" + userId;
   }
 
-  private String getOrganizationUsersUrl(UUID organization) {
-    return "/organizations/" + organization + "/users";
+  private String getOrganizationUsersUrl(UUID organizationId) {
+    return "/organizations/" + organizationId + "/users";
   }
 
   private Organization organization;
