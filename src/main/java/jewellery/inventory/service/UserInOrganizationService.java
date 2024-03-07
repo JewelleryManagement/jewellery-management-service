@@ -46,9 +46,8 @@ public class UserInOrganizationService implements EntityFetcher {
         getUserInOrganizationByUserIdAndOrganizationId(userId, organizationId);
 
     Organization organization = userInOrganization.getOrganization();
-    User userForUpdate = userInOrganization.getUser();
 
-    changeUserPermissionInOrganization(organization, userForUpdate, organizationPermissionList);
+    changeUserPermissionInOrganization(userInOrganization, organizationPermissionList);
     logger.info(
         "Successfully updated user permissions in the organization. Organization ID: {}, User ID: {}",
         organizationId,
@@ -157,23 +156,16 @@ public class UserInOrganizationService implements EntityFetcher {
   }
 
   private void changeUserPermissionInOrganization(
-      Organization organization,
-      User userForUpdate,
+      UserInOrganization userInOrganization,
       List<OrganizationPermission> organizationPermissionList) {
 
-    organization.getUsersInOrganization().stream()
-        .filter(userInOrg -> userInOrg.getUser().equals(userForUpdate))
-        .findFirst()
-        .ifPresent(
-            userInOrg -> {
-              userInOrg.setOrganizationPermission(organizationPermissionList);
-              userInOrganizationRepository.save(userInOrg);
-              logger.info(
-                  "User permissions successfully changed in organization. User ID: {}, Organization ID: {}, New Permissions: {}",
-                  userForUpdate.getId(),
-                  organization.getId(),
-                  organizationPermissionList);
-            });
+    userInOrganization.setOrganizationPermission(organizationPermissionList);
+    userInOrganizationRepository.save(userInOrganization);
+    logger.info(
+        "User permissions successfully changed in organization. User ID: {}, Organization ID: {}, New Permissions: {}",
+        userInOrganization.getUser().getId(),
+        userInOrganization.getOrganization().getId(),
+        organizationPermissionList);
   }
 
   private UserInOrganization getUserInOrganizationByUserIdAndOrganizationId(

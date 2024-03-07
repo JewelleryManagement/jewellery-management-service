@@ -16,7 +16,6 @@ import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.OrganizationPermission;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.UserInOrganization;
-import jewellery.inventory.repository.OrganizationRepository;
 import jewellery.inventory.repository.UserInOrganizationRepository;
 import jewellery.inventory.service.OrganizationService;
 import jewellery.inventory.service.UserInOrganizationService;
@@ -33,7 +32,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class UserInOrganizationServiceTest {
   @InjectMocks private UserInOrganizationService userInOrganizationService;
   @Mock private OrganizationService organizationService;
-  @Mock private OrganizationRepository organizationRepository;
   @Mock private AuthService authService;
   @Mock private UserService userService;
   @Mock private OrganizationMapper organizationMapper;

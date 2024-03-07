@@ -33,8 +33,24 @@ public class OrganizationMapper {
     organizationResponseDto.setNote(organization.getNote());
     return organizationResponseDto;
   }
+  public OrganizationMembersResponseDto toOrganizationMembersResponseDto(
+          Organization organization) {
+    OrganizationMembersResponseDto membersResponseDto = new OrganizationMembersResponseDto();
+    membersResponseDto.setMembers(toUserInOrganizationResponseDto(organization));
+    membersResponseDto.setOrganization(toResponse(organization));
+    return membersResponseDto;
+  }
 
-  private List<UserInOrganizationResponseDto> toUserInOrganizationListResponseDto(
+  public OrganizationSingleMemberResponseDto toOrganizationSingleMemberResponseDto(
+          UUID userId, Organization organization) {
+    OrganizationSingleMemberResponseDto memberResponseDto =
+            new OrganizationSingleMemberResponseDto();
+    memberResponseDto.setMember(toUserInOrganizationResponseDto(organization, userId));
+    memberResponseDto.setOrganization(toResponse(organization));
+    return memberResponseDto;
+  }
+
+  private List<UserInOrganizationResponseDto> toUserInOrganizationResponseDto(
       Organization organization) {
     List<UserInOrganizationResponseDto> userResponseDtoList = new ArrayList<>();
 
@@ -51,7 +67,7 @@ public class OrganizationMapper {
     return userResponseDtoList;
   }
 
-  private UserInOrganizationResponseDto toUserInOrganizationListResponseDto(
+  private UserInOrganizationResponseDto toUserInOrganizationResponseDto(
       Organization organization, UUID userId) {
     UserInOrganizationResponseDto userResponseDto = new UserInOrganizationResponseDto();
 
@@ -65,22 +81,5 @@ public class OrganizationMapper {
             });
 
     return userResponseDto;
-  }
-
-  public OrganizationMembersResponseDto toOrganizationMembersResponseDto(
-      Organization organization) {
-    OrganizationMembersResponseDto membersResponseDto = new OrganizationMembersResponseDto();
-    membersResponseDto.setMembers(toUserInOrganizationListResponseDto(organization));
-    membersResponseDto.setOrganization(toResponse(organization));
-    return membersResponseDto;
-  }
-
-  public OrganizationSingleMemberResponseDto toOrganizationSingleMemberResponseDto(
-      UUID userId, Organization organization) {
-    OrganizationSingleMemberResponseDto memberResponseDto =
-        new OrganizationSingleMemberResponseDto();
-    memberResponseDto.setMember(toUserInOrganizationListResponseDto(organization, userId));
-    memberResponseDto.setOrganization(toResponse(organization));
-    return memberResponseDto;
   }
 }
