@@ -8,7 +8,6 @@ import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
 import jewellery.inventory.model.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.List;
 
