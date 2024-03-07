@@ -2,7 +2,9 @@ package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
-import static jewellery.inventory.helper.UserTestHelper.*;
+import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
+import static jewellery.inventory.helper.UserTestHelper.createInvalidUserRequest;
+import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
 import static jewellery.inventory.model.EventType.USER_CREATE;
 import static jewellery.inventory.model.EventType.USER_DELETE;
 import static jewellery.inventory.model.EventType.USER_UPDATE;
