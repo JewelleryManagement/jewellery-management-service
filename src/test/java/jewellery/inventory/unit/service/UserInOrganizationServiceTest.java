@@ -36,9 +36,7 @@ class UserInOrganizationServiceTest {
   @Mock private UserService userService;
   @Mock private OrganizationMapper organizationMapper;
   @Mock private UserInOrganizationRepository userInOrganizationRepository;
-
   private Organization organizationWithUserAllPermission;
-
   private User user;
   private UserInOrganization userInOrganization;
   private ExecutorResponseDto executorResponseDto;
