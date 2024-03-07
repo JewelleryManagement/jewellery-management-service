@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Component
 @AllArgsConstructor
@@ -33,8 +32,9 @@ public class OrganizationMapper {
     organizationResponseDto.setNote(organization.getNote());
     return organizationResponseDto;
   }
+
   public OrganizationMembersResponseDto toOrganizationMembersResponseDto(
-          Organization organization) {
+      Organization organization) {
     OrganizationMembersResponseDto membersResponseDto = new OrganizationMembersResponseDto();
     membersResponseDto.setMembers(toUserInOrganizationResponseDto(organization));
     membersResponseDto.setOrganization(toResponse(organization));
@@ -42,11 +42,11 @@ public class OrganizationMapper {
   }
 
   public OrganizationSingleMemberResponseDto toOrganizationSingleMemberResponseDto(
-          UUID userId, Organization organization) {
+      UserInOrganization userInOrganization) {
     OrganizationSingleMemberResponseDto memberResponseDto =
-            new OrganizationSingleMemberResponseDto();
-    memberResponseDto.setMember(toUserInOrganizationResponseDto(organization, userId));
-    memberResponseDto.setOrganization(toResponse(organization));
+        new OrganizationSingleMemberResponseDto();
+    memberResponseDto.setMember(toUserInOrganizationResponseDto(userInOrganization));
+    memberResponseDto.setOrganization(toResponse(userInOrganization.getOrganization()));
     return memberResponseDto;
   }
 
@@ -68,17 +68,11 @@ public class OrganizationMapper {
   }
 
   private UserInOrganizationResponseDto toUserInOrganizationResponseDto(
-      Organization organization, UUID userId) {
+      UserInOrganization userInOrganization) {
     UserInOrganizationResponseDto userResponseDto = new UserInOrganizationResponseDto();
 
-    organization.getUsersInOrganization().stream()
-        .filter(userInOrg -> userInOrg.getUser().getId().equals(userId))
-        .findFirst()
-        .ifPresent(
-            userInOrg -> {
-              userResponseDto.setUserId(userInOrg.getUser().getId());
-              userResponseDto.setOrganizationPermissions(userInOrg.getOrganizationPermission());
-            });
+    userResponseDto.setUserId(userInOrganization.getId());
+    userResponseDto.setOrganizationPermissions(userInOrganization.getOrganizationPermission());
 
     return userResponseDto;
   }

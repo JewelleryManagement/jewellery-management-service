@@ -60,7 +60,6 @@ public class OrganizationService implements EntityFetcher {
     userInOrganizationOwner.setOrganization(organization);
     userInOrganizationOwner.setOrganizationPermission(
         Arrays.asList(OrganizationPermission.values()));
-    logger.info("Created UserInOrganization for Organization ID: {}", organization.getId());
     organization.setUsersInOrganization(List.of(userInOrganizationOwner));
   }
 

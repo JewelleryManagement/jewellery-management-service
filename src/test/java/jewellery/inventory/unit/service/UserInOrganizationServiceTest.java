@@ -79,9 +79,7 @@ class UserInOrganizationServiceTest {
             organizationWithUserAllPermission.getId()))
         .thenReturn(Optional.of(userInOrganization));
 
-    when(organizationMapper.toOrganizationSingleMemberResponseDto(
-            organizationWithUserAllPermission.getUsersInOrganization().get(0).getUser().getId(),
-            organizationWithUserAllPermission))
+    when(organizationMapper.toOrganizationSingleMemberResponseDto(userInOrganization))
         .thenReturn(new OrganizationSingleMemberResponseDto());
 
     OrganizationSingleMemberResponseDto actual =

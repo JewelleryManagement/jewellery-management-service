@@ -45,14 +45,12 @@ public class UserInOrganizationService implements EntityFetcher {
     UserInOrganization userInOrganization =
         getUserInOrganizationByUserIdAndOrganizationId(userId, organizationId);
 
-    Organization organization = userInOrganization.getOrganization();
-
     changeUserPermissionInOrganization(userInOrganization, organizationPermissionList);
     logger.info(
         "Successfully updated user permissions in the organization. Organization ID: {}, User ID: {}",
         organizationId,
         userId);
-    return organizationMapper.toOrganizationSingleMemberResponseDto(userId, organization);
+    return organizationMapper.toOrganizationSingleMemberResponseDto(userInOrganization);
   }
 
   @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_CREATE)
@@ -68,8 +66,7 @@ public class UserInOrganizationService implements EntityFetcher {
         createUserInOrganization(userInOrganizationRequestDto, organization);
     addUserToOrganization(userInOrganization, organization);
 
-    return organizationMapper.toOrganizationSingleMemberResponseDto(
-        userInOrganizationRequestDto.getUserId(), organization);
+    return organizationMapper.toOrganizationSingleMemberResponseDto(userInOrganization);
   }
 
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_USER_DELETE)
@@ -184,7 +181,6 @@ public class UserInOrganizationService implements EntityFetcher {
     if (userInOrganization == null) {
       return null;
     }
-    return organizationMapper.toOrganizationSingleMemberResponseDto(
-        userInOrganization.getUser().getId(), userInOrganization.getOrganization());
+    return organizationMapper.toOrganizationSingleMemberResponseDto(userInOrganization);
   }
 }
