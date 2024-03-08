@@ -28,7 +28,6 @@ import jewellery.inventory.exception.sale.EmptySaleException;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.helper.UserTestHelper;
-import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.Product;
@@ -56,14 +55,13 @@ class SaleServiceTest {
   @Mock private UserService userService;
   @Mock private ProductService productService;
   @Mock private ResourceService resourceService;
-  @Mock private ProductRepository productRepository;
   @Mock private PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   @Mock private SaleMapper saleMapper;
-  @Mock private PurchasedResourceInUserMapper purchasedResourceInUserMapper;
   @Mock private ResourceInUserService resourceInUserService;
   private User seller;
   private User buyer;
   private Product product;
+  private Product product2;
   private Sale sale;
   private SaleRequestDto saleRequestDto;
   private SaleRequestDto saleRequestDtoSellerNotOwner;
@@ -71,7 +69,6 @@ class SaleServiceTest {
   private ProductReturnResponseDto productReturnResponseDto;
   private ProductPriceDiscount productPriceDiscount;
   private PurchasedResourceInUser purchasedResourceInUser;
-  private PurchasedResourceQuantityRequestDto purchasedResourceQuantityRequestDto;
   private Resource resource;
 
   @BeforeEach
@@ -80,6 +77,7 @@ class SaleServiceTest {
     seller.setId(UUID.randomUUID());
     buyer = createSecondTestUser();
     product = getTestProduct(seller, new Resource());
+    product2 = getTestProduct(seller, new Resource());
     resource = ResourceTestHelper.getPearl();
     resource.setPricePerQuantity(BigDecimal.TEN);
     purchasedResourceInUser = SaleTestHelper.createPurchasedResource(BigDecimal.TEN);
@@ -90,7 +88,8 @@ class SaleServiceTest {
     productPriceDiscount.setSale(sale);
     ProductDiscountRequestDto productDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(product.getId(), getBigDecimal("10"));
-    purchasedResourceQuantityRequestDto = SaleTestHelper.createPurchasedResourceRequestDto();
+    PurchasedResourceQuantityRequestDto purchasedResourceQuantityRequestDto =
+              SaleTestHelper.createPurchasedResourceRequestDto();
     saleRequestDto =
         SaleTestHelper.createSaleRequest(
             seller.getId(),
@@ -171,7 +170,8 @@ class SaleServiceTest {
   @Test
   void testCreateSaleProductWillThrowsProductIsPartOfAnotherProduct() {
     when(resourceService.getResourceById(any())).thenReturn(resource);
-    product.setContentOf(product);
+    product.setContentOf(product2);
+
     when(saleMapper.mapRequestToEntity(
             any(SaleRequestDto.class), any(User.class), any(User.class), anyList(), anyList()))
         .thenReturn(sale);

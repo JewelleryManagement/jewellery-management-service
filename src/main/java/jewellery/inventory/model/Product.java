@@ -5,13 +5,12 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.model.resource.ResourceInProduct;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Getter
 @Setter
+@EqualsAndHashCode
 @RequiredArgsConstructor
 public class Product {
   @Id @GeneratedValue private UUID id;
@@ -48,4 +47,16 @@ public class Product {
   private ProductPriceDiscount partOfSale;
 
   @ManyToOne private Organization organization;
+
+  public ProductPriceDiscount getPartOfSale(){
+    Product parentProduct = this.contentOf;
+
+    while(parentProduct != null){
+      if(parentProduct.getPartOfSale() != null){
+        return parentProduct.getPartOfSale();
+      }
+      parentProduct = parentProduct.getContentOf();
+    }
+    return this.partOfSale;
+  }
 }
