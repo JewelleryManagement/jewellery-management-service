@@ -44,7 +44,7 @@ public class OrganizationMapper {
       UserInOrganization userInOrganization) {
     OrganizationSingleMemberResponseDto memberResponseDto =
         new OrganizationSingleMemberResponseDto();
-    memberResponseDto.setMember(toListUserInOrganizationResponseDto(userInOrganization));
+    memberResponseDto.setMember(toUserInOrganizationResponseDto(userInOrganization));
     memberResponseDto.setOrganization(toResponse(userInOrganization.getOrganization()));
     return memberResponseDto;
   }
@@ -66,7 +66,7 @@ public class OrganizationMapper {
     return userResponseDtoList;
   }
 
-  private UserInOrganizationResponseDto toListUserInOrganizationResponseDto(
+  private UserInOrganizationResponseDto toUserInOrganizationResponseDto(
       UserInOrganization userInOrganization) {
     UserInOrganizationResponseDto userResponseDto = new UserInOrganizationResponseDto();
 
