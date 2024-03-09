@@ -29,7 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class ResourceInOrganizationServiceTest {
+class ResourceInOrganizationServiceTest {
 
   @InjectMocks private ResourceInOrganizationService resourceInOrganizationService;
   @Mock private ResourceInOrganizationRepository resourceInOrganizationRepository;

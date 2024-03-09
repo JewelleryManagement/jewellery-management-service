@@ -26,14 +26,17 @@ public class ResourceInOrganizationMapper {
 
   public ResourcesInOrganizationResponseDto toResourceInOrganizationResponse(
       Organization organization) {
-    List<ResourceQuantityResponseDto> resourceQuantityResponse =
-        organization.getResourceInOrganization().stream()
-            .map(this::getResourceQuantityResponseDto)
-            .toList();
     return ResourcesInOrganizationResponseDto.builder()
-        .resourcesAndQuantities(resourceQuantityResponse)
+        .resourcesAndQuantities(getResourcesQuantitiesResponseDto(organization))
         .owner(organizationMapper.toResponse(organization))
         .build();
+  }
+
+  private List<ResourceQuantityResponseDto> getResourcesQuantitiesResponseDto(
+      Organization organization) {
+    return organization.getResourceInOrganization().stream()
+        .map(this::getResourceQuantityResponseDto)
+        .toList();
   }
 
   private ResourceQuantityResponseDto getResourceQuantityResponseDto(
