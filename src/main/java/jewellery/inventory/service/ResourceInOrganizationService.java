@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
+import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
@@ -34,7 +35,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
 
   private static final BigDecimal EPSILON = new BigDecimal("1e-10");
 
-  @LogUpdateEvent(eventType = EventType.ORGANIZATION_ADD_RESOURCE)
+  @LogCreateEvent(eventType = EventType.ORGANIZATION_ADD_RESOURCE_QUANTITY)
   @Transactional
   public ResourcesInOrganizationResponseDto addResourceToOrganization(
       ResourceInOrganizationRequestDto resourceInOrganizationRequestDto) {
@@ -67,7 +68,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
     Organization organization = organizationService.getOrganization(organizationId);
     userInOrganizationService.validateUserInOrganization(organization);
 
-    return resourceInOrganizationMapper.toResourceInOrganizationResponseDto(organization);
+    return resourceInOrganizationMapper.toResourceInOrganizationResponse(organization);
   }
 
   @Override
@@ -92,7 +93,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
     ResourceInOrganization resourceInOrganization =
         getResourceInOrganization(organization, resource);
     if (resourceInOrganization != null) {
-      return resourceInOrganizationMapper.toResourceInOrganizationResponseDto(organization);
+      return resourceInOrganizationMapper.toResourceInOrganizationResponse(resourceInOrganization);
     }
     return null;
   }

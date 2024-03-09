@@ -100,7 +100,7 @@ public class ResourceInOrganizationServiceTest {
   @Test
   void testAddResourceToOrganizationSuccessfully() {
     ResourcesInOrganizationResponseDto resourcesInOrganizationResponseDto =
-        resourceInOrganizationMapper.toResourceInOrganizationResponseDto(organization);
+        resourceInOrganizationMapper.toResourceInOrganizationResponse(organization);
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
     when(resourceService.getResourceById(resourceInOrganizationRequestDto.getResourceId()))
         .thenReturn(resource);
@@ -196,7 +196,6 @@ public class ResourceInOrganizationServiceTest {
     resourceInOrganizationService.getAllResourcesFromOrganization(organization.getId());
 
     verify(organizationService, times(1)).getOrganization(organization.getId());
-    verify(resourceInOrganizationMapper, times(1))
-        .toResourceInOrganizationResponseDto(organization);
+    verify(resourceInOrganizationMapper, times(1)).toResourceInOrganizationResponse(organization);
   }
 }

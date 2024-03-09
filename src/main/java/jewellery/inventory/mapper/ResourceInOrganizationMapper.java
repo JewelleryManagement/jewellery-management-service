@@ -1,52 +1,46 @@
 package jewellery.inventory.mapper;
 
-import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.ResourceInOrganization;
-import jewellery.inventory.model.resource.Resource;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
-public interface ResourceInOrganizationMapper {
+@Component
+@RequiredArgsConstructor
+public class ResourceInOrganizationMapper {
 
-  @Mapping(source = "organization", target = "owner")
-  @Mapping(source = "resourceInOrganization", target = "resourcesAndQuantities")
-  ResourcesInOrganizationResponseDto toResourceInOrganizationResponseDto(Organization organization);
+  private final OrganizationMapper organizationMapper;
+  private final ResourceMapper resourceMapper;
 
-  OrganizationResponseDto toOrganizationResponseDto(Organization organization);
-
-  ResourceQuantityResponseDto toResourceQuantityResponseDto(ResourceInOrganization resource);
-
-  default List<ResourceQuantityResponseDto> toQuantities(List<ResourceInOrganization> resources) {
-    return resources.stream().map(this::toResourceQuantityResponseDto).collect(Collectors.toList());
+  public ResourcesInOrganizationResponseDto toResourceInOrganizationResponse(
+      ResourceInOrganization resourceInOrganization) {
+    return ResourcesInOrganizationResponseDto.builder()
+        .owner(organizationMapper.toResponse(resourceInOrganization.getOrganization()))
+        .dealPrice(resourceInOrganization.getDealPrice())
+        .resourcesAndQuantities(List.of(getResourceQuantityResponseDto(resourceInOrganization)))
+        .build();
   }
 
-  @Mapping(source = "organization", target = "owner")
-  @Mapping(
-      target = "resourcesAndQuantities",
-      expression =
-          "java(toResourceQuantityResponseList(resourceInOrganization.getResource(), resourceInOrganization.getQuantity()))")
-  ResourcesInOrganizationResponseDto toResourceInOrganizationResponse(
-      ResourceInOrganization resourceInOrganization);
-
-  default List<ResourceQuantityResponseDto> toResourceQuantityResponseList(
-      Resource resource, BigDecimal quantity) {
-    ResourceResponseDto resourceResponseDto = toResourceResponseDto(resource);
-    ResourceQuantityResponseDto resourceQuantityResponseDto =
-        ResourceQuantityResponseDto.builder()
-            .resource(resourceResponseDto)
-            .quantity(quantity)
-            .build();
-    return Collections.singletonList(resourceQuantityResponseDto);
+  public ResourcesInOrganizationResponseDto toResourceInOrganizationResponse(
+      Organization organization) {
+    List<ResourceQuantityResponseDto> resourceQuantityResponse =
+        organization.getResourceInOrganization().stream()
+            .map(this::getResourceQuantityResponseDto)
+            .toList();
+    return ResourcesInOrganizationResponseDto.builder()
+        .resourcesAndQuantities(resourceQuantityResponse)
+        .owner(organizationMapper.toResponse(organization))
+        .build();
   }
 
-  ResourceResponseDto toResourceResponseDto(Resource resource);
+  private ResourceQuantityResponseDto getResourceQuantityResponseDto(
+      ResourceInOrganization resourceInOrganization) {
+    return ResourceQuantityResponseDto.builder()
+        .resource(resourceMapper.toResourceResponse(resourceInOrganization.getResource()))
+        .quantity(resourceInOrganization.getQuantity())
+        .build();
+  }
 }

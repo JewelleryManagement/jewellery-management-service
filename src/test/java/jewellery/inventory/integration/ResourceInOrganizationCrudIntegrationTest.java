@@ -1,6 +1,7 @@
 package jewellery.inventory.integration;
 
-import static jewellery.inventory.helper.ResourceTestHelper.getPreciousStoneRequestDto;
+import static jewellery.inventory.helper.ResourceTestHelper.getPearlRequestDto;
+import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.model.EventType.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
@@ -16,7 +17,7 @@ import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
-import jewellery.inventory.dto.response.resource.PreciousStoneResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.OrganizationTestHelper;
 import jewellery.inventory.helper.ResourceInOrganizationTestHelper;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +30,7 @@ import org.springframework.http.ResponseEntity;
 class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private static final BigDecimal RESOURCE_QUANTITY = getBigDecimal("100");
-  private static final BigDecimal RESOURCE_PRICE = getBigDecimal("105.5");
+  private static final BigDecimal RESOURCE_PRICE = getBigDecimal("105");
   private static final BigDecimal RESOURCE_QUANTITY_TO_REMOVE = getBigDecimal("5");
 
   private String buildUrl(String... paths) {
@@ -51,7 +52,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   @Test
   void addResourceToOrganizationSuccessfully() throws JsonProcessingException {
     OrganizationResponseDto organizationResponseDto = createOrganization();
-    PreciousStoneResponseDto resourceResponse = sendCreatePreciousStoneRequest();
+    ResourceResponseDto resourceResponse = createResourceResponse();
 
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -64,22 +65,27 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
         sendResourceToOrganization(resourceInOrganizationRequest);
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
-    assertNotNull(response.getBody());
 
     ResourcesInOrganizationResponseDto result = response.getBody();
+    assertNotNull(result);
     assertEquals(1, result.getResourcesAndQuantities().size());
     assertEquals(organizationResponseDto.getId(), result.getOwner().getId());
+    assertEquals(
+        resourceResponse.getId(), result.getResourcesAndQuantities().get(0).getResource().getId());
+    assertEquals(
+        resourceInOrganizationRequest.getQuantity(),
+        result.getResourcesAndQuantities().get(0).getQuantity());
+    assertEquals(resourceInOrganizationRequest.getDealPrice(), result.getDealPrice());
 
-    //TODO:
-//    Map<String, Object> expectedEventPayload = getUpdateEventPayload(null, result, objectMapper);
-//
-//    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_ADD_RESOURCE, expectedEventPayload);
+    Map<String, Object> expectedEventPayload = getCreateOrDeleteEventPayload(result, objectMapper);
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_ADD_RESOURCE_QUANTITY, expectedEventPayload);
   }
 
   @Test
   void addResourceToOrganizationShouldThrowWhenOrganizationNotFound() {
 
-    PreciousStoneResponseDto resourceResponse = sendCreatePreciousStoneRequest();
+    ResourceResponseDto resourceResponse = createResourceResponse();
 
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -108,7 +114,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   @Test
   void addResourceToOrganizationShouldThrowWhenQuantityInvalid() {
     OrganizationResponseDto organizationResponseDto = createOrganization();
-    PreciousStoneResponseDto resourceResponse = sendCreatePreciousStoneRequest();
+    ResourceResponseDto resourceResponse = createResourceResponse();
 
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -126,8 +132,8 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   @Test
   void getAllResourcesFromOrganizationSuccessfully() {
     OrganizationResponseDto organizationResponseDto = createOrganization();
-    PreciousStoneResponseDto resourceResponse = sendCreatePreciousStoneRequest();
-    PreciousStoneResponseDto otherResource = sendCreatePreciousStoneRequest();
+    ResourceResponseDto resourceResponse = createResourceResponse();
+    ResourceResponseDto otherResource = createResourceResponse();
 
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -156,42 +162,31 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   @Test
   void removeResourceQuantityFromOrganizationSuccessfully() throws JsonProcessingException {
     OrganizationResponseDto organizationResponseDto = createOrganization();
-    PreciousStoneResponseDto resourceResponse = sendCreatePreciousStoneRequest();
+    ResourceResponseDto resourceResponse = createResourceResponse();
 
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organizationResponseDto.getId(),
-            resourceResponse.getId(),
-            RESOURCE_QUANTITY,
-            RESOURCE_PRICE);
+            organizationResponseDto.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, null);
 
     ResponseEntity<ResourcesInOrganizationResponseDto> response =
         sendResourceToOrganization(request);
-    ResponseEntity<ResourcesInOrganizationResponseDto> deleteQuantityResponse =
+    ResponseEntity<ResourcesInOrganizationResponseDto> deletedQuantityResponse =
         sendDeleteOperation(getDeleteResourceUrl(organizationResponseDto, resourceResponse));
-    ResponseEntity<ResourcesInOrganizationResponseDto> resourceResponseAfterDeletingQuantity =
-        getAllResourcesByOrganizationId(organizationResponseDto);
 
     assertEquals(
         RESOURCE_QUANTITY.subtract(RESOURCE_QUANTITY_TO_REMOVE),
-        resourceResponseAfterDeletingQuantity
-            .getBody()
-            .getResourcesAndQuantities()
-            .get(0)
-            .getQuantity());
+        deletedQuantityResponse.getBody().getResourcesAndQuantities().get(0).getQuantity());
 
-    //TODO:
-//    Map<String, Object> expectedEventPayload =
-//        getUpdateEventPayload(response.getBody(), deleteQuantityResponse.getBody(), objectMapper);
-//
-//    systemEventTestHelper.assertEventWasLogged(
-//        ORGANIZATION_REMOVE_RESOURCE_QUANTITY, expectedEventPayload);
+    Map<String, Object> expectedEventPayload =
+        getUpdateEventPayload(response.getBody(), deletedQuantityResponse.getBody(), objectMapper);
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_REMOVE_RESOURCE_QUANTITY, expectedEventPayload);
   }
 
   @Test
-  void removeResourceFromDatabaseWhenQuantityIsZero() {
+  void removeResourceFromDatabaseWhenResourceQuantityIsZero() {
     OrganizationResponseDto organizationResponseDto = createOrganization();
-    PreciousStoneResponseDto resourceResponse = sendCreatePreciousStoneRequest();
+    ResourceResponseDto resourceResponse = createResourceResponse();
 
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -217,7 +212,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   @Test
   void removeResourceQuantityShouldThrowWhenOrganizationNotFound() {
     OrganizationResponseDto organizationResponseDto = createOrganization();
-    PreciousStoneResponseDto resourceResponse = sendCreatePreciousStoneRequest();
+    ResourceResponseDto resourceResponse = createResourceResponse();
 
     organizationResponseDto.setId(UUID.randomUUID());
 
@@ -229,7 +224,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   @Test
   void removeResourceQuantityShouldThrowWhenResourceNotFound() {
     OrganizationResponseDto organizationResponseDto = createOrganization();
-    PreciousStoneResponseDto resourceResponse = sendCreatePreciousStoneRequest();
+    ResourceResponseDto resourceResponse = createResourceResponse();
 
     resourceResponse.setId(UUID.randomUUID());
 
@@ -241,7 +236,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   @Test
   void removeResourceQuantityShouldThrowWhenInsufficientQuantity() {
     OrganizationResponseDto organizationResponseDto = createOrganization();
-    PreciousStoneResponseDto resourceResponse = sendCreatePreciousStoneRequest();
+    ResourceResponseDto resourceResponse = createResourceResponse();
 
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -260,7 +255,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   @Test
   void removeResourceShouldThrowWhenQuantityToRemoveIsNegative() {
     OrganizationResponseDto organizationResponseDto = createOrganization();
-    PreciousStoneResponseDto resourceResponse = sendCreatePreciousStoneRequest();
+    ResourceResponseDto resourceResponse = createResourceResponse();
 
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -293,7 +288,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
 
   @NotNull
   private String getDeleteResourceUrl(
-      OrganizationResponseDto organizationResponseDto, PreciousStoneResponseDto resourceResponse) {
+      OrganizationResponseDto organizationResponseDto, ResourceResponseDto resourceResponse) {
     return buildUrl(
         "organizations",
         "resources-availability",
@@ -323,15 +318,15 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
     return organizationResponseDto;
   }
 
-  private PreciousStoneResponseDto sendCreatePreciousStoneRequest() {
-    ResourceRequestDto resourceRequest = getPreciousStoneRequestDto();
-    ResponseEntity<PreciousStoneResponseDto> resourceResponseEntity =
+  private ResourceResponseDto createResourceResponse() {
+    ResourceRequestDto resourceRequest = getPearlRequestDto();
+    ResponseEntity<ResourceResponseDto> resourceResponseEntity =
         this.testRestTemplate.postForEntity(
-            getBaseResourceUrl(), resourceRequest, PreciousStoneResponseDto.class);
+            getBaseResourceUrl(), resourceRequest, ResourceResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, resourceResponseEntity.getStatusCode());
 
-    PreciousStoneResponseDto createdResource = resourceResponseEntity.getBody();
+    ResourceResponseDto createdResource = resourceResponseEntity.getBody();
     assertNotNull(createdResource);
     assertNotNull(createdResource.getId());
     return createdResource;
@@ -339,11 +334,9 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
 
   private ResponseEntity<ResourcesInOrganizationResponseDto> sendResourceToOrganization(
       ResourceInOrganizationRequestDto resourceInOrganizationRequest) {
-    ResponseEntity<ResourcesInOrganizationResponseDto> response =
-        this.testRestTemplate.postForEntity(
-            getBaseResourceAvailabilityUrl(),
-            resourceInOrganizationRequest,
-            ResourcesInOrganizationResponseDto.class);
-    return response;
+    return this.testRestTemplate.postForEntity(
+        getBaseResourceAvailabilityUrl(),
+        resourceInOrganizationRequest,
+        ResourcesInOrganizationResponseDto.class);
   }
 }
