@@ -1,6 +1,6 @@
 package jewellery.inventory.service;
 
-import static jewellery.inventory.model.EventType.ORGANIZATION_REMOVE_RESOURCE;
+import static jewellery.inventory.model.EventType.ORGANIZATION_REMOVE_RESOURCE_QUANTITY;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -10,6 +10,7 @@ import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
+import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInOrganizationNotFoundException;
 import jewellery.inventory.mapper.ResourceInOrganizationMapper;
 import jewellery.inventory.model.*;
@@ -56,7 +57,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
   }
 
   @Transactional
-  @LogUpdateEvent(eventType = ORGANIZATION_REMOVE_RESOURCE)
+  @LogUpdateEvent(eventType = ORGANIZATION_REMOVE_RESOURCE_QUANTITY)
   public ResourcesInOrganizationResponseDto removeQuantityFromResource(
       UUID organizationId, UUID resourceId, BigDecimal quantity) {
     return removeQuantityFromResourceNoLog(organizationId, resourceId, quantity);
@@ -99,6 +100,9 @@ public class ResourceInOrganizationService implements EntityFetcher {
   private ResourcesInOrganizationResponseDto removeQuantityFromResourceNoLog(
       UUID organizationId, UUID resourceId, BigDecimal quantity) {
     Organization organization = organizationService.getOrganization(organizationId);
+
+    throwExceptionWhenQuantityToRemoveIsNegative(quantity);
+
     userInOrganizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.REMOVE_RESOURCE_QUANTITY);
 
@@ -110,6 +114,12 @@ public class ResourceInOrganizationService implements EntityFetcher {
       return resourceInOrganizationMapper.toResourceInOrganizationResponse(resourceInOrganization);
     }
     return new ResourcesInOrganizationResponseDto();
+  }
+
+  private void throwExceptionWhenQuantityToRemoveIsNegative(BigDecimal quantity) {
+    if (quantity.compareTo(BigDecimal.ZERO) < 0) {
+      throw new InvalidResourceQuantityException("Resource quantity must be positive number");
+    }
   }
 
   private void removeQuantityFromResource(
