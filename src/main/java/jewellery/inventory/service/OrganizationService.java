@@ -53,10 +53,6 @@ public class OrganizationService implements EntityFetcher {
         .orElseThrow(() -> new OrganizationNotFoundException(id));
   }
 
-  public void saveOrganization(Organization organization) {
-    organizationRepository.save(organization);
-  }
-
   private void makeCurrentUserOwner(Organization organization) {
     UserInOrganization userInOrganizationOwner = new UserInOrganization();
     User user = userService.getUser(authService.getCurrentUser().getId());
