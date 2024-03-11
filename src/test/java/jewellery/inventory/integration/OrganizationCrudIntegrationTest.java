@@ -54,6 +54,24 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
+  void deleteOrganizationSuccessfully() throws JsonProcessingException {
+    OrganizationResponseDto responseDto = createOrganizationsWithRequest(organizationRequestDto);
+
+    ResponseEntity<HttpStatus> response =
+            this.testRestTemplate.exchange(
+                    getOrganizationByIdUrl(responseDto.getId()),
+                    HttpMethod.DELETE,
+                    null,
+                    HttpStatus.class);
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+    Map<String, Object> expectedEventPayload =
+            getCreateOrDeleteEventPayload(responseDto, objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_DELETE, expectedEventPayload);
+  }
+
+  @Test
   void getOrganizationsSuccessfully() {
     ResponseEntity<List<OrganizationResponseDto>> response =
         this.testRestTemplate.exchange(

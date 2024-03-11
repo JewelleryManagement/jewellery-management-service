@@ -9,7 +9,6 @@ import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationMembersResponseDto;
 import jewellery.inventory.dto.response.OrganizationSingleMemberResponseDto;
-import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
@@ -39,7 +38,7 @@ public class UserInOrganizationService implements EntityFetcher {
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_USER_UPDATE)
   public OrganizationSingleMemberResponseDto updateUserPermissionsInOrganization(
       UUID userId, UUID organizationId, List<OrganizationPermission> organizationPermissionList) {
-    validateCurrentUserPermission(
+    organizationService.validateCurrentUserPermission(
         organizationService.getOrganization(organizationId), OrganizationPermission.MANAGE_USERS);
 
     UserInOrganization userInOrganization =
@@ -57,7 +56,7 @@ public class UserInOrganizationService implements EntityFetcher {
   public OrganizationSingleMemberResponseDto addUserInOrganization(
       UUID organizationId, UserInOrganizationRequestDto userInOrganizationRequestDto) {
 
-    validateCurrentUserPermission(
+    organizationService.validateCurrentUserPermission(
         organizationService.getOrganization(organizationId), OrganizationPermission.MANAGE_USERS);
 
     Organization organization = organizationService.getOrganization(organizationId);
@@ -72,7 +71,8 @@ public class UserInOrganizationService implements EntityFetcher {
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_USER_DELETE)
   public void deleteUserInOrganization(UUID userId, UUID organizationId) {
     Organization organization = organizationService.getOrganization(organizationId);
-    validateCurrentUserPermission(organization, OrganizationPermission.MANAGE_USERS);
+    organizationService.validateCurrentUserPermission(
+        organization, OrganizationPermission.MANAGE_USERS);
 
     boolean isFoundAndDeleted =
         organization
@@ -90,19 +90,6 @@ public class UserInOrganizationService implements EntityFetcher {
         userId);
   }
 
-  public void validateCurrentUserPermission(
-      Organization organization, OrganizationPermission permission) {
-    User currentUser = userService.getUser(authService.getCurrentUser().getId());
-    if (!hasPermission(currentUser, organization, permission)) {
-      throw new MissingOrganizationPermissionException(
-          currentUser.getId(), organization.getId(), permission);
-    }
-    logger.debug(
-        "User permission validation successful. User ID: {}, Organization ID: {}",
-        currentUser.getId(),
-        organization.getId());
-  }
-
   private void validateUserInOrganization(Organization organization) {
     User currentUser = userService.getUser(authService.getCurrentUser().getId());
     boolean isUserInOrganization =
@@ -116,15 +103,6 @@ public class UserInOrganizationService implements EntityFetcher {
         "User permission validation successful. User ID: {}, Organization ID: {}",
         currentUser.getId(),
         organization.getId());
-  }
-
-  private boolean hasPermission(
-      User user, Organization organization, OrganizationPermission permission) {
-    return organization.getUsersInOrganization().stream()
-        .anyMatch(
-            userInOrganization ->
-                userInOrganization.getUser().equals(user)
-                    && userInOrganization.getOrganizationPermission().contains(permission));
   }
 
   private UserInOrganization createUserInOrganization(

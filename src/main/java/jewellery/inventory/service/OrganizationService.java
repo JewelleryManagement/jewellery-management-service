@@ -81,15 +81,15 @@ public class OrganizationService implements EntityFetcher {
   }
 
   private void validateOrganizationProductsAndResources(Organization organization) {
-    if (!organization.getResourceInOrganization().isEmpty()) {
-      throw new OrganizationResourcesException(organization.getId());
-    }
     if (!organization.getProductsOwned().isEmpty()) {
       throw new OrganizationProductsException(organization.getId());
     }
+    if (!organization.getResourceInOrganization().isEmpty()) {
+      throw new OrganizationResourcesException(organization.getId());
+    }
   }
 
-  private void validateCurrentUserPermission(
+  public void validateCurrentUserPermission(
       Organization organization, OrganizationPermission permission) {
     User currentUser = userService.getUser(authService.getCurrentUser().getId());
     if (!hasPermission(currentUser, organization, permission)) {

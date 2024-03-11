@@ -31,6 +31,8 @@ public class OrganizationTestHelper {
     List<UserInOrganization> usersInOrganizationList = new ArrayList<>();
     usersInOrganizationList.add(userInOrganization);
     organization.setUsersInOrganization(usersInOrganizationList);
+    organization.setProductsOwned(new ArrayList<>());
+    organization.setResourceInOrganization(new ArrayList<>());
     return organization;
   }
 

@@ -39,6 +39,7 @@ class OrganizationServiceTest {
   @Mock private UserInOrganizationRepository userInOrganizationRepository;
 
   private Organization organization;
+  private Organization organizationWithUserAllPermission;
   private User user;
   private OrganizationRequestDto organizationRequestDto;
   private OrganizationResponseDto organizationResponseDto;
@@ -49,6 +50,7 @@ class OrganizationServiceTest {
     organization = getTestOrganization();
     organizationRequestDto = getTestOrganizationRequest();
     user = UserTestHelper.createSecondTestUser();
+    organizationWithUserAllPermission = getTestOrganizationWithUserWithAllPermissions(user);
     executorResponseDto = getTestExecutor(user);
     organizationResponseDto = getTestOrganizationResponseDto(organization);
   }
@@ -96,6 +98,29 @@ class OrganizationServiceTest {
     OrganizationResponseDto actual = organizationService.create(organizationRequestDto);
     assertNotNull(actual);
     assertEquals(actual, organizationResponseDto);
+  }
+
+  @Test
+  void deleteOrganizationSuccessfully() {
+    when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
+        .thenReturn(Optional.of(organizationWithUserAllPermission));
+    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(userService.getUser(user.getId())).thenReturn(user);
+
+    organizationService.delete(organizationWithUserAllPermission.getId());
+    verify(organizationRepository, times(1)).delete(organizationWithUserAllPermission);
+    verify(userService, times(1)).getUser(user.getId());
+    verify(authService, times(1)).getCurrentUser();
+  }
+
+  @Test
+  void deleteOrganizationThrowOrganizationNotFoundException() {
+    when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
+        .thenThrow(OrganizationNotFoundException.class);
+
+    assertThrows(
+        OrganizationNotFoundException.class,
+        () -> organizationService.delete(organizationWithUserAllPermission.getId()));
   }
 
   @Test
