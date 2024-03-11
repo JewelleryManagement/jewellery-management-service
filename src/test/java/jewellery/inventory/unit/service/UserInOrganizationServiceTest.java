@@ -13,10 +13,7 @@ import jewellery.inventory.exception.organization.MissingOrganizationPermissionE
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.mapper.OrganizationMapper;
-import jewellery.inventory.model.Organization;
-import jewellery.inventory.model.OrganizationPermission;
-import jewellery.inventory.model.User;
-import jewellery.inventory.model.UserInOrganization;
+import jewellery.inventory.model.*;
 import jewellery.inventory.repository.UserInOrganizationRepository;
 import jewellery.inventory.service.OrganizationService;
 import jewellery.inventory.service.UserInOrganizationService;

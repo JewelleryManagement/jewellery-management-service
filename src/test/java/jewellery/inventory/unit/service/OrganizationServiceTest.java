@@ -10,9 +10,13 @@ import java.util.*;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
+import jewellery.inventory.exception.organization.OrganizationProductsException;
+import jewellery.inventory.exception.organization.OrganizationResourcesException;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.Organization;
+import jewellery.inventory.model.Product;
+import jewellery.inventory.model.ResourceInOrganization;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.OrganizationRepository;
 import jewellery.inventory.repository.UserInOrganizationRepository;
@@ -120,6 +124,35 @@ class OrganizationServiceTest {
 
     assertThrows(
         OrganizationNotFoundException.class,
+        () -> organizationService.delete(organizationWithUserAllPermission.getId()));
+  }
+
+  @Test
+  void deleteOrganizationThrowOrganizationProductsException() {
+    organizationWithUserAllPermission.setProductsOwned(List.of(new Product()));
+    when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
+        .thenReturn(Optional.of(organizationWithUserAllPermission));
+
+    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(userService.getUser(user.getId())).thenReturn(user);
+
+    assertThrows(
+        OrganizationProductsException.class,
+        () -> organizationService.delete(organizationWithUserAllPermission.getId()));
+  }
+
+  @Test
+  void deleteOrganizationThrowOrganizationResourcesException() {
+    organizationWithUserAllPermission.setResourceInOrganization(
+        List.of(new ResourceInOrganization()));
+    when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
+        .thenReturn(Optional.of(organizationWithUserAllPermission));
+
+    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(userService.getUser(user.getId())).thenReturn(user);
+
+    assertThrows(
+        OrganizationResourcesException.class,
         () -> organizationService.delete(organizationWithUserAllPermission.getId()));
   }
 
