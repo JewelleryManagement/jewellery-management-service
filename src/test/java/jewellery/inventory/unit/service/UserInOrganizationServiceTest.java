@@ -4,6 +4,7 @@ import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import java.util.*;
@@ -36,6 +37,7 @@ class UserInOrganizationServiceTest {
   @Mock private UserService userService;
   @Mock private OrganizationMapper organizationMapper;
   @Mock private UserInOrganizationRepository userInOrganizationRepository;
+  private Organization organization;
   private Organization organizationWithUserAllPermission;
   private User user;
   private UserInOrganization userInOrganization;
@@ -43,6 +45,7 @@ class UserInOrganizationServiceTest {
 
   @BeforeEach
   void setUp() {
+    organization = getTestOrganization();
     user = UserTestHelper.createSecondTestUser();
     organizationWithUserAllPermission = getTestOrganizationWithUserWithAllPermissions(user);
     executorResponseDto = getTestExecutor(user);
@@ -53,7 +56,7 @@ class UserInOrganizationServiceTest {
   void getUsersInOrganizationSuccessfully() {
     when(organizationService.getOrganization(organizationWithUserAllPermission.getId()))
         .thenReturn(organizationWithUserAllPermission);
-    ;
+
     when(authService.getCurrentUser()).thenReturn(executorResponseDto);
     when(userService.getUser(user.getId())).thenReturn(user);
 
@@ -69,8 +72,6 @@ class UserInOrganizationServiceTest {
 
   @Test
   void updateUserPermissionsInOrganizationSuccessfully() {
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(user.getId())).thenReturn(user);
     when(organizationService.getOrganization(organizationWithUserAllPermission.getId()))
         .thenReturn(organizationWithUserAllPermission);
 
@@ -93,16 +94,16 @@ class UserInOrganizationServiceTest {
 
   @Test
   void deleteUserInOrganizationThrowsExceptionWhenNoManageUsersPermission() {
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(executorResponseDto.getId())).thenReturn(new User());
-    when(organizationService.getOrganization(organizationWithUserAllPermission.getId()))
-        .thenReturn(organizationWithUserAllPermission);
+    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
+
+    doThrow(MissingOrganizationPermissionException.class)
+        .when(organizationService)
+        .validateCurrentUserPermission(organization, OrganizationPermission.MANAGE_USERS);
 
     assertThrows(
         MissingOrganizationPermissionException.class,
         () ->
-            userInOrganizationService.deleteUserInOrganization(
-                user.getId(), organizationWithUserAllPermission.getId()));
+            userInOrganizationService.deleteUserInOrganization(user.getId(), organization.getId()));
   }
 
   @Test
