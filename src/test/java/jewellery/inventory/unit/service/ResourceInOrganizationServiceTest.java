@@ -134,8 +134,7 @@ class ResourceInOrganizationServiceTest {
 
   @Test
   void testRemoveQuantityFromResourceShouldThrowInvalidResourceQuantityException() {
-    when(organizationService.getOrganization(any()))
-        .thenThrow(InvalidResourceQuantityException.class);
+    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
 
     Assertions.assertThrows(
         InvalidResourceQuantityException.class,
