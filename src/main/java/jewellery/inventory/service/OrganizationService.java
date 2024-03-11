@@ -3,9 +3,12 @@ package jewellery.inventory.service;
 import java.util.*;
 import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
+import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
+import jewellery.inventory.exception.organization.OrganizationProductsException;
+import jewellery.inventory.exception.organization.OrganizationResourcesException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.*;
@@ -23,6 +26,7 @@ public class OrganizationService implements EntityFetcher {
   private final OrganizationMapper organizationMapper;
   private final AuthService authService;
   private final UserService userService;
+  private final UserInOrganizationService userInOrganizationService;
 
   public List<OrganizationResponseDto> getAllOrganizationsResponses() {
     logger.debug("Fetching all organizationsResponses");
@@ -41,6 +45,15 @@ public class OrganizationService implements EntityFetcher {
     organization = organizationRepository.save(organization);
     logger.info("Organization created with ID: {}", organization.getId());
     return organizationMapper.toResponse(organization);
+  }
+
+  @LogDeleteEvent(eventType = EventType.ORGANIZATION_DELETE)
+  public void delete(UUID organizationId)  {
+    Organization organizationForDelete = getOrganization(organizationId);
+    userInOrganizationService.validateCurrentUserPermission(
+        organizationForDelete, OrganizationPermission.DESTROY_ORGANIZATION);
+    validateOrganizationProductsAndResources(organizationForDelete);
+    organizationRepository.delete(organizationForDelete);
   }
 
   public Organization getOrganization(UUID id) {
@@ -65,6 +78,15 @@ public class OrganizationService implements EntityFetcher {
 
   private List<Organization> getAll() {
     return organizationRepository.findAll();
+  }
+
+  private void validateOrganizationProductsAndResources(Organization organization) {
+    if (!organization.getResourceInOrganization().isEmpty()) {
+      throw new OrganizationResourcesException(organization.getId());
+    }
+    if (!organization.getProductsOwned().isEmpty()) {
+      throw new OrganizationProductsException(organization.getId());
+    }
   }
 
   @Override
