@@ -8,6 +8,7 @@ import java.util.List;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
+import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
@@ -43,6 +44,7 @@ class ResourceInOrganizationServiceTest {
   private ResourceInOrganizationRequestDto resourceInOrganizationRequestDto;
   private ResourceInOrganization resourceInOrganization;
   private static final BigDecimal QUANTITY = BigDecimal.ONE;
+  private static final BigDecimal NEGATIVE_QUANTITY = BigDecimal.valueOf(-5);
   private static final BigDecimal BIG_QUANTITY = BigDecimal.valueOf(30);
   private static final BigDecimal DEAL_PRICE = BigDecimal.TEN;
 
@@ -128,6 +130,17 @@ class ResourceInOrganizationServiceTest {
         () ->
             resourceInOrganizationService.removeQuantityFromResource(
                 organization.getId(), resource.getId(), QUANTITY));
+  }
+
+  @Test
+  void testRemoveQuantityFromResourceShouldThrowInvalidResourceQuantityException(){
+    when(organizationService.getOrganization(any())).thenThrow(InvalidResourceQuantityException.class);
+
+    Assertions.assertThrows(
+            InvalidResourceQuantityException.class,
+            () ->
+                    resourceInOrganizationService.removeQuantityFromResource(
+                            organization.getId(), resource.getId(), NEGATIVE_QUANTITY));
   }
 
   @Test
