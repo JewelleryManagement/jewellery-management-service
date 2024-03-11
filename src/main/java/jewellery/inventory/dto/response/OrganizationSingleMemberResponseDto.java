@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class OrganizationSingleMemberResponseDto {
-  private UserInOrganizationResponseDto member;
   private OrganizationResponseDto organization;
+  private UserInOrganizationResponseDto member;
 }
