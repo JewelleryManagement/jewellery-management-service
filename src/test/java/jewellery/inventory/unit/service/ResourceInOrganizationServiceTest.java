@@ -133,14 +133,15 @@ class ResourceInOrganizationServiceTest {
   }
 
   @Test
-  void testRemoveQuantityFromResourceShouldThrowInvalidResourceQuantityException(){
-    when(organizationService.getOrganization(any())).thenThrow(InvalidResourceQuantityException.class);
+  void testRemoveQuantityFromResourceShouldThrowInvalidResourceQuantityException() {
+    when(organizationService.getOrganization(any()))
+        .thenThrow(InvalidResourceQuantityException.class);
 
     Assertions.assertThrows(
-            InvalidResourceQuantityException.class,
-            () ->
-                    resourceInOrganizationService.removeQuantityFromResource(
-                            organization.getId(), resource.getId(), NEGATIVE_QUANTITY));
+        InvalidResourceQuantityException.class,
+        () ->
+            resourceInOrganizationService.removeQuantityFromResource(
+                organization.getId(), resource.getId(), NEGATIVE_QUANTITY));
   }
 
   @Test
