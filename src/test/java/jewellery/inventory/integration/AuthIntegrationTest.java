@@ -1,6 +1,8 @@
 package jewellery.inventory.integration;
 
-import static jewellery.inventory.helper.UserTestHelper.*;
+import static jewellery.inventory.helper.UserTestHelper.USER_EMAIL;
+import static jewellery.inventory.helper.UserTestHelper.USER_PASSWORD;
+import static jewellery.inventory.helper.UserTestHelper.createTestUser;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;

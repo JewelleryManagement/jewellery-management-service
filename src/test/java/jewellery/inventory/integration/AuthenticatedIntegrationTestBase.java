@@ -46,7 +46,6 @@ abstract class AuthenticatedIntegrationTestBase {
   @Autowired private ResourceInUserRepository resourceInUserRepository;
   @Autowired private ResourceInProductRepository resourceInProductRepository;
   @Autowired private PurchasedResourceInUserRepository purchasedResourceInUserRepository;
-
   @Autowired private ImageService imageService;
   @Autowired private ImageRepository imageRepository;
 
