@@ -49,10 +49,6 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     return buildUrl("resources", "availability", "transfer");
   }
 
-  private String getResourceAvailabilityUrl(UUID userId, UUID resourceId) {
-    return buildUrl("resources", "availability", userId.toString(), resourceId.toString());
-  }
-
   private String getBaseUserUrl() {
     return buildUrl("users");
   }

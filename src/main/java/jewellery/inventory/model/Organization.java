@@ -19,21 +19,23 @@ import lombok.*;
 @AllArgsConstructor
 @Table(name = "organizations")
 public class Organization {
-  @Id
-  @GeneratedValue
-  private UUID id;
+  @Id @GeneratedValue private UUID id;
+
   @Column(nullable = false)
   private String name;
-  @Column
-  private String address;
-  @Column
-  private String note;
+
+  @Column private String address;
+  @Column private String note;
+
   @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
   private List<ResourceInOrganization> resourceInOrganization;
+
   @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
   private List<Product> productsOwned;
-  @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
+
+  @OneToMany(mappedBy = "organization", orphanRemoval = true, cascade = CascadeType.ALL)
   private List<UserInOrganization> usersInOrganization;
+
   @OneToMany(mappedBy = "organizationSeller", cascade = CascadeType.ALL)
   private List<Sale> sales;
 }

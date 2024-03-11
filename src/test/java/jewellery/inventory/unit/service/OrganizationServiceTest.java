@@ -4,22 +4,20 @@ import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizationRequest;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
-import jewellery.inventory.dto.response.ExecutorResponseDto;
-import jewellery.inventory.dto.response.OrganizationResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.OrganizationRepository;
+import jewellery.inventory.repository.UserInOrganizationRepository;
 import jewellery.inventory.service.OrganizationService;
+import jewellery.inventory.service.UserInOrganizationService;
 import jewellery.inventory.service.UserService;
 import jewellery.inventory.service.security.AuthService;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,10 +30,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class OrganizationServiceTest {
   @InjectMocks private OrganizationService organizationService;
+  @Mock private UserInOrganizationService userInOrganizationService;
+
   @Mock private OrganizationRepository organizationRepository;
   @Mock private OrganizationMapper organizationMapper;
   @Mock private AuthService authService;
   @Mock private UserService userService;
+  @Mock private UserInOrganizationRepository userInOrganizationRepository;
 
   private Organization organization;
   private User user;
@@ -88,7 +89,7 @@ class OrganizationServiceTest {
   void createOrganizationSuccessfully() {
     when(organizationMapper.toEntity(organizationRequestDto)).thenReturn(organization);
     when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(any(UUID.class))).thenReturn(user);
+    when(userService.getUser(user.getId())).thenReturn(user);
     when(organizationRepository.save(organization)).thenReturn(organization);
     when(organizationMapper.toResponse(organization)).thenReturn(organizationResponseDto);
 

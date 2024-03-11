@@ -1,7 +1,7 @@
 package jewellery.inventory.service;
 
 import java.util.*;
-
+import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
-public class OrganizationService {
+public class OrganizationService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(OrganizationService.class);
   private final OrganizationRepository organizationRepository;
   private final OrganizationMapper organizationMapper;
@@ -43,6 +43,16 @@ public class OrganizationService {
     return organizationMapper.toResponse(organization);
   }
 
+  public Organization getOrganization(UUID id) {
+    return organizationRepository
+        .findById(id)
+        .orElseThrow(() -> new OrganizationNotFoundException(id));
+  }
+
+  public void saveOrganization(Organization organization) {
+    organizationRepository.save(organization);
+  }
+
   private void makeCurrentUserOwner(Organization organization) {
     UserInOrganization userInOrganizationOwner = new UserInOrganization();
     User user = userService.getUser(authService.getCurrentUser().getId());
@@ -50,7 +60,6 @@ public class OrganizationService {
     userInOrganizationOwner.setOrganization(organization);
     userInOrganizationOwner.setOrganizationPermission(
         Arrays.asList(OrganizationPermission.values()));
-    logger.info("Created UserInOrganization for Organization ID: {}", organization.getId());
     organization.setUsersInOrganization(List.of(userInOrganizationOwner));
   }
 
@@ -58,9 +67,12 @@ public class OrganizationService {
     return organizationRepository.findAll();
   }
 
-  private Organization getOrganization(UUID id) {
-    return organizationRepository
-        .findById(id)
-        .orElseThrow(() -> new OrganizationNotFoundException(id));
+  @Override
+  public Object fetchEntity(Object... ids) {
+    Organization organization = organizationRepository.findById((UUID) ids[0]).orElse(null);
+    if (organization == null) {
+      return null;
+    }
+    return organizationMapper.toResponse(organization);
   }
 }

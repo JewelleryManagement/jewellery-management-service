@@ -1,6 +1,6 @@
 package jewellery.inventory.integration;
 
-import static jewellery.inventory.helper.UserTestHelper.createTestUserWithId;
+import static jewellery.inventory.helper.UserTestHelper.createTestAdminUser;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -46,7 +46,6 @@ abstract class AuthenticatedIntegrationTestBase {
   @Autowired private ResourceInUserRepository resourceInUserRepository;
   @Autowired private ResourceInProductRepository resourceInProductRepository;
   @Autowired private PurchasedResourceInUserRepository purchasedResourceInUserRepository;
-
   @Autowired private ImageService imageService;
   @Autowired private ImageRepository imageRepository;
 
@@ -63,12 +62,10 @@ abstract class AuthenticatedIntegrationTestBase {
     resourceInUserRepository.deleteAll();
     resourceInProductRepository.deleteAll();
     systemEventRepository.deleteAll();
-    User adminUser = createTestUserWithId();
+    User adminUser = createTestAdminUser();
     setupMockSecurityContext(adminUser);
     setupTestRestTemplateWithAuthHeaders();
-    User adminDifferent = createUserInDatabase(UserTestHelper.createDifferentTestUserRequest());
-    setupMockSecurityContext(adminDifferent);
-    setupTestRestTemplateWithAuthHeaders();
+    adminUser.setId(createUserInDatabase(UserTestHelper.getTestUserRequest(adminUser)).getId());
   }
 
   private void deleteAllImages() {
