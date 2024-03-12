@@ -10,6 +10,7 @@ import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationMembersResponseDto;
 import jewellery.inventory.dto.response.OrganizationSingleMemberResponseDto;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
+import jewellery.inventory.exception.organization.UserIsPartOfOrganizationException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.UserInOrganizationRepository;
@@ -55,11 +56,12 @@ public class UserInOrganizationService implements EntityFetcher {
   @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_CREATE)
   public OrganizationSingleMemberResponseDto addUserInOrganization(
       UUID organizationId, UserInOrganizationRequestDto userInOrganizationRequestDto) {
+    Organization organization = organizationService.getOrganization(organizationId);
 
     organizationService.validateCurrentUserPermission(
-        organizationService.getOrganization(organizationId), OrganizationPermission.MANAGE_USERS);
-
-    Organization organization = organizationService.getOrganization(organizationId);
+        organization, OrganizationPermission.MANAGE_USERS);
+    validateUserIsPartOfOrganization(
+        organization, userService.getUser(userInOrganizationRequestDto.getUserId()));
 
     UserInOrganization userInOrganization =
         createUserInOrganization(userInOrganizationRequestDto, organization);
@@ -148,6 +150,15 @@ public class UserInOrganizationService implements EntityFetcher {
     return userInOrganizationRepository
         .findByUserIdAndOrganizationId(userId, organizationId)
         .orElseThrow(() -> new UserIsNotPartOfOrganizationException(userId, organizationId));
+  }
+
+  private void validateUserIsPartOfOrganization(Organization organization, User userForAdd) {
+    boolean isPart =
+        organization.getUsersInOrganization().stream()
+            .anyMatch(userInOrganization -> userInOrganization.getUser().equals(userForAdd));
+    if (isPart) {
+      throw new UserIsPartOfOrganizationException(userForAdd.getId(), organization.getId());
+    }
   }
 
   @Override
