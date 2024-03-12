@@ -17,7 +17,6 @@ import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.OrganizationPermission;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.UserInOrganization;
-import jewellery.inventory.repository.OrganizationRepository;
 import jewellery.inventory.repository.UserInOrganizationRepository;
 import jewellery.inventory.service.OrganizationService;
 import jewellery.inventory.service.UserInOrganizationService;
@@ -34,14 +33,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class UserInOrganizationServiceTest {
   @InjectMocks private UserInOrganizationService userInOrganizationService;
   @Mock private OrganizationService organizationService;
-  @Mock private OrganizationRepository organizationRepository;
   @Mock private AuthService authService;
   @Mock private UserService userService;
   @Mock private OrganizationMapper organizationMapper;
   @Mock private UserInOrganizationRepository userInOrganizationRepository;
-
   private Organization organizationWithUserAllPermission;
-
   private User user;
   private UserInOrganization userInOrganization;
   private ExecutorResponseDto executorResponseDto;
@@ -66,21 +62,23 @@ class UserInOrganizationServiceTest {
         .thenReturn(new OrganizationMembersResponseDto());
 
     OrganizationMembersResponseDto actual =
-        userInOrganizationService.getAllUsersInOrganization(organizationWithUserAllPermission.getId());
+        userInOrganizationService.getAllUsersInOrganization(
+            organizationWithUserAllPermission.getId());
 
     assertNotNull(actual);
   }
 
   @Test
   void updateUserPermissionsInOrganizationSuccessfully() {
+    when(organizationService.getOrganization(organizationWithUserAllPermission.getId()))
+        .thenReturn(organizationWithUserAllPermission);
+
     when(userInOrganizationRepository.findByUserIdAndOrganizationId(
             organizationWithUserAllPermission.getUsersInOrganization().get(0).getUser().getId(),
             organizationWithUserAllPermission.getId()))
         .thenReturn(Optional.of(userInOrganization));
 
-    when(organizationMapper.toOrganizationSingleMemberResponseDto(
-            organizationWithUserAllPermission.getUsersInOrganization().get(0).getUser().getId(),
-            organizationWithUserAllPermission))
+    when(organizationMapper.toOrganizationSingleMemberResponseDto(userInOrganization))
         .thenReturn(new OrganizationSingleMemberResponseDto());
 
     OrganizationSingleMemberResponseDto actual =
@@ -117,6 +115,8 @@ class UserInOrganizationServiceTest {
 
     assertThrows(
         UserIsNotPartOfOrganizationException.class,
-        () -> userInOrganizationService.getAllUsersInOrganization(organizationWithUserAllPermission.getId()));
+        () ->
+            userInOrganizationService.getAllUsersInOrganization(
+                organizationWithUserAllPermission.getId()));
   }
 }

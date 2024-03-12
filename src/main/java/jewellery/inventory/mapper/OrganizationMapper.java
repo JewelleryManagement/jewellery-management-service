@@ -8,10 +8,8 @@ import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
 import jewellery.inventory.model.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Component
 @AllArgsConstructor
@@ -34,7 +32,24 @@ public class OrganizationMapper {
     return organizationResponseDto;
   }
 
-  private List<UserInOrganizationResponseDto> toUserInOrganizationResponseDtoResponse(
+  public OrganizationMembersResponseDto toOrganizationMembersResponseDto(
+      Organization organization) {
+    OrganizationMembersResponseDto membersResponseDto = new OrganizationMembersResponseDto();
+    membersResponseDto.setMembers(toListUserInOrganizationResponseDto(organization));
+    membersResponseDto.setOrganization(toResponse(organization));
+    return membersResponseDto;
+  }
+
+  public OrganizationSingleMemberResponseDto toOrganizationSingleMemberResponseDto(
+      UserInOrganization userInOrganization) {
+    OrganizationSingleMemberResponseDto memberResponseDto =
+        new OrganizationSingleMemberResponseDto();
+    memberResponseDto.setMember(toUserInOrganizationResponseDto(userInOrganization));
+    memberResponseDto.setOrganization(toResponse(userInOrganization.getOrganization()));
+    return memberResponseDto;
+  }
+
+  private List<UserInOrganizationResponseDto> toListUserInOrganizationResponseDto(
       Organization organization) {
     List<UserInOrganizationResponseDto> userResponseDtoList = new ArrayList<>();
 
@@ -51,33 +66,13 @@ public class OrganizationMapper {
     return userResponseDtoList;
   }
 
-  private UserInOrganizationResponseDto toUserInOrganizationResponseDtoResponse(
-      Organization organization, UUID userId) {
+  private UserInOrganizationResponseDto toUserInOrganizationResponseDto(
+      UserInOrganization userInOrganization) {
     UserInOrganizationResponseDto userResponseDto = new UserInOrganizationResponseDto();
 
-    organization.getUsersInOrganization().stream()
-        .filter(userInOrg -> userInOrg.getUser().getId().equals(userId))
-        .findFirst()
-        .ifPresent(
-            userInOrg -> {
-              userResponseDto.setUserId(userInOrg.getUser().getId());
-              userResponseDto.setOrganizationPermissions(userInOrg.getOrganizationPermission());
-            });
+    userResponseDto.setUserId(userInOrganization.getId());
+    userResponseDto.setOrganizationPermissions(userInOrganization.getOrganizationPermission());
 
     return userResponseDto;
   }
-
-    public OrganizationMembersResponseDto toOrganizationMembersResponseDto(Organization organization) {
-        OrganizationMembersResponseDto membersResponseDto = new OrganizationMembersResponseDto();
-        membersResponseDto.setMembers(toUserInOrganizationResponseDtoResponse(organization));
-        membersResponseDto.setOrganization(toResponse(organization));
-        return membersResponseDto;
-    }
-
-    public OrganizationSingleMemberResponseDto toOrganizationSingleMemberResponseDto(UUID userId,Organization organization){
-        OrganizationSingleMemberResponseDto memberResponseDto = new OrganizationSingleMemberResponseDto();
-        memberResponseDto.setMember(toUserInOrganizationResponseDtoResponse(organization,userId));
-        memberResponseDto.setOrganization(toResponse(organization));
-        return memberResponseDto;
-    }
 }

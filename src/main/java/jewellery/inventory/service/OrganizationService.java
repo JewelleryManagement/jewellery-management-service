@@ -48,6 +48,12 @@ public class OrganizationService implements EntityFetcher {
     return organizationMapper.toResponse(organization);
   }
 
+  public Organization getOrganization(UUID id) {
+    return organizationRepository
+        .findById(id)
+        .orElseThrow(() -> new OrganizationNotFoundException(id));
+  }
+
   private void makeCurrentUserOwner(Organization organization) {
     UserInOrganization userInOrganizationOwner = new UserInOrganization();
     User user = userService.getUser(authService.getCurrentUser().getId());
@@ -55,18 +61,11 @@ public class OrganizationService implements EntityFetcher {
     userInOrganizationOwner.setOrganization(organization);
     userInOrganizationOwner.setOrganizationPermission(
         Arrays.asList(OrganizationPermission.values()));
-    logger.info("Created UserInOrganization for Organization ID: {}", organization.getId());
     organization.setUsersInOrganization(List.of(userInOrganizationOwner));
   }
 
   private List<Organization> getAll() {
     return organizationRepository.findAll();
-  }
-
-  public Organization getOrganization(UUID id) {
-    return organizationRepository
-        .findById(id)
-        .orElseThrow(() -> new OrganizationNotFoundException(id));
   }
 
   public void validateCurrentUserPermission(

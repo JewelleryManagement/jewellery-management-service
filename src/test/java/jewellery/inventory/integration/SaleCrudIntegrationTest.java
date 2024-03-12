@@ -89,7 +89,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @BeforeEach
   void setUp() {
-    seller = createUserInDatabase(createDifferentTestUserRequest());
+    seller = createUserInDatabase(createTestUserRequest());
     buyer = createUserInDatabase(createDifferentUserRequest());
     preciousStone = createPreciousStoneInDatabase();
     resourceInUserRequestDto =

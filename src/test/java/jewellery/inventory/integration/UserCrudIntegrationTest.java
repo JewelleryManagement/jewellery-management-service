@@ -2,7 +2,9 @@ package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
-import static jewellery.inventory.helper.UserTestHelper.*;
+import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
+import static jewellery.inventory.helper.UserTestHelper.createInvalidUserRequest;
+import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
 import static jewellery.inventory.model.EventType.USER_CREATE;
 import static jewellery.inventory.model.EventType.USER_DELETE;
 import static jewellery.inventory.model.EventType.USER_UPDATE;
@@ -33,7 +35,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
   void createUserSuccessfully() throws Exception {
 
-    UserRequestDto userRequest = createDifferentTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
 
     ResponseEntity<UserResponseDto> response =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
@@ -92,7 +94,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getAllUsersSuccessfully() {
-    UserRequestDto userRequest = createDifferentTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
 
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
@@ -113,7 +115,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getSpecificUserSuccessfully() {
-    UserRequestDto userRequest = createDifferentTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
     UserResponseDto createdUser = userResponseEntity.getBody();
@@ -141,7 +143,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void updateUserSuccessfully() throws JsonProcessingException {
-    UserRequestDto userRequest = createDifferentTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
     UserResponseDto createdUser = userResponseEntity.getBody();
@@ -207,7 +209,7 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void deleteUserSuccessfully() throws JsonProcessingException {
-    UserRequestDto userRequest = createDifferentTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<UserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
     UserResponseDto createdUser = userResponseEntity.getBody();

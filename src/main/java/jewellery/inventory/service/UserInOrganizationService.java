@@ -12,7 +12,6 @@ import jewellery.inventory.dto.response.OrganizationSingleMemberResponseDto;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
-import jewellery.inventory.repository.OrganizationRepository;
 import jewellery.inventory.repository.UserInOrganizationRepository;
 import jewellery.inventory.service.security.AuthService;
 import lombok.AllArgsConstructor;
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class UserInOrganizationService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(UserInOrganizationService.class);
-  private final OrganizationRepository organizationRepository;
   private final OrganizationMapper organizationMapper;
   private final AuthService authService;
   private final UserService userService;
@@ -40,36 +38,42 @@ public class UserInOrganizationService implements EntityFetcher {
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_USER_UPDATE)
   public OrganizationSingleMemberResponseDto updateUserPermissionsInOrganization(
       UUID userId, UUID organizationId, List<OrganizationPermission> organizationPermissionList) {
+    organizationService.validateCurrentUserPermission(
+        organizationService.getOrganization(organizationId), OrganizationPermission.MANAGE_USERS);
 
     UserInOrganization userInOrganization =
-        userInOrganizationRepository
-            .findByUserIdAndOrganizationId(userId, organizationId)
-            .orElseThrow(() -> new UserIsNotPartOfOrganizationException(userId, organizationId));
+        getUserInOrganizationByUserIdAndOrganizationId(userId, organizationId);
+
 
     Organization organization = userInOrganization.getOrganization();
-    User userForUpdate = userInOrganization.getUser();
 
     organizationService.validateCurrentUserPermission(organization, OrganizationPermission.MANAGE_USERS);
-    changeUserPermissionInOrganization(organization, userForUpdate, organizationPermissionList);
+
+    changeUserPermissionInOrganization(userInOrganization, organizationPermissionList);
+
     logger.info(
         "Successfully updated user permissions in the organization. Organization ID: {}, User ID: {}",
         organizationId,
         userId);
-    return organizationMapper.toOrganizationSingleMemberResponseDto(userId, organization);
+    return organizationMapper.toOrganizationSingleMemberResponseDto(userInOrganization);
   }
 
   @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_CREATE)
   public OrganizationSingleMemberResponseDto addUserInOrganization(
       UUID organizationId, UserInOrganizationRequestDto userInOrganizationRequestDto) {
+
+    organizationService.validateCurrentUserPermission(
+        organizationService.getOrganization(organizationId), OrganizationPermission.MANAGE_USERS);
+
     Organization organization = organizationService.getOrganization(organizationId);
+
     organizationService.validateCurrentUserPermission(organization, OrganizationPermission.MANAGE_USERS);
 
     UserInOrganization userInOrganization =
         createUserInOrganization(userInOrganizationRequestDto, organization);
     addUserToOrganization(userInOrganization, organization);
 
-    return organizationMapper.toOrganizationSingleMemberResponseDto(
-        userInOrganizationRequestDto.getUserId(), organization);
+    return organizationMapper.toOrganizationSingleMemberResponseDto(userInOrganization);
   }
 
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_USER_DELETE)
@@ -86,7 +90,7 @@ public class UserInOrganizationService implements EntityFetcher {
       throw new UserIsNotPartOfOrganizationException(userId, organizationId);
     }
 
-    organizationRepository.save(organization);
+    organizationService.saveOrganization(organization);
     logger.info(
         "Successfully deleted user in the organization. Organization ID: {}, User ID: {}",
         organizationId,
@@ -130,27 +134,27 @@ public class UserInOrganizationService implements EntityFetcher {
         "Successfully added user in the organization. Organization ID: {}, User ID: {}",
         organization.getId(),
         userInOrganization.getUser().getId());
-    organizationRepository.save(organization);
+    organizationService.saveOrganization(organization);
   }
 
   private void changeUserPermissionInOrganization(
-      Organization organization,
-      User userForUpdate,
+      UserInOrganization userInOrganization,
       List<OrganizationPermission> organizationPermissionList) {
 
-    organization.getUsersInOrganization().stream()
-        .filter(userInOrg -> userInOrg.getUser().equals(userForUpdate))
-        .findFirst()
-        .ifPresent(
-            userInOrg -> {
-              userInOrg.setOrganizationPermission(organizationPermissionList);
-              userInOrganizationRepository.save(userInOrg);
-              logger.info(
-                  "User permissions successfully changed in organization. User ID: {}, Organization ID: {}, New Permissions: {}",
-                  userForUpdate.getId(),
-                  organization.getId(),
-                  organizationPermissionList);
-            });
+    userInOrganization.setOrganizationPermission(organizationPermissionList);
+    userInOrganizationRepository.save(userInOrganization);
+    logger.info(
+        "User permissions successfully changed in organization. User ID: {}, Organization ID: {}, New Permissions: {}",
+        userInOrganization.getUser().getId(),
+        userInOrganization.getOrganization().getId(),
+        organizationPermissionList);
+  }
+
+  private UserInOrganization getUserInOrganizationByUserIdAndOrganizationId(
+      UUID userId, UUID organizationId) {
+    return userInOrganizationRepository
+        .findByUserIdAndOrganizationId(userId, organizationId)
+        .orElseThrow(() -> new UserIsNotPartOfOrganizationException(userId, organizationId));
   }
 
   @Override
@@ -162,7 +166,6 @@ public class UserInOrganizationService implements EntityFetcher {
     if (userInOrganization == null) {
       return null;
     }
-    return organizationMapper.toOrganizationSingleMemberResponseDto(
-        userInOrganization.getUser().getId(), userInOrganization.getOrganization());
+    return organizationMapper.toOrganizationSingleMemberResponseDto(userInOrganization);
   }
 }

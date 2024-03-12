@@ -5,7 +5,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
-import jewellery.inventory.dto.request.UpdateUserPermissionsRequest;
+import jewellery.inventory.dto.request.UpdateUserInOrganizationRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationMembersResponseDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
@@ -70,9 +70,9 @@ public class OrganizationController {
   public OrganizationSingleMemberResponseDto updateUserPermissionsInOrganization(
       @PathVariable UUID organizationId,
       @PathVariable UUID userId,
-      @RequestBody @Valid UpdateUserPermissionsRequest updateUserPermissionsRequest) {
+      @RequestBody @Valid UpdateUserInOrganizationRequest updateUserInOrganizationRequest) {
     return userInOrganizationService.updateUserPermissionsInOrganization(
-        userId, organizationId, updateUserPermissionsRequest.getOrganizationPermission());
+        userId, organizationId, updateUserInOrganizationRequest.getOrganizationPermission());
   }
 
   @Operation(summary = "Get all users in organization")

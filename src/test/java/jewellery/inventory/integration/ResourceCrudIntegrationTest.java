@@ -23,6 +23,7 @@ import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ResourceMapper;
+import org.hibernate.AssertionFailure;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -127,7 +128,10 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertInputMatchesFetchedFromServer(updatedInputDtos);
 
     Map<String, Object> expectedEventPayload =
-        getUpdateEventPayload(createdDtos.get(0), updatedDtos.get(0), objectMapper);
+            getUpdateEventPayload(
+                    createdDtos.get(0),
+                    getMatchingUpdatedDto(createdDtos.get(0).getId(), updatedDtos),
+                    objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(RESOURCE_UPDATE, expectedEventPayload);
   }
@@ -246,5 +250,11 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             .toList();
 
     assertThat(mappedDtos).containsExactlyInAnyOrderElementsOf(updatedResources);
+  }
+  private ResourceResponseDto getMatchingUpdatedDto(UUID id, List<ResourceResponseDto> updatedDtos) {
+    return updatedDtos.stream()
+            .filter(resourceResponseDto -> resourceResponseDto.getId().equals(id))
+            .findFirst()
+            .orElseThrow(() -> new AssertionFailure("Can't find id: " + id + " in responses"));
   }
 }

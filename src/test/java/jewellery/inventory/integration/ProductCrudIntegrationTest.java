@@ -90,7 +90,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @BeforeEach
   void setUp() {
-    user = createUserInDatabase(createDifferentTestUserRequest());
+    user = createUserInDatabase(createTestUserRequest());
     preciousStone = createPreciousStoneInDatabase();
     resourcePurchaseRequestDto =
         getResourceInUserRequestDto(user, Objects.requireNonNull(preciousStone));

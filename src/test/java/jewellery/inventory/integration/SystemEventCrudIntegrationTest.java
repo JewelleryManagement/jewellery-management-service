@@ -1,7 +1,7 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.SystemEventTestHelper.*;
-import static jewellery.inventory.helper.UserTestHelper.createDifferentTestUserRequest;
+import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -44,7 +44,7 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   private UserResponseDto createAndSaveUser() {
-    UserRequestDto userRequest = createDifferentTestUserRequest();
+    UserRequestDto userRequest = createTestUserRequest();
 
     return this.testRestTemplate
         .postForEntity("/users", userRequest, UserResponseDto.class)
