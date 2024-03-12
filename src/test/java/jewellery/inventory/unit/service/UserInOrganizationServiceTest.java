@@ -4,6 +4,7 @@ import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import java.util.*;
@@ -72,9 +73,6 @@ class UserInOrganizationServiceTest {
 
   @Test
   void updateUserPermissionsInOrganizationSuccessfully() {
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(user.getId())).thenReturn(user);
-
     when(userInOrganizationRepository.findByUserIdAndOrganizationId(
             organizationWithUserAllPermission.getUsersInOrganization().get(0).getUser().getId(),
             organizationWithUserAllPermission.getId()))
@@ -96,10 +94,12 @@ class UserInOrganizationServiceTest {
 
   @Test
   void deleteUserInOrganizationThrowsExceptionWhenNoManageUsersPermission() {
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(executorResponseDto.getId())).thenReturn(new User());
     when(organizationService.getOrganization(organizationWithUserAllPermission.getId()))
         .thenReturn(organizationWithUserAllPermission);
+
+    doThrow(MissingOrganizationPermissionException.class)
+            .when(organizationService)
+            .validateCurrentUserPermission(organizationWithUserAllPermission, OrganizationPermission.MANAGE_USERS);
 
     assertThrows(
         MissingOrganizationPermissionException.class,

@@ -10,11 +10,13 @@ import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.service.ResourceInOrganizationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/organizations/resources-availability")
 @RequiredArgsConstructor
+@Validated
 public class ResourceInOrganizationController {
   private static final String QUANTITY_MIN_VALUE_MSG = "Quantity should not be less than 0.";
 

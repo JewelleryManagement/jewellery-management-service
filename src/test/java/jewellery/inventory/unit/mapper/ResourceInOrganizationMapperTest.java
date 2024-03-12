@@ -44,7 +44,7 @@ public class ResourceInOrganizationMapperTest {
   @Test
   void testMapEntityToResponse() {
     ResourcesInOrganizationResponseDto response =
-        resourceInOrganizationMapper.toResourceInOrganizationResponse(resourceInOrganization);
+        resourceInOrganizationMapper.toResourcesInOrganizationResponse(resourceInOrganization);
 
     assertNotNull(response);
     verify(organizationMapper, times(1)).toResponse(organization);
@@ -59,7 +59,7 @@ public class ResourceInOrganizationMapperTest {
     organization.setResourceInOrganization(
         List.of(resourceInOrganization, secondResourceInOrganization));
     ResourcesInOrganizationResponseDto response =
-        resourceInOrganizationMapper.toResourceInOrganizationResponse(organization);
+        resourceInOrganizationMapper.toResourcesInOrganizationResponse(organization);
 
     assertEquals(2, response.getResourcesAndQuantities().size());
     verify(organizationMapper, times(1)).toResponse(organization);

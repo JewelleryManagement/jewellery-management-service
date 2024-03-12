@@ -6,6 +6,7 @@ import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
+import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.*;
@@ -66,6 +67,28 @@ public class OrganizationService implements EntityFetcher {
     return organizationRepository
         .findById(id)
         .orElseThrow(() -> new OrganizationNotFoundException(id));
+  }
+
+  public void validateCurrentUserPermission(
+      Organization organization, OrganizationPermission permission) {
+    User currentUser = userService.getUser(authService.getCurrentUser().getId());
+    if (!hasPermission(currentUser, organization, permission)) {
+      throw new MissingOrganizationPermissionException(
+          currentUser.getId(), organization.getId(), permission);
+    }
+    logger.debug(
+        "User permission validation successful. User ID: {}, Organization ID: {}",
+        currentUser.getId(),
+        organization.getId());
+  }
+
+  private boolean hasPermission(
+      User user, Organization organization, OrganizationPermission permission) {
+    return organization.getUsersInOrganization().stream()
+        .anyMatch(
+            userInOrganization ->
+                userInOrganization.getUser().equals(user)
+                    && userInOrganization.getOrganizationPermission().contains(permission));
   }
 
   @Override

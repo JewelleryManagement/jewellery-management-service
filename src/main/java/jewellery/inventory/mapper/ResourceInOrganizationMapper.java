@@ -15,16 +15,19 @@ public class ResourceInOrganizationMapper {
   private final OrganizationMapper organizationMapper;
   private final ResourceMapper resourceMapper;
 
-  public ResourcesInOrganizationResponseDto toResourceInOrganizationResponse(
+  public ResourcesInOrganizationResponseDto toResourcesInOrganizationResponse(
       ResourceInOrganization resourceInOrganization) {
-    return ResourcesInOrganizationResponseDto.builder()
-        .owner(organizationMapper.toResponse(resourceInOrganization.getOrganization()))
-        .dealPrice(resourceInOrganization.getDealPrice())
-        .resourcesAndQuantities(List.of(getResourceQuantityResponseDto(resourceInOrganization)))
-        .build();
+    if (resourceInOrganization != null) {
+      return ResourcesInOrganizationResponseDto.builder()
+          .owner(organizationMapper.toResponse(resourceInOrganization.getOrganization()))
+          .dealPrice(resourceInOrganization.getDealPrice())
+          .resourcesAndQuantities(List.of(getResourceQuantityResponseDto(resourceInOrganization)))
+          .build();
+    }
+    return new ResourcesInOrganizationResponseDto();
   }
 
-  public ResourcesInOrganizationResponseDto toResourceInOrganizationResponse(
+  public ResourcesInOrganizationResponseDto toResourcesInOrganizationResponse(
       Organization organization) {
     return ResourcesInOrganizationResponseDto.builder()
         .resourcesAndQuantities(getResourcesQuantitiesResponseDto(organization))

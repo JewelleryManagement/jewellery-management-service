@@ -12,5 +12,8 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 public class ResourcePurchaseRequestDto extends ResourceInUserRequestDto {
-  @NotNull @Positive private BigDecimal dealPrice;
+
+  @NotNull
+  @Positive
+  private BigDecimal dealPrice;
 }

@@ -1,7 +1,6 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ResourceTestHelper.getPearlRequestDto;
-import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.model.EventType.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
@@ -77,7 +76,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
         result.getResourcesAndQuantities().get(0).getQuantity());
     assertEquals(resourceInOrganizationRequest.getDealPrice(), result.getDealPrice());
 
-    Map<String, Object> expectedEventPayload = getCreateOrDeleteEventPayload(result, objectMapper);
+    Map<String, Object> expectedEventPayload = getUpdateEventPayload(null, result, objectMapper);
     systemEventTestHelper.assertEventWasLogged(
         ORGANIZATION_ADD_RESOURCE_QUANTITY, expectedEventPayload);
   }
@@ -213,11 +212,11 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   void removeResourceQuantityShouldThrowWhenOrganizationNotFound() {
     OrganizationResponseDto organizationResponseDto = createOrganization();
     ResourceResponseDto resourceResponse = createResourceResponse();
-
     organizationResponseDto.setId(UUID.randomUUID());
 
     ResponseEntity<ResourcesInOrganizationResponseDto> response =
         sendDeleteOperation(getDeleteResourceUrl(organizationResponseDto, resourceResponse));
+
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
 
@@ -225,11 +224,11 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   void removeResourceQuantityShouldThrowWhenResourceNotFound() {
     OrganizationResponseDto organizationResponseDto = createOrganization();
     ResourceResponseDto resourceResponse = createResourceResponse();
-
     resourceResponse.setId(UUID.randomUUID());
 
     ResponseEntity<ResourcesInOrganizationResponseDto> response =
         sendDeleteOperation(getDeleteResourceUrl(organizationResponseDto, resourceResponse));
+
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
 
@@ -237,18 +236,17 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   void removeResourceQuantityShouldThrowWhenInsufficientQuantity() {
     OrganizationResponseDto organizationResponseDto = createOrganization();
     ResourceResponseDto resourceResponse = createResourceResponse();
-
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organizationResponseDto.getId(),
             resourceResponse.getId(),
             RESOURCE_QUANTITY_TO_REMOVE.subtract(getBigDecimal("1")),
             RESOURCE_PRICE);
-
     sendResourceToOrganization(request);
 
     ResponseEntity<ResourcesInOrganizationResponseDto> response =
         sendDeleteOperation(getDeleteResourceUrl(organizationResponseDto, resourceResponse));
+
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
 
@@ -256,14 +254,12 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   void removeResourceShouldThrowWhenQuantityToRemoveIsNegative() {
     OrganizationResponseDto organizationResponseDto = createOrganization();
     ResourceResponseDto resourceResponse = createResourceResponse();
-
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organizationResponseDto.getId(),
             resourceResponse.getId(),
             RESOURCE_QUANTITY,
             RESOURCE_PRICE);
-
     sendResourceToOrganization(request);
 
     String removeResourceURL =
@@ -276,6 +272,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
 
     ResponseEntity<ResourcesInOrganizationResponseDto> response =
         sendDeleteOperation(removeResourceURL);
+
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
 
