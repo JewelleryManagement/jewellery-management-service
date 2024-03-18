@@ -24,7 +24,7 @@ public class ResourceInOrganizationMapper {
           .resourcesAndQuantities(List.of(getResourceQuantityResponseDto(resourceInOrganization)))
           .build();
     }
-    return new ResourcesInOrganizationResponseDto();
+    return null;
   }
 
   public ResourcesInOrganizationResponseDto toResourcesInOrganizationResponse(

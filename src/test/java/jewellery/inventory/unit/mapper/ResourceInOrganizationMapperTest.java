@@ -1,7 +1,6 @@
 package jewellery.inventory.unit.mapper;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
@@ -63,5 +62,15 @@ public class ResourceInOrganizationMapperTest {
 
     assertEquals(2, response.getResourcesAndQuantities().size());
     verify(organizationMapper, times(1)).toResponse(organization);
+  }
+
+  @Test
+  void testToResourcesInOrganizationResponseShouldReturnNullIfNullIsPassedAsArgument() {
+    ResourcesInOrganizationResponseDto response =
+        resourceInOrganizationMapper.toResourcesInOrganizationResponse(
+            (ResourceInOrganization) null);
+
+    assertNull(response);
+    verify(organizationMapper, times(0)).toResponse(any());
   }
 }

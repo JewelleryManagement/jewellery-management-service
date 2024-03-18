@@ -7,6 +7,7 @@ import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
+import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.*;
@@ -54,18 +55,19 @@ public class OrganizationService implements EntityFetcher {
         .orElseThrow(() -> new OrganizationNotFoundException(id));
   }
 
-  private void makeCurrentUserOwner(Organization organization) {
-    UserInOrganization userInOrganizationOwner = new UserInOrganization();
-    User user = userService.getUser(authService.getCurrentUser().getId());
-    userInOrganizationOwner.setUser(user);
-    userInOrganizationOwner.setOrganization(organization);
-    userInOrganizationOwner.setOrganizationPermission(
-        Arrays.asList(OrganizationPermission.values()));
-    organization.setUsersInOrganization(List.of(userInOrganizationOwner));
-  }
+  public void validateUserInOrganization(Organization organization) {
+    User currentUser = userService.getUser(authService.getCurrentUser().getId());
+    boolean isUserInOrganization =
+        organization.getUsersInOrganization().stream()
+            .anyMatch(userInOrganization -> userInOrganization.getUser().equals(currentUser));
 
-  private List<Organization> getAll() {
-    return organizationRepository.findAll();
+    if (!isUserInOrganization) {
+      throw new UserIsNotPartOfOrganizationException(currentUser.getId(), organization.getId());
+    }
+    logger.debug(
+        "User permission validation successful. User ID: {}, Organization ID: {}",
+        currentUser.getId(),
+        organization.getId());
   }
 
   public void validateCurrentUserPermission(
@@ -79,6 +81,20 @@ public class OrganizationService implements EntityFetcher {
         "User permission validation successful. User ID: {}, Organization ID: {}",
         currentUser.getId(),
         organization.getId());
+  }
+
+  private void makeCurrentUserOwner(Organization organization) {
+    UserInOrganization userInOrganizationOwner = new UserInOrganization();
+    User user = userService.getUser(authService.getCurrentUser().getId());
+    userInOrganizationOwner.setUser(user);
+    userInOrganizationOwner.setOrganization(organization);
+    userInOrganizationOwner.setOrganizationPermission(
+        Arrays.asList(OrganizationPermission.values()));
+    organization.setUsersInOrganization(List.of(userInOrganizationOwner));
+  }
+
+  private List<Organization> getAll() {
+    return organizationRepository.findAll();
   }
 
   private boolean hasPermission(

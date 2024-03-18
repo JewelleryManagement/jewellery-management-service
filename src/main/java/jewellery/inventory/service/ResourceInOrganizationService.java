@@ -64,7 +64,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
 
   public ResourcesInOrganizationResponseDto getAllResourcesFromOrganization(UUID organizationId) {
     Organization organization = organizationService.getOrganization(organizationId);
-    userInOrganizationService.validateUserInOrganization(organization);
+    organizationService.validateUserInOrganization(organization);
 
     return resourceInOrganizationMapper.toResourcesInOrganizationResponse(organization);
   }
@@ -166,6 +166,19 @@ public class ResourceInOrganizationService implements EntityFetcher {
     return resourceInOrganization;
   }
 
+  private ResourcesInOrganizationResponseDto getResourceInOrganizationResponse(
+      UUID organizationId, UUID resourceId) {
+    ResourceInOrganization resourceInOrganization =
+        getResourceInOrganization(organizationId, resourceId);
+    return resourceInOrganizationMapper.toResourcesInOrganizationResponse(resourceInOrganization);
+  }
+
+  private ResourceInOrganization getResourceInOrganization(UUID organizationId, UUID resourceId) {
+    return findResourceInOrganization(
+            organizationService.getOrganization(organizationId), resourceId)
+        .orElse(null);
+  }
+
   @Override
   public Object fetchEntity(Object... ids) {
     if (ids != null && ids.length > 0) {
@@ -179,21 +192,5 @@ public class ResourceInOrganizationService implements EntityFetcher {
       }
     }
     return null;
-  }
-
-  private ResourcesInOrganizationResponseDto getResourceInOrganizationResponse(
-      UUID organizationId, UUID resourceId) {
-    ResourceInOrganization resourceInOrganization =
-        getResourceInOrganization(organizationId, resourceId);
-    if (resourceInOrganization != null) {
-      return resourceInOrganizationMapper.toResourcesInOrganizationResponse(resourceInOrganization);
-    }
-    return null;
-  }
-
-  private ResourceInOrganization getResourceInOrganization(UUID organizationId, UUID resourceId) {
-    return findResourceInOrganization(
-            organizationService.getOrganization(organizationId), resourceId)
-        .orElse(null);
   }
 }

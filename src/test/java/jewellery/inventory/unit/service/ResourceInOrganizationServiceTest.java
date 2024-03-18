@@ -8,7 +8,6 @@ import java.util.List;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
-import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQuantityException;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
@@ -169,7 +168,7 @@ class ResourceInOrganizationServiceTest {
   void testGetALLResourcesFromOrganizationShouldThrowUserIsNotPartOfOrganizationException() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
     doThrow(UserIsNotPartOfOrganizationException.class)
-        .when(userInOrganizationService)
+        .when(organizationService)
         .validateUserInOrganization(organization);
 
     Assertions.assertThrows(
