@@ -399,8 +399,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     HttpEntity<ProductRequestDto> requestEntity = new HttpEntity<>(productRequestDto, headers);
 
     ResponseEntity<ProductResponseDto> response =
-        this.testRestTemplate.exchange(
-            getProductUrl(productId), HttpMethod.PUT, requestEntity, ProductResponseDto.class);
+            this.testRestTemplate.exchange(
+                    getProductUrl(productId), HttpMethod.PUT, requestEntity, ProductResponseDto.class);
 
     assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
   }
