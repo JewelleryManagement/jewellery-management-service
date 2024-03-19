@@ -3,7 +3,7 @@ package jewellery.inventory.unit.service;
 import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
@@ -91,11 +91,18 @@ class UserInOrganizationServiceTest {
 
   @Test
   void deleteUserInOrganizationThrowsExceptionWhenNoManageUsersPermission() {
+    when(organizationService.getOrganization(organizationWithUserAllPermission.getId()))
+        .thenReturn(organizationWithUserAllPermission);
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
 
     doThrow(MissingOrganizationPermissionException.class)
         .when(organizationService)
         .validateCurrentUserPermission(organization, OrganizationPermission.MANAGE_USERS);
+
+    doThrow(MissingOrganizationPermissionException.class)
+        .when(organizationService)
+        .validateCurrentUserPermission(
+            organizationWithUserAllPermission, OrganizationPermission.MANAGE_USERS);
 
     assertThrows(
         MissingOrganizationPermissionException.class,
@@ -107,8 +114,9 @@ class UserInOrganizationServiceTest {
   void getUsersInOrganizationThrowsExceptionWhenUserIsNotPartOfOrganizationException() {
     when(organizationService.getOrganization(organizationWithUserAllPermission.getId()))
         .thenReturn(organizationWithUserAllPermission);
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(any(UUID.class))).thenReturn(new User());
+    doThrow(UserIsNotPartOfOrganizationException.class)
+        .when(organizationService)
+        .validateUserInOrganization(organizationWithUserAllPermission);
 
     assertThrows(
         UserIsNotPartOfOrganizationException.class,

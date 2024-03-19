@@ -32,20 +32,24 @@ public class UserInOrganizationService implements EntityFetcher {
 
   public OrganizationMembersResponseDto getAllUsersInOrganization(UUID organizationId) {
     Organization organization = organizationService.getOrganization(organizationId);
-    validateUserInOrganization(organization);
+    organizationService.validateUserInOrganization(organization);
     return organizationMapper.toOrganizationMembersResponseDto(organization);
   }
 
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_USER_UPDATE)
   public OrganizationSingleMemberResponseDto updateUserPermissionsInOrganization(
       UUID userId, UUID organizationId, List<OrganizationPermission> organizationPermissionList) {
-    organizationService.validateCurrentUserPermission(
-        organizationService.getOrganization(organizationId), OrganizationPermission.MANAGE_USERS);
 
     UserInOrganization userInOrganization =
         getUserInOrganizationByUserIdAndOrganizationId(userId, organizationId);
 
+    Organization organization = userInOrganization.getOrganization();
+
+    organizationService.validateCurrentUserPermission(
+        organization, OrganizationPermission.MANAGE_USERS);
+
     changeUserPermissionInOrganization(userInOrganization, organizationPermissionList);
+
     logger.info(
         "Successfully updated user permissions in the organization. Organization ID: {}, User ID: {}",
         organizationId,
@@ -90,21 +94,6 @@ public class UserInOrganizationService implements EntityFetcher {
         "Successfully deleted user in the organization. Organization ID: {}, User ID: {}",
         organizationId,
         userId);
-  }
-
-  private void validateUserInOrganization(Organization organization) {
-    User currentUser = userService.getUser(authService.getCurrentUser().getId());
-    boolean isUserInOrganization =
-        organization.getUsersInOrganization().stream()
-            .anyMatch(userInOrganization -> userInOrganization.getUser().equals(currentUser));
-
-    if (!isUserInOrganization) {
-      throw new UserIsNotPartOfOrganizationException(currentUser.getId(), organization.getId());
-    }
-    logger.debug(
-        "User permission validation successful. User ID: {}, Organization ID: {}",
-        currentUser.getId(),
-        organization.getId());
   }
 
   private UserInOrganization createUserInOrganization(

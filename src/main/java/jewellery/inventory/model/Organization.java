@@ -9,7 +9,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.List;
 import java.util.UUID;
-
 import lombok.*;
 
 @Entity
@@ -27,7 +26,7 @@ public class Organization {
   @Column private String address;
   @Column private String note;
 
-  @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ResourceInOrganization> resourceInOrganization;
 
   @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
