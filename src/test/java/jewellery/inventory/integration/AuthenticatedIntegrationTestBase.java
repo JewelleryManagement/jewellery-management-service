@@ -46,6 +46,8 @@ abstract class AuthenticatedIntegrationTestBase {
   @Autowired private ResourceInUserRepository resourceInUserRepository;
   @Autowired private ResourceInProductRepository resourceInProductRepository;
   @Autowired private PurchasedResourceInUserRepository purchasedResourceInUserRepository;
+  @Autowired private ResourceInOrganizationRepository resourceInOrganizationRepository;
+
   @Autowired private ImageService imageService;
   @Autowired private ImageRepository imageRepository;
 
@@ -53,6 +55,7 @@ abstract class AuthenticatedIntegrationTestBase {
 
   @BeforeEach
   void setup() {
+    resourceInOrganizationRepository.deleteAll();
     deleteAllImages();
     productRepository.deleteAll();
     purchasedResourceInUserRepository.deleteAll();
