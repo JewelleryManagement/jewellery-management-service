@@ -14,7 +14,6 @@ import jewellery.inventory.exception.organization.UserIsPartOfOrganizationExcept
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.UserInOrganizationRepository;
-import jewellery.inventory.service.security.AuthService;
 import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Service;
 public class UserInOrganizationService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(UserInOrganizationService.class);
   private final OrganizationMapper organizationMapper;
-  private final AuthService authService;
   private final UserService userService;
   private final UserInOrganizationRepository userInOrganizationRepository;
   private final OrganizationService organizationService;

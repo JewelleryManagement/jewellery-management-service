@@ -54,9 +54,6 @@ class UserInOrganizationServiceTest {
     when(organizationService.getOrganization(organizationWithUserAllPermission.getId()))
         .thenReturn(organizationWithUserAllPermission);
 
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
-    when(userService.getUser(user.getId())).thenReturn(user);
-
     when(organizationMapper.toOrganizationMembersResponseDto(organizationWithUserAllPermission))
         .thenReturn(new OrganizationMembersResponseDto());
 
@@ -69,9 +66,6 @@ class UserInOrganizationServiceTest {
 
   @Test
   void updateUserPermissionsInOrganizationSuccessfully() {
-    when(organizationService.getOrganization(organizationWithUserAllPermission.getId()))
-        .thenReturn(organizationWithUserAllPermission);
-
     when(userInOrganizationRepository.findByUserIdAndOrganizationId(
             organizationWithUserAllPermission.getUsersInOrganization().get(0).getUser().getId(),
             organizationWithUserAllPermission.getId()))
@@ -91,18 +85,11 @@ class UserInOrganizationServiceTest {
 
   @Test
   void deleteUserInOrganizationThrowsExceptionWhenNoManageUsersPermission() {
-    when(organizationService.getOrganization(organizationWithUserAllPermission.getId()))
-        .thenReturn(organizationWithUserAllPermission);
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
 
     doThrow(MissingOrganizationPermissionException.class)
         .when(organizationService)
         .validateCurrentUserPermission(organization, OrganizationPermission.MANAGE_USERS);
-
-    doThrow(MissingOrganizationPermissionException.class)
-        .when(organizationService)
-        .validateCurrentUserPermission(
-            organizationWithUserAllPermission, OrganizationPermission.MANAGE_USERS);
 
     assertThrows(
         MissingOrganizationPermissionException.class,
