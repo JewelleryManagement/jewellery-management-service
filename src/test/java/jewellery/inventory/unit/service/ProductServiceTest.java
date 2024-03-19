@@ -303,7 +303,6 @@ class ProductServiceTest {
   @Test
   void updateProductShouldThrowWhenProductIsSold() {
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
     product.setPartOfSale(new ProductPriceDiscount());
     assertThrows(ProductIsSoldException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
   }
@@ -328,7 +327,7 @@ class ProductServiceTest {
     productService.updateProduct(innerProduct.getId(), productRequestDto);
 
     verify(productRepository, times(1)).findById(innerProduct.getId());
-    verify(userRepository,times(2)).findById(user.getId());
+    verify(userRepository,times(1)).findById(user.getId());
     verify(resourceInUserRepository, times(1))
             .findByResourceIdAndOwnerId(pearl.getId(), user.getId());
     verify(productRepository, times(1)).save(innerProduct);
@@ -342,7 +341,6 @@ class ProductServiceTest {
     innerProduct.setContentOf(product);
 
     when(productRepository.findById(innerProduct.getId())).thenReturn(Optional.of(innerProduct));
-    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
     assertThrows(ProductIsSoldException.class, () -> productService.updateProduct(innerProduct.getId(), productRequestDto));
   }
 }
