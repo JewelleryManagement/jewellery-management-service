@@ -6,6 +6,8 @@ import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
+import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
+import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.*;
@@ -34,11 +36,15 @@ public class OrganizationService implements EntityFetcher {
     return organizationMapper.toResponse(getOrganization(id));
   }
 
+  public Organization saveOrganization(Organization organization) {
+    return organizationRepository.save(organization);
+  }
+
   @LogCreateEvent(eventType = EventType.ORGANIZATION_CREATE)
   public OrganizationResponseDto create(OrganizationRequestDto organizationRequestDto) {
     Organization organization = organizationMapper.toEntity(organizationRequestDto);
     makeCurrentUserOwner(organization);
-    organization = organizationRepository.save(organization);
+    organization = saveOrganization(organization);
     logger.info("Organization created with ID: {}", organization.getId());
     return organizationMapper.toResponse(organization);
   }
@@ -49,8 +55,32 @@ public class OrganizationService implements EntityFetcher {
         .orElseThrow(() -> new OrganizationNotFoundException(id));
   }
 
-  public void saveOrganization(Organization organization) {
-    organizationRepository.save(organization);
+  public void validateUserInOrganization(Organization organization) {
+    User currentUser = userService.getUser(authService.getCurrentUser().getId());
+    boolean isUserInOrganization =
+        organization.getUsersInOrganization().stream()
+            .anyMatch(userInOrganization -> userInOrganization.getUser().equals(currentUser));
+
+    if (!isUserInOrganization) {
+      throw new UserIsNotPartOfOrganizationException(currentUser.getId(), organization.getId());
+    }
+    logger.debug(
+        "User permission validation successful. User ID: {}, Organization ID: {}",
+        currentUser.getId(),
+        organization.getId());
+  }
+
+  public void validateCurrentUserPermission(
+      Organization organization, OrganizationPermission permission) {
+    User currentUser = userService.getUser(authService.getCurrentUser().getId());
+    if (!hasPermission(currentUser, organization, permission)) {
+      throw new MissingOrganizationPermissionException(
+          currentUser.getId(), organization.getId(), permission);
+    }
+    logger.debug(
+        "User permission validation successful. User ID: {}, Organization ID: {}",
+        currentUser.getId(),
+        organization.getId());
   }
 
   private void makeCurrentUserOwner(Organization organization) {
@@ -65,6 +95,15 @@ public class OrganizationService implements EntityFetcher {
 
   private List<Organization> getAll() {
     return organizationRepository.findAll();
+  }
+
+  private boolean hasPermission(
+      User user, Organization organization, OrganizationPermission permission) {
+    return organization.getUsersInOrganization().stream()
+        .anyMatch(
+            userInOrganization ->
+                userInOrganization.getUser().equals(user)
+                    && userInOrganization.getOrganizationPermission().contains(permission));
   }
 
   @Override
