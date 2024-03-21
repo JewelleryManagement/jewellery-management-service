@@ -55,7 +55,7 @@ class OrganizationServiceTest {
     organization = getTestOrganization();
     organizationRequestDto = getTestOrganizationRequest();
     user = UserTestHelper.createSecondTestUser();
-    organizationWithNoUserPermissions = addUserWithNoPermissions(organization, user);
+    organizationWithNoUserPermissions = getOrganizationWithUserWithNoPermissions(organization, user);
     organizationWithUserAllPermission = getTestOrganizationWithUserWithAllPermissions(user);
     executorResponseDto = getTestExecutor(user);
     organizationResponseDto = getTestOrganizationResponseDto(organization);
