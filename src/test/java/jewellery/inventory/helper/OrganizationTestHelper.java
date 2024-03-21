@@ -24,6 +24,12 @@ public class OrganizationTestHelper {
     return organization;
   }
 
+  public static Organization addUserWithNoPermissions(Organization organization, User user) {
+    organization.setUsersInOrganization(
+        List.of(new UserInOrganization(UUID.randomUUID(), user, organization, new ArrayList<>())));
+    return organization;
+  }
+
   public static Organization getTestOrganizationWithUserWithAllPermissions(User user) {
     Organization organization = getTestOrganization();
     UserInOrganization userInOrganization =
@@ -100,4 +106,4 @@ public class OrganizationTestHelper {
         organization.getUsersInOrganization().get(0).getOrganizationPermission());
     return dto;
   }
- }
+}

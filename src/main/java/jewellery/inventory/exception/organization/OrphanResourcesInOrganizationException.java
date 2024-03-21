@@ -1,8 +1,8 @@
 package jewellery.inventory.exception.organization;
 import java.util.UUID;
 
-public class OrganizationResourcesException extends RuntimeException {
-  public OrganizationResourcesException(UUID organizationId) {
+public class OrphanResourcesInOrganizationException extends RuntimeException {
+  public OrphanResourcesInOrganizationException(UUID organizationId) {
     super("Organization with id " + organizationId + " has resources and cannot be deleted.");
   }
 }

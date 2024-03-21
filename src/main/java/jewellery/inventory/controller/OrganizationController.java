@@ -64,7 +64,7 @@ public class OrganizationController {
     userInOrganizationService.deleteUserInOrganization(userId, organizationId);
   }
 
-  @Operation(summary = "Delete a organization")
+  @Operation(summary = "Delete an organization")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{organizationId}")
   public void deleteOrganization(@PathVariable UUID organizationId) {
