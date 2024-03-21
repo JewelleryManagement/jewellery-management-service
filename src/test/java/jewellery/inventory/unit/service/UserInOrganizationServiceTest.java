@@ -3,9 +3,6 @@ package jewellery.inventory.unit.service;
 import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.*;
 
 import java.util.*;
@@ -14,7 +11,10 @@ import jewellery.inventory.exception.organization.MissingOrganizationPermissionE
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.mapper.OrganizationMapper;
-import jewellery.inventory.model.*;
+import jewellery.inventory.model.Organization;
+import jewellery.inventory.model.OrganizationPermission;
+import jewellery.inventory.model.User;
+import jewellery.inventory.model.UserInOrganization;
 import jewellery.inventory.repository.UserInOrganizationRepository;
 import jewellery.inventory.service.OrganizationService;
 import jewellery.inventory.service.UserInOrganizationService;

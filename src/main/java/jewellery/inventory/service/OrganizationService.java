@@ -9,8 +9,8 @@ import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
-import jewellery.inventory.exception.organization.OrganizationProductsException;
-import jewellery.inventory.exception.organization.OrganizationResourcesException;
+import jewellery.inventory.exception.organization.OrphanProductsInOrganizationException;
+import jewellery.inventory.exception.organization.OrphanResourcesInOrganizationException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.*;
@@ -57,7 +57,7 @@ public class OrganizationService implements EntityFetcher {
     Organization organizationForDelete = getOrganization(organizationId);
     validateCurrentUserPermission(
         organizationForDelete, OrganizationPermission.DESTROY_ORGANIZATION);
-    validateOrganizationProductsAndResources(organizationForDelete);
+    verifyNoProductsOrResourcesInOrganization(organizationForDelete);
     organizationRepository.delete(organizationForDelete);
   }
 
@@ -96,12 +96,12 @@ public class OrganizationService implements EntityFetcher {
     return organizationRepository.findAll();
   }
 
-  private void validateOrganizationProductsAndResources(Organization organization) {
+  private void verifyNoProductsOrResourcesInOrganization(Organization organization) {
     if (!organization.getProductsOwned().isEmpty()) {
-      throw new OrganizationProductsException(organization.getId());
+      throw new OrphanProductsInOrganizationException(organization.getId());
     }
     if (!organization.getResourceInOrganization().isEmpty()) {
-      throw new OrganizationResourcesException(organization.getId());
+      throw new OrphanResourcesInOrganizationException(organization.getId());
     }
   }
 

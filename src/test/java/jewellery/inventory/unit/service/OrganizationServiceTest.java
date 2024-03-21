@@ -10,8 +10,9 @@ import java.util.*;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
-import jewellery.inventory.exception.organization.OrganizationProductsException;
-import jewellery.inventory.exception.organization.OrganizationResourcesException;
+import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
+import jewellery.inventory.exception.organization.OrphanProductsInOrganizationException;
+import jewellery.inventory.exception.organization.OrphanResourcesInOrganizationException;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.Organization;
@@ -41,9 +42,9 @@ class OrganizationServiceTest {
   @Mock private AuthService authService;
   @Mock private UserService userService;
   @Mock private UserInOrganizationRepository userInOrganizationRepository;
-
   private Organization organization;
   private Organization organizationWithUserAllPermission;
+  private Organization organizationWithNoUserPermissions;
   private User user;
   private OrganizationRequestDto organizationRequestDto;
   private OrganizationResponseDto organizationResponseDto;
@@ -54,6 +55,7 @@ class OrganizationServiceTest {
     organization = getTestOrganization();
     organizationRequestDto = getTestOrganizationRequest();
     user = UserTestHelper.createSecondTestUser();
+    organizationWithNoUserPermissions = addUserWithNoPermissions(organization, user);
     organizationWithUserAllPermission = getTestOrganizationWithUserWithAllPermissions(user);
     executorResponseDto = getTestExecutor(user);
     organizationResponseDto = getTestOrganizationResponseDto(organization);
@@ -118,6 +120,18 @@ class OrganizationServiceTest {
   }
 
   @Test
+  void deleteOrganizationThrowMissingOrganizationPermissionException() {
+    when(organizationRepository.findById(organizationWithNoUserPermissions.getId()))
+        .thenReturn(Optional.of(organizationWithNoUserPermissions));
+    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(userService.getUser(user.getId())).thenReturn(user);
+
+    assertThrows(
+        MissingOrganizationPermissionException.class,
+        () -> organizationService.delete(organizationWithNoUserPermissions.getId()));
+  }
+
+  @Test
   void deleteOrganizationThrowOrganizationNotFoundException() {
     when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
         .thenThrow(OrganizationNotFoundException.class);
@@ -128,7 +142,7 @@ class OrganizationServiceTest {
   }
 
   @Test
-  void deleteOrganizationThrowOrganizationProductsException() {
+  void deleteOrganizationThrowOrphanProductsInOrganizationException() {
     organizationWithUserAllPermission.setProductsOwned(List.of(new Product()));
     when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
         .thenReturn(Optional.of(organizationWithUserAllPermission));
@@ -137,12 +151,12 @@ class OrganizationServiceTest {
     when(userService.getUser(user.getId())).thenReturn(user);
 
     assertThrows(
-        OrganizationProductsException.class,
+        OrphanProductsInOrganizationException.class,
         () -> organizationService.delete(organizationWithUserAllPermission.getId()));
   }
 
   @Test
-  void deleteOrganizationThrowOrganizationResourcesException() {
+  void deleteOrganizationThrowOrphanResourcesInOrganizationException() {
     organizationWithUserAllPermission.setResourceInOrganization(
         List.of(new ResourceInOrganization()));
     when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
@@ -152,7 +166,7 @@ class OrganizationServiceTest {
     when(userService.getUser(user.getId())).thenReturn(user);
 
     assertThrows(
-        OrganizationResourcesException.class,
+        OrphanResourcesInOrganizationException.class,
         () -> organizationService.delete(organizationWithUserAllPermission.getId()));
   }
 
