@@ -36,7 +36,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class OrganizationServiceTest {
   @InjectMocks private OrganizationService organizationService;
   @Mock private UserInOrganizationService userInOrganizationService;
-
   @Mock private OrganizationRepository organizationRepository;
   @Mock private OrganizationMapper organizationMapper;
   @Mock private AuthService authService;
@@ -55,7 +54,7 @@ class OrganizationServiceTest {
     organization = getTestOrganization();
     organizationRequestDto = getTestOrganizationRequest();
     user = UserTestHelper.createSecondTestUser();
-    organizationWithNoUserPermissions = addUserWithNoPermissions(organization, user);
+    organizationWithNoUserPermissions = getOrganizationWithUserWithNoPermissions(organization, user);
     organizationWithUserAllPermission = getTestOrganizationWithUserWithAllPermissions(user);
     executorResponseDto = getTestExecutor(user);
     organizationResponseDto = getTestOrganizationResponseDto(organization);
