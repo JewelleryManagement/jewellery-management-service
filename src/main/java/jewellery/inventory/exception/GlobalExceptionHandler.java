@@ -18,6 +18,8 @@ import jewellery.inventory.exception.invalid_resource_quantity.InvalidResourceQu
 import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
+import jewellery.inventory.exception.organization.OrphanProductsInOrganizationException;
+import jewellery.inventory.exception.organization.OrphanResourcesInOrganizationException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.exception.product.*;
 import jewellery.inventory.exception.sale.EmptySaleException;
@@ -87,7 +89,9 @@ public class GlobalExceptionHandler {
     ProductNotSoldException.class,
     ProductPartOfItselfException.class,
     MissingOrganizationPermissionException.class,
-    UserIsNotPartOfOrganizationException.class
+    UserIsNotPartOfOrganizationException.class,
+    OrphanResourcesInOrganizationException.class,
+    OrphanProductsInOrganizationException.class
   })
   public ResponseEntity<Object> handleEntityConstraintConflict(RuntimeException ex) {
     return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), ex);

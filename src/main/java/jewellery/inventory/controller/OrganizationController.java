@@ -64,6 +64,13 @@ public class OrganizationController {
     userInOrganizationService.deleteUserInOrganization(userId, organizationId);
   }
 
+  @Operation(summary = "Delete an organization")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @DeleteMapping("/{organizationId}")
+  public void deleteOrganization(@PathVariable UUID organizationId) {
+    organizationService.delete(organizationId);
+  }
+
   @Operation(summary = "Update a user permissions in organization")
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("{organizationId}/users/{userId}")

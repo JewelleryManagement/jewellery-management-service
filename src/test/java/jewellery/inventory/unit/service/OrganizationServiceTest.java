@@ -10,9 +10,14 @@ import java.util.*;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
+import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
+import jewellery.inventory.exception.organization.OrphanProductsInOrganizationException;
+import jewellery.inventory.exception.organization.OrphanResourcesInOrganizationException;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.Organization;
+import jewellery.inventory.model.Product;
+import jewellery.inventory.model.ResourceInOrganization;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.OrganizationRepository;
 import jewellery.inventory.repository.UserInOrganizationRepository;
@@ -37,8 +42,9 @@ class OrganizationServiceTest {
   @Mock private AuthService authService;
   @Mock private UserService userService;
   @Mock private UserInOrganizationRepository userInOrganizationRepository;
-
   private Organization organization;
+  private Organization organizationWithUserAllPermission;
+  private Organization organizationWithNoUserPermissions;
   private User user;
   private OrganizationRequestDto organizationRequestDto;
   private OrganizationResponseDto organizationResponseDto;
@@ -49,6 +55,8 @@ class OrganizationServiceTest {
     organization = getTestOrganization();
     organizationRequestDto = getTestOrganizationRequest();
     user = UserTestHelper.createSecondTestUser();
+    organizationWithNoUserPermissions = getOrganizationWithUserWithNoPermissions(organization, user);
+    organizationWithUserAllPermission = getTestOrganizationWithUserWithAllPermissions(user);
     executorResponseDto = getTestExecutor(user);
     organizationResponseDto = getTestOrganizationResponseDto(organization);
   }
@@ -96,6 +104,70 @@ class OrganizationServiceTest {
     OrganizationResponseDto actual = organizationService.create(organizationRequestDto);
     assertNotNull(actual);
     assertEquals(actual, organizationResponseDto);
+  }
+
+  @Test
+  void deleteOrganizationSuccessfully() {
+    when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
+        .thenReturn(Optional.of(organizationWithUserAllPermission));
+    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(userService.getUser(user.getId())).thenReturn(user);
+
+    organizationService.delete(organizationWithUserAllPermission.getId());
+    verify(organizationRepository, times(1)).delete(organizationWithUserAllPermission);
+    verify(userService, times(1)).getUser(user.getId());
+    verify(authService, times(1)).getCurrentUser();
+  }
+
+  @Test
+  void deleteOrganizationThrowMissingOrganizationPermissionException() {
+    when(organizationRepository.findById(organizationWithNoUserPermissions.getId()))
+        .thenReturn(Optional.of(organizationWithNoUserPermissions));
+    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(userService.getUser(user.getId())).thenReturn(user);
+
+    assertThrows(
+        MissingOrganizationPermissionException.class,
+        () -> organizationService.delete(organizationWithNoUserPermissions.getId()));
+  }
+
+  @Test
+  void deleteOrganizationThrowOrganizationNotFoundException() {
+    when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
+        .thenThrow(OrganizationNotFoundException.class);
+
+    assertThrows(
+        OrganizationNotFoundException.class,
+        () -> organizationService.delete(organizationWithUserAllPermission.getId()));
+  }
+
+  @Test
+  void deleteOrganizationThrowOrphanProductsInOrganizationException() {
+    organizationWithUserAllPermission.setProductsOwned(List.of(new Product()));
+    when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
+        .thenReturn(Optional.of(organizationWithUserAllPermission));
+
+    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(userService.getUser(user.getId())).thenReturn(user);
+
+    assertThrows(
+        OrphanProductsInOrganizationException.class,
+        () -> organizationService.delete(organizationWithUserAllPermission.getId()));
+  }
+
+  @Test
+  void deleteOrganizationThrowOrphanResourcesInOrganizationException() {
+    organizationWithUserAllPermission.setResourceInOrganization(
+        List.of(new ResourceInOrganization()));
+    when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
+        .thenReturn(Optional.of(organizationWithUserAllPermission));
+
+    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(userService.getUser(user.getId())).thenReturn(user);
+
+    assertThrows(
+        OrphanResourcesInOrganizationException.class,
+        () -> organizationService.delete(organizationWithUserAllPermission.getId()));
   }
 
   @Test

@@ -38,6 +38,8 @@ public class UserInOrganizationService implements EntityFetcher {
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_USER_UPDATE)
   public OrganizationSingleMemberResponseDto updateUserPermissionsInOrganization(
       UUID userId, UUID organizationId, List<OrganizationPermission> organizationPermissionList) {
+    organizationService.validateCurrentUserPermission(
+        organizationService.getOrganization(organizationId), OrganizationPermission.MANAGE_USERS);
 
     UserInOrganization userInOrganization =
         getUserInOrganizationByUserIdAndOrganizationId(userId, organizationId);
