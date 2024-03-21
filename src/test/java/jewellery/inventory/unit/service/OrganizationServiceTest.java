@@ -36,6 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class OrganizationServiceTest {
   @InjectMocks private OrganizationService organizationService;
   @Mock private UserInOrganizationService userInOrganizationService;
+
   @Mock private OrganizationRepository organizationRepository;
   @Mock private OrganizationMapper organizationMapper;
   @Mock private AuthService authService;

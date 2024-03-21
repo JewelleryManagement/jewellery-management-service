@@ -65,7 +65,7 @@ public class UserInOrganizationService implements EntityFetcher {
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.MANAGE_USERS);
 
-    validateUserIsPartOfOrganization(
+    validateUserIsNotPartOfOrganization(
         organization, userService.getUser(userInOrganizationRequestDto.getUserId()));
 
     UserInOrganization userInOrganization =
@@ -97,7 +97,7 @@ public class UserInOrganizationService implements EntityFetcher {
         userId);
   }
 
-  private void validateUserIsPartOfOrganization(Organization organization, User userForAdd) {
+  private void validateUserIsNotPartOfOrganization(Organization organization, User userForAdd) {
     boolean isPart =
         organization.getUsersInOrganization().stream()
             .anyMatch(userInOrganization -> userInOrganization.getUser().equals(userForAdd));
