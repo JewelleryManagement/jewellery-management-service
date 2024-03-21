@@ -15,6 +15,7 @@ import jewellery.inventory.dto.request.UpdateUserInOrganizationRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.*;
+import jewellery.inventory.exception.organization.UserIsPartOfOrganizationException;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.User;
@@ -197,6 +198,25 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(ORGANIZATION_USER_CREATE, expectedEventPayload);
+  }
+
+  @Test
+  void addUserInOrganizationThrowUserIsPartOfOrganizationException() {
+    UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
+
+    ResponseEntity<OrganizationSingleMemberResponseDto> response =
+            this.testRestTemplate.postForEntity(
+                    getOrganizationUsersUrl(organizationId),
+                    userInOrganizationRequestDto,
+                    OrganizationSingleMemberResponseDto.class);
+
+    ResponseEntity<OrganizationSingleMemberResponseDto> responseSameUser =
+            this.testRestTemplate.postForEntity(
+                    getOrganizationUsersUrl(organizationId),
+                    userInOrganizationRequestDto,
+                    OrganizationSingleMemberResponseDto.class);
+
+    assertEquals(HttpStatus.CONFLICT, responseSameUser.getStatusCode());
   }
 
   @Test

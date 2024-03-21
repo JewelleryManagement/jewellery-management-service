@@ -10,10 +10,10 @@ import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationMembersResponseDto;
 import jewellery.inventory.dto.response.OrganizationSingleMemberResponseDto;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
+import jewellery.inventory.exception.organization.UserIsPartOfOrganizationException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.UserInOrganizationRepository;
-import jewellery.inventory.service.security.AuthService;
 import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,7 +24,6 @@ import org.springframework.stereotype.Service;
 public class UserInOrganizationService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(UserInOrganizationService.class);
   private final OrganizationMapper organizationMapper;
-  private final AuthService authService;
   private final UserService userService;
   private final UserInOrganizationRepository userInOrganizationRepository;
   private final OrganizationService organizationService;
@@ -61,14 +60,13 @@ public class UserInOrganizationService implements EntityFetcher {
   @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_CREATE)
   public OrganizationSingleMemberResponseDto addUserInOrganization(
       UUID organizationId, UserInOrganizationRequestDto userInOrganizationRequestDto) {
-
-    organizationService.validateCurrentUserPermission(
-        organizationService.getOrganization(organizationId), OrganizationPermission.MANAGE_USERS);
-
     Organization organization = organizationService.getOrganization(organizationId);
 
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.MANAGE_USERS);
+
+    validateUserIsNotPartOfOrganization(
+        organization, userService.getUser(userInOrganizationRequestDto.getUserId()));
 
     UserInOrganization userInOrganization =
         createUserInOrganization(userInOrganizationRequestDto, organization);
@@ -97,6 +95,15 @@ public class UserInOrganizationService implements EntityFetcher {
         "Successfully deleted user in the organization. Organization ID: {}, User ID: {}",
         organizationId,
         userId);
+  }
+
+  private void validateUserIsNotPartOfOrganization(Organization organization, User userForAdd) {
+    boolean isPart =
+        organization.getUsersInOrganization().stream()
+            .anyMatch(userInOrganization -> userInOrganization.getUser().equals(userForAdd));
+    if (isPart) {
+      throw new UserIsPartOfOrganizationException(userForAdd.getId(), organization.getId());
+    }
   }
 
   private UserInOrganization createUserInOrganization(

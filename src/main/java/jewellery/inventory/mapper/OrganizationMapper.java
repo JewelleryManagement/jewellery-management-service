@@ -70,7 +70,7 @@ public class OrganizationMapper {
       UserInOrganization userInOrganization) {
     UserInOrganizationResponseDto userResponseDto = new UserInOrganizationResponseDto();
 
-    userResponseDto.setUserId(userInOrganization.getId());
+    userResponseDto.setUserId(userInOrganization.getUser().getId());
     userResponseDto.setOrganizationPermissions(userInOrganization.getOrganizationPermission());
 
     return userResponseDto;
