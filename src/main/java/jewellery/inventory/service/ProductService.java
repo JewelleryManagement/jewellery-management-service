@@ -48,15 +48,14 @@ public class ProductService implements EntityFetcher {
   @LogUpdateEvent(eventType = EventType.PRODUCT_UPDATE)
   public ProductResponseDto updateProduct(UUID id, ProductRequestDto productUpdateRequestDto) {
     Product product = getProduct(id);
-    User user = getUser(productUpdateRequestDto.getOwnerId());
     throwExceptionIfProductIsSold(product);
     moveQuantityFromResourcesInProductToResourcesInUser(product);
     disassembleProductContent(product);
 
-    setProductFields(productUpdateRequestDto, user, product);
+    setProductFields(productUpdateRequestDto, product.getOwner(), product);
     productRepository.save(product);
     addProductsContentToProduct(productUpdateRequestDto, product);
-    addResourcesToProduct(productUpdateRequestDto, user, product);
+    addResourcesToProduct(productUpdateRequestDto, product.getOwner(), product);
     logger.info("Product with ID: {} updated", product.getId());
     return productMapper.mapToProductResponseDto(product);
   }

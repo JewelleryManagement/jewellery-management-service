@@ -390,6 +390,27 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
+  void updateProductSuccessfullyShouldNotChangeOwner() throws JsonProcessingException {
+    ProductResponseDto product = createProductWithRequest(productRequestDto);
+    UUID productId = product.getId();
+    UUID oldOwnerId = productRequestDto.getOwnerId();
+    productRequestDto.setOwnerId(UUID.randomUUID());
+    HttpEntity<ProductRequestDto> requestEntity = new HttpEntity<>(productRequestDto, headers);
+
+    ResponseEntity<ProductResponseDto> response =
+        this.testRestTemplate.exchange(
+            getProductUrl(productId), HttpMethod.PUT, requestEntity, ProductResponseDto.class);
+    ProductResponseDto productResponseDto = response.getBody();
+    Map<String, Object> expectedEventPayload =
+        getUpdateEventPayload(product, productResponseDto, objectMapper);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_UPDATE, expectedEventPayload);
+    assertEquals(oldOwnerId, productResponseDto.getOwner().getId());
+    assertNotEquals(productRequestDto.getOwnerId(), productResponseDto.getOwner().getId());
+  }
+
+  @Test
   void productUpdateShouldThrowWhenProductContentsItself() {
     ProductResponseDto product = createProductWithRequest(productRequestDto);
     UUID productId = product.getId();
@@ -399,8 +420,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     HttpEntity<ProductRequestDto> requestEntity = new HttpEntity<>(productRequestDto, headers);
 
     ResponseEntity<ProductResponseDto> response =
-            this.testRestTemplate.exchange(
-                    getProductUrl(productId), HttpMethod.PUT, requestEntity, ProductResponseDto.class);
+        this.testRestTemplate.exchange(
+            getProductUrl(productId), HttpMethod.PUT, requestEntity, ProductResponseDto.class);
 
     assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
   }
