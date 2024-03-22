@@ -22,11 +22,31 @@ public class UserTestHelper {
     return user;
   }
 
+  public static UserRequestDto getTestUserRequest(User user) {
+    UserRequestDto userRequestDto = new UserRequestDto();
+    userRequestDto.setRole(user.getRole());
+    userRequestDto.setPassword(user.getPassword());
+    userRequestDto.setEmail(user.getEmail());
+    userRequestDto.setFirstName(user.getFirstName());
+    userRequestDto.setLastName(user.getLastName());
+    return userRequestDto;
+  }
+
   public static User createTestUser() {
     User user = new User();
     user.setFirstName(FIRST_NAME);
     user.setLastName(LAST_NAME);
     user.setEmail(USER_EMAIL);
+    user.setPassword(USER_PASSWORD);
+    user.setRole(Role.ADMIN);
+    return user;
+  }
+
+  public static User createTestAdminUser() {
+    User user = new User();
+    user.setFirstName("admin");
+    user.setLastName("admin");
+    user.setEmail("admin@example.com");
     user.setPassword(USER_PASSWORD);
     user.setRole(Role.ADMIN);
     return user;
@@ -73,6 +93,7 @@ public class UserTestHelper {
     userRequest.setLastName(LAST_NAME);
     userRequest.setEmail(USER_EMAIL);
     userRequest.setPassword(USER_PASSWORD);
+    userRequest.setRole(Role.ADMIN);
     return userRequest;
   }
 

@@ -109,8 +109,8 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     List<UserResponseDto> users = response.getBody();
     assertNotNull(users);
     assertFalse(users.isEmpty());
-    assertEquals(userRequest.getFirstName(), users.get(0).getFirstName());
-    assertEquals(userRequest.getEmail(), users.get(0).getEmail());
+    assertEquals(userRequest.getFirstName(), users.get(1).getFirstName());
+    assertEquals(userRequest.getEmail(), users.get(1).getEmail());
   }
 
   @Test

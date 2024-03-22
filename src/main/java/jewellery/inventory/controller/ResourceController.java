@@ -5,7 +5,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
-import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.service.ResourceService;
 import lombok.RequiredArgsConstructor;

@@ -26,7 +26,7 @@ import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.PreciousStoneResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.*;
@@ -47,10 +47,6 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   private String getBaseResourceAvailabilityTransferUrl() {
     return buildUrl("resources", "availability", "transfer");
-  }
-
-  private String getResourceAvailabilityUrl(UUID userId, UUID resourceId) {
-    return buildUrl("resources", "availability", userId.toString(), resourceId.toString());
   }
 
   private String getBaseUserUrl() {

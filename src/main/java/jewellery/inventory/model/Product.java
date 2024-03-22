@@ -5,13 +5,12 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.model.resource.ResourceInProduct;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Getter
 @Setter
+@EqualsAndHashCode
 @RequiredArgsConstructor
 public class Product {
   @Id @GeneratedValue private UUID id;
@@ -42,7 +41,22 @@ public class Product {
   private String catalogNumber;
   private String productionNumber;
   private String description;
-  private BigDecimal salePrice;
-  private BigDecimal discount;
-  @ManyToOne private Sale partOfSale;
+  private BigDecimal additionalPrice;
+
+  @OneToOne(mappedBy = "product", cascade = CascadeType.REMOVE, orphanRemoval = true)
+  private ProductPriceDiscount partOfSale;
+
+  @ManyToOne private Organization organization;
+
+  public ProductPriceDiscount getPartOfSale(){
+    Product parentProduct = this.contentOf;
+
+    while(parentProduct != null){
+      if(parentProduct.getPartOfSale() != null){
+        return parentProduct.getPartOfSale();
+      }
+      parentProduct = parentProduct.getContentOf();
+    }
+    return this.partOfSale;
+  }
 }

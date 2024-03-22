@@ -19,8 +19,11 @@ public class SaleResponseDto {
   private UserResponseDto seller;
   private UserResponseDto buyer;
   private List<ProductResponseDto> products;
+  private List<PurchasedResourceQuantityResponseDto> resources;
+
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
   private LocalDate date;
+
   private BigDecimal totalPrice;
   private BigDecimal totalDiscountedPrice;
   private BigDecimal totalDiscount;

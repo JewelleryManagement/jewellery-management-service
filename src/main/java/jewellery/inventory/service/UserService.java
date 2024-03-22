@@ -46,13 +46,17 @@ public class UserService implements EntityFetcher {
     return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
   }
 
+  public User saveUser(User user) {
+    return userRepository.save(user);
+  }
+
   @LogCreateEvent(eventType = EventType.USER_CREATE)
   public UserResponseDto createUser(UserRequestDto user) {
     User userToCreate = userMapper.toUserEntity(user);
     validateUserEmail(userToCreate);
     userToCreate.setPassword(passwordEncoder.encode(userToCreate.getPassword()));
     logger.info("Create new User");
-    return userMapper.toUserResponse(userRepository.save(userToCreate));
+    return userMapper.toUserResponse(saveUser(userToCreate));
   }
 
   @LogUpdateEvent(eventType = EventType.USER_UPDATE)
@@ -65,7 +69,7 @@ public class UserService implements EntityFetcher {
 
     validateUserEmail(userToUpdate);
     logger.info("User with ID: {} updated successfully.", id);
-    return userMapper.toUserResponse(userRepository.save(userToUpdate));
+    return userMapper.toUserResponse(saveUser(userToUpdate));
   }
 
   @LogDeleteEvent(eventType = EventType.USER_DELETE)

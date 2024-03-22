@@ -17,9 +17,14 @@ public class Sale {
   @Id @GeneratedValue private UUID id;
   @ManyToOne private User seller;
   @ManyToOne private User buyer;
+  @JoinColumn(name = "organization_seller_id")
+  @ManyToOne private Organization organizationSeller;
 
-  @OneToMany(mappedBy = "partOfSale")
-  private List<Product> products;
+  @OneToMany(mappedBy = "sale", orphanRemoval = true, cascade = CascadeType.PERSIST)
+  private List<ProductPriceDiscount> products;
+
+  @OneToMany(mappedBy = "partOfSale", orphanRemoval = true, cascade = CascadeType.PERSIST)
+  private List<PurchasedResourceInUser> resources;
 
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   private LocalDate date;
