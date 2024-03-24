@@ -86,6 +86,10 @@ public class ProductService implements EntityFetcher {
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
+  public List<ProductResponseDto> getProductsResponse(List<Product> products) {
+    return products.stream().map(productMapper::mapToProductResponseDto).toList();
+  }
+
   public List<ProductResponseDto> getByOwner(UUID ownerId) {
     List<Product> products = productRepository.findAllByOwnerId(ownerId);
     logger.info("Get product by owner with ID: {}", ownerId);
@@ -383,7 +387,8 @@ public class ProductService implements EntityFetcher {
         owner.getId(),
         product.getId());
 
-    ResourceInUser resourceInUser = getResourceInUser(owner, incomingResourceInProduct.getResourceId());
+    ResourceInUser resourceInUser =
+        getResourceInUser(owner, incomingResourceInProduct.getResourceId());
     resourceInUserService.removeQuantityFromResourceNoLog(
         owner.getId(),
         resourceInUser.getResource().getId(),
