@@ -89,7 +89,8 @@ public class GlobalExceptionHandler {
     UserIsNotPartOfOrganizationException.class,
     UserIsPartOfOrganizationException.class,
     OrphanResourcesInOrganizationException.class,
-    OrphanProductsInOrganizationException.class
+    OrphanProductsInOrganizationException.class,
+    OrganizationNotOwnerException.class
   })
   public ResponseEntity<Object> handleEntityConstraintConflict(RuntimeException ex) {
     return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), ex);

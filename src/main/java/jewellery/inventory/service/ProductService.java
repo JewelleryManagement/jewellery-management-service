@@ -106,6 +106,10 @@ public class ProductService implements EntityFetcher {
     return productMapper.mapToProductResponseDto(getProduct(id));
   }
 
+  public Product saveProduct(Product product) {
+    return productRepository.save(product);
+  }
+
   public void updateProductOwnerAndSale(Product product, User newOwner, Sale sale) {
     updateProductOwnerRecursively(product, newOwner);
     if (sale == null) {
@@ -174,7 +178,7 @@ public class ProductService implements EntityFetcher {
     }
   }
 
-  private void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
+  public void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
     if (product.getContentOf() != null) {
       throw new ProductIsContentException(id);
     }
@@ -186,7 +190,7 @@ public class ProductService implements EntityFetcher {
     }
   }
 
-  private void throwExceptionIfProductIsSold(Product product) {
+  public void throwExceptionIfProductIsSold(Product product) {
     if (product.getPartOfSale() != null) {
       throw new ProductIsSoldException(product.getId());
     }
@@ -284,7 +288,7 @@ public class ProductService implements EntityFetcher {
     return products;
   }
 
-  private void throwExceptionIfProductIsPartOfItself(Product product, UUID parentId) {
+  public void throwExceptionIfProductIsPartOfItself(Product product, UUID parentId) {
     if (product.getId().equals(parentId)) {
       throw new ProductPartOfItselfException();
     }
@@ -325,7 +329,7 @@ public class ProductService implements EntityFetcher {
     product.setResourcesContent(new ArrayList<>());
   }
 
-  private List<User> getAuthors(ProductRequestDto productRequestDto) {
+  public List<User> getAuthors(ProductRequestDto productRequestDto) {
     logger.debug("Getting authors for product.");
     List<UUID> authorsIds = productRequestDto.getAuthors();
     List<User> authors = new ArrayList<>();

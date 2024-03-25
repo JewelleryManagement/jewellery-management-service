@@ -103,7 +103,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
     logger.debug("ResourceInOrganization after quantity removal: {}", resourceInOrganization);
   }
 
-  private ResourceInOrganization findResourceInOrganizationOrThrow(
+  public ResourceInOrganization findResourceInOrganizationOrThrow(
       Organization previousOwner, UUID resourceId) {
     return findResourceInOrganization(previousOwner, resourceId)
         .orElseThrow(

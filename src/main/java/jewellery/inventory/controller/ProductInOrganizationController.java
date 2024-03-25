@@ -1,7 +1,9 @@
 package jewellery.inventory.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import java.util.UUID;
+import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.service.ProductInOrganizationService;
 import lombok.AllArgsConstructor;
@@ -20,5 +22,11 @@ public class ProductInOrganizationController {
   public ProductsInOrganizationResponseDto getAllProductsInOrganization(
       @PathVariable UUID organizationId) {
     return productInOrganizationService.getProductsInOrganization(organizationId);
+  }
+  @Operation(summary = "Create a new product in organization")
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping("/products")
+  public ProductsInOrganizationResponseDto createProductInOrganization(@RequestBody @Valid ProductRequestDto productRequestDto) {
+    return productInOrganizationService.createProductInOrganization(productRequestDto);
   }
 }
