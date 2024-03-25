@@ -161,6 +161,9 @@ public class ProductService implements EntityFetcher {
     productRepository.deleteById(id);
     logger.info("Deleted product by ID: {}", id);
   }
+  public void deleteProductById(UUID productId){
+    productRepository.deleteById(productId);
+  }
 
   @LogUpdateEvent(eventType = EventType.PRODUCT_TRANSFER)
   public ProductResponseDto transferProduct(UUID productId, UUID recipientId) {

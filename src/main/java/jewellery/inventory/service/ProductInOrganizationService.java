@@ -66,6 +66,7 @@ public class ProductInOrganizationService {
     removeProductsContentFromProduct(subProducts);
     removeResourcesFromProduct(
         forDeleteProduct, organizationService.getOrganization(organizationId));
+    productService.deleteProductById(productId);
   }
 
   private Product persistProductWithoutResourcesAndProducts(
