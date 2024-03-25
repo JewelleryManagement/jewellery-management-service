@@ -1,5 +1,6 @@
 package jewellery.inventory.service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -50,6 +51,23 @@ public class ProductInOrganizationService {
         organization, productService.getProductsResponse(List.of(product)));
   }
 
+  public void deleteProductInOrganization(UUID organizationId, UUID productId) {
+    organizationService.validateCurrentUserPermission(
+        organizationService.getOrganization(organizationId),
+        OrganizationPermission.DISASSEMBLE_PRODUCT);
+
+    Product forDeleteProduct = productService.getProduct(productId);
+
+    List<Product> subProducts =
+        getProductsInProduct(
+            forDeleteProduct.getProductsContent().stream().map(Product::getId).toList(),
+            forDeleteProduct);
+
+    removeProductsContentFromProduct(subProducts);
+    removeResourcesFromProduct(
+        forDeleteProduct, organizationService.getOrganization(organizationId));
+  }
+
   private Product persistProductWithoutResourcesAndProducts(
       ProductRequestDto productRequestDto, Organization organization) {
     Product product = getProductWithoutResourcesAndProduct(productRequestDto, organization);
@@ -86,6 +104,43 @@ public class ProductInOrganizationService {
     }
   }
 
+  private void removeProductsContentFromProduct(List<Product> subProducts) {
+    if (!subProducts.isEmpty()) {
+      for (Product subProduct : subProducts) {
+        subProduct.setContentOf(null);
+        productService.saveProduct(subProduct);
+      }
+    }
+  }
+
+  private void removeResourcesFromProduct(Product product, Organization organization) {
+    List<ResourceInProduct> resourceInProductList = new ArrayList<>();
+    for (int i = 0; i < product.getResourcesContent().size(); i++) {
+      ResourceInProduct resourceInProduct =
+          createResourceInProduct(
+              product.getResourcesContent().get(i).getQuantity(),
+              product.getResourcesContent().get(i).getResource(),
+              product);
+      resourceInProductList.add(resourceInProduct);
+      product.setResourcesContent(null);
+    }
+    addResourcesToOrganization(resourceInProductList, organization);
+  }
+
+  private void addResourcesToOrganization(
+      List<ResourceInProduct> resourceInProductList, Organization organization) {
+    for (ResourceInProduct resourceInProduct : resourceInProductList) {
+      getResourceInOrganization(
+          organization, resourceInProduct.getResource(), resourceInProduct.getQuantity());
+    }
+  }
+
+  private ResourceInOrganization getResourceInOrganization(
+      Organization organization, Resource resource, BigDecimal quantity) {
+    return resourceInOrganizationService.addResourceToOrganization(
+        organization, resource, quantity, BigDecimal.ZERO);
+  }
+
   private List<Product> getProductsInProduct(
       List<UUID> productsIdInRequest, Product parentProduct) {
     List<Product> products = new ArrayList<>();
@@ -95,7 +150,6 @@ public class ProductInOrganizationService {
             Product product = productService.getProduct(productId);
             productService.throwExceptionIfProductIsPartOfItself(product, parentProduct.getId());
             productService.throwExceptionIfProductIsSold(product);
-            productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
             if ((product.getOrganization() != null)
                 && parentProduct
                     .getOrganization()
@@ -152,14 +206,14 @@ public class ProductInOrganizationService {
         incomingResourceInProduct.getQuantity());
 
     return createResourceInProduct(
-        incomingResourceInProduct, resourceInOrganization.getResource(), product);
+        incomingResourceInProduct.getQuantity(), resourceInOrganization.getResource(), product);
   }
 
   private ResourceInProduct createResourceInProduct(
-      ResourceQuantityRequestDto incomingResourceInProduct, Resource resource, Product product) {
+      BigDecimal quantity, Resource resource, Product product) {
     ResourceInProduct resourceInProduct = new ResourceInProduct();
     resourceInProduct.setResource(resource);
-    resourceInProduct.setQuantity(incomingResourceInProduct.getQuantity());
+    resourceInProduct.setQuantity(quantity);
     resourceInProduct.setProduct(product);
     return resourceInProduct;
   }

@@ -29,4 +29,10 @@ public class ProductInOrganizationController {
   public ProductsInOrganizationResponseDto createProductInOrganization(@RequestBody @Valid ProductRequestDto productRequestDto) {
     return productInOrganizationService.createProductInOrganization(productRequestDto);
   }
+  @Operation(summary = "Delete a new product in organization")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @DeleteMapping("/{organizationId}/products/{productId}")
+  public void deleteProductInOrganization(@PathVariable UUID organizationId,@PathVariable UUID productId) {
+     productInOrganizationService.deleteProductInOrganization(organizationId,productId);
+  }
 }

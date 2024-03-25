@@ -39,6 +39,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
       ResourceInOrganizationRequestDto resourceInOrganizationRequestDto) {
     Organization organization =
         organizationService.getOrganization(resourceInOrganizationRequestDto.getOrganizationId());
+
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.ADD_RESOURCE_QUANTITY);
 
@@ -141,7 +142,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
     return resourceInOrganization;
   }
 
-  private ResourceInOrganization getResourceInOrganization(
+  public ResourceInOrganization getResourceInOrganization(
       Organization organization, Resource resource) {
     logger.debug(
         "Getting resource in organization. Organization: {}, Resource: {}", organization, resource);
@@ -150,7 +151,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
             () -> createAndAddNewResourceInOrganization(organization, resource, BigDecimal.ZERO));
   }
 
-  private ResourceInOrganization addResourceToOrganization(
+  public ResourceInOrganization addResourceToOrganization(
       Organization organization, Resource resource, BigDecimal quantity, BigDecimal dealPrice) {
     logger.info(
         "Adding resource to organization. Organization: {}, Resource: {}, Quantity: {}",
