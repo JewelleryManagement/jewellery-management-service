@@ -199,7 +199,7 @@ public class ProductService implements EntityFetcher {
     }
   }
 
-  private void disassembleProductContent(Product product) {
+  public void disassembleProductContent(Product product) {
     if (product.getProductsContent() != null) {
       logger.debug("Disassembling product content for product with ID: {}", product.getId());
 

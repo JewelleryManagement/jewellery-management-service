@@ -4,27 +4,62 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
+import jewellery.inventory.aspect.annotation.LogDeleteEvent;
+import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ProductRequestDto;
+import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
 import jewellery.inventory.mapper.ProductInOrganizationMapper;
+import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInProduct;
+import jewellery.inventory.repository.ProductRepository;
+import jewellery.inventory.repository.ResourceInProductRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
-public class ProductInOrganizationService {
+public class ProductInOrganizationService implements EntityFetcher {
   private final OrganizationService organizationService;
   private final ProductService productService;
   private final ProductInOrganizationMapper mapper;
   private final ResourceInOrganizationService resourceInOrganizationService;
+  private final ResourceInProductRepository resourceInProductRepository;
+  private final ProductRepository productRepository;
+  private final ProductMapper productMapper;
+
+  @Transactional
+  @LogUpdateEvent(eventType = EventType.ORGANIZATION_PRODUCT_UPDATE)
+  public ProductsInOrganizationResponseDto updateProduct(
+      UUID productId, ProductRequestDto productRequestDto) {
+
+    Organization organization = organizationService.getOrganization(productRequestDto.getOwnerId());
+    organizationService.validateUserInOrganization(organization);
+
+    organizationService.validateCurrentUserPermission(
+        organization, OrganizationPermission.EDIT_PRODUCT);
+
+    Product product = productService.getProduct(productId);
+    productService.throwExceptionIfProductIsSold(product);
+    moveQuantityFromResourcesInProductToResourcesInOrganization(product);
+    productService.disassembleProductContent(product);
+
+    setProductFields(productRequestDto, organization, product);
+    productRepository.save(product);
+
+    addProductsContentToProduct(productRequestDto, product);
+    addResourcesToProduct(productRequestDto, organization, product);
+    return mapper.mapToProductResponseDto(
+        organization, List.of(productMapper.mapToProductResponseDto(product)));
+  }
 
   public ProductsInOrganizationResponseDto getProductsInOrganization(UUID organizationId) {
     Organization organization = organizationService.getOrganization(organizationId);
@@ -51,6 +86,8 @@ public class ProductInOrganizationService {
         organization, productService.getProductsResponse(List.of(product)));
   }
 
+  @Transactional
+  @LogDeleteEvent(eventType = EventType.ORGANIZATION_PRODUCT_DISASSEMBLY)
   public void deleteProductInOrganization(UUID organizationId, UUID productId) {
     organizationService.validateCurrentUserPermission(
         organizationService.getOrganization(organizationId),
@@ -227,5 +264,36 @@ public class ProductInOrganizationService {
       throw new InsufficientResourceQuantityException(
           incomingResourceInProduct.getQuantity(), resourceInOrganization.getQuantity());
     }
+  }
+
+  private ResourceInOrganizationRequestDto getResourceInOrganizationRequest(
+      Organization owner, ResourceInProduct resourceInProduct) {
+
+    return ResourceInOrganizationRequestDto.builder()
+        .organizationId(owner.getId())
+        .resourceId(resourceInProduct.getResource().getId())
+        .quantity(resourceInProduct.getQuantity())
+        .build();
+  }
+
+  private void moveQuantityFromResourcesInProductToResourcesInOrganization(Product product) {
+    List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
+    resourcesInProduct.forEach(
+        resourceInProduct -> {
+          resourceInOrganizationService.addResourceToOrganization(
+              getResourceInOrganizationRequest(product.getOrganization(), resourceInProduct));
+          resourceInProductRepository.delete(resourceInProduct);
+        });
+    product.setResourcesContent(null);
+  }
+
+  @Override
+  public Object fetchEntity(Object... ids) {
+    Product product = productRepository.findById((UUID) ids[0]).orElse(null);
+    if (product == null) {
+      return null;
+    }
+    return mapper.mapToProductResponseDto(
+        product.getOrganization(), List.of(productMapper.mapToProductResponseDto(product)));
   }
 }

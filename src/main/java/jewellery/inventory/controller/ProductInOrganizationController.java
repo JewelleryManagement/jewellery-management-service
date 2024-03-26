@@ -23,16 +23,29 @@ public class ProductInOrganizationController {
       @PathVariable UUID organizationId) {
     return productInOrganizationService.getProductsInOrganization(organizationId);
   }
+
   @Operation(summary = "Create a new product in organization")
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/products")
-  public ProductsInOrganizationResponseDto createProductInOrganization(@RequestBody @Valid ProductRequestDto productRequestDto) {
+  public ProductsInOrganizationResponseDto createProductInOrganization(
+      @RequestBody @Valid ProductRequestDto productRequestDto) {
     return productInOrganizationService.createProductInOrganization(productRequestDto);
   }
+
   @Operation(summary = "Delete a new product in organization")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{organizationId}/products/{productId}")
-  public void deleteProductInOrganization(@PathVariable UUID organizationId,@PathVariable UUID productId) {
-     productInOrganizationService.deleteProductInOrganization(organizationId,productId);
+  public void deleteProductInOrganization(
+      @PathVariable UUID organizationId, @PathVariable UUID productId) {
+    productInOrganizationService.deleteProductInOrganization(organizationId, productId);
+  }
+
+  @Operation(summary = "Update a product in organization")
+  @ResponseStatus(HttpStatus.OK)
+  @PutMapping("/products/{productId}")
+  public ProductsInOrganizationResponseDto updateProduct(
+      @PathVariable("productId") UUID productId,
+      @Valid @RequestBody ProductRequestDto productRequestDto) {
+    return productInOrganizationService.updateProduct(productId, productRequestDto);
   }
 }
