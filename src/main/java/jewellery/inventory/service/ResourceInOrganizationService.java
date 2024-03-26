@@ -26,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class ResourceInOrganizationService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(ResourceInOrganizationService.class);
   private final ResourceInOrganizationRepository resourceInOrganizationRepository;
-  private final UserInOrganizationService userInOrganizationService;
   private final OrganizationService organizationService;
   private final ResourceService resourceService;
   private final ResourceInOrganizationMapper resourceInOrganizationMapper;
@@ -142,7 +141,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
     return resourceInOrganization;
   }
 
-  public ResourceInOrganization getResourceInOrganization(
+  private ResourceInOrganization getResourceInOrganization(
       Organization organization, Resource resource) {
     logger.debug(
         "Getting resource in organization. Organization: {}, Resource: {}", organization, resource);

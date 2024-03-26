@@ -95,14 +95,16 @@ public class ProductInOrganizationService implements EntityFetcher {
 
     Product forDeleteProduct = productService.getProduct(productId);
 
+    productService.throwExceptionIfProductIsSold(forDeleteProduct);
+    productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, forDeleteProduct);
+
     List<Product> subProducts =
         getProductsInProduct(
             forDeleteProduct.getProductsContent().stream().map(Product::getId).toList(),
             forDeleteProduct);
 
     removeProductsContentFromProduct(subProducts);
-    removeResourcesFromProduct(
-        forDeleteProduct, organizationService.getOrganization(organizationId));
+    moveQuantityFromResourcesInProductToResourcesInOrganization(forDeleteProduct);
     productService.deleteProductById(productId);
   }
 
@@ -149,34 +151,6 @@ public class ProductInOrganizationService implements EntityFetcher {
         productService.saveProduct(subProduct);
       }
     }
-  }
-
-  private void removeResourcesFromProduct(Product product, Organization organization) {
-    List<ResourceInProduct> resourceInProductList = new ArrayList<>();
-    for (int i = 0; i < product.getResourcesContent().size(); i++) {
-      ResourceInProduct resourceInProduct =
-          createResourceInProduct(
-              product.getResourcesContent().get(i).getQuantity(),
-              product.getResourcesContent().get(i).getResource(),
-              product);
-      resourceInProductList.add(resourceInProduct);
-      product.setResourcesContent(null);
-    }
-    addResourcesToOrganization(resourceInProductList, organization);
-  }
-
-  private void addResourcesToOrganization(
-      List<ResourceInProduct> resourceInProductList, Organization organization) {
-    for (ResourceInProduct resourceInProduct : resourceInProductList) {
-      getResourceInOrganization(
-          organization, resourceInProduct.getResource(), resourceInProduct.getQuantity());
-    }
-  }
-
-  private ResourceInOrganization getResourceInOrganization(
-      Organization organization, Resource resource, BigDecimal quantity) {
-    return resourceInOrganizationService.addResourceToOrganization(
-        organization, resource, quantity, BigDecimal.ZERO);
   }
 
   private List<Product> getProductsInProduct(

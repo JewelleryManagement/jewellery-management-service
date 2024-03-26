@@ -39,6 +39,17 @@ public class ProductTestHelper {
     return productRequestDto;
   }
 
+  public static ProductRequestDto getBaseProductRequestDtoForOrganization(
+      User author) {
+    ProductRequestDto productRequestDto = new ProductRequestDto();
+    productRequestDto.setProductionNumber("1234");
+    productRequestDto.setCatalogNumber("1");
+    productRequestDto.setAuthors(List.of(author.getId()));
+    productRequestDto.setDescription("This is test product");
+    productRequestDto.setAdditionalPrice(BigDecimal.ZERO);
+    return productRequestDto;
+  }
+
   @NotNull
   public static ProductRequestDto getProductRequestDto(
       ResourcesInUserResponseDto resourcesInUser, User user) {

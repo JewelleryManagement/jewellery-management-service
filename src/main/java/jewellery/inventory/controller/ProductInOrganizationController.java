@@ -36,7 +36,7 @@ public class ProductInOrganizationController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{organizationId}/products/{productId}")
   public void deleteProductInOrganization(
-      @PathVariable UUID organizationId, @PathVariable UUID productId) {
+      @PathVariable("organizationId") UUID organizationId, @PathVariable("productId") UUID productId) {
     productInOrganizationService.deleteProductInOrganization(organizationId, productId);
   }
 
