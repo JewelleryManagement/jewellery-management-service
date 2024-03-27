@@ -134,8 +134,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
         sendResourceToOrganization(resourceInOrganizationRequest);
 
     ResponseEntity<ResourcesInOrganizationResponseDto> resource2 =
-            sendResourceToOrganization(resourceInOrganizationRequest);
-
+        sendResourceToOrganization(resourceInOrganizationRequest);
 
     ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
         createProduct(
@@ -149,41 +148,41 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
         updateProduct(
             productRequestDto,
             productInOrganizationResponse.getBody().getProducts().get(0).getId().toString());
-    assertEquals(HttpStatus.OK,updatedProductInOrganizationResponse.getStatusCode());
+    assertEquals(HttpStatus.OK, updatedProductInOrganizationResponse.getStatusCode());
   }
 
-  //  @Test
-  //  void deleteProductInOrganizationSuccessfully() {
-  //    OrganizationResponseDto organizationResponseDto = createOrganization();
-  //    ResourceResponseDto resourceResponse = createResourceResponse();
+  //    @Test
+  //    void deleteProductInOrganizationSuccessfully() {
+  //      OrganizationResponseDto organizationResponseDto = createOrganization();
+  //      ResourceResponseDto resourceResponse = createResourceResponse();
   //
-  //    sendResourceToOrganization(
-  //        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-  //            organizationResponseDto.getId(),
-  //            resourceResponse.getId(),
-  //            RESOURCE_QUANTITY,
-  //            RESOURCE_PRICE));
+  //      sendResourceToOrganization(
+  //          ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+  //              organizationResponseDto.getId(),
+  //              resourceResponse.getId(),
+  //              RESOURCE_QUANTITY,
+  //              RESOURCE_PRICE));
   //
-  //    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-  //        createProduct(
-  //            setOwnerAndResourceToProductRequest(
-  //                productRequestDto,
-  //                organizationResponseDto.getId(),
-  //                resourceResponse.getId(),
-  //                RESOURCE_QUANTITY));
+  //      ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+  //          createProduct(
+  //              setOwnerAndResourceToProductRequest(
+  //                  productRequestDto,
+  //                  organizationResponseDto.getId(),
+  //                  resourceResponse.getId(),
+  //                  RESOURCE_QUANTITY));
   //
-  //    ResponseEntity<Void> response =
-  //        this.testRestTemplate.exchange(
-  //            getOrganizationProductsWithIdUrl(
-  //                organizationResponseDto.getId().toString(),
+  //      ResponseEntity<Void> response =
+  //          this.testRestTemplate.exchange(
+  //              getOrganizationProductsWithIdUrl(
+  //                  organizationResponseDto.getId().toString(),
   //
-  // productInOrganizationResponse.getBody().getProducts().get(0).getId().toString()),
-  //            HttpMethod.DELETE,
-  //            null,
-  //            Void.class);
+  //   productInOrganizationResponse.getBody().getProducts().get(0).getId().toString()),
+  //              HttpMethod.DELETE,
+  //              null,
+  //              Void.class);
   //
-  //    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-  //  }
+  //      assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+  //    }
 
   private OrganizationResponseDto createOrganization() {
     OrganizationRequestDto organizationRequestDto =
