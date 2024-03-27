@@ -8,10 +8,8 @@ import static org.mockito.Mockito.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
-import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
@@ -44,47 +42,33 @@ class ProductInOrganizationServiceTest {
   @Mock private ProductInOrganizationMapper mapper;
   @Mock private ResourceInOrganizationService resourceInOrganizationService;
   @Mock private ResourceInProductRepository resourceInProductRepository;
-  @Mock private ProductRepository productRepository;
-  @Mock private ProductMapper productMapper;
+  private static final BigDecimal BIG_QUANTITY = BigDecimal.valueOf(30);
+
   private Organization organization;
   private Organization organizationWithProduct;
-  private OrganizationResponseDto organizationResponseDto;
-
-  private Resource resource;
-  private ResourceInOrganizationRequestDto resourceInOrganizationRequestDto;
   private ResourceInOrganization resourceInOrganization;
   private ProductRequestDto productRequestDto;
-  private User user;
   private Product product;
-  private ProductResponseDto productResponseDto;
-  private static final BigDecimal QUANTITY = BigDecimal.ONE;
-  private static final BigDecimal NEGATIVE_QUANTITY = BigDecimal.valueOf(-5);
-  private static final BigDecimal BIG_QUANTITY = BigDecimal.valueOf(30);
-  private static final BigDecimal DEAL_PRICE = BigDecimal.TEN;
   private ProductsInOrganizationResponseDto productsInOrganizationResponseDto;
 
   @BeforeEach
   void setUp() {
-    user = UserTestHelper.createSecondTestUser();
+
+    User user = UserTestHelper.createSecondTestUser();
     organization = OrganizationTestHelper.getTestOrganization();
-    resource = ResourceTestHelper.getPearl();
-    resourceInOrganizationRequestDto =
-        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organization.getId(), resource.getId(), QUANTITY, DEAL_PRICE);
+    Resource resource = ResourceTestHelper.getPearl();
+    product = getTestProduct(user, resource);
     resourceInOrganization =
         ResourceInOrganizationTestHelper.createResourceInOrganization(organization, resource);
     organization.setResourceInOrganization(List.of(resourceInOrganization));
-    productRequestDto = ProductTestHelper.getBaseProductRequestDtoForOrganization(user);
     productRequestDto =
-        setOwnerAndResourceToProductRequest(
-            productRequestDto, organization.getId(), user.getId(), BIG_QUANTITY);
-    product = getTestProduct(user, resource);
+        ProductTestHelper.getProductRequestDtoForOrganization(
+            user, organization.getId(), user.getId(), BIG_QUANTITY);
     organizationWithProduct =
-        setProductAndRsourcesToOrganization(organization, product, resourceInOrganization);
-    productResponseDto = productToResponse(product);
-    organizationResponseDto = getTestOrganizationResponseDto(organization);
+        setProductAndResourcesToOrganization(organization, product, resourceInOrganization);
     productsInOrganizationResponseDto =
-        new ProductsInOrganizationResponseDto(organizationResponseDto, List.of(productResponseDto));
+        new ProductsInOrganizationResponseDto(
+            getTestOrganizationResponseDto(organization), List.of(productToResponse(product)));
   }
 
   @Test
@@ -103,7 +87,6 @@ class ProductInOrganizationServiceTest {
   @Test
   void createProductInOrganizationSuccessfully() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-    resourceInOrganizationService.addResourceToOrganization(resourceInOrganizationRequestDto);
 
     when(resourceInOrganizationService.findResourceInOrganizationOrThrow(
             organization, productRequestDto.getResourcesContent().get(0).getResourceId()))
@@ -112,37 +95,24 @@ class ProductInOrganizationServiceTest {
     when(mapper.mapToProductResponseDto(organization, new ArrayList<>()))
         .thenReturn(productsInOrganizationResponseDto);
 
-    ProductsInOrganizationResponseDto products =
+    ProductsInOrganizationResponseDto productsInOrganizationResponse =
         productInOrganizationService.createProductInOrganization(productRequestDto);
-    assertNotNull(products);
-    assertEquals(1, products.getProducts().size());
-    assertEquals(products.getOrganization().getId(), organization.getId());
+    assertNotNull(productsInOrganizationResponse);
+    assertEquals(1, productsInOrganizationResponse.getProducts().size());
+    assertEquals(productsInOrganizationResponse.getOrganization().getId(), organization.getId());
     assertEquals(
-        products.getProducts().get(0).getId(), organization.getProductsOwned().get(0).getId());
+        productsInOrganizationResponse.getProducts().get(0).getId(),
+        organization.getProductsOwned().get(0).getId());
   }
 
   @Test
   void deleteProductInOrganizationSuccessfully() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-    resourceInOrganizationService.addResourceToOrganization(resourceInOrganizationRequestDto);
 
     when(productService.getProduct(product.getId())).thenReturn(product);
 
     productInOrganizationService.deleteProductInOrganization(organization.getId(), product.getId());
     verify(productService, times(1)).deleteProductById(product.getId());
-  }
-
-  private ProductRequestDto setOwnerAndResourceToProductRequest(
-      ProductRequestDto productRequestDto,
-      UUID organizationId,
-      UUID resourceId,
-      BigDecimal quantity) {
-    productRequestDto.setOwnerId(organizationId);
-    ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
-    resourceQuantityRequestDto.setResourceId(resourceId);
-    resourceQuantityRequestDto.setQuantity(quantity);
-    productRequestDto.setResourcesContent(List.of(resourceQuantityRequestDto));
-    return productRequestDto;
   }
 
   private ProductResponseDto productToResponse(Product product) {

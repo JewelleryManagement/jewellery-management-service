@@ -47,12 +47,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     return buildUrl("organizations", organizationId, "products");
   }
 
-  private String getOrganizationProductsWithIdUrl(String organizationId, String productId) {
-    return buildUrl("organizations", organizationId, "products", productId);
-  }
-
   private PreciousStone preciousStone;
-
   private ProductRequestDto productRequestDto;
   private OrganizationResponseDto organization;
   private User user;
@@ -62,7 +57,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     user = createUserInDatabase(UserTestHelper.createTestUserRequest());
     organization = createOrganization();
     preciousStone = createPreciousStoneInDatabase();
-    productRequestDto = ProductTestHelper.getBaseProductRequestDtoForOrganization(user);
+    productRequestDto = ProductTestHelper.getProductRequestDtoForOrganization(user,organization.getId(),preciousStone.getId(),RESOURCE_QUANTITY);
   }
 
   @Test
@@ -101,7 +96,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             null,
             ProductsInOrganizationResponseDto.class);
 
-    assertEquals(getAllProductsInOrgResponse.getBody().getProducts().size(), 0);
+    assertEquals(0, getAllProductsInOrgResponse.getBody().getProducts().size());
 
     ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
         createProduct(
@@ -112,7 +107,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
                 RESOURCE_QUANTITY));
 
     assertNotNull(productInOrganizationResponse.getBody());
-    assertEquals(productInOrganizationResponse.getBody().getProducts().size(), 1);
+    assertEquals(1, productInOrganizationResponse.getBody().getProducts().size());
     assertEquals(HttpStatus.CREATED, productInOrganizationResponse.getStatusCode());
   }
 

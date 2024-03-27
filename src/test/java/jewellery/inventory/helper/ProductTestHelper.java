@@ -39,14 +39,20 @@ public class ProductTestHelper {
     return productRequestDto;
   }
 
-  public static ProductRequestDto getBaseProductRequestDtoForOrganization(
-      User author) {
+  public static ProductRequestDto getProductRequestDtoForOrganization(
+      User author,UUID organizationId,UUID resourceId,
+      BigDecimal quantity) {
     ProductRequestDto productRequestDto = new ProductRequestDto();
+    productRequestDto.setOwnerId(organizationId);
     productRequestDto.setProductionNumber("1234");
     productRequestDto.setCatalogNumber("1");
     productRequestDto.setAuthors(List.of(author.getId()));
     productRequestDto.setDescription("This is test product");
     productRequestDto.setAdditionalPrice(BigDecimal.ZERO);
+    ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
+    resourceQuantityRequestDto.setResourceId(resourceId);
+    resourceQuantityRequestDto.setQuantity(quantity);
+    productRequestDto.setResourcesContent(List.of(resourceQuantityRequestDto));
     return productRequestDto;
   }
 
