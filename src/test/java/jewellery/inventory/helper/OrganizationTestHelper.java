@@ -5,10 +5,7 @@ import java.util.*;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.*;
-import jewellery.inventory.model.Organization;
-import jewellery.inventory.model.OrganizationPermission;
-import jewellery.inventory.model.User;
-import jewellery.inventory.model.UserInOrganization;
+import jewellery.inventory.model.*;
 
 public class OrganizationTestHelper {
   private static final String ORGANIZATION_NAME = "Test Name";
@@ -24,7 +21,14 @@ public class OrganizationTestHelper {
     return organization;
   }
 
-  public static Organization getOrganizationWithUserWithNoPermissions(Organization organization, User user) {
+  public static Organization setProductToOrganization(Organization organization, Product product) {
+    product.setOrganization(organization);
+    organization.setProductsOwned(List.of(product));
+    return organization;
+  }
+
+  public static Organization getOrganizationWithUserWithNoPermissions(
+      Organization organization, User user) {
     organization.setUsersInOrganization(
         List.of(new UserInOrganization(UUID.randomUUID(), user, organization, new ArrayList<>())));
     return organization;

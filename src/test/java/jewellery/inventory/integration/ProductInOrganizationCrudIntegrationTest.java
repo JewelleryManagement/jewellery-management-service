@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
@@ -15,12 +14,8 @@ import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.*;
-import jewellery.inventory.model.ResourceInOrganization;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.PreciousStone;
-import jewellery.inventory.model.resource.ResourceInProduct;
-import jewellery.inventory.repository.ResourceInProductRepository;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -127,31 +122,31 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     ResourceResponseDto resourceResponse = createResourceResponse();
 
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
-            ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-                    organizationResponseDto.getId(),
-                    resourceResponse.getId(),
-                    RESOURCE_QUANTITY,
-                    RESOURCE_PRICE);
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organizationResponseDto.getId(),
+            resourceResponse.getId(),
+            RESOURCE_QUANTITY,
+            RESOURCE_PRICE);
 
     ResponseEntity<ResourcesInOrganizationResponseDto> resource =
-            sendResourceToOrganization(resourceInOrganizationRequest);
+        sendResourceToOrganization(resourceInOrganizationRequest);
 
     ResponseEntity<ProductsInOrganizationResponseDto> getAllProductsInOrgResponse =
-            this.testRestTemplate.exchange(
-                    getOrganizationProductsUrl(organizationResponseDto.getId().toString()),
-                    HttpMethod.GET,
-                    null,
-                    ProductsInOrganizationResponseDto.class);
+        this.testRestTemplate.exchange(
+            getOrganizationProductsUrl(organizationResponseDto.getId().toString()),
+            HttpMethod.GET,
+            null,
+            ProductsInOrganizationResponseDto.class);
 
     assertEquals(getAllProductsInOrgResponse.getBody().getProducts().size(), 0);
 
     ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-            createProduct(
-                    setOwnerAndResourceToProductRequest(
-                            productRequestDto,
-                            organizationResponseDto.getId(),
-                            resourceResponse.getId(),
-                            BigDecimal.valueOf(99)));
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto,
+                organizationResponseDto.getId(),
+                resourceResponse.getId(),
+                RESOURCE_QUANTITY));
 
     assertEquals(productInOrganizationResponse.getBody().getProducts().size(), 1);
 
@@ -238,11 +233,5 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     resourceQuantityRequestDto.setQuantity(quantity);
     productRequestDto.setResourcesContent(List.of(resourceQuantityRequestDto));
     return productRequestDto;
-  }
-
-  @NotNull
-  private String getDeleteResourceUrl(UUID organizationId, UUID productId) {
-    return buildUrl(
-        "organizations", "resources-availability", organizationId.toString(), productId.toString());
   }
 }
