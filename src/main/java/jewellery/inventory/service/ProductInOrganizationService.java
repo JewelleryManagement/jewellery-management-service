@@ -98,15 +98,12 @@ public class ProductInOrganizationService implements EntityFetcher {
     productService.throwExceptionIfProductIsSold(forDeleteProduct);
     productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, forDeleteProduct);
 
-    if (!forDeleteProduct.getProductsContent().isEmpty()) {
-      List<Product> subProducts =
-          getProductsInProduct(
-              forDeleteProduct.getProductsContent().stream().map(Product::getId).toList(),
-              forDeleteProduct);
+    List<Product> subProducts =
+        getProductsInProduct(
+            forDeleteProduct.getProductsContent().stream().map(Product::getId).toList(),
+            forDeleteProduct);
 
-      removeProductsContentFromProduct(subProducts);
-    }
-
+    removeProductsContentFromProduct(subProducts);
     moveQuantityFromResourcesInProductToResourcesInOrganization(forDeleteProduct);
     productService.deleteProductById(productId);
   }
