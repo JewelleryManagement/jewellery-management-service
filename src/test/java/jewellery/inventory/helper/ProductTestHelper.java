@@ -93,6 +93,7 @@ public class ProductTestHelper {
     testProduct.setResourcesContent(List.of(getResourceInProduct(pearl)));
     testProduct.setProductsContent(new ArrayList<>());
     testProduct.setContentOf(null);
+    testProduct.setResourcesContent(new ArrayList<>());
     testProduct.setAdditionalPrice(BigDecimal.TEN);
     return testProduct;
   }

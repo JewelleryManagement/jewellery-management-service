@@ -57,7 +57,8 @@ public class ProductInOrganizationService implements EntityFetcher {
 
     addProductsContentToProduct(productRequestDto, product);
     addResourcesToProduct(productRequestDto, organization, product);
-    return mapper.mapToProductResponseDto(
+
+    return mapper.mapToProductsInOrganizationResponseDto(
         organization, List.of(productMapper.mapToProductResponseDto(product)));
   }
 
@@ -65,7 +66,7 @@ public class ProductInOrganizationService implements EntityFetcher {
     Organization organization = organizationService.getOrganization(organizationId);
     organizationService.validateUserInOrganization(organization);
 
-    return mapper.mapToProductResponseDto(
+    return mapper.mapToProductsInOrganizationResponseDto(
         organization, productService.getProductsResponse(organization.getProductsOwned()));
   }
 
@@ -82,7 +83,7 @@ public class ProductInOrganizationService implements EntityFetcher {
     addProductsContentToProduct(productRequestDto, product);
     addResourcesToProduct(productRequestDto, organization, product);
 
-    return mapper.mapToProductResponseDto(
+    return mapper.mapToProductsInOrganizationResponseDto(
         organization, productService.getProductsResponse(List.of(product)));
   }
 
@@ -274,7 +275,7 @@ public class ProductInOrganizationService implements EntityFetcher {
     if (product == null) {
       return null;
     }
-    return mapper.mapToProductResponseDto(
+    return mapper.mapToProductsInOrganizationResponseDto(
         product.getOrganization(), List.of(productMapper.mapToProductResponseDto(product)));
   }
 }

@@ -13,7 +13,7 @@ import java.util.List;
 public class ProductInOrganizationMapper {
   private final OrganizationMapper organizationMapper;
 
-  public ProductsInOrganizationResponseDto mapToProductResponseDto(
+  public ProductsInOrganizationResponseDto mapToProductsInOrganizationResponseDto(
       Organization organization, List<ProductResponseDto> products) {
     ProductsInOrganizationResponseDto productsInOrganizationResponseDto =
         new ProductsInOrganizationResponseDto();
