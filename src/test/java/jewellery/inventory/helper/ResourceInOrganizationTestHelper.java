@@ -25,7 +25,7 @@ public class ResourceInOrganizationTestHelper {
         .id(UUID.randomUUID())
         .organization(organization)
         .resource(resource)
-        .quantity(BigDecimal.TEN)
+        .quantity(BigDecimal.valueOf(100))
         .dealPrice(BigDecimal.ONE)
         .build();
   }

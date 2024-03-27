@@ -21,9 +21,10 @@ public class OrganizationTestHelper {
     return organization;
   }
 
-  public static Organization setProductToOrganization(Organization organization, Product product) {
+  public static Organization setProductAndRsourcesToOrganization(Organization organization, Product product,ResourceInOrganization resourceInOrganization) {
     product.setOrganization(organization);
     organization.setProductsOwned(List.of(product));
+    organization.setResourceInOrganization(List.of(resourceInOrganization));
     return organization;
   }
 

@@ -1,7 +1,6 @@
 package jewellery.inventory.unit.service;
 
-import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizationResponseDto;
-import static jewellery.inventory.helper.OrganizationTestHelper.setProductToOrganization;
+import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static jewellery.inventory.helper.ProductTestHelper.getTestProduct;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -81,7 +80,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
         setOwnerAndResourceToProductRequest(
             productRequestDto, organization.getId(), user.getId(), BIG_QUANTITY);
     product = getTestProduct(user, resource);
-    organizationWithProduct = setProductToOrganization(organization, product);
+    organizationWithProduct = setProductAndRsourcesToOrganization(organization, product,resourceInOrganization);
     productResponseDto= productToResponse(product);
     organizationResponseDto = getTestOrganizationResponseDto(organization);
     productsInOrganizationResponseDto = new ProductsInOrganizationResponseDto(organizationResponseDto,List.of(productResponseDto));
@@ -104,11 +103,22 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
   @Test
   void createProductInOrganizationSuccessfully() {
-    when(organizationService.getOrganization(organizationWithProduct.getId())).thenReturn(organizationWithProduct);
+    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
+    resourceInOrganizationService.addResourceToOrganization(resourceInOrganizationRequestDto);
+
+    when(resourceInOrganizationService.findResourceInOrganizationOrThrow(
+            organization, productRequestDto.getResourcesContent().get(0).getResourceId())).thenReturn(resourceInOrganization);
+
+
+      when(mapper.mapToProductResponseDto(organization,new ArrayList<>()))
+              .thenReturn(productsInOrganizationResponseDto);
 
     ProductsInOrganizationResponseDto products =
             productInOrganizationService.createProductInOrganization(productRequestDto);
     assertNotNull(products);
+    assertEquals(1, products.getProducts().size());
+    assertEquals(products.getOrganization().getId(),organization.getId());
+    assertEquals(products.getProducts().get(0).getId(),organization.getProductsOwned().get(0).getId());
 
   }
 
