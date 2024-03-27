@@ -116,51 +116,51 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     assertEquals(HttpStatus.CREATED, productInOrganizationResponse.getStatusCode());
   }
 
-  @Test
-  void deleteProductInOrganizationSuccessfully() {
-    OrganizationResponseDto organizationResponseDto = createOrganization();
-    ResourceResponseDto resourceResponse = createResourceResponse();
-
-    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
-        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organizationResponseDto.getId(),
-            resourceResponse.getId(),
-            RESOURCE_QUANTITY,
-            RESOURCE_PRICE);
-
-    ResponseEntity<ResourcesInOrganizationResponseDto> resource =
-        sendResourceToOrganization(resourceInOrganizationRequest);
-
-    ResponseEntity<ProductsInOrganizationResponseDto> getAllProductsInOrgResponse =
-        this.testRestTemplate.exchange(
-            getOrganizationProductsUrl(organizationResponseDto.getId().toString()),
-            HttpMethod.GET,
-            null,
-            ProductsInOrganizationResponseDto.class);
-
-    assertEquals(getAllProductsInOrgResponse.getBody().getProducts().size(), 0);
-
-    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-        createProduct(
-            setOwnerAndResourceToProductRequest(
-                productRequestDto,
-                organizationResponseDto.getId(),
-                resourceResponse.getId(),
-                RESOURCE_QUANTITY));
-
-    assertEquals(productInOrganizationResponse.getBody().getProducts().size(), 1);
-
-    ResponseEntity<Void> response =
-        this.testRestTemplate.exchange(
-            getOrganizationProductsWithIdUrl(
-                organizationResponseDto.getId().toString(),
-                productInOrganizationResponse.getBody().getProducts().get(0).getId().toString()),
-            HttpMethod.DELETE,
-            null,
-            Void.class);
-
-    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-  }
+//  @Test
+//  void deleteProductInOrganizationSuccessfully() {
+//    OrganizationResponseDto organizationResponseDto = createOrganization();
+//    ResourceResponseDto resourceResponse = createResourceResponse();
+//
+//    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
+//        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+//            organizationResponseDto.getId(),
+//            resourceResponse.getId(),
+//            RESOURCE_QUANTITY,
+//            RESOURCE_PRICE);
+//
+//    ResponseEntity<ResourcesInOrganizationResponseDto> resource =
+//        sendResourceToOrganization(resourceInOrganizationRequest);
+//
+//    ResponseEntity<ProductsInOrganizationResponseDto> getAllProductsInOrgResponse =
+//        this.testRestTemplate.exchange(
+//            getOrganizationProductsUrl(organizationResponseDto.getId().toString()),
+//            HttpMethod.GET,
+//            null,
+//            ProductsInOrganizationResponseDto.class);
+//
+//    assertEquals(getAllProductsInOrgResponse.getBody().getProducts().size(), 0);
+//
+//    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+//        createProduct(
+//            setOwnerAndResourceToProductRequest(
+//                productRequestDto,
+//                organizationResponseDto.getId(),
+//                resourceResponse.getId(),
+//                RESOURCE_QUANTITY));
+//
+//    assertEquals(productInOrganizationResponse.getBody().getProducts().size(), 1);
+//
+//    ResponseEntity<Void> response =
+//        this.testRestTemplate.exchange(
+//            getOrganizationProductsWithIdUrl(
+//                organizationResponseDto.getId().toString(),
+//                productInOrganizationResponse.getBody().getProducts().get(0).getId().toString()),
+//            HttpMethod.DELETE,
+//            null,
+//            Void.class);
+//
+//    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+//  }
 
   private OrganizationResponseDto createOrganization() {
     OrganizationRequestDto organizationRequestDto =

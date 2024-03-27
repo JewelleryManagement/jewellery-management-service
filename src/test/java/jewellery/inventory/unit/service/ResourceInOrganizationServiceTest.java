@@ -43,7 +43,7 @@ class ResourceInOrganizationServiceTest {
   private ResourceInOrganization resourceInOrganization;
   private static final BigDecimal QUANTITY = BigDecimal.ONE;
   private static final BigDecimal NEGATIVE_QUANTITY = BigDecimal.valueOf(-5);
-  private static final BigDecimal BIG_QUANTITY = BigDecimal.valueOf(30);
+  private static final BigDecimal BIG_QUANTITY = BigDecimal.valueOf(1000);
   private static final BigDecimal DEAL_PRICE = BigDecimal.TEN;
 
   @BeforeEach
