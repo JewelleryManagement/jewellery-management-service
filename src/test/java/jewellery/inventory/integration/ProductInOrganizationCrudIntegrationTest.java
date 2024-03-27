@@ -19,6 +19,7 @@ import jewellery.inventory.model.resource.PreciousStone;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,7 +62,9 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     user = createUserInDatabase(UserTestHelper.createTestUserRequest());
     organization = createOrganization();
     preciousStone = createPreciousStoneInDatabase();
-    productRequestDto = ProductTestHelper.getProductRequestDtoForOrganization(user,organization.getId(),preciousStone.getId(),RESOURCE_QUANTITY);
+    productRequestDto =
+        ProductTestHelper.getProductRequestDtoForOrganization(
+            user, organization.getId(), preciousStone.getId(), RESOURCE_QUANTITY);
   }
 
   @Test
@@ -115,37 +118,72 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     assertEquals(HttpStatus.CREATED, productInOrganizationResponse.getStatusCode());
   }
 
-//  @Test
-//  void deleteProductInOrganizationSuccessfully() {
-//    OrganizationResponseDto organizationResponseDto = createOrganization();
-//    ResourceResponseDto resourceResponse = createResourceResponse();
-//
-//    sendResourceToOrganization(
-//        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-//            organizationResponseDto.getId(),
-//            resourceResponse.getId(),
-//            RESOURCE_QUANTITY,
-//            RESOURCE_PRICE));
-//
-//    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-//        createProduct(
-//            setOwnerAndResourceToProductRequest(
-//                productRequestDto,
-//                organizationResponseDto.getId(),
-//                resourceResponse.getId(),
-//                RESOURCE_QUANTITY));
-//
-//    ResponseEntity<Void> response =
-//        this.testRestTemplate.exchange(
-//            getOrganizationProductsWithIdUrl(
-//                organizationResponseDto.getId().toString(),
-//                productInOrganizationResponse.getBody().getProducts().get(0).getId().toString()),
-//            HttpMethod.DELETE,
-//            null,
-//            Void.class);
-//
-//    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-//  }
+  @Test
+  void updateProductInOrganizationSuccessfully() {
+    OrganizationResponseDto organizationResponseDto = createOrganization();
+    ResourceResponseDto resourceResponse = createResourceResponse();
+
+    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organizationResponseDto.getId(),
+            resourceResponse.getId(),
+            RESOURCE_QUANTITY,
+            RESOURCE_PRICE);
+
+    ResponseEntity<ResourcesInOrganizationResponseDto> resource =
+        sendResourceToOrganization(resourceInOrganizationRequest);
+
+    ResponseEntity<ResourcesInOrganizationResponseDto> resource2 =
+            sendResourceToOrganization(resourceInOrganizationRequest);
+
+
+    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto,
+                organizationResponseDto.getId(),
+                resourceResponse.getId(),
+                RESOURCE_QUANTITY));
+
+    ResponseEntity<ProductsInOrganizationResponseDto> updatedProductInOrganizationResponse =
+        updateProduct(
+            productRequestDto,
+            productInOrganizationResponse.getBody().getProducts().get(0).getId().toString());
+    assertEquals(HttpStatus.OK,updatedProductInOrganizationResponse.getStatusCode());
+  }
+
+  //  @Test
+  //  void deleteProductInOrganizationSuccessfully() {
+  //    OrganizationResponseDto organizationResponseDto = createOrganization();
+  //    ResourceResponseDto resourceResponse = createResourceResponse();
+  //
+  //    sendResourceToOrganization(
+  //        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+  //            organizationResponseDto.getId(),
+  //            resourceResponse.getId(),
+  //            RESOURCE_QUANTITY,
+  //            RESOURCE_PRICE));
+  //
+  //    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+  //        createProduct(
+  //            setOwnerAndResourceToProductRequest(
+  //                productRequestDto,
+  //                organizationResponseDto.getId(),
+  //                resourceResponse.getId(),
+  //                RESOURCE_QUANTITY));
+  //
+  //    ResponseEntity<Void> response =
+  //        this.testRestTemplate.exchange(
+  //            getOrganizationProductsWithIdUrl(
+  //                organizationResponseDto.getId().toString(),
+  //
+  // productInOrganizationResponse.getBody().getProducts().get(0).getId().toString()),
+  //            HttpMethod.DELETE,
+  //            null,
+  //            Void.class);
+  //
+  //    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+  //  }
 
   private OrganizationResponseDto createOrganization() {
     OrganizationRequestDto organizationRequestDto =
@@ -187,6 +225,19 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     return this.testRestTemplate.postForEntity(
         getBaseOrganizationUrl() + "/products",
         productRequestDto,
+        ProductsInOrganizationResponseDto.class);
+  }
+
+  @Nullable
+  private ResponseEntity<ProductsInOrganizationResponseDto> updateProduct(
+      ProductRequestDto productRequestDto, String productId) {
+
+    HttpEntity<ProductRequestDto> requestEntity = new HttpEntity<>(productRequestDto, headers);
+
+    return this.testRestTemplate.exchange(
+        getBaseOrganizationUrl() + "/products/" + productId,
+        HttpMethod.PUT,
+        requestEntity,
         ProductsInOrganizationResponseDto.class);
   }
 
