@@ -85,7 +85,7 @@ public class ProductTestHelper {
     testProduct.setOwner(user);
     testProduct.setDescription("This is Test Product");
     testProduct.setResourcesContent(List.of(getResourceInProduct(pearl)));
-    testProduct.setProductsContent(null);
+    testProduct.setProductsContent(new ArrayList<>());
     testProduct.setContentOf(null);
     testProduct.setAdditionalPrice(BigDecimal.TEN);
     return testProduct;
