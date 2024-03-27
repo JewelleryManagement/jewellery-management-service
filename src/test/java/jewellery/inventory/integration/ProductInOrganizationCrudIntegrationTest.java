@@ -47,6 +47,10 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     return buildUrl("organizations", organizationId, "products");
   }
 
+  private String getOrganizationProductsWithIdUrl(String organizationId, String productId) {
+    return buildUrl("organizations", organizationId, "products", productId);
+  }
+
   private PreciousStone preciousStone;
   private ProductRequestDto productRequestDto;
   private OrganizationResponseDto organization;
@@ -116,24 +120,12 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 //    OrganizationResponseDto organizationResponseDto = createOrganization();
 //    ResourceResponseDto resourceResponse = createResourceResponse();
 //
-//    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
+//    sendResourceToOrganization(
 //        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
 //            organizationResponseDto.getId(),
 //            resourceResponse.getId(),
 //            RESOURCE_QUANTITY,
-//            RESOURCE_PRICE);
-//
-//    ResponseEntity<ResourcesInOrganizationResponseDto> resource =
-//        sendResourceToOrganization(resourceInOrganizationRequest);
-//
-//    ResponseEntity<ProductsInOrganizationResponseDto> getAllProductsInOrgResponse =
-//        this.testRestTemplate.exchange(
-//            getOrganizationProductsUrl(organizationResponseDto.getId().toString()),
-//            HttpMethod.GET,
-//            null,
-//            ProductsInOrganizationResponseDto.class);
-//
-//    assertEquals(getAllProductsInOrgResponse.getBody().getProducts().size(), 0);
+//            RESOURCE_PRICE));
 //
 //    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
 //        createProduct(
@@ -142,8 +134,6 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 //                organizationResponseDto.getId(),
 //                resourceResponse.getId(),
 //                RESOURCE_QUANTITY));
-//
-//    assertEquals(productInOrganizationResponse.getBody().getProducts().size(), 1);
 //
 //    ResponseEntity<Void> response =
 //        this.testRestTemplate.exchange(

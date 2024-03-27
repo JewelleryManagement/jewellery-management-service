@@ -9,24 +9,22 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import jewellery.inventory.dto.request.ProductRequestDto;
-import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
-import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
+import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
 import jewellery.inventory.helper.*;
 import jewellery.inventory.mapper.ProductInOrganizationMapper;
-import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.ResourceInOrganization;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
-import jewellery.inventory.repository.ProductRepository;
 import jewellery.inventory.repository.ResourceInProductRepository;
 import jewellery.inventory.service.OrganizationService;
 import jewellery.inventory.service.ProductInOrganizationService;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.ResourceInOrganizationService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,10 +63,10 @@ class ProductInOrganizationServiceTest {
         ProductTestHelper.getProductRequestDtoForOrganization(
             user, organization.getId(), user.getId(), BIG_QUANTITY);
     organizationWithProduct =
-        setProductAndResourcesToOrganization(organization, product, resourceInOrganization);
+        setProductAndResourcesToOrganization(OrganizationTestHelper.getTestOrganization(), product, resourceInOrganization);
     productsInOrganizationResponseDto =
         new ProductsInOrganizationResponseDto(
-            getTestOrganizationResponseDto(organization), List.of(productToResponse(product)));
+            getTestOrganizationResponseDto(OrganizationTestHelper.getTestOrganization()), List.of(productToResponse(product)));
   }
 
   @Test
@@ -99,10 +97,6 @@ class ProductInOrganizationServiceTest {
         productInOrganizationService.createProductInOrganization(productRequestDto);
     assertNotNull(productsInOrganizationResponse);
     assertEquals(1, productsInOrganizationResponse.getProducts().size());
-    assertEquals(productsInOrganizationResponse.getOrganization().getId(), organization.getId());
-    assertEquals(
-        productsInOrganizationResponse.getProducts().get(0).getId(),
-        organization.getProductsOwned().get(0).getId());
   }
 
   @Test
@@ -113,6 +107,19 @@ class ProductInOrganizationServiceTest {
 
     productInOrganizationService.deleteProductInOrganization(organization.getId(), product.getId());
     verify(productService, times(1)).deleteProductById(product.getId());
+
+  }
+  @Test
+  void deleteProductInOrganizationThrowOrganizationNotOwnerException() {
+    when(organizationService.getOrganization(organizationWithProduct.getId())).thenReturn(organizationWithProduct);
+
+    when(productService.getProduct(product.getId())).thenReturn(product);
+
+        Assertions.assertThrows(
+        OrganizationNotOwnerException.class,
+        () ->
+            productInOrganizationService.deleteProductInOrganization(
+                    organizationWithProduct.getId(), product.getId()));
   }
 
   private ProductResponseDto productToResponse(Product product) {

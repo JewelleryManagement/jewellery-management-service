@@ -95,6 +95,7 @@ public class ProductInOrganizationService implements EntityFetcher {
 
     Product forDeleteProduct = productService.getProduct(productId);
 
+    throwExceptionIfOrganizationNotOwner(organizationId, forDeleteProduct);
     productService.throwExceptionIfProductIsSold(forDeleteProduct);
     productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, forDeleteProduct);
 
@@ -237,6 +238,12 @@ public class ProductInOrganizationService implements EntityFetcher {
         < 0) {
       throw new InsufficientResourceQuantityException(
           incomingResourceInProduct.getQuantity(), resourceInOrganization.getQuantity());
+    }
+  }
+
+  private void throwExceptionIfOrganizationNotOwner(UUID organizationId, Product product) {
+    if (organizationId==product.getOrganization().getId()) {
+      throw new OrganizationNotOwnerException(organizationId, product.getId());
     }
   }
 
