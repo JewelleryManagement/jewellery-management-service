@@ -135,6 +135,7 @@ class ProductInOrganizationServiceTest {
   @Test
   void updateProductInOrganizationSuccessfully() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
+    product.setOrganization(organization);
     when(productService.getProduct(product.getId())).thenReturn(product);
 
     when(resourceInOrganizationService.findResourceInOrganizationOrThrow(
@@ -172,7 +173,7 @@ class ProductInOrganizationServiceTest {
         OrganizationNotOwnerException.class,
         () ->
             productInOrganizationService.deleteProductInOrganization(
-                    product.getId(), organizationWithProduct.getId()));
+                product.getId(), organizationWithProduct.getId()));
   }
 
   private ProductResponseDto productToResponse(Product product) {

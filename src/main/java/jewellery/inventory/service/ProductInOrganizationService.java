@@ -48,6 +48,7 @@ public class ProductInOrganizationService implements EntityFetcher {
         organization, OrganizationPermission.EDIT_PRODUCT);
 
     Product product = productService.getProduct(productId);
+    throwExceptionIfOrganizationNotOwner(organization.getId(),product);
     productService.throwExceptionIfProductIsSold(product);
     moveQuantityFromResourcesInProductToResourcesInOrganization(product);
     productService.disassembleProductContent(product);
