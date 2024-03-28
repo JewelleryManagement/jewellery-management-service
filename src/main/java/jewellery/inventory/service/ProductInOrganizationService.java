@@ -243,7 +243,7 @@ public class ProductInOrganizationService implements EntityFetcher {
   }
 
   private void throwExceptionIfOrganizationNotOwner(UUID organizationId, Product product) {
-    if (organizationId==product.getOrganization().getId()) {
+    if (organizationId!=product.getOrganization().getId()) {
       throw new OrganizationNotOwnerException(organizationId, product.getId());
     }
   }
