@@ -48,7 +48,7 @@ public class ProductInOrganizationService implements EntityFetcher {
         organization, OrganizationPermission.EDIT_PRODUCT);
 
     Product product = productService.getProduct(productId);
-    throwExceptionIfOrganizationNotOwner(organization.getId(),product);
+    throwExceptionIfOrganizationNotOwner(organization.getId(), product);
     productService.throwExceptionIfProductIsSold(product);
     moveQuantityFromResourcesInProductToResourcesInOrganization(product);
     productService.disassembleProductContent(product);
@@ -90,14 +90,14 @@ public class ProductInOrganizationService implements EntityFetcher {
 
   @Transactional
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_PRODUCT_DISASSEMBLY)
-  public void deleteProductInOrganization(UUID productId,UUID organizationId) {
-    organizationService.validateCurrentUserPermission(
-        organizationService.getOrganization(organizationId),
-        OrganizationPermission.DISASSEMBLE_PRODUCT);
-
+  public void deleteProductInOrganization(UUID productId) {
     Product forDeleteProduct = productService.getProduct(productId);
+    Organization organization =
+        organizationService.getOrganization(forDeleteProduct.getOrganization().getId());
 
-    throwExceptionIfOrganizationNotOwner(organizationId, forDeleteProduct);
+    organizationService.validateCurrentUserPermission(
+        organization, OrganizationPermission.DISASSEMBLE_PRODUCT);
+
     productService.throwExceptionIfProductIsSold(forDeleteProduct);
     productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, forDeleteProduct);
 

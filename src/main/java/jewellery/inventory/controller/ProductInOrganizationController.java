@@ -34,10 +34,10 @@ public class ProductInOrganizationController {
 
   @Operation(summary = "Delete a new product in organization")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @DeleteMapping("/{organizationId}/products/{productId}")
+  @DeleteMapping("/products/{productId}")
   public void deleteProductInOrganization(
-          @PathVariable("productId") UUID productId, @PathVariable("organizationId") UUID organizationId) {
-    productInOrganizationService.deleteProductInOrganization(organizationId, productId);
+          @PathVariable("productId") UUID productId) {
+    productInOrganizationService.deleteProductInOrganization(productId);
   }
 
   @Operation(summary = "Update a product in organization")
