@@ -156,7 +156,7 @@ class ProductInOrganizationServiceTest {
     product.setOrganization(organization);
     when(productService.getProduct(product.getId())).thenReturn(product);
 
-    productInOrganizationService.deleteProductInOrganization(organization.getId(), product.getId());
+    productInOrganizationService.deleteProductInOrganization(product.getId(), organization.getId());
     verify(productService, times(1)).deleteProductById(product.getId());
   }
 
@@ -172,7 +172,7 @@ class ProductInOrganizationServiceTest {
         OrganizationNotOwnerException.class,
         () ->
             productInOrganizationService.deleteProductInOrganization(
-                organizationWithProduct.getId(), product.getId()));
+                    product.getId(), organizationWithProduct.getId()));
   }
 
   private ProductResponseDto productToResponse(Product product) {

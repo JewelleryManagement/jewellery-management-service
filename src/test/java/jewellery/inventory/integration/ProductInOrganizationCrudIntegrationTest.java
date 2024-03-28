@@ -1,10 +1,12 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ResourceTestHelper.getPearlRequestDto;
+import static jewellery.inventory.model.EventType.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -82,7 +84,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   }
 
   @Test
-  void createProductInOrganizationSuccessfully() {
+  void createProductInOrganizationSuccessfully() throws JsonProcessingException {
     OrganizationResponseDto organizationResponseDto = createOrganization();
     ResourceResponseDto resourceResponse = createResourceResponse();
 
@@ -116,6 +118,14 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     assertNotNull(productInOrganizationResponse.getBody());
     assertEquals(1, productInOrganizationResponse.getBody().getProducts().size());
     assertEquals(HttpStatus.CREATED, productInOrganizationResponse.getStatusCode());
+
+    //    Map<String, Object> expectedEventPayload =
+    //
+    // getCreateOrDeleteEventPayload(productInOrganizationResponse.getBody().getProducts().get(0),
+    // objectMapper);
+    //
+    //    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_CREATE,
+    // expectedEventPayload);
   }
 
   @Test
@@ -149,40 +159,51 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             productRequestDto,
             productInOrganizationResponse.getBody().getProducts().get(0).getId().toString());
     assertEquals(HttpStatus.OK, updatedProductInOrganizationResponse.getStatusCode());
+
+    //    Map<String, Object> expectedEventPayload =
+    //            getUpdateEventPayload(
+    //                    productInOrganizationResponse.getBody().getProducts().get(0),
+    //
+    // Objects.requireNonNull(updatedProductInOrganizationResponse.getBody()).getProducts().get(0),
+    //                    objectMapper);
+    //
+    //    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_UPDATE,
+    // expectedEventPayload);
   }
 
-//  @Test
-//  void deleteProductInOrganizationSuccessfully() {
-//    OrganizationResponseDto organizationResponseDto = createOrganization();
-//    ResourceResponseDto resourceResponse = createResourceResponse();
-//
-//    sendResourceToOrganization(
-//        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-//            organizationResponseDto.getId(),
-//            resourceResponse.getId(),
-//            RESOURCE_QUANTITY,
-//            RESOURCE_PRICE));
-//
-//    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-//        createProduct(
-//            setOwnerAndResourceToProductRequest(
-//                productRequestDto,
-//                organizationResponseDto.getId(),
-//                resourceResponse.getId(),
-//                RESOURCE_QUANTITY));
-//
-//    ResponseEntity<Void> response =
-//        this.testRestTemplate.exchange(
-//            getOrganizationProductsWithIdUrl(
-//                organizationResponseDto.getId().toString(),
-//                productInOrganizationResponse.getBody().getProducts().get(0).getId().toString()),
-//            HttpMethod.DELETE,
-//            null,
-//            Void.class);
-//
-//    assertEquals(HttpStatus.CREATED, productInOrganizationResponse.getStatusCode());
-//    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-//  }
+  //  @Test
+  //  void deleteProductInOrganizationSuccessfully() {
+  //    OrganizationResponseDto organizationResponseDto = createOrganization();
+  //    ResourceResponseDto resourceResponse = createResourceResponse();
+  //
+  //    sendResourceToOrganization(
+  //        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+  //            organizationResponseDto.getId(),
+  //            resourceResponse.getId(),
+  //            RESOURCE_QUANTITY,
+  //            RESOURCE_PRICE));
+  //
+  //    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+  //        createProduct(
+  //            setOwnerAndResourceToProductRequest(
+  //                productRequestDto,
+  //                organizationResponseDto.getId(),
+  //                resourceResponse.getId(),
+  //                RESOURCE_QUANTITY));
+  //
+  //    ResponseEntity<Void> response =
+  //        this.testRestTemplate.exchange(
+  //            getOrganizationProductsWithIdUrl(
+  //                organizationResponseDto.getId().toString(),
+  //
+  // productInOrganizationResponse.getBody().getProducts().get(0).getId().toString()),
+  //            HttpMethod.DELETE,
+  //            null,
+  //            Void.class);
+  //
+  //    assertEquals(HttpStatus.CREATED, productInOrganizationResponse.getStatusCode());
+  //    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+  //  }
 
   private OrganizationResponseDto createOrganization() {
     OrganizationRequestDto organizationRequestDto =

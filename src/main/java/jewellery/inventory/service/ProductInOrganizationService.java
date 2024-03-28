@@ -89,7 +89,7 @@ public class ProductInOrganizationService implements EntityFetcher {
 
   @Transactional
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_PRODUCT_DISASSEMBLY)
-  public void deleteProductInOrganization(UUID organizationId, UUID productId) {
+  public void deleteProductInOrganization(UUID productId,UUID organizationId) {
     organizationService.validateCurrentUserPermission(
         organizationService.getOrganization(organizationId),
         OrganizationPermission.DISASSEMBLE_PRODUCT);
@@ -243,7 +243,7 @@ public class ProductInOrganizationService implements EntityFetcher {
   }
 
   private void throwExceptionIfOrganizationNotOwner(UUID organizationId, Product product) {
-    if (organizationId!=product.getOrganization().getId()) {
+    if (!organizationId.equals(product.getOrganization().getId())) {
       throw new OrganizationNotOwnerException(organizationId, product.getId());
     }
   }
