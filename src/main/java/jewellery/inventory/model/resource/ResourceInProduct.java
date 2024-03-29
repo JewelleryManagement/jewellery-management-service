@@ -1,9 +1,7 @@
 package jewellery.inventory.model.resource;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 import java.util.UUID;
 import jewellery.inventory.model.Product;
@@ -20,5 +18,5 @@ public class ResourceInProduct {
 
   private BigDecimal quantity;
 
-  @ManyToOne private Product product;
+  @ManyToOne(cascade = CascadeType.PERSIST) private Product product;
 }

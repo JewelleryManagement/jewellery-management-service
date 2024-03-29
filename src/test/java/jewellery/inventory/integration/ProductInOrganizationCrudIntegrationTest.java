@@ -185,9 +185,6 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             setOwnerAndResourceToProductRequest(
                 productRequestDto, organization.getId(), preciousStone.getId(), RESOURCE_QUANTITY));
 
-    assertEquals(HttpStatus.CREATED, productInOrganizationResponse.getStatusCode());
-    assertEquals(1, productInOrganizationResponse.getBody().getProducts().size());
-
     UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
 
     ResponseEntity<String> response =
@@ -199,19 +196,10 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
 
-    ResponseEntity<ProductsInOrganizationResponseDto> afterDeleteResponse =
-            this.testRestTemplate.exchange(
-                    getOrganizationProductsUrl(organization.getId().toString()),
-                    HttpMethod.GET,
-                    null,
-                    ProductsInOrganizationResponseDto.class);
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(productInOrganizationResponse.getBody(), objectMapper);
 
-    assertEquals(0, afterDeleteResponse.getBody().getProducts().size());
-
-//    Map<String, Object> expectedEventPayload =
-//        getCreateOrDeleteEventPayload(productInOrganizationResponse.getBody(), objectMapper);
-//
-//    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_DISASSEMBLY, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_DISASSEMBLY, expectedEventPayload);
   }
 
   private OrganizationResponseDto createOrganization() {

@@ -100,6 +100,7 @@ public class ProductInOrganizationService implements EntityFetcher {
     productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
 
     moveQuantityFromResourcesInProductToResourcesInOrganization(product);
+
     productService.disassembleProductContent(product);
     productService.deleteProductById(productId);
   }
