@@ -50,6 +50,10 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     return buildUrl("organizations");
   }
 
+  private String getProductUrl(UUID id) {
+    return "/products/" + id;
+  }
+
   private String getOrganizationProductsUrl(String organizationId) {
     return buildUrl("organizations", organizationId, "products");
   }
@@ -124,8 +128,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     assertEquals(HttpStatus.CREATED, productInOrganizationResponse.getStatusCode());
 
     Map<String, Object> expectedEventPayload =
-        getCreateOrDeleteEventPayload(
-            productInOrganizationResponse.getBody(), objectMapper);
+        getCreateOrDeleteEventPayload(productInOrganizationResponse.getBody(), objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_CREATE, expectedEventPayload);
   }
@@ -171,49 +174,45 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_UPDATE, expectedEventPayload);
   }
 
-    @Test
-    void deleteProductInOrganizationSuccessfully() {
-      OrganizationResponseDto organizationResponseDto = createOrganization();
-      ResourceResponseDto resourceResponse = createResourceResponse();
+  @Test
+  void deleteProductInOrganizationSuccessfully() throws JsonProcessingException {
+    sendResourceToOrganization(
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organization.getId(), preciousStone.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
 
-      sendResourceToOrganization(
-          ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-              organizationResponseDto.getId(),
-              resourceResponse.getId(),
-              RESOURCE_QUANTITY,
-              RESOURCE_PRICE));
+    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto, organization.getId(), preciousStone.getId(), RESOURCE_QUANTITY));
 
-      ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-          createProduct(
-              setOwnerAndResourceToProductRequest(
-                  productRequestDto,
-                  organizationResponseDto.getId(),
-                  resourceResponse.getId(),
-                  RESOURCE_QUANTITY));
+    assertEquals(HttpStatus.CREATED, productInOrganizationResponse.getStatusCode());
+    assertEquals(1, productInOrganizationResponse.getBody().getProducts().size());
 
-            ResponseEntity<HttpStatus> response =
-              this.testRestTemplate.exchange(
-                      getBaseOrganizationUrl() + "/products/" + productInOrganizationResponse.getBody().getProducts().get(0).getId(),
-                      HttpMethod.DELETE,
-                      null,
-                      HttpStatus.class);
+    UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
 
-            assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    ResponseEntity<String> response =
+        this.testRestTemplate.exchange(
+            getBaseOrganizationUrl() + getProductUrl(productId),
+            HttpMethod.DELETE,
+            null,
+            String.class);
 
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
 
-//      ResponseEntity<Void> response =
-//          this.testRestTemplate.exchange(
-//              getOrganizationProductsWithIdUrl(
-//                  organizationResponseDto.getId().toString(),
+    ResponseEntity<ProductsInOrganizationResponseDto> afterDeleteResponse =
+            this.testRestTemplate.exchange(
+                    getOrganizationProductsUrl(organization.getId().toString()),
+                    HttpMethod.GET,
+                    null,
+                    ProductsInOrganizationResponseDto.class);
+
+    assertEquals(0, afterDeleteResponse.getBody().getProducts().size());
+
+//    Map<String, Object> expectedEventPayload =
+//        getCreateOrDeleteEventPayload(productInOrganizationResponse.getBody(), objectMapper);
 //
-//   productInOrganizationResponse.getBody().getProducts().get(0).getId().toString()),
-//              HttpMethod.DELETE,
-//              null,
-//              Void.class);
-//
-//      assertEquals(HttpStatus.CREATED, productInOrganizationResponse.getStatusCode());
-//      assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-    }
+//    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_DISASSEMBLY, expectedEventPayload);
+  }
 
   private OrganizationResponseDto createOrganization() {
     OrganizationRequestDto organizationRequestDto =

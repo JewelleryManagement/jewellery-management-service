@@ -15,7 +15,6 @@ import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
 import jewellery.inventory.mapper.ProductInOrganizationMapper;
-import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInProduct;
@@ -90,23 +89,18 @@ public class ProductInOrganizationService implements EntityFetcher {
   @Transactional
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_PRODUCT_DISASSEMBLY)
   public void deleteProductInOrganization(UUID productId) {
-    Product forDeleteProduct = productService.getProduct(productId);
+    Product product = productService.getProduct(productId);
     Organization organization =
-        organizationService.getOrganization(forDeleteProduct.getOrganization().getId());
+        organizationService.getOrganization(product.getOrganization().getId());
 
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.DISASSEMBLE_PRODUCT);
 
-    productService.throwExceptionIfProductIsSold(forDeleteProduct);
-    productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, forDeleteProduct);
+    productService.throwExceptionIfProductIsSold(product);
+    productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
 
-    List<Product> subProducts =
-        getProductsInProduct(
-            forDeleteProduct.getProductsContent().stream().map(Product::getId).toList(),
-            forDeleteProduct);
-
-    removeProductsContentFromProduct(subProducts);
-    moveQuantityFromResourcesInProductToResourcesInOrganization(forDeleteProduct);
+    moveQuantityFromResourcesInProductToResourcesInOrganization(product);
+    productService.disassembleProductContent(product);
     productService.deleteProductById(productId);
   }
 
@@ -143,15 +137,6 @@ public class ProductInOrganizationService implements EntityFetcher {
       product.setProductsContent(
           getProductsInProduct(productRequestDto.getProductsContent(), product));
       productService.saveProduct(product);
-    }
-  }
-
-  private void removeProductsContentFromProduct(List<Product> subProducts) {
-    if (!subProducts.isEmpty()) {
-      for (Product subProduct : subProducts) {
-        subProduct.setContentOf(null);
-        productService.saveProduct(subProduct);
-      }
     }
   }
 
