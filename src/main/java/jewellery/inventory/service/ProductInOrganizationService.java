@@ -34,7 +34,6 @@ public class ProductInOrganizationService implements EntityFetcher {
   private final ResourceInOrganizationService resourceInOrganizationService;
   private final ResourceInProductRepository resourceInProductRepository;
   private final ProductRepository productRepository;
-  private final ProductMapper productMapper;
 
   @Transactional
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_PRODUCT_UPDATE)
@@ -60,7 +59,7 @@ public class ProductInOrganizationService implements EntityFetcher {
     addResourcesToProduct(productRequestDto, organization, product);
 
     return mapper.mapToProductsInOrganizationResponseDto(
-        organization, List.of(productMapper.mapToProductResponseDto(product)));
+        organization, productService.getProductsResponse(List.of(product)));
   }
 
   public ProductsInOrganizationResponseDto getProductsInOrganization(UUID organizationId) {
@@ -277,6 +276,6 @@ public class ProductInOrganizationService implements EntityFetcher {
       return null;
     }
     return mapper.mapToProductsInOrganizationResponseDto(
-        product.getOrganization(), List.of(productMapper.mapToProductResponseDto(product)));
+        product.getOrganization(), productService.getProductsResponse(List.of(product)));
   }
 }
