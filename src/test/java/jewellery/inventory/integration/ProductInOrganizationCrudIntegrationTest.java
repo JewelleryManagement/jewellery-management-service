@@ -58,10 +58,6 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     return buildUrl("organizations", organizationId, "products");
   }
 
-  private String getOrganizationProductsWithIdUrl(String organizationId, String productId) {
-    return buildUrl("organizations", organizationId, "products", productId);
-  }
-
   private PreciousStone preciousStone;
   private ProductRequestDto productRequestDto;
   private OrganizationResponseDto organization;

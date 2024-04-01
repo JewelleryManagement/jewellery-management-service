@@ -86,12 +86,12 @@ public class ProductInOrganizationService implements EntityFetcher {
         organization, productService.getProductsResponse(List.of(product)));
   }
 
-  @Transactional
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_PRODUCT_DISASSEMBLY)
   public void deleteProductInOrganization(UUID productId) {
     Product product = productService.getProduct(productId);
     Organization organization =
         organizationService.getOrganization(product.getOrganization().getId());
+    throwExceptionIfOrganizationNotOwner(organization.getId(),product);
 
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.DISASSEMBLE_PRODUCT);
