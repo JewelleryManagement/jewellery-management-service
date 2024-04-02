@@ -20,12 +20,15 @@ import jewellery.inventory.model.resource.ResourceInProduct;
 import jewellery.inventory.repository.ProductRepository;
 import jewellery.inventory.repository.ResourceInProductRepository;
 import lombok.AllArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
 public class ProductInOrganizationService implements EntityFetcher {
+  private static final Logger logger = LogManager.getLogger(ProductInOrganizationService.class);
   private final OrganizationService organizationService;
   private final ProductService productService;
   private final ProductInOrganizationMapper mapper;
@@ -115,6 +118,7 @@ public class ProductInOrganizationService implements EntityFetcher {
 
   private Product getProductWithoutResourcesAndProduct(
       ProductRequestDto productRequestDto, Organization organization) {
+    logger.debug("Creating product without resources and products");
     Product product = new Product();
     setProductFields(productRequestDto, organization, product);
     return product;
@@ -132,12 +136,14 @@ public class ProductInOrganizationService implements EntityFetcher {
     product.setAdditionalPrice(productRequestDto.getAdditionalPrice());
     product.setProductsContent(new ArrayList<>());
     product.setResourcesContent(new ArrayList<>());
+    logger.debug("Product fields have been set successfully for product: {}", product);
   }
 
   private void addProductsContentToProduct(ProductRequestDto productRequestDto, Product product) {
     if (productRequestDto.getProductsContent() != null) {
       product.setProductsContent(
           getProductsInProduct(productRequestDto.getProductsContent(), product));
+      logger.debug("Products content added successfully to product: {}", product);
       productService.saveProduct(product);
     }
   }
@@ -158,12 +164,18 @@ public class ProductInOrganizationService implements EntityFetcher {
                     .equals(product.getOrganization().getId())) {
               product.setContentOf(parentProduct);
               products.add(product);
+              logger.debug("Added product '{}' to the list.", product);
             } else {
+              logger.error(
+                  "Organization with ID '{}' is not the owner of product with ID '{}'.",
+                  parentProduct.getOrganization().getId(),
+                  product.getId());
               throw new OrganizationNotOwnerException(
                   parentProduct.getOrganization().getId(), product.getId());
             }
           });
     }
+    logger.debug("Products in product retrieved successfully.");
     return products;
   }
 
@@ -173,6 +185,8 @@ public class ProductInOrganizationService implements EntityFetcher {
     List<ResourceInProduct> resourcesInProducts =
         transferResourcesQuantitiesFromOrganizationToProduct(
             organization, productRequestDto.getResourcesContent(), product);
+    logger.debug("Resources added successfully to product: {}", product);
+
     product.setResourcesContent(resourcesInProducts);
   }
 
@@ -187,6 +201,7 @@ public class ProductInOrganizationService implements EntityFetcher {
           transferSingleResourceQuantityFromOrganizationToProduct(
               organization, resourceQuantity, product));
     }
+    logger.debug("Resources quantities transferred successfully from organization to product.");
     return resourcesForAdd;
   }
 
@@ -194,6 +209,9 @@ public class ProductInOrganizationService implements EntityFetcher {
       Organization organization,
       ResourceQuantityRequestDto incomingResourceInProduct,
       Product product) {
+    logger.debug(
+        "Transferring single resource quantity from organization to product for product: {}",
+        product);
 
     ResourceInOrganization resourceInOrganization =
         resourceInOrganizationService.findResourceInOrganizationOrThrow(
@@ -206,6 +224,12 @@ public class ProductInOrganizationService implements EntityFetcher {
         incomingResourceInProduct.getResourceId(),
         incomingResourceInProduct.getQuantity());
 
+    logger.debug(
+        "Quantity '{}' of resource '{}' removed from organization '{}'.",
+        incomingResourceInProduct.getQuantity(),
+        resourceInOrganization.getResource(),
+        organization.getName());
+
     return createResourceInProduct(
         incomingResourceInProduct.getQuantity(), resourceInOrganization.getResource(), product);
   }
@@ -216,6 +240,7 @@ public class ProductInOrganizationService implements EntityFetcher {
     resourceInProduct.setResource(resource);
     resourceInProduct.setQuantity(quantity);
     resourceInProduct.setProduct(product);
+    logger.debug("ResourceInProduct created successfully for product: {}", product);
     return resourceInProduct;
   }
 
@@ -224,6 +249,12 @@ public class ProductInOrganizationService implements EntityFetcher {
       ResourceQuantityRequestDto incomingResourceInProduct) {
     if (resourceInOrganization.getQuantity().compareTo(incomingResourceInProduct.getQuantity())
         < 0) {
+      logger.error(
+          "Insufficient quantity of resource '{}' in organization. Requested: {}, Available: {}",
+          resourceInOrganization.getResource(),
+          incomingResourceInProduct.getQuantity(),
+          resourceInOrganization.getQuantity());
+
       throw new InsufficientResourceQuantityException(
           incomingResourceInProduct.getQuantity(), resourceInOrganization.getQuantity());
     }
@@ -231,15 +262,27 @@ public class ProductInOrganizationService implements EntityFetcher {
 
   private void throwExceptionIfOrganizationNotOwner(UUID organizationId, Product product) {
     if (!organizationId.equals(product.getOrganization().getId())) {
+      logger.error("Organization with ID '{}' is not the owner of product with ID '{}'.", organizationId, product.getId());
       throw new OrganizationNotOwnerException(organizationId, product.getId());
     }
   }
+
   private void moveQuantityFromResourcesInProductToResourcesInOrganization(Product product) {
     List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
     resourcesInProduct.forEach(
         resourceInProduct -> {
-          resourceInOrganizationService.addResourceToOrganization(product.getOrganization(),resourceInProduct.getResource(),resourceInProduct.getQuantity(),BigDecimal.ZERO);
+          logger.info(
+              "Adding resource: {} to organization: {} with quantity {}",
+              resourceInProduct.getResource(),
+              product.getOrganization(),
+              resourceInProduct.getQuantity());
+          resourceInOrganizationService.addResourceToOrganization(
+              product.getOrganization(),
+              resourceInProduct.getResource(),
+              resourceInProduct.getQuantity(),
+              BigDecimal.ZERO);
           resourceInProductRepository.delete(resourceInProduct);
+          logger.info("Resource deleted from product: {}", product);
         });
     product.setResourcesContent(null);
   }
