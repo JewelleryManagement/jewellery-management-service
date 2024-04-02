@@ -196,6 +196,15 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
         getCreateOrDeleteEventPayload(productInOrganizationResponse.getBody(), objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_DISASSEMBLY, expectedEventPayload);
+
+    ResponseEntity<ProductsInOrganizationResponseDto> organizationProductsResponse =
+            this.testRestTemplate.exchange(
+                    getOrganizationProductsUrl(productInOrganizationResponse.getBody().getOrganization().getId().toString()),
+                    HttpMethod.GET,
+                    null,
+                    ProductsInOrganizationResponseDto.class);
+     assertEquals(0,organizationProductsResponse.getBody().getProducts().size());
+
   }
 
   private OrganizationResponseDto createOrganization() {
