@@ -9,7 +9,6 @@ import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ProductRequestDto;
-import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
@@ -94,6 +93,7 @@ public class ProductInOrganizationService implements EntityFetcher {
     moveQuantityFromResourcesInProductToResourcesInOrganization(product);
 
     productService.disassembleProductContent(product);
+    product.setOrganization(null);
     productService.deleteProductById(productId);
   }
 
@@ -234,23 +234,11 @@ public class ProductInOrganizationService implements EntityFetcher {
       throw new OrganizationNotOwnerException(organizationId, product.getId());
     }
   }
-
-  private ResourceInOrganizationRequestDto getResourceInOrganizationRequest(
-      Organization owner, ResourceInProduct resourceInProduct) {
-
-    return ResourceInOrganizationRequestDto.builder()
-        .organizationId(owner.getId())
-        .resourceId(resourceInProduct.getResource().getId())
-        .quantity(resourceInProduct.getQuantity())
-        .build();
-  }
-
   private void moveQuantityFromResourcesInProductToResourcesInOrganization(Product product) {
     List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
     resourcesInProduct.forEach(
         resourceInProduct -> {
-          resourceInOrganizationService.addResourceToOrganization(
-              getResourceInOrganizationRequest(product.getOrganization(), resourceInProduct));
+          resourceInOrganizationService.addResourceToOrganization(product.getOrganization(),resourceInProduct.getResource(),resourceInProduct.getQuantity(),BigDecimal.ZERO);
           resourceInProductRepository.delete(resourceInProduct);
         });
     product.setResourcesContent(null);

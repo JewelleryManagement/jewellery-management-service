@@ -150,7 +150,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
             () -> createAndAddNewResourceInOrganization(organization, resource, BigDecimal.ZERO));
   }
 
-  private ResourceInOrganization addResourceToOrganization(
+  public ResourceInOrganization addResourceToOrganization(
       Organization organization, Resource resource, BigDecimal quantity, BigDecimal dealPrice) {
     logger.info(
         "Adding resource to organization. Organization: {}, Resource: {}, Quantity: {}",
