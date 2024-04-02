@@ -34,13 +34,20 @@ public class ProductInOrganizationService implements EntityFetcher {
   private final ResourceInProductRepository resourceInProductRepository;
   private final ProductRepository productRepository;
 
+  public ProductsInOrganizationResponseDto getProductsInOrganization(UUID organizationId) {
+    Organization organization = organizationService.getOrganization(organizationId);
+    organizationService.validateUserInOrganization(organization);
+
+    return mapper.mapToProductsInOrganizationResponseDto(
+        organization, productService.getProductsResponse(organization.getProductsOwned()));
+  }
+
   @Transactional
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_PRODUCT_UPDATE)
   public ProductsInOrganizationResponseDto updateProduct(
       UUID productId, ProductRequestDto productRequestDto) {
 
     Organization organization = organizationService.getOrganization(productRequestDto.getOwnerId());
-    organizationService.validateUserInOrganization(organization);
 
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.EDIT_PRODUCT);
@@ -54,19 +61,7 @@ public class ProductInOrganizationService implements EntityFetcher {
     setProductFields(productRequestDto, organization, product);
     productRepository.save(product);
 
-    addProductsContentToProduct(productRequestDto, product);
-    addResourcesToProduct(productRequestDto, organization, product);
-
-    return mapper.mapToProductsInOrganizationResponseDto(
-        organization, productService.getProductsResponse(List.of(product)));
-  }
-
-  public ProductsInOrganizationResponseDto getProductsInOrganization(UUID organizationId) {
-    Organization organization = organizationService.getOrganization(organizationId);
-    organizationService.validateUserInOrganization(organization);
-
-    return mapper.mapToProductsInOrganizationResponseDto(
-        organization, productService.getProductsResponse(organization.getProductsOwned()));
+    return addProductContents(organization, productRequestDto, product);
   }
 
   @Transactional
@@ -79,11 +74,8 @@ public class ProductInOrganizationService implements EntityFetcher {
         organization, OrganizationPermission.CREATE_PRODUCT);
 
     Product product = persistProductWithoutResourcesAndProducts(productRequestDto, organization);
-    addProductsContentToProduct(productRequestDto, product);
-    addResourcesToProduct(productRequestDto, organization, product);
 
-    return mapper.mapToProductsInOrganizationResponseDto(
-        organization, productService.getProductsResponse(List.of(product)));
+    return addProductContents(organization, productRequestDto, product);
   }
 
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_PRODUCT_DISASSEMBLY)
@@ -91,7 +83,7 @@ public class ProductInOrganizationService implements EntityFetcher {
     Product product = productService.getProduct(productId);
     Organization organization =
         organizationService.getOrganization(product.getOrganization().getId());
-    throwExceptionIfOrganizationNotOwner(organization.getId(),product);
+    throwExceptionIfOrganizationNotOwner(organization.getId(), product);
 
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.DISASSEMBLE_PRODUCT);
@@ -103,6 +95,15 @@ public class ProductInOrganizationService implements EntityFetcher {
 
     productService.disassembleProductContent(product);
     productService.deleteProductById(productId);
+  }
+
+  private ProductsInOrganizationResponseDto addProductContents(
+      Organization organization, ProductRequestDto productRequestDto, Product product) {
+    addProductsContentToProduct(productRequestDto, product);
+    addResourcesToProduct(productRequestDto, organization, product);
+
+    return mapper.mapToProductsInOrganizationResponseDto(
+        organization, productService.getProductsResponse(List.of(product)));
   }
 
   private Product persistProductWithoutResourcesAndProducts(

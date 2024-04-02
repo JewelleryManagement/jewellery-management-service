@@ -90,7 +90,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   @Test
   void createProductInOrganizationSuccessfully() throws JsonProcessingException {
     OrganizationResponseDto organizationResponseDto = createOrganization();
-    ResourceResponseDto resourceResponse = createResourceResponse();
+    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
 
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -132,7 +132,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   @Test
   void updateProductInOrganizationSuccessfully() throws JsonProcessingException {
     OrganizationResponseDto organizationResponseDto = createOrganization();
-    ResourceResponseDto resourceResponse = createResourceResponse();
+    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
 
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -210,7 +210,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     return organizationResponseDto;
   }
 
-  private ResourceResponseDto createResourceResponse() {
+  private ResourceResponseDto sendCreateResourceRequest() {
     ResourceRequestDto resourceRequest = getPearlRequestDto();
     ResponseEntity<ResourceResponseDto> resourceResponseEntity =
         this.testRestTemplate.postForEntity(

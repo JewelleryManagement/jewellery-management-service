@@ -4,6 +4,7 @@ import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static jewellery.inventory.helper.ProductTestHelper.getProductRequestDtoForOrganization;
 import static jewellery.inventory.helper.ProductTestHelper.getTestProduct;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
@@ -42,7 +43,7 @@ class ProductInOrganizationServiceTest {
   @Mock private ProductInOrganizationMapper mapper;
   @Mock private ResourceInOrganizationService resourceInOrganizationService;
   @Mock private ResourceInProductRepository resourceInProductRepository;
-  private static final BigDecimal BIG_QUANTITY = BigDecimal.valueOf(30);
+  private static final BigDecimal QUANTITY = BigDecimal.valueOf(30);
 
   private Organization organization;
   private Organization organizationWithProduct;
@@ -63,9 +64,9 @@ class ProductInOrganizationServiceTest {
         ResourceInOrganizationTestHelper.createResourceInOrganization(organization, resource);
     organization.setResourceInOrganization(List.of(resourceInOrganization));
     productRequestDto =
-        getProductRequestDtoForOrganization(user, organization.getId(), user.getId(), BIG_QUANTITY);
+        getProductRequestDtoForOrganization(user, organization.getId(), user.getId(), QUANTITY);
     productWithProductRequestDto =
-        getProductRequestDtoForOrganization(user, organization.getId(), user.getId(), BIG_QUANTITY);
+        getProductRequestDtoForOrganization(user, organization.getId(), user.getId(), QUANTITY);
     productWithProductRequestDto.setProductsContent(List.of(product.getId()));
     organizationWithProduct =
         setProductAndResourcesToOrganization(
@@ -85,6 +86,7 @@ class ProductInOrganizationServiceTest {
 
     ProductsInOrganizationResponseDto products =
         productInOrganizationService.getProductsInOrganization(organizationWithProduct.getId());
+
     assertNotNull(products);
     assertEquals(1, products.getProducts().size());
   }
@@ -92,16 +94,15 @@ class ProductInOrganizationServiceTest {
   @Test
   void createProductInOrganizationSuccessfully() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-
     when(resourceInOrganizationService.findResourceInOrganizationOrThrow(
             organization, productRequestDto.getResourcesContent().get(0).getResourceId()))
         .thenReturn(resourceInOrganization);
-
     when(mapper.mapToProductsInOrganizationResponseDto(organization, new ArrayList<>()))
         .thenReturn(productsInOrganizationResponseDto);
 
     ProductsInOrganizationResponseDto productsInOrganizationResponse =
         productInOrganizationService.createProductInOrganization(productRequestDto);
+
     assertNotNull(productsInOrganizationResponse);
     assertEquals(1, productsInOrganizationResponse.getProducts().size());
   }
@@ -109,20 +110,18 @@ class ProductInOrganizationServiceTest {
   @Test
   void createProductWithProductInOrganizationSuccessfully() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-
     when(resourceInOrganizationService.findResourceInOrganizationOrThrow(
             organization,
             productWithProductRequestDto.getResourcesContent().get(0).getResourceId()))
         .thenReturn(resourceInOrganization);
-
     product.setOrganization(organization);
-
     when(mapper.mapToProductsInOrganizationResponseDto(organization, new ArrayList<>()))
         .thenReturn(productsInOrganizationResponseDto);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
 
     ProductsInOrganizationResponseDto productsInOrganizationResponse =
         productInOrganizationService.createProductInOrganization(productWithProductRequestDto);
+
     assertNotNull(productsInOrganizationResponse);
     assertEquals(1, productsInOrganizationResponse.getProducts().size());
   }
@@ -132,26 +131,27 @@ class ProductInOrganizationServiceTest {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
     product.setOrganization(organization);
     when(productService.getProduct(product.getId())).thenReturn(product);
-
     when(resourceInOrganizationService.findResourceInOrganizationOrThrow(
             organization, productRequestDto.getResourcesContent().get(0).getResourceId()))
         .thenReturn(resourceInOrganization);
-
     when(mapper.mapToProductsInOrganizationResponseDto(eq(organization), anyList()))
         .thenReturn(productsInOrganizationResponseDto);
 
     ProductsInOrganizationResponseDto productsInOrganizationResponse =
         productInOrganizationService.updateProduct(product.getId(), productRequestDto);
+
     assertNotNull(productsInOrganizationResponse);
+    assertEquals(1, productsInOrganizationResponse.getProducts().size());
   }
 
   @Test
   void deleteProductInOrganizationSuccessfully() {
-    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-    product.setOrganization(organization);
+    when(organizationService.getOrganization(organizationWithProduct.getId()))
+        .thenReturn(organizationWithProduct);
     when(productService.getProduct(product.getId())).thenReturn(product);
 
     productInOrganizationService.deleteProductInOrganization(product.getId());
+
     verify(productService, times(1)).deleteProductById(product.getId());
   }
 
