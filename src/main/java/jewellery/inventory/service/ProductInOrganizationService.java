@@ -80,6 +80,7 @@ public class ProductInOrganizationService implements EntityFetcher {
     return addProductContents(organization, productRequestDto, product);
   }
 
+  @Transactional
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_PRODUCT_DISASSEMBLY)
   public void deleteProductInOrganization(UUID productId) {
     Product product = productService.getProduct(productId);
@@ -97,6 +98,7 @@ public class ProductInOrganizationService implements EntityFetcher {
 
     productService.disassembleProductContent(product);
     product.setOrganization(null);
+    organization.getProductsOwned().remove(product);
     productService.deleteProductById(productId);
   }
 
@@ -262,7 +264,10 @@ public class ProductInOrganizationService implements EntityFetcher {
 
   private void throwExceptionIfOrganizationNotOwner(UUID organizationId, Product product) {
     if (!organizationId.equals(product.getOrganization().getId())) {
-      logger.error("Organization with ID '{}' is not the owner of product with ID '{}'.", organizationId, product.getId());
+      logger.error(
+          "Organization with ID '{}' is not the owner of product with ID '{}'.",
+          organizationId,
+          product.getId());
       throw new OrganizationNotOwnerException(organizationId, product.getId());
     }
   }
