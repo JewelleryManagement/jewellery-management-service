@@ -146,8 +146,6 @@ class ProductInOrganizationServiceTest {
 
   @Test
   void deleteProductInOrganizationSuccessfully() {
-    when(organizationService.getOrganization(organizationWithProduct.getId()))
-        .thenReturn(organizationWithProduct);
     when(productService.getProduct(product.getId())).thenReturn(product);
 
     productInOrganizationService.deleteProductInOrganization(product.getId());

@@ -18,5 +18,5 @@ public class ResourceInProduct {
 
   private BigDecimal quantity;
 
-  @ManyToOne(cascade = CascadeType.PERSIST) private Product product;
+  @ManyToOne private Product product;
 }

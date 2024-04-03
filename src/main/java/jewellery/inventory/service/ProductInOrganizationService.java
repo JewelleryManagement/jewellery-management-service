@@ -13,6 +13,7 @@ import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
+import jewellery.inventory.exception.organization.ProductIsNotPartOfOrganizationException;
 import jewellery.inventory.mapper.ProductInOrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
@@ -84,9 +85,8 @@ public class ProductInOrganizationService implements EntityFetcher {
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_PRODUCT_DISASSEMBLY)
   public void deleteProductInOrganization(UUID productId) {
     Product product = productService.getProduct(productId);
-    Organization organization =
-        organizationService.getOrganization(product.getOrganization().getId());
-    throwExceptionIfOrganizationNotOwner(organization.getId(), product);
+    validateProductIsOwnedOrganization(product);
+    Organization organization = product.getOrganization();
 
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.DISASSEMBLE_PRODUCT);
@@ -97,9 +97,13 @@ public class ProductInOrganizationService implements EntityFetcher {
     moveQuantityFromResourcesInProductToResourcesInOrganization(product);
 
     productService.disassembleProductContent(product);
-    product.setOrganization(null);
-    organization.getProductsOwned().remove(product);
     productService.deleteProductById(productId);
+  }
+
+  private void validateProductIsOwnedOrganization(Product product) {
+    if (product.getOrganization() == null) {
+      throw new ProductIsNotPartOfOrganizationException(product.getId());
+    }
   }
 
   private ProductsInOrganizationResponseDto addProductContents(
@@ -286,6 +290,8 @@ public class ProductInOrganizationService implements EntityFetcher {
               resourceInProduct.getResource(),
               resourceInProduct.getQuantity(),
               BigDecimal.ZERO);
+
+          resourceInProduct.setProduct(null);
           resourceInProductRepository.delete(resourceInProduct);
           logger.info("Resource deleted from product: {}", product);
         });
@@ -295,7 +301,7 @@ public class ProductInOrganizationService implements EntityFetcher {
   @Override
   public Object fetchEntity(Object... ids) {
     Product product = productRepository.findById((UUID) ids[0]).orElse(null);
-    if (product == null) {
+    if (product == null || product.getOrganization() == null) {
       return null;
     }
     return mapper.mapToProductsInOrganizationResponseDto(

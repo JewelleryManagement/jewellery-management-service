@@ -90,7 +90,8 @@ public class GlobalExceptionHandler {
     UserIsPartOfOrganizationException.class,
     OrphanResourcesInOrganizationException.class,
     OrphanProductsInOrganizationException.class,
-    OrganizationNotOwnerException.class
+    OrganizationNotOwnerException.class,
+    ProductIsNotPartOfOrganizationException.class
   })
   public ResponseEntity<Object> handleEntityConstraintConflict(RuntimeException ex) {
     return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), ex);
@@ -112,7 +113,7 @@ public class GlobalExceptionHandler {
     String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT_PATTERN));
     body.put(TIMESTAMP_KEY, date);
     body.put(ERROR_KEY, error);
-    logger.error("Error occurred: " + ex.getMessage(), ex);
+    logger.error("Error occurred: {} " , ex.getMessage(), ex);
     return new ResponseEntity<>(body, status);
   }
 
