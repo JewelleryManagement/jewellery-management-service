@@ -203,6 +203,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
                     HttpMethod.GET,
                     null,
                     ProductsInOrganizationResponseDto.class);
+
      assertEquals(0,organizationProductsResponse.getBody().getProducts().size());
 
   }
