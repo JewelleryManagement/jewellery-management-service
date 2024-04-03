@@ -69,7 +69,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     preciousStone = createPreciousStoneInDatabase();
     productRequestDto =
         ProductTestHelper.getProductRequestDtoForOrganization(
-                user, organization.getId(), preciousStone.getId(), RESOURCE_QUANTITY);
+            user, organization.getId(), preciousStone.getId(), RESOURCE_QUANTITY);
   }
 
   @Test
@@ -90,17 +90,14 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   void createProductInOrganizationSuccessfully() throws JsonProcessingException {
     OrganizationResponseDto organizationResponseDto = createOrganization();
     ResourceResponseDto resourceResponse = sendCreateResourceRequest();
-
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organizationResponseDto.getId(),
             resourceResponse.getId(),
             RESOURCE_QUANTITY,
             RESOURCE_PRICE);
-
     ResponseEntity<ResourcesInOrganizationResponseDto> resource =
         sendResourceToOrganization(resourceInOrganizationRequest);
-
     assertProductsInOrganizationSize(organizationResponseDto.getId().toString(), 0);
 
     ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
@@ -114,12 +111,9 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     assertNotNull(productInOrganizationResponse.getBody());
     assertEquals(1, productInOrganizationResponse.getBody().getProducts().size());
     assertEquals(HttpStatus.CREATED, productInOrganizationResponse.getStatusCode());
-
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(productInOrganizationResponse.getBody(), objectMapper);
-
     systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_CREATE, expectedEventPayload);
-
     assertProductsInOrganizationSize(organizationResponseDto.getId().toString(), 1);
   }
 
@@ -127,20 +121,16 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   void updateProductInOrganizationSuccessfully() throws JsonProcessingException {
     OrganizationResponseDto organizationResponseDto = createOrganization();
     ResourceResponseDto resourceResponse = sendCreateResourceRequest();
-
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organizationResponseDto.getId(),
             resourceResponse.getId(),
             RESOURCE_QUANTITY,
             RESOURCE_PRICE);
-
     ResponseEntity<ResourcesInOrganizationResponseDto> resource =
         sendResourceToOrganization(resourceInOrganizationRequest);
-
     ResponseEntity<ResourcesInOrganizationResponseDto> resource2 =
         sendResourceToOrganization(resourceInOrganizationRequest);
-
     ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
         createProduct(
             setOwnerAndResourceToProductRequest(
@@ -153,16 +143,14 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
         updateProduct(
             productRequestDto,
             productInOrganizationResponse.getBody().getProducts().get(0).getId().toString());
-    assertEquals(HttpStatus.OK, updatedProductInOrganizationResponse.getStatusCode());
 
+    assertEquals(HttpStatus.OK, updatedProductInOrganizationResponse.getStatusCode());
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(
             productInOrganizationResponse.getBody(),
             Objects.requireNonNull(updatedProductInOrganizationResponse.getBody()),
             objectMapper);
-
     systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_UPDATE, expectedEventPayload);
-
     assertProductsInOrganizationSize(organizationResponseDto.getId().toString(), 1);
   }
 
@@ -171,12 +159,10 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     sendResourceToOrganization(
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organization.getId(), preciousStone.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-
     ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
         createProduct(
             setOwnerAndResourceToProductRequest(
                 productRequestDto, organization.getId(), preciousStone.getId(), RESOURCE_QUANTITY));
-
     UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
 
     ResponseEntity<String> response =
@@ -187,13 +173,10 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             String.class);
 
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(productInOrganizationResponse.getBody(), objectMapper);
-
     systemEventTestHelper.assertEventWasLogged(
         ORGANIZATION_PRODUCT_DISASSEMBLY, expectedEventPayload);
-
     assertProductsInOrganizationSize(
         productInOrganizationResponse.getBody().getOrganization().getId().toString(), 0);
   }
