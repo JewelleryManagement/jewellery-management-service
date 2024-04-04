@@ -26,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class ResourceInOrganizationService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(ResourceInOrganizationService.class);
   private final ResourceInOrganizationRepository resourceInOrganizationRepository;
-  private final UserInOrganizationService userInOrganizationService;
   private final OrganizationService organizationService;
   private final ResourceService resourceService;
   private final ResourceInOrganizationMapper resourceInOrganizationMapper;
@@ -39,6 +38,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
       ResourceInOrganizationRequestDto resourceInOrganizationRequestDto) {
     Organization organization =
         organizationService.getOrganization(resourceInOrganizationRequestDto.getOrganizationId());
+
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.ADD_RESOURCE_QUANTITY);
 
@@ -103,7 +103,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
     logger.debug("ResourceInOrganization after quantity removal: {}", resourceInOrganization);
   }
 
-  private ResourceInOrganization findResourceInOrganizationOrThrow(
+  public ResourceInOrganization findResourceInOrganizationOrThrow(
       Organization previousOwner, UUID resourceId) {
     return findResourceInOrganization(previousOwner, resourceId)
         .orElseThrow(
@@ -150,7 +150,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
             () -> createAndAddNewResourceInOrganization(organization, resource, BigDecimal.ZERO));
   }
 
-  private ResourceInOrganization addResourceToOrganization(
+  public ResourceInOrganization addResourceToOrganization(
       Organization organization, Resource resource, BigDecimal quantity, BigDecimal dealPrice) {
     logger.info(
         "Adding resource to organization. Organization: {}, Resource: {}, Quantity: {}",

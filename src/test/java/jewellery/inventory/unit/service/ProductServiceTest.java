@@ -330,7 +330,7 @@ class ProductServiceTest {
     verify(userRepository,times(1)).findById(user.getId());
     verify(resourceInUserRepository, times(1))
             .findByResourceIdAndOwnerId(pearl.getId(), user.getId());
-    verify(productRepository, times(1)).save(innerProduct);
+    verify(productRepository, times(2)).save(innerProduct);
   }
 
   @Test

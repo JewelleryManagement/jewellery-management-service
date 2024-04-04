@@ -86,6 +86,10 @@ public class ProductService implements EntityFetcher {
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
+  public List<ProductResponseDto> getProductsResponse(List<Product> products) {
+    return products.stream().map(productMapper::mapToProductResponseDto).toList();
+  }
+
   public List<ProductResponseDto> getByOwner(UUID ownerId) {
     List<Product> products = productRepository.findAllByOwnerId(ownerId);
     logger.info("Get product by owner with ID: {}", ownerId);
@@ -100,6 +104,10 @@ public class ProductService implements EntityFetcher {
   public ProductResponseDto getProductResponse(UUID id) {
     logger.info("Get productResponse by ID: {}", id);
     return productMapper.mapToProductResponseDto(getProduct(id));
+  }
+
+  public Product saveProduct(Product product) {
+    return productRepository.save(product);
   }
 
   public void updateProductOwnerAndSale(Product product, User newOwner, Sale sale) {
@@ -153,6 +161,9 @@ public class ProductService implements EntityFetcher {
     productRepository.deleteById(id);
     logger.info("Deleted product by ID: {}", id);
   }
+  public void deleteProductById(UUID productId){
+    productRepository.deleteById(productId);
+  }
 
   @LogUpdateEvent(eventType = EventType.PRODUCT_TRANSFER)
   public ProductResponseDto transferProduct(UUID productId, UUID recipientId) {
@@ -170,7 +181,7 @@ public class ProductService implements EntityFetcher {
     }
   }
 
-  private void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
+  public void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
     if (product.getContentOf() != null) {
       throw new ProductIsContentException(id);
     }
@@ -182,13 +193,13 @@ public class ProductService implements EntityFetcher {
     }
   }
 
-  private void throwExceptionIfProductIsSold(Product product) {
+  public void throwExceptionIfProductIsSold(Product product) {
     if (product.getPartOfSale() != null) {
       throw new ProductIsSoldException(product.getId());
     }
   }
 
-  private void disassembleProductContent(Product product) {
+  public void disassembleProductContent(Product product) {
     if (product.getProductsContent() != null) {
       logger.debug("Disassembling product content for product with ID: {}", product.getId());
 
@@ -280,7 +291,7 @@ public class ProductService implements EntityFetcher {
     return products;
   }
 
-  private void throwExceptionIfProductIsPartOfItself(Product product, UUID parentId) {
+  public void throwExceptionIfProductIsPartOfItself(Product product, UUID parentId) {
     if (product.getId().equals(parentId)) {
       throw new ProductPartOfItselfException();
     }
@@ -321,7 +332,7 @@ public class ProductService implements EntityFetcher {
     product.setResourcesContent(new ArrayList<>());
   }
 
-  private List<User> getAuthors(ProductRequestDto productRequestDto) {
+  public List<User> getAuthors(ProductRequestDto productRequestDto) {
     logger.debug("Getting authors for product.");
     List<UUID> authorsIds = productRequestDto.getAuthors();
     List<User> authors = new ArrayList<>();
@@ -383,7 +394,8 @@ public class ProductService implements EntityFetcher {
         owner.getId(),
         product.getId());
 
-    ResourceInUser resourceInUser = getResourceInUser(owner, incomingResourceInProduct.getResourceId());
+    ResourceInUser resourceInUser =
+        getResourceInUser(owner, incomingResourceInProduct.getResourceId());
     resourceInUserService.removeQuantityFromResourceNoLog(
         owner.getId(),
         resourceInUser.getResource().getId(),
