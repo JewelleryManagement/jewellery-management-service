@@ -6,12 +6,18 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
+import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
+import jewellery.inventory.dto.request.TransferResourceRequestDto;
+import jewellery.inventory.dto.response.OrganizationTransferResourceResponseDto;
+import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInOrganizationNotFoundException;
+import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.mapper.ResourceInOrganizationMapper;
+import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceInOrganizationRepository;
@@ -29,8 +35,44 @@ public class ResourceInOrganizationService implements EntityFetcher {
   private final OrganizationService organizationService;
   private final ResourceService resourceService;
   private final ResourceInOrganizationMapper resourceInOrganizationMapper;
-
+  private final OrganizationMapper organizationMapper;
+  private final ResourceMapper resourceMapper;
   private static final BigDecimal EPSILON = new BigDecimal("1e-10");
+@Transactional
+@LogCreateEvent(eventType = EventType.ORGANIZATION_RESOURCE_TRANSFER)
+  public OrganizationTransferResourceResponseDto transferResource(
+      TransferResourceRequestDto transferResourceRequestDto) {
+    Organization previousOwner =
+        organizationService.getOrganization(transferResourceRequestDto.getPreviousOwnerId());
+
+    organizationService.validateCurrentUserPermission(
+        previousOwner, OrganizationPermission.TRANSFER_RESOURCE);
+
+    Organization newOwner =
+        organizationService.getOrganization(transferResourceRequestDto.getNewOwnerId());
+
+    ResourceInOrganization resourceInPreviousOwner =
+        findResourceInOrganizationOrThrow(
+            previousOwner, transferResourceRequestDto.getTransferredResourceId());
+
+    removeQuantityFromResource(resourceInPreviousOwner, transferResourceRequestDto.getQuantity());
+
+    addResourceToOrganization(
+        newOwner,
+        resourceInPreviousOwner.getResource(),
+        transferResourceRequestDto.getQuantity(),
+        BigDecimal.ZERO);
+
+    OrganizationTransferResourceResponseDto transferResourceResponseDto =
+        getOrganizationTransferResourceResponseDto(
+            previousOwner,
+            newOwner,
+            resourceInPreviousOwner.getResource(),
+            transferResourceRequestDto.getQuantity());
+    logger.info("Transfer completed successfully {}", transferResourceResponseDto);
+
+    return transferResourceResponseDto;
+  }
 
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_ADD_RESOURCE_QUANTITY)
   @Transactional
@@ -108,6 +150,25 @@ public class ResourceInOrganizationService implements EntityFetcher {
     return findResourceInOrganization(previousOwner, resourceId)
         .orElseThrow(
             () -> new ResourceInOrganizationNotFoundException(resourceId, previousOwner.getId()));
+  }
+
+
+  private OrganizationTransferResourceResponseDto getOrganizationTransferResourceResponseDto(
+          Organization previousOwner, Organization newOwner, Resource resource, BigDecimal quantity) {
+
+    OrganizationTransferResourceResponseDto responseDto =
+            OrganizationTransferResourceResponseDto.builder()
+                    .previousOwner(organizationMapper.toResponse(previousOwner))
+                    .newOwner(organizationMapper.toResponse(newOwner))
+                    .transferredResource(
+                            ResourceQuantityResponseDto.builder()
+                                    .resource(resourceMapper.toResourceResponse(resource))
+                                    .quantity(quantity)
+                                    .build())
+                    .build();
+
+    logger.info("TransferResourceResponseDto created: {}", responseDto);
+    return responseDto;
   }
 
   private boolean isApproachingZero(BigDecimal value) {
