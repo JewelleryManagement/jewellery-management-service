@@ -12,8 +12,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.UUID;
-
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.message.StatusLine;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;

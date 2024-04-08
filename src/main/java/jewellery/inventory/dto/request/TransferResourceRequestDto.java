@@ -17,5 +17,6 @@ public class TransferResourceRequestDto {
   @NotNull private UUID previousOwnerId;
   @NotNull private UUID newOwnerId;
   @NotNull private UUID transferredResourceId;
+
   @Positive private BigDecimal quantity;
 }
