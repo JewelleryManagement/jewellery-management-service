@@ -2,8 +2,6 @@ package jewellery.inventory.helper;
 
 import java.math.BigDecimal;
 import java.util.UUID;
-
-import jakarta.validation.constraints.NotNull;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.model.Organization;

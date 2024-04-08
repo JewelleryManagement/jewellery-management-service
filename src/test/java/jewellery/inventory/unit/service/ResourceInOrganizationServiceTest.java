@@ -73,7 +73,10 @@ class ResourceInOrganizationServiceTest {
     secondOrganization.setResourceInOrganization(List.of(resourceInOrganization));
     transferResourceRequestDto =
         ResourceInOrganizationTestHelper.createTransferResourceRequestDto(
-            organization.getId(), secondOrganization.getId(), resource.getId(), BigDecimal.valueOf(200));
+            organization.getId(),
+            secondOrganization.getId(),
+            resource.getId(),
+            BigDecimal.valueOf(200));
   }
 
   @Test
@@ -256,21 +259,21 @@ class ResourceInOrganizationServiceTest {
 
   @Test
   void
-  testTransferResourceShouldThrowInsufficientResourceQuantityExceptionWhenQuantityToRemoveIsMoreThenOwned() {
+      testTransferResourceShouldThrowInsufficientResourceQuantityExceptionWhenQuantityToRemoveIsMoreThanOwned() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
     when(organizationService.getOrganization(secondOrganization.getId()))
-            .thenReturn(secondOrganization);
+        .thenReturn(secondOrganization);
 
     Assertions.assertThrows(
-            InsufficientResourceQuantityException.class,
-            () -> resourceInOrganizationService.transferResource(transferResourceRequestDto));
+        InsufficientResourceQuantityException.class,
+        () -> resourceInOrganizationService.transferResource(transferResourceRequestDto));
   }
 
   @Test
-  void testTransferResourceSuccessfully(){
+  void testTransferResourceSuccessfully() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
     when(organizationService.getOrganization(secondOrganization.getId()))
-            .thenReturn(secondOrganization);
+        .thenReturn(secondOrganization);
 
     transferResourceRequestDto.setQuantity(BigDecimal.valueOf(20));
 
