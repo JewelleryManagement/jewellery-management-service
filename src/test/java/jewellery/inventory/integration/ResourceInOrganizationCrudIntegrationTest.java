@@ -1,6 +1,7 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ResourceTestHelper.getPearlRequestDto;
+import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.model.EventType.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
@@ -13,18 +14,17 @@ import java.util.Map;
 import java.util.UUID;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
+import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
+import jewellery.inventory.dto.response.OrganizationTransferResourceResponseDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.OrganizationTestHelper;
 import jewellery.inventory.helper.ResourceInOrganizationTestHelper;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 
 class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
@@ -49,10 +49,71 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   }
 
   @Test
+  void transferResourceToOrganizationSuccessfully() throws JsonProcessingException {
+    OrganizationResponseDto previousOrganizationResponseDto = createOrganization();
+    OrganizationResponseDto newOwnerOrganizationResponseDto = createOrganization();
+    ResourceResponseDto resourceResponse = createResourceResponse();
+    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            previousOrganizationResponseDto.getId(),
+            resourceResponse.getId(),
+            RESOURCE_QUANTITY,
+            RESOURCE_PRICE);
+    ResponseEntity<ResourcesInOrganizationResponseDto> resourceInOrganizationResponse =
+        sendResourceToOrganization(resourceInOrganizationRequest);
+    assertEquals(HttpStatus.CREATED, resourceInOrganizationResponse.getStatusCode());
+    TransferResourceRequestDto transferResourceRequestDto =
+        ResourceInOrganizationTestHelper.createTransferResourceRequestDto(
+            previousOrganizationResponseDto.getId(),
+            newOwnerOrganizationResponseDto.getId(),
+            resourceResponse.getId(),
+            BigDecimal.ONE);
+
+    ResponseEntity<OrganizationTransferResourceResponseDto> result =
+        sendTransferResourceToOrganization(transferResourceRequestDto);
+
+    assertNotNull(result);
+    assertEquals(HttpStatus.OK, result.getStatusCode());
+    assertEquals(BigDecimal.ONE, result.getBody().getTransferredResource().getQuantity());
+    assertEquals(
+        result.getBody().getTransferredResource().getResource().getId(), resourceResponse.getId());
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(result.getBody(), objectMapper);
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_RESOURCE_TRANSFER, expectedEventPayload);
+  }
+
+  @Test
+  void transferResourceToOrganizationWillThrowInsufficientResourceQuantityException() {
+    OrganizationResponseDto previousOrganizationResponseDto = createOrganization();
+    OrganizationResponseDto newOwnerOrganizationResponseDto = createOrganization();
+    ResourceResponseDto resourceResponse = createResourceResponse();
+    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            previousOrganizationResponseDto.getId(),
+            resourceResponse.getId(),
+            RESOURCE_QUANTITY,
+            RESOURCE_PRICE);
+    ResponseEntity<ResourcesInOrganizationResponseDto> resourceInOrganizationResponse =
+        sendResourceToOrganization(resourceInOrganizationRequest);
+    assertEquals(HttpStatus.CREATED, resourceInOrganizationResponse.getStatusCode());
+    TransferResourceRequestDto transferResourceRequestDto =
+        ResourceInOrganizationTestHelper.createTransferResourceRequestDto(
+            previousOrganizationResponseDto.getId(),
+            newOwnerOrganizationResponseDto.getId(),
+            resourceResponse.getId(),
+            BigDecimal.valueOf(1000));
+
+    ResponseEntity<OrganizationTransferResourceResponseDto> result =
+        sendTransferResourceToOrganization(transferResourceRequestDto);
+
+    assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+  }
+
+  @Test
   void addResourceToOrganizationSuccessfully() throws JsonProcessingException {
     OrganizationResponseDto organizationResponseDto = createOrganization();
     ResourceResponseDto resourceResponse = createResourceResponse();
-
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organizationResponseDto.getId(),
@@ -62,10 +123,9 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
 
     ResponseEntity<ResourcesInOrganizationResponseDto> response =
         sendResourceToOrganization(resourceInOrganizationRequest);
-
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
-
     ResourcesInOrganizationResponseDto result = response.getBody();
+
     assertNotNull(result);
     assertEquals(1, result.getResourcesAndQuantities().size());
     assertEquals(organizationResponseDto.getId(), result.getOwner().getId());
@@ -75,7 +135,6 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
         resourceInOrganizationRequest.getQuantity(),
         result.getResourcesAndQuantities().get(0).getQuantity());
     assertEquals(resourceInOrganizationRequest.getDealPrice(), result.getDealPrice());
-
     Map<String, Object> expectedEventPayload = getUpdateEventPayload(null, result, objectMapper);
     systemEventTestHelper.assertEventWasLogged(
         ORGANIZATION_ADD_RESOURCE_QUANTITY, expectedEventPayload);
@@ -83,9 +142,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
 
   @Test
   void addResourceToOrganizationShouldThrowWhenOrganizationNotFound() {
-
     ResourceResponseDto resourceResponse = createResourceResponse();
-
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             UUID.randomUUID(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
@@ -99,7 +156,6 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   @Test
   void addResourceToOrganizationShouldThrowWhenResourceNotFound() {
     OrganizationResponseDto organizationResponseDto = createOrganization();
-
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organizationResponseDto.getId(), UUID.randomUUID(), RESOURCE_QUANTITY, RESOURCE_PRICE);
@@ -114,7 +170,6 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   void addResourceToOrganizationShouldThrowWhenQuantityInvalid() {
     OrganizationResponseDto organizationResponseDto = createOrganization();
     ResourceResponseDto resourceResponse = createResourceResponse();
-
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organizationResponseDto.getId(),
@@ -133,7 +188,6 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
     OrganizationResponseDto organizationResponseDto = createOrganization();
     ResourceResponseDto resourceResponse = createResourceResponse();
     ResourceResponseDto otherResource = createResourceResponse();
-
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organizationResponseDto.getId(),
@@ -141,7 +195,6 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
             RESOURCE_QUANTITY,
             RESOURCE_PRICE);
     sendResourceToOrganization(request);
-
     ResourceInOrganizationRequestDto otherRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organizationResponseDto.getId(),
@@ -162,7 +215,6 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   void removeResourceQuantityFromOrganizationSuccessfully() throws JsonProcessingException {
     OrganizationResponseDto organizationResponseDto = createOrganization();
     ResourceResponseDto resourceResponse = createResourceResponse();
-
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organizationResponseDto.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, null);
@@ -175,7 +227,6 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
     assertEquals(
         RESOURCE_QUANTITY.subtract(RESOURCE_QUANTITY_TO_REMOVE),
         deletedQuantityResponse.getBody().getResourcesAndQuantities().get(0).getQuantity());
-
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(response.getBody(), deletedQuantityResponse.getBody(), objectMapper);
     systemEventTestHelper.assertEventWasLogged(
@@ -186,14 +237,12 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   void removeResourceFromDatabaseWhenResourceQuantityIsZero() {
     OrganizationResponseDto organizationResponseDto = createOrganization();
     ResourceResponseDto resourceResponse = createResourceResponse();
-
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organizationResponseDto.getId(),
             resourceResponse.getId(),
             RESOURCE_QUANTITY_TO_REMOVE,
             RESOURCE_PRICE);
-
     sendResourceToOrganization(request);
     ResponseEntity<ResourcesInOrganizationResponseDto> resourceResponseBeforeDeletingQuantity =
         getAllResourcesByOrganizationId(organizationResponseDto);
@@ -264,8 +313,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
 
     String removeResourceURL =
         buildUrl(
-            "organizations",
-            "resources-availability",
+            getBaseResourceAvailabilityUrl(),
             organizationResponseDto.getId().toString(),
             resourceResponse.getId().toString(),
             "-1");
@@ -287,8 +335,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   private String getDeleteResourceUrl(
       OrganizationResponseDto organizationResponseDto, ResourceResponseDto resourceResponse) {
     return buildUrl(
-        "organizations",
-        "resources-availability",
+        getBaseResourceAvailabilityUrl(),
         organizationResponseDto.getId().toString(),
         resourceResponse.getId().toString(),
         RESOURCE_QUANTITY_TO_REMOVE.toString());
@@ -335,5 +382,13 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
         getBaseResourceAvailabilityUrl(),
         resourceInOrganizationRequest,
         ResourcesInOrganizationResponseDto.class);
+  }
+
+  private ResponseEntity<OrganizationTransferResourceResponseDto>
+      sendTransferResourceToOrganization(TransferResourceRequestDto transferResourceRequestDto) {
+    return this.testRestTemplate.postForEntity(
+        getBaseResourceAvailabilityUrl() + "/transfer",
+        transferResourceRequestDto,
+        OrganizationTransferResourceResponseDto.class);
   }
 }

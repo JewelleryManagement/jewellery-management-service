@@ -3,6 +3,7 @@ package jewellery.inventory.helper;
 import java.math.BigDecimal;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
+import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.ResourceInOrganization;
 import jewellery.inventory.model.resource.Resource;
@@ -17,6 +18,16 @@ public class ResourceInOrganizationTestHelper {
         .quantity(quantity)
         .dealPrice(dealPrice)
         .build();
+  }
+
+  public static TransferResourceRequestDto createTransferResourceRequestDto(
+      UUID previousOwnerId, UUID newOwnerId, UUID resourceId, BigDecimal quantity) {
+    TransferResourceRequestDto transferResourceRequestDto = new TransferResourceRequestDto();
+    transferResourceRequestDto.setPreviousOwnerId(previousOwnerId);
+    transferResourceRequestDto.setNewOwnerId(newOwnerId);
+    transferResourceRequestDto.setTransferredResourceId(resourceId);
+    transferResourceRequestDto.setQuantity(quantity);
+    return transferResourceRequestDto;
   }
 
   public static ResourceInOrganization createResourceInOrganization(
