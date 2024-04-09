@@ -20,6 +20,7 @@ import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.*;
+import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.PreciousStone;
 import org.jetbrains.annotations.Nullable;
@@ -179,6 +180,42 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
         ORGANIZATION_PRODUCT_DISASSEMBLY, expectedEventPayload);
     assertProductsInOrganizationSize(
         productInOrganizationResponse.getBody().getOrganization().getId().toString(), 0);
+  }
+
+  @Test
+  void transferProductSuccessfully() throws JsonProcessingException {
+    sendResourceToOrganization(
+            ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+                    organization.getId(), preciousStone.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
+    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+            createProduct(
+                    setOwnerAndResourceToProductRequest(
+                            productRequestDto, organization.getId(), preciousStone.getId(), RESOURCE_QUANTITY));
+    UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
+
+
+    OrganizationResponseDto createSecondOrganization = createOrganization();
+    UUID organizationId = createSecondOrganization.getId();
+
+    ResponseEntity<ProductsInOrganizationResponseDto> transferResponse =
+            this.testRestTemplate.exchange(
+                    "/organizations/products/" +
+                            productId +
+                            "/transfer/" +
+                            organizationId,
+                    HttpMethod.PUT,
+                    null,
+                    ProductsInOrganizationResponseDto.class
+            );
+
+    assertEquals(HttpStatus.OK, transferResponse.getStatusCode());
+    Map<String, Object> expectedEventPayload =
+            getUpdateEventPayload(
+                    productInOrganizationResponse.getBody(),
+                    Objects.requireNonNull(transferResponse.getBody()),
+                    objectMapper);
+    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_TRANSFER, expectedEventPayload);
+
   }
 
   private void assertProductsInOrganizationSize(String organizationId, int assertSize) {

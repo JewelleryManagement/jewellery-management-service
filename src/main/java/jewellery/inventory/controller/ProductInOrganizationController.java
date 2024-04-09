@@ -35,8 +35,7 @@ public class ProductInOrganizationController {
   @Operation(summary = "Delete a new product in organization")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/products/{productId}")
-  public void deleteProductInOrganization(
-          @PathVariable("productId") UUID productId) {
+  public void deleteProductInOrganization(@PathVariable("productId") UUID productId) {
     productInOrganizationService.deleteProductInOrganization(productId);
   }
 
@@ -47,5 +46,13 @@ public class ProductInOrganizationController {
       @PathVariable("productId") UUID productId,
       @Valid @RequestBody ProductRequestDto productRequestDto) {
     return productInOrganizationService.updateProduct(productId, productRequestDto);
+  }
+
+  @Operation(summary = "Transfer a product to other organization")
+  @ResponseStatus(HttpStatus.OK)
+  @PutMapping("/products/{productId}/transfer/{recipientId}")
+  public ProductsInOrganizationResponseDto transferProduct(
+      @PathVariable("productId") UUID productId, @PathVariable("recipientId") UUID recipientId) {
+    return productInOrganizationService.transferProduct(productId, recipientId);
   }
 }

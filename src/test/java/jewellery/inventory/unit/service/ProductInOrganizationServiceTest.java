@@ -14,12 +14,14 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
+import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
+import jewellery.inventory.exception.not_found.ProductNotFoundException;
+import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
+import jewellery.inventory.exception.product.ProductIsContentException;
+import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.helper.*;
 import jewellery.inventory.mapper.ProductInOrganizationMapper;
-import jewellery.inventory.model.Organization;
-import jewellery.inventory.model.Product;
-import jewellery.inventory.model.ResourceInOrganization;
-import jewellery.inventory.model.User;
+import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ProductRepository;
 import jewellery.inventory.repository.ResourceInProductRepository;
@@ -75,6 +77,68 @@ class ProductInOrganizationServiceTest {
         new ProductsInOrganizationResponseDto(
             getTestOrganizationResponseDto(OrganizationTestHelper.getTestOrganization()),
             List.of(productToResponse(product)));
+  }
+
+  @Test
+  void transferProductShouldThrowWhenProductNotFound() {
+    when(productService.getProduct(any())).thenThrow(ProductNotFoundException.class);
+
+    assertThrows(ProductNotFoundException.class, () ->
+            productInOrganizationService.transferProduct(product.getId(), organizationWithProduct.getId()));
+  }
+
+  @Test
+  void transferProductShouldThrowWhenOrganizationNotFound() {
+    when(organizationService.getOrganization(any())).thenThrow(OrganizationNotFoundException.class);
+
+    assertThrows(
+            OrganizationNotFoundException.class, () ->
+                    productInOrganizationService.transferProduct(
+                            product.getId(), organizationWithProduct.getId()));
+  }
+
+  @Test
+  void transferProductShouldThrowWhenProductIsSold() {
+    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(organizationService.getOrganization(organizationWithProduct.getId()))
+        .thenReturn(organizationWithProduct);
+    when(productInOrganizationService.transferProduct(
+            product.getId(), organizationWithProduct.getId()))
+        .thenThrow(ProductIsSoldException.class);
+
+    assertThrows(
+        ProductIsSoldException.class,
+        () ->
+            productInOrganizationService.transferProduct(
+                product.getId(), organizationWithProduct.getId()));
+  }
+
+  @Test
+  void transferProductShouldThrowWhenProductIsPartOfOtherProduct() {
+    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(organizationService.getOrganization(organizationWithProduct.getId()))
+        .thenReturn(organizationWithProduct);
+    when(productInOrganizationService.transferProduct(
+            product.getId(), organizationWithProduct.getId()))
+        .thenThrow(ProductIsContentException.class);
+
+    assertThrows(
+        ProductIsContentException.class,
+        () ->
+            productInOrganizationService.transferProduct(
+                product.getId(), organizationWithProduct.getId()));
+  }
+
+  @Test
+  void transferProductShouldThrowWhenNoPermission() {
+    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(organizationService.getOrganization(organizationWithProduct.getId()))
+            .thenReturn(organizationWithProduct);
+    when(productInOrganizationService.transferProduct(product.getId(), organizationWithProduct.getId()))
+            .thenThrow(MissingOrganizationPermissionException.class);
+
+    assertThrows(MissingOrganizationPermissionException.class, () ->
+            productInOrganizationService.transferProduct(product.getId(), organizationWithProduct.getId()));
   }
 
   @Test
