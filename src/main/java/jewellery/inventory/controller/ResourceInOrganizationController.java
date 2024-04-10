@@ -6,6 +6,8 @@ import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
+import jewellery.inventory.dto.request.TransferResourceRequestDto;
+import jewellery.inventory.dto.response.OrganizationTransferResourceResponseDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.service.ResourceInOrganizationService;
 import lombok.RequiredArgsConstructor;
@@ -47,8 +49,16 @@ public class ResourceInOrganizationController {
   @Operation(summary = "Get resources by organizationId")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{organizationId}")
-  public ResourcesInOrganizationResponseDto getAllResourcesFromUser(
+  public ResourcesInOrganizationResponseDto getAllResourcesFromOrganization(
       @PathVariable UUID organizationId) {
     return resourceInOrganizationService.getAllResourcesFromOrganization(organizationId);
+  }
+
+  @Operation(summary = "Transfer resource from organization to another organization")
+  @ResponseStatus(HttpStatus.OK)
+  @PostMapping("/transfer")
+  public OrganizationTransferResourceResponseDto transferResources(
+          @RequestBody @Valid TransferResourceRequestDto transferResourceRequestDto) {
+    return resourceInOrganizationService.transferResource(transferResourceRequestDto);
   }
 }
