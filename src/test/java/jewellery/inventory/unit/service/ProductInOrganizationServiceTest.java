@@ -10,7 +10,6 @@ import static org.mockito.Mockito.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
@@ -24,7 +23,6 @@ import jewellery.inventory.mapper.ProductInOrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ProductRepository;
-import jewellery.inventory.repository.ResourceInProductRepository;
 import jewellery.inventory.service.OrganizationService;
 import jewellery.inventory.service.ProductInOrganizationService;
 import jewellery.inventory.service.ProductService;
@@ -45,9 +43,7 @@ class ProductInOrganizationServiceTest {
   @Mock private ProductRepository productRepository;
   @Mock private ProductInOrganizationMapper mapper;
   @Mock private ResourceInOrganizationService resourceInOrganizationService;
-  @Mock private ResourceInProductRepository resourceInProductRepository;
   private static final BigDecimal QUANTITY = BigDecimal.valueOf(30);
-
   private Organization organization;
   private Organization organizationWithProduct;
   private ResourceInOrganization resourceInOrganization;
@@ -58,7 +54,6 @@ class ProductInOrganizationServiceTest {
 
   @BeforeEach
   void setUp() {
-
     User user = UserTestHelper.createSecondTestUser();
     organization = OrganizationTestHelper.getTestOrganization();
     Resource resource = ResourceTestHelper.getPearl();
@@ -235,35 +230,36 @@ class ProductInOrganizationServiceTest {
     when(productService.getProduct(product.getId())).thenReturn(product);
 
     doThrow(MissingOrganizationPermissionException.class)
-            .when(organizationService)
-            .validateCurrentUserPermission(organizationWithProduct, OrganizationPermission.DISASSEMBLE_PRODUCT);
+        .when(organizationService)
+        .validateCurrentUserPermission(
+            organizationWithProduct, OrganizationPermission.DISASSEMBLE_PRODUCT);
 
     Assertions.assertThrows(
-            MissingOrganizationPermissionException.class,
-            () -> productInOrganizationService.deleteProductInOrganization(product.getId()));
+        MissingOrganizationPermissionException.class,
+        () -> productInOrganizationService.deleteProductInOrganization(product.getId()));
   }
+
   @Test
   void deleteProductInOrganizationThrowProductIsNotPartOfOrganizationException() {
     when(productService.getProduct(product.getId())).thenReturn(product);
     product.setOrganization(null);
 
     Assertions.assertThrows(
-            ProductIsNotPartOfOrganizationException.class,
-            () -> productInOrganizationService.deleteProductInOrganization(product.getId()));
+        ProductIsNotPartOfOrganizationException.class,
+        () -> productInOrganizationService.deleteProductInOrganization(product.getId()));
   }
+
   @Test
   void deleteProductInOrganizationThrowProductIsContentException() {
     when(productService.getProduct(product.getId())).thenReturn(product);
     doThrow(ProductIsContentException.class)
-            .when(productService)
-            .throwExceptionIfProductIsPartOfAnotherProduct(product.getId(),product);
-
+        .when(productService)
+        .throwExceptionIfProductIsPartOfAnotherProduct(product.getId(), product);
 
     Assertions.assertThrows(
-            ProductIsContentException.class,
-            () -> productInOrganizationService.deleteProductInOrganization(product.getId()));
+        ProductIsContentException.class,
+        () -> productInOrganizationService.deleteProductInOrganization(product.getId()));
   }
-
 
   private ProductResponseDto productToResponse(Product product) {
     ProductResponseDto productResponseDto = new ProductResponseDto();
