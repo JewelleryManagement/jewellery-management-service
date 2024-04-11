@@ -1,9 +1,9 @@
 package jewellery.inventory.dto.request;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
-
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -17,5 +17,8 @@ public class PurchasedResourceQuantityRequestDto {
 
   @NotNull private ResourceQuantityRequestDto resourceAndQuantity;
 
-  @Positive private BigDecimal discount;
+  @NotNull
+  @DecimalMin(value = "0")
+  @DecimalMax(value = "100")
+  private BigDecimal discount;
 }
