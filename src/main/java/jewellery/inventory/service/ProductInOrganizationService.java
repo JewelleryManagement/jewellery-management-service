@@ -49,9 +49,9 @@ public class ProductInOrganizationService implements EntityFetcher {
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_PRODUCT_TRANSFER)
   public ProductsInOrganizationResponseDto transferProduct(UUID productId, UUID recipientId) {
     Product product = productService.getProduct(productId);
+    throwExceptionIfProductOrganizationEqualsRecipient(recipientId, product);
     productService.throwExceptionIfProductIsSold(product);
     productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
-    throwExceptionIfProductOrganizationEqualsRecipient(recipientId, product);
 
     Organization recipient = organizationService.getOrganization(recipientId);
 
@@ -335,7 +335,7 @@ public class ProductInOrganizationService implements EntityFetcher {
   }
 
   private static void throwExceptionIfProductOrganizationEqualsRecipient(UUID recipientId, Product product) {
-    if (product.getOrganization().getId().equals(recipientId)) {
+    if ((product.getOrganization() != null) && product.getOrganization().getId().equals(recipientId)) {
       throw new ProductOwnerEqualsRecipientException(product.getOrganization().getId());
     }
   }

@@ -104,61 +104,65 @@ class ProductInOrganizationServiceTest {
 
   @Test
   void transferProductShouldThrowWhenOrganizationNotFound() {
-    when(organizationService.getOrganization(any())).thenThrow(OrganizationNotFoundException.class);
+    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(organizationService.getOrganization(organization.getId()))
+        .thenThrow(OrganizationNotFoundException.class);
 
     assertThrows(
         OrganizationNotFoundException.class,
-        () ->
-            productInOrganizationService.transferProduct(
-                product.getId(), organizationWithProduct.getId()));
+        () -> productInOrganizationService.transferProduct(product.getId(), organization.getId()));
   }
 
   @Test
   void transferProductShouldThrowWhenProductIsSold() {
+    product.setPartOfSale(new ProductPriceDiscount());
     when(productService.getProduct(product.getId())).thenReturn(product);
-    when(organizationService.getOrganization(organizationWithProduct.getId()))
-        .thenReturn(organizationWithProduct);
+    when(organizationService.getOrganization(organization.getId()))
+            .thenReturn(organization);
     when(productInOrganizationService.transferProduct(
-            product.getId(), organizationWithProduct.getId()))
-        .thenThrow(ProductIsSoldException.class);
+            product.getId(), organization.getId()))
+            .thenThrow(ProductIsSoldException.class);
+    product.setOrganization(null);
 
     assertThrows(
-        ProductIsSoldException.class,
-        () ->
-            productInOrganizationService.transferProduct(
-                product.getId(), organizationWithProduct.getId()));
+            ProductIsSoldException.class,
+            () ->
+                    productInOrganizationService.transferProduct(
+                            product.getId(), organization.getId()));
   }
 
   @Test
   void transferProductShouldThrowWhenProductIsPartOfOtherProduct() {
     when(productService.getProduct(product.getId())).thenReturn(product);
-    when(organizationService.getOrganization(organizationWithProduct.getId()))
-        .thenReturn(organizationWithProduct);
+    when(organizationService.getOrganization(organization.getId()))
+        .thenReturn(organization);
     when(productInOrganizationService.transferProduct(
-            product.getId(), organizationWithProduct.getId()))
+            product.getId(), organization.getId()))
         .thenThrow(ProductIsContentException.class);
+    product.setOrganization(null);
 
     assertThrows(
         ProductIsContentException.class,
         () ->
             productInOrganizationService.transferProduct(
-                product.getId(), organizationWithProduct.getId()));
+                product.getId(), organization.getId()));
   }
 
   @Test
   void transferProductShouldThrowWhenNoPermission() {
     when(productService.getProduct(product.getId())).thenReturn(product);
-    when(organizationService.getOrganization(organizationWithProduct.getId()))
-        .thenReturn(organizationWithProduct);
+    when(organizationService.getOrganization(organization.getId()))
+        .thenReturn(organization);
     when(productInOrganizationService.transferProduct(
-            product.getId(), organizationWithProduct.getId()))
+            product.getId(), organization.getId()))
         .thenThrow(MissingOrganizationPermissionException.class);
+    product.setOrganization(null);
 
     assertThrows(
         MissingOrganizationPermissionException.class,
         () ->
             productInOrganizationService.transferProduct(
-                product.getId(), organizationWithProduct.getId()));
+                product.getId(), organization.getId()));
   }
 
   @Test
