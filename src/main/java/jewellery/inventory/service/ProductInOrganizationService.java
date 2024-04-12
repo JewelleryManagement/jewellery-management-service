@@ -49,6 +49,7 @@ public class ProductInOrganizationService implements EntityFetcher {
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_PRODUCT_TRANSFER)
   public ProductsInOrganizationResponseDto transferProduct(UUID productId, UUID recipientId) {
     Product product = productService.getProduct(productId);
+    throwExceptionIfProductIsNotPartOfOrganization(product);
     throwExceptionIfProductOrganizationEqualsRecipient(recipientId, product);
     productService.throwExceptionIfProductIsSold(product);
     productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
@@ -107,7 +108,7 @@ public class ProductInOrganizationService implements EntityFetcher {
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_PRODUCT_DISASSEMBLY)
   public void deleteProductInOrganization(UUID productId) {
     Product product = productService.getProduct(productId);
-    validateProductIsOwnedOrganization(product);
+    throwExceptionIfProductIsNotPartOfOrganization(product);
     Organization organization = product.getOrganization();
 
     organizationService.validateCurrentUserPermission(
@@ -122,7 +123,7 @@ public class ProductInOrganizationService implements EntityFetcher {
     productService.deleteProductById(productId);
   }
 
-  private void validateProductIsOwnedOrganization(Product product) {
+  private static void throwExceptionIfProductIsNotPartOfOrganization(Product product) {
     if (product.getOrganization() == null) {
       throw new ProductIsNotPartOfOrganizationException(product.getId());
     }
@@ -335,7 +336,7 @@ public class ProductInOrganizationService implements EntityFetcher {
   }
 
   private static void throwExceptionIfProductOrganizationEqualsRecipient(UUID recipientId, Product product) {
-    if ((product.getOrganization() != null) && product.getOrganization().getId().equals(recipientId)) {
+    if (product.getOrganization().getId().equals(recipientId)) {
       throw new ProductOwnerEqualsRecipientException(product.getOrganization().getId());
     }
   }
