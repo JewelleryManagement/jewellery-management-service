@@ -192,8 +192,6 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
                     setOwnerAndResourceToProductRequest(
                             productRequestDto, organization.getId(), preciousStone.getId(), RESOURCE_QUANTITY));
     UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
-
-
     OrganizationResponseDto createSecondOrganization = createOrganization();
     UUID organizationId = createSecondOrganization.getId();
 
@@ -209,13 +207,14 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             );
 
     assertEquals(HttpStatus.OK, transferResponse.getStatusCode());
+    assertNotNull(transferResponse.getBody());
+    assertEquals(organizationId, transferResponse.getBody().getOrganization().getId());
     Map<String, Object> expectedEventPayload =
             getUpdateEventPayload(
                     productInOrganizationResponse.getBody(),
                     Objects.requireNonNull(transferResponse.getBody()),
                     objectMapper);
     systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_TRANSFER, expectedEventPayload);
-
   }
 
   private void assertProductsInOrganizationSize(String organizationId, int assertSize) {
