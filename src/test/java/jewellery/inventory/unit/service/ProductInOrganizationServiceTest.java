@@ -19,6 +19,7 @@ import jewellery.inventory.exception.not_found.ProductNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
+import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
 import jewellery.inventory.helper.*;
 import jewellery.inventory.mapper.ProductInOrganizationMapper;
 import jewellery.inventory.model.*;
@@ -80,11 +81,25 @@ class ProductInOrganizationServiceTest {
   }
 
   @Test
+  void transferProductShouldThrowWhenOwnerOrganizationEqualsRecipient() {
+    when(productService.getProduct(product.getId())).thenReturn(product);
+
+    assertThrows(
+        ProductOwnerEqualsRecipientException.class,
+        () ->
+            productInOrganizationService.transferProduct(
+                product.getId(), product.getOrganization().getId()));
+  }
+
+  @Test
   void transferProductShouldThrowWhenProductNotFound() {
     when(productService.getProduct(any())).thenThrow(ProductNotFoundException.class);
 
-    assertThrows(ProductNotFoundException.class, () ->
-            productInOrganizationService.transferProduct(product.getId(), organizationWithProduct.getId()));
+    assertThrows(
+        ProductNotFoundException.class,
+        () ->
+            productInOrganizationService.transferProduct(
+                product.getId(), organizationWithProduct.getId()));
   }
 
   @Test
@@ -92,9 +107,10 @@ class ProductInOrganizationServiceTest {
     when(organizationService.getOrganization(any())).thenThrow(OrganizationNotFoundException.class);
 
     assertThrows(
-            OrganizationNotFoundException.class, () ->
-                    productInOrganizationService.transferProduct(
-                            product.getId(), organizationWithProduct.getId()));
+        OrganizationNotFoundException.class,
+        () ->
+            productInOrganizationService.transferProduct(
+                product.getId(), organizationWithProduct.getId()));
   }
 
   @Test
@@ -133,12 +149,16 @@ class ProductInOrganizationServiceTest {
   void transferProductShouldThrowWhenNoPermission() {
     when(productService.getProduct(product.getId())).thenReturn(product);
     when(organizationService.getOrganization(organizationWithProduct.getId()))
-            .thenReturn(organizationWithProduct);
-    when(productInOrganizationService.transferProduct(product.getId(), organizationWithProduct.getId()))
-            .thenThrow(MissingOrganizationPermissionException.class);
+        .thenReturn(organizationWithProduct);
+    when(productInOrganizationService.transferProduct(
+            product.getId(), organizationWithProduct.getId()))
+        .thenThrow(MissingOrganizationPermissionException.class);
 
-    assertThrows(MissingOrganizationPermissionException.class, () ->
-            productInOrganizationService.transferProduct(product.getId(), organizationWithProduct.getId()));
+    assertThrows(
+        MissingOrganizationPermissionException.class,
+        () ->
+            productInOrganizationService.transferProduct(
+                product.getId(), organizationWithProduct.getId()));
   }
 
   @Test

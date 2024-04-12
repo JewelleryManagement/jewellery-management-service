@@ -14,6 +14,7 @@ import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
 import jewellery.inventory.exception.organization.ProductIsNotPartOfOrganizationException;
+import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
 import jewellery.inventory.mapper.ProductInOrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
@@ -50,6 +51,8 @@ public class ProductInOrganizationService implements EntityFetcher {
     Product product = productService.getProduct(productId);
     productService.throwExceptionIfProductIsSold(product);
     productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
+    throwExceptionIfProductOrganizationEqualsRecipient(recipientId, product);
+
     Organization recipient = organizationService.getOrganization(recipientId);
 
     organizationService.validateCurrentUserPermission(
@@ -328,6 +331,12 @@ public class ProductInOrganizationService implements EntityFetcher {
       for (Product subProduct : subProducts) {
         updateProductOrganizationRecursively(subProduct, newOrganization);
       }
+    }
+  }
+
+  private static void throwExceptionIfProductOrganizationEqualsRecipient(UUID recipientId, Product product) {
+    if (product.getOrganization().getId().equals(recipientId)) {
+      throw new ProductOwnerEqualsRecipientException(product.getOrganization().getId());
     }
   }
 
