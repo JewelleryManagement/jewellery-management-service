@@ -329,7 +329,6 @@ public class ProductService implements EntityFetcher {
     product.setCatalogNumber(productRequestDto.getCatalogNumber());
     product.setAdditionalPrice(productRequestDto.getAdditionalPrice());
     product.setProductsContent(new ArrayList<>());
-    product.setResourcesContent(new ArrayList<>());
   }
 
   public List<User> getAuthors(ProductRequestDto productRequestDto) {
