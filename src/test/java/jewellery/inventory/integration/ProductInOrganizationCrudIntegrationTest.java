@@ -1,12 +1,12 @@
 package jewellery.inventory.integration;
 
+import static jewellery.inventory.helper.OrganizationTestHelper.getTestUserInOrganizationRequest;
 import static jewellery.inventory.helper.ResourceTestHelper.getPearlRequestDto;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.model.EventType.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
@@ -20,7 +20,6 @@ import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.*;
-import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.PreciousStone;
 import org.jetbrains.annotations.Nullable;
@@ -59,14 +58,20 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     return buildUrl("organizations", organizationId, "products");
   }
 
+  private String getOrganizationUsersUrl(UUID organizationId) {
+    return "/organizations/" + organizationId + "/users";
+  }
+
   private PreciousStone preciousStone;
   private ProductRequestDto productRequestDto;
   private OrganizationResponseDto organization;
+  private UserInOrganizationRequestDto userInOrganizationRequestDto;
 
   @BeforeEach
   void setUp() {
     User user = createUserInDatabase(UserTestHelper.createTestUserRequest());
     organization = createOrganization();
+    userInOrganizationRequestDto = getTestUserInOrganizationRequest(user.getId());
     preciousStone = createPreciousStoneInDatabase();
     productRequestDto =
         ProductTestHelper.getProductRequestDtoForOrganization(
@@ -90,6 +95,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   @Test
   void createProductInOrganizationSuccessfully() throws JsonProcessingException {
     OrganizationResponseDto organizationResponseDto = createOrganization();
+    addUserInOrganization(organizationResponseDto.getId(), userInOrganizationRequestDto);
     ResourceResponseDto resourceResponse = sendCreateResourceRequest();
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -121,6 +127,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   @Test
   void updateProductInOrganizationSuccessfully() throws JsonProcessingException {
     OrganizationResponseDto organizationResponseDto = createOrganization();
+    addUserInOrganization(organizationResponseDto.getId(), userInOrganizationRequestDto);
     ResourceResponseDto resourceResponse = sendCreateResourceRequest();
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -157,6 +164,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void deleteProductInOrganizationSuccessfully() throws JsonProcessingException {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
     sendResourceToOrganization(
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organization.getId(), preciousStone.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
@@ -184,6 +192,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void transferProductSuccessfully() throws JsonProcessingException {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
     sendResourceToOrganization(
             ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
                     organization.getId(), preciousStone.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
@@ -299,6 +308,16 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     ResponseEntity<User> createUser =
         this.testRestTemplate.postForEntity("/users", userRequestDto, User.class);
     return createUser.getBody();
+  }
+
+  @Nullable
+  private void addUserInOrganization(UUID organizationID, UserInOrganizationRequestDto requestDto) {
+    ResponseEntity<OrganizationSingleMemberResponseDto> addUserInOrganization =
+        this.testRestTemplate.postForEntity(
+            getOrganizationUsersUrl(organizationID),
+            requestDto,
+            OrganizationSingleMemberResponseDto.class);
+    assertEquals(HttpStatus.CREATED, addUserInOrganization.getStatusCode());
   }
 
   private ProductRequestDto setOwnerAndResourceToProductRequest(

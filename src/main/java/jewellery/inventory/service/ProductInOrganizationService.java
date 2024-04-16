@@ -14,6 +14,7 @@ import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
 import jewellery.inventory.exception.organization.ProductIsNotPartOfOrganizationException;
+import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
 import jewellery.inventory.mapper.ProductInOrganizationMapper;
 import jewellery.inventory.model.*;
@@ -77,6 +78,7 @@ public class ProductInOrganizationService implements EntityFetcher {
 
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.EDIT_PRODUCT);
+    validateProductAuthors(organization, productService.getAuthors(productRequestDto));
 
     Product product = productService.getProduct(productId);
     throwExceptionIfOrganizationNotOwner(organization.getId(), product);
@@ -98,6 +100,7 @@ public class ProductInOrganizationService implements EntityFetcher {
 
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.CREATE_PRODUCT);
+    validateProductAuthors(organization, productService.getAuthors(productRequestDto));
 
     Product product = persistProductWithoutResourcesAndProducts(productRequestDto, organization);
 
@@ -166,6 +169,21 @@ public class ProductInOrganizationService implements EntityFetcher {
     product.setProductsContent(new ArrayList<>());
     product.setResourcesContent(new ArrayList<>());
     logger.debug("Product fields have been set successfully for product: {}", product);
+  }
+
+  private void validateProductAuthors(Organization organization, List<User> authors) {
+    for (User author : authors) {
+      boolean isUserInOrganization = false;
+      for (UserInOrganization userInOrganization : organization.getUsersInOrganization()) {
+        if (userInOrganization.getUser().getId().equals(author.getId())) {
+          isUserInOrganization = true;
+          break;
+        }
+      }
+      if (!isUserInOrganization) {
+        throw new UserIsNotPartOfOrganizationException(author.getId(), organization.getId());
+      }
+    }
   }
 
   private void addProductsContentToProduct(ProductRequestDto productRequestDto, Product product) {
@@ -335,7 +353,8 @@ public class ProductInOrganizationService implements EntityFetcher {
     }
   }
 
-  private static void throwExceptionIfProductOrganizationEqualsRecipient(UUID recipientId, Product product) {
+  private static void throwExceptionIfProductOrganizationEqualsRecipient(
+      UUID recipientId, Product product) {
     if (product.getOrganization().getId().equals(recipientId)) {
       throw new ProductOwnerEqualsRecipientException(product.getOrganization().getId());
     }
