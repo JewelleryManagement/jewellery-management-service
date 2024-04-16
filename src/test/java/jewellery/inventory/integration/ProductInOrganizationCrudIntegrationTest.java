@@ -125,6 +125,31 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   }
 
   @Test
+  void createProductInOrganizationThrowUserNotPartOfOrganization() {
+    OrganizationResponseDto organizationResponseDto = createOrganization();
+    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
+    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organizationResponseDto.getId(),
+            resourceResponse.getId(),
+            RESOURCE_QUANTITY,
+            RESOURCE_PRICE);
+    ResponseEntity<ResourcesInOrganizationResponseDto> resource =
+        sendResourceToOrganization(resourceInOrganizationRequest);
+    assertProductsInOrganizationSize(organizationResponseDto.getId().toString(), 0);
+
+    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto,
+                organizationResponseDto.getId(),
+                resourceResponse.getId(),
+                RESOURCE_QUANTITY));
+
+    assertEquals(HttpStatus.CONFLICT, productInOrganizationResponse.getStatusCode());
+  }
+
+  @Test
   void updateProductInOrganizationSuccessfully() throws JsonProcessingException {
     OrganizationResponseDto organizationResponseDto = createOrganization();
     addUserInOrganization(organizationResponseDto.getId(), userInOrganizationRequestDto);
@@ -160,6 +185,40 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             objectMapper);
     systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_UPDATE, expectedEventPayload);
     assertProductsInOrganizationSize(organizationResponseDto.getId().toString(), 1);
+  }
+
+  @Test
+  void updateProductInOrganizationThrowUserIsNotPartOfOrganization() {
+    OrganizationResponseDto organizationResponseDto = createOrganization();
+    addUserInOrganization(organizationResponseDto.getId(), userInOrganizationRequestDto);
+    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
+    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organizationResponseDto.getId(),
+            resourceResponse.getId(),
+            RESOURCE_QUANTITY,
+            RESOURCE_PRICE);
+    ResponseEntity<ResourcesInOrganizationResponseDto> resource =
+        sendResourceToOrganization(resourceInOrganizationRequest);
+    ResponseEntity<ResourcesInOrganizationResponseDto> resource2 =
+        sendResourceToOrganization(resourceInOrganizationRequest);
+    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto,
+                organizationResponseDto.getId(),
+                resourceResponse.getId(),
+                RESOURCE_QUANTITY));
+    productRequestDto.setAuthors(List.of());
+   User newUser = createUserInDatabase(UserTestHelper.createDifferentUserRequest());
+   productRequestDto.setAuthors(List.of(newUser.getId()));
+
+    ResponseEntity<ProductsInOrganizationResponseDto> updatedProductInOrganizationResponse =
+        updateProduct(
+            productRequestDto,
+            productInOrganizationResponse.getBody().getProducts().get(0).getId().toString());
+
+    assertEquals(HttpStatus.CONFLICT, updatedProductInOrganizationResponse.getStatusCode());
   }
 
   @Test
