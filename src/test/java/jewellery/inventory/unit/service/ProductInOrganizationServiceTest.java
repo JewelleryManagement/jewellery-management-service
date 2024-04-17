@@ -17,6 +17,7 @@ import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.not_found.ProductNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
+import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
 import jewellery.inventory.exception.organization.ProductIsNotPartOfOrganizationException;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
@@ -31,6 +32,7 @@ import jewellery.inventory.service.OrganizationService;
 import jewellery.inventory.service.ProductInOrganizationService;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.ResourceInOrganizationService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,7 +61,6 @@ class ProductInOrganizationServiceTest {
 
   @BeforeEach
   void setUp() {
-
     User user = UserTestHelper.createSecondTestUser();
     organization = OrganizationTestHelper.getTestOrganization();
     Resource resource = ResourceTestHelper.getPearl();
@@ -261,7 +262,7 @@ class ProductInOrganizationServiceTest {
         .when(organizationService)
         .validateCurrentUserPermission(organization, OrganizationPermission.EDIT_PRODUCT);
 
-    Assertions.assertThrows(
+    assertThrows(
         MissingOrganizationPermissionException.class,
         () -> productInOrganizationService.updateProduct(product.getId(), productRequestDto));
   }
@@ -271,7 +272,7 @@ class ProductInOrganizationServiceTest {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
     when(productService.getProduct(product.getId())).thenReturn(product);
 
-    Assertions.assertThrows(
+    assertThrows(
         OrganizationNotOwnerException.class,
         () -> productInOrganizationService.updateProduct(product.getId(), productRequestDto));
   }
@@ -285,7 +286,7 @@ class ProductInOrganizationServiceTest {
         .when(organizationService)
         .validateCurrentUserPermission(organization, OrganizationPermission.EDIT_PRODUCT);
 
-    Assertions.assertThrows(
+    assertThrows(
         ProductIsSoldException.class,
         () -> productInOrganizationService.updateProduct(product.getId(), productRequestDto));
   }
@@ -319,7 +320,7 @@ class ProductInOrganizationServiceTest {
     when(productService.getProduct(product.getId())).thenReturn(product);
     product.setOrganization(null);
 
-    Assertions.assertThrows(
+    assertThrows(
         ProductIsNotPartOfOrganizationException.class,
         () -> productInOrganizationService.deleteProductInOrganization(product.getId()));
   }
@@ -331,7 +332,7 @@ class ProductInOrganizationServiceTest {
         .when(productService)
         .throwExceptionIfProductIsPartOfAnotherProduct(product.getId(), product);
 
-    Assertions.assertThrows(
+    assertThrows(
         ProductIsContentException.class,
         () -> productInOrganizationService.deleteProductInOrganization(product.getId()));
   }
