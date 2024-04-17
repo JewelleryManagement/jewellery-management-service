@@ -78,7 +78,7 @@ public class ProductInOrganizationService implements EntityFetcher {
 
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.EDIT_PRODUCT);
-    validateProductAuthors(organization, productService.getAuthors(productRequestDto));
+    validateUsersAreMembersOfOrganization(organization, productService.getAuthors(productRequestDto));
 
     Product product = productService.getProduct(productId);
     throwExceptionIfOrganizationNotOwner(organization.getId(), product);
@@ -100,7 +100,7 @@ public class ProductInOrganizationService implements EntityFetcher {
 
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.CREATE_PRODUCT);
-    validateProductAuthors(organization, productService.getAuthors(productRequestDto));
+    validateUsersAreMembersOfOrganization(organization, productService.getAuthors(productRequestDto));
 
     Product product = persistProductWithoutResourcesAndProducts(productRequestDto, organization);
 
@@ -171,7 +171,7 @@ public class ProductInOrganizationService implements EntityFetcher {
     logger.debug("Product fields have been set successfully for product: {}", product);
   }
 
-  private void validateProductAuthors(Organization organization, List<User> authors) {
+  private void validateUsersAreMembersOfOrganization(Organization organization, List<User> authors) {
     for (User author : authors) {
       boolean isUserInOrganization = false;
       for (UserInOrganization userInOrganization : organization.getUsersInOrganization()) {
