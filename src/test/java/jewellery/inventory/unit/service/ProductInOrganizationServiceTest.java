@@ -17,6 +17,7 @@ import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.not_found.ProductNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
+import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
 import jewellery.inventory.exception.organization.ProductIsNotPartOfOrganizationException;
 import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
@@ -31,6 +32,7 @@ import jewellery.inventory.service.OrganizationService;
 import jewellery.inventory.service.ProductInOrganizationService;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.ResourceInOrganizationService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,7 +61,6 @@ class ProductInOrganizationServiceTest {
 
   @BeforeEach
   void setUp() {
-
     User user = UserTestHelper.createSecondTestUser();
     organization = OrganizationTestHelper.getTestOrganization();
     Resource resource = ResourceTestHelper.getPearl();
@@ -173,6 +174,9 @@ class ProductInOrganizationServiceTest {
     ProductsInOrganizationResponseDto products =
         productInOrganizationService.getProductsInOrganization(organizationWithProduct.getId());
 
+    verify(organizationService, times(1)).getOrganization(organizationWithProduct.getId());
+    verify(mapper, times(1))
+        .mapToProductsInOrganizationResponseDto(organizationWithProduct, new ArrayList<>());
     assertNotNull(products);
     assertEquals(1, products.getProducts().size());
   }
@@ -189,6 +193,12 @@ class ProductInOrganizationServiceTest {
     ProductsInOrganizationResponseDto productsInOrganizationResponse =
         productInOrganizationService.createProductInOrganization(productRequestDto);
 
+    verify(organizationService, times(1)).getOrganization(organization.getId());
+    verify(resourceInOrganizationService, times(1))
+        .findResourceInOrganizationOrThrow(
+            organization, productRequestDto.getResourcesContent().get(0).getResourceId());
+    verify(mapper, times(1))
+        .mapToProductsInOrganizationResponseDto(organization, new ArrayList<>());
     assertNotNull(productsInOrganizationResponse);
     assertEquals(1, productsInOrganizationResponse.getProducts().size());
   }
@@ -203,11 +213,18 @@ class ProductInOrganizationServiceTest {
     product.setOrganization(organization);
     when(mapper.mapToProductsInOrganizationResponseDto(organization, new ArrayList<>()))
         .thenReturn(productsInOrganizationResponseDto);
-    when(productService.getProduct(any(UUID.class))).thenReturn(product);
+    when(productService.getProduct(product.getId())).thenReturn(product);
 
     ProductsInOrganizationResponseDto productsInOrganizationResponse =
         productInOrganizationService.createProductInOrganization(productWithProductRequestDto);
 
+    verify(organizationService, times(1)).getOrganization(organization.getId());
+    verify(resourceInOrganizationService, times(1))
+        .findResourceInOrganizationOrThrow(
+            organization, productRequestDto.getResourcesContent().get(0).getResourceId());
+    verify(mapper, times(1))
+        .mapToProductsInOrganizationResponseDto(organization, new ArrayList<>());
+    verify(productService, times(1)).getProduct(product.getId());
     assertNotNull(productsInOrganizationResponse);
     assertEquals(1, productsInOrganizationResponse.getProducts().size());
   }
@@ -226,8 +243,52 @@ class ProductInOrganizationServiceTest {
     ProductsInOrganizationResponseDto productsInOrganizationResponse =
         productInOrganizationService.updateProduct(product.getId(), productRequestDto);
 
+    verify(organizationService, times(1)).getOrganization(organization.getId());
+    verify(productService, times(1)).getProduct(product.getId());
+    verify(resourceInOrganizationService, times(1))
+        .findResourceInOrganizationOrThrow(
+            organization, productRequestDto.getResourcesContent().get(0).getResourceId());
+    verify(mapper, times(1))
+        .mapToProductsInOrganizationResponseDto(organization, new ArrayList<>());
     assertNotNull(productsInOrganizationResponse);
     assertEquals(1, productsInOrganizationResponse.getProducts().size());
+  }
+
+  @Test
+  void updateProductInOrganizationThrowMissingOrganizationPermissionException() {
+    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
+
+    doThrow(MissingOrganizationPermissionException.class)
+        .when(organizationService)
+        .validateCurrentUserPermission(organization, OrganizationPermission.EDIT_PRODUCT);
+
+    assertThrows(
+        MissingOrganizationPermissionException.class,
+        () -> productInOrganizationService.updateProduct(product.getId(), productRequestDto));
+  }
+
+  @Test
+  void updateProductInOrganizationThrowOrganizationNotOwnerException() {
+    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
+    when(productService.getProduct(product.getId())).thenReturn(product);
+
+    assertThrows(
+        OrganizationNotOwnerException.class,
+        () -> productInOrganizationService.updateProduct(product.getId(), productRequestDto));
+  }
+
+  @Test
+  void updateProductInOrganizationProductIsSoldException() {
+    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
+    product.setPartOfSale(new ProductPriceDiscount());
+
+    doThrow(ProductIsSoldException.class)
+        .when(organizationService)
+        .validateCurrentUserPermission(organization, OrganizationPermission.EDIT_PRODUCT);
+
+    assertThrows(
+        ProductIsSoldException.class,
+        () -> productInOrganizationService.updateProduct(product.getId(), productRequestDto));
   }
 
   @Test
@@ -236,7 +297,44 @@ class ProductInOrganizationServiceTest {
 
     productInOrganizationService.deleteProductInOrganization(product.getId());
 
+    verify(productService, times(1)).getProduct(product.getId());
     verify(productService, times(1)).deleteProductById(product.getId());
+  }
+
+  @Test
+  void deleteProductInOrganizationThrowMissingOrganizationPermissionException() {
+    when(productService.getProduct(product.getId())).thenReturn(product);
+
+    doThrow(MissingOrganizationPermissionException.class)
+        .when(organizationService)
+        .validateCurrentUserPermission(
+            organizationWithProduct, OrganizationPermission.DISASSEMBLE_PRODUCT);
+
+    Assertions.assertThrows(
+        MissingOrganizationPermissionException.class,
+        () -> productInOrganizationService.deleteProductInOrganization(product.getId()));
+  }
+
+  @Test
+  void deleteProductInOrganizationThrowProductIsNotPartOfOrganizationException() {
+    when(productService.getProduct(product.getId())).thenReturn(product);
+    product.setOrganization(null);
+
+    assertThrows(
+        ProductIsNotPartOfOrganizationException.class,
+        () -> productInOrganizationService.deleteProductInOrganization(product.getId()));
+  }
+
+  @Test
+  void deleteProductInOrganizationThrowProductIsContentException() {
+    when(productService.getProduct(product.getId())).thenReturn(product);
+    doThrow(ProductIsContentException.class)
+        .when(productService)
+        .throwExceptionIfProductIsPartOfAnotherProduct(product.getId(), product);
+
+    assertThrows(
+        ProductIsContentException.class,
+        () -> productInOrganizationService.deleteProductInOrganization(product.getId()));
   }
 
   private ProductResponseDto productToResponse(Product product) {
