@@ -14,6 +14,7 @@ import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
 import jewellery.inventory.exception.organization.ProductIsNotPartOfOrganizationException;
+import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
 import jewellery.inventory.mapper.ProductInOrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
@@ -43,6 +44,28 @@ public class ProductInOrganizationService implements EntityFetcher {
 
     return mapper.mapToProductsInOrganizationResponseDto(
         organization, productService.getProductsResponse(organization.getProductsOwned()));
+  }
+
+  @LogUpdateEvent(eventType = EventType.ORGANIZATION_PRODUCT_TRANSFER)
+  public ProductsInOrganizationResponseDto transferProduct(UUID productId, UUID recipientId) {
+    Product product = productService.getProduct(productId);
+    throwExceptionIfProductIsNotPartOfOrganization(product);
+    throwExceptionIfProductOrganizationEqualsRecipient(recipientId, product);
+    productService.throwExceptionIfProductIsSold(product);
+    productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
+
+    Organization recipient = organizationService.getOrganization(recipientId);
+
+    organizationService.validateCurrentUserPermission(
+        product.getOrganization(), OrganizationPermission.TRANSFER_PRODUCT);
+
+    updateProductOrganizationRecursively(product, recipient);
+    logger.info(
+        "Transferred product with ID {} to new organization with ID {}", productId, recipientId);
+    productRepository.save(product);
+
+    return mapper.mapToProductsInOrganizationResponseDto(
+        recipient, productService.getProductsResponse(List.of(product)));
   }
 
   @Transactional
@@ -85,7 +108,7 @@ public class ProductInOrganizationService implements EntityFetcher {
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_PRODUCT_DISASSEMBLY)
   public void deleteProductInOrganization(UUID productId) {
     Product product = productService.getProduct(productId);
-    validateProductIsOwnedOrganization(product);
+    throwExceptionIfProductIsNotPartOfOrganization(product);
     Organization organization = product.getOrganization();
 
     organizationService.validateCurrentUserPermission(
@@ -100,7 +123,7 @@ public class ProductInOrganizationService implements EntityFetcher {
     productService.deleteProductById(productId);
   }
 
-  private void validateProductIsOwnedOrganization(Product product) {
+  private static void throwExceptionIfProductIsNotPartOfOrganization(Product product) {
     if (product.getOrganization() == null) {
       throw new ProductIsNotPartOfOrganizationException(product.getId());
     }
@@ -296,6 +319,26 @@ public class ProductInOrganizationService implements EntityFetcher {
           logger.info("Resource deleted from product: {}", product);
         });
     product.setResourcesContent(null);
+  }
+
+  private void updateProductOrganizationRecursively(Product product, Organization newOrganization) {
+    product.setOrganization(newOrganization);
+    logger.debug(
+        "Updated organization for product with ID: {}. New organization with ID: {}",
+        product.getId(),
+        newOrganization.getId());
+    if (product.getProductsContent() != null) {
+      List<Product> subProducts = product.getProductsContent();
+      for (Product subProduct : subProducts) {
+        updateProductOrganizationRecursively(subProduct, newOrganization);
+      }
+    }
+  }
+
+  private static void throwExceptionIfProductOrganizationEqualsRecipient(UUID recipientId, Product product) {
+    if (product.getOrganization().getId().equals(recipientId)) {
+      throw new ProductOwnerEqualsRecipientException(product.getOrganization().getId());
+    }
   }
 
   @Override
