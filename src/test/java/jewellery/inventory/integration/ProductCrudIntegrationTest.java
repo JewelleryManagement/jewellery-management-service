@@ -153,7 +153,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void imageAttachedToProducOverrideSuccessfully() {
+  void imageAttachedToProductOverrideSuccessfully() {
     ProductResponseDto productResponse = createProductWithRequest(productRequestDto);
 
     uploadImageAndAssertSuccessfulResponse(productResponse);
@@ -244,23 +244,35 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void createProductSuccessfully() throws JsonProcessingException {
-
     ResponseEntity<ProductResponseDto> response =
         this.testRestTemplate.postForEntity(
             getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
     ProductResponseDto productResponseDto = response.getBody();
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
-    assertEquals(
-        productRequestDto.getResourcesContent().get(0).getResourceId(),
-        productResponseDto.getResourcesContent().get(0).getResource().getId());
-    assertEquals(productRequestDto.getOwnerId(), productResponseDto.getOwner().getId());
-    assertEquals(productRequestDto.getProductionNumber(), productResponseDto.getProductionNumber());
-    assertEquals(productRequestDto.getCatalogNumber(), productResponseDto.getCatalogNumber());
-
+    assertCreatedProductMatchesRequest(productRequestDto, response);
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(productResponseDto, objectMapper);
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_CREATE, expectedEventPayload);
+  }
 
+  @Test
+  void createProductWithProductWithImageSuccessfully() throws JsonProcessingException {
+    ResponseEntity<ProductResponseDto> productResponse =
+            this.testRestTemplate.postForEntity(
+                    getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+    ProductResponseDto productResponseDto = productResponse.getBody();
+    uploadImageAndAssertSuccessfulResponse(productResponseDto);
+    productRequestDto2.setProductsContent(List.of(productResponse.getBody().getId()));
+
+    ResponseEntity<ProductResponseDto> productWithProductResponse =
+            this.testRestTemplate.postForEntity(
+                    getBaseProductUrl(), productRequestDto2, ProductResponseDto.class);
+
+    assertEquals(HttpStatus.CREATED, productWithProductResponse.getStatusCode());
+    assertCreatedProductMatchesRequest(productRequestDto2, productWithProductResponse);
+    Map<String, Object> expectedEventPayload =
+            getCreateOrDeleteEventPayload(productWithProductResponse.getBody(), objectMapper);
     systemEventTestHelper.assertEventWasLogged(PRODUCT_CREATE, expectedEventPayload);
   }
 
@@ -424,6 +436,15 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             getProductUrl(productId), HttpMethod.PUT, requestEntity, ProductResponseDto.class);
 
     assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+  }
+
+  private void assertCreatedProductMatchesRequest(ProductRequestDto comparisonRequest, ResponseEntity<ProductResponseDto> productWithProductResponse) {
+    assertEquals(
+            comparisonRequest.getResourcesContent().get(0).getResourceId(),
+            productWithProductResponse.getBody().getResourcesContent().get(0).getResource().getId());
+    assertEquals(comparisonRequest.getOwnerId(), productWithProductResponse.getBody().getOwner().getId());
+    assertEquals(comparisonRequest.getProductionNumber(), productWithProductResponse.getBody().getProductionNumber());
+    assertEquals(comparisonRequest.getCatalogNumber(), productWithProductResponse.getBody().getCatalogNumber());
   }
 
   private void uploadImageAndAssertSuccessfulResponse(ProductResponseDto productResponse) {
