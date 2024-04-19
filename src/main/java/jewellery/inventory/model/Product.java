@@ -35,6 +35,7 @@ public class Product {
   private List<Product> productsContent;
 
   @OneToOne(cascade = CascadeType.ALL)
+  @EqualsAndHashCode.Exclude
   @JoinColumn(name = "image_id", referencedColumnName = "id")
   private Image image;
 
