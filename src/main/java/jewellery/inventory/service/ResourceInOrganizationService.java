@@ -6,13 +6,19 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
+import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
+import jewellery.inventory.dto.request.TransferResourceRequestDto;
+import jewellery.inventory.dto.response.OrganizationTransferResourceResponseDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInOrganizationNotFoundException;
 import jewellery.inventory.mapper.ResourceInOrganizationMapper;
-import jewellery.inventory.model.*;
+import jewellery.inventory.model.EventType;
+import jewellery.inventory.model.Organization;
+import jewellery.inventory.model.OrganizationPermission;
+import jewellery.inventory.model.ResourceInOrganization;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceInOrganizationRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +32,46 @@ import org.springframework.transaction.annotation.Transactional;
 public class ResourceInOrganizationService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(ResourceInOrganizationService.class);
   private final ResourceInOrganizationRepository resourceInOrganizationRepository;
-  private final UserInOrganizationService userInOrganizationService;
   private final OrganizationService organizationService;
   private final ResourceService resourceService;
   private final ResourceInOrganizationMapper resourceInOrganizationMapper;
-
   private static final BigDecimal EPSILON = new BigDecimal("1e-10");
+
+  @Transactional
+  @LogCreateEvent(eventType = EventType.ORGANIZATION_RESOURCE_TRANSFER)
+  public OrganizationTransferResourceResponseDto transferResource(
+      TransferResourceRequestDto transferResourceRequestDto) {
+    Organization previousOwner =
+        organizationService.getOrganization(transferResourceRequestDto.getPreviousOwnerId());
+
+    organizationService.validateCurrentUserPermission(
+        previousOwner, OrganizationPermission.TRANSFER_RESOURCE);
+
+    Organization newOwner =
+        organizationService.getOrganization(transferResourceRequestDto.getNewOwnerId());
+
+    ResourceInOrganization resourceInPreviousOwner =
+        findResourceInOrganizationOrThrow(
+            previousOwner, transferResourceRequestDto.getTransferredResourceId());
+
+    removeQuantityFromResource(resourceInPreviousOwner, transferResourceRequestDto.getQuantity());
+
+    addResourceToOrganization(
+        newOwner,
+        resourceInPreviousOwner.getResource(),
+        transferResourceRequestDto.getQuantity(),
+        BigDecimal.ZERO);
+
+    OrganizationTransferResourceResponseDto transferResourceResponseDto =
+        resourceInOrganizationMapper.getOrganizationTransferResourceResponseDto(
+            previousOwner,
+            newOwner,
+            resourceInPreviousOwner.getResource(),
+            transferResourceRequestDto.getQuantity());
+    logger.info("Transfer completed successfully {}", transferResourceResponseDto);
+
+    return transferResourceResponseDto;
+  }
 
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_ADD_RESOURCE_QUANTITY)
   @Transactional
@@ -39,6 +79,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
       ResourceInOrganizationRequestDto resourceInOrganizationRequestDto) {
     Organization organization =
         organizationService.getOrganization(resourceInOrganizationRequestDto.getOrganizationId());
+
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.ADD_RESOURCE_QUANTITY);
 
@@ -103,7 +144,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
     logger.debug("ResourceInOrganization after quantity removal: {}", resourceInOrganization);
   }
 
-  private ResourceInOrganization findResourceInOrganizationOrThrow(
+  public ResourceInOrganization findResourceInOrganizationOrThrow(
       Organization previousOwner, UUID resourceId) {
     return findResourceInOrganization(previousOwner, resourceId)
         .orElseThrow(
@@ -150,7 +191,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
             () -> createAndAddNewResourceInOrganization(organization, resource, BigDecimal.ZERO));
   }
 
-  private ResourceInOrganization addResourceToOrganization(
+  public ResourceInOrganization addResourceToOrganization(
       Organization organization, Resource resource, BigDecimal quantity, BigDecimal dealPrice) {
     logger.info(
         "Adding resource to organization. Organization: {}, Resource: {}, Quantity: {}",
