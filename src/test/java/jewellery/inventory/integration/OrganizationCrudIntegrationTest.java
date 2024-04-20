@@ -15,9 +15,9 @@ import jewellery.inventory.dto.request.UpdateUserInOrganizationRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.*;
-import jewellery.inventory.exception.organization.UserIsPartOfOrganizationException;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.Organization;
+import jewellery.inventory.model.OrganizationPermission;
 import jewellery.inventory.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -148,22 +148,13 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     OrganizationSingleMemberResponseDto singleMemberResponseDto =
         addUserInOrganization(organizationResponse.getId());
 
-    UpdateUserInOrganizationRequest request = new UpdateUserInOrganizationRequest();
-    request.setOrganizationPermission(new ArrayList<>());
-
     ResponseEntity<OrganizationSingleMemberResponseDto> response =
-        this.testRestTemplate.exchange(
-            getOrganizationUsersUrl(organizationResponse.getId(), user.getId()),
-            HttpMethod.PUT,
-            new HttpEntity<>(request),
-            OrganizationSingleMemberResponseDto.class);
+        removePermissionsForUser(organizationResponse, user);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
-
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(singleMemberResponseDto, response.getBody(), objectMapper);
-
     systemEventTestHelper.assertEventWasLogged(ORGANIZATION_USER_UPDATE, expectedEventPayload);
   }
 
@@ -227,11 +218,44 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(201));
     assertNotNull(response.getBody());
-
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
-
     systemEventTestHelper.assertEventWasLogged(ORGANIZATION_CREATE, expectedEventPayload);
+  }
+
+  @Test
+  void getOrganizationsByPermissionSuccessfully() {
+    ResponseEntity<OrganizationResponseDto> firstOrganization =
+        testRestTemplate.postForEntity(
+            getBaseOrganizationsUrl(), organizationRequestDto, OrganizationResponseDto.class);
+    organizationRequestDto.setName("secondOrg");
+    ResponseEntity<OrganizationResponseDto> secondOrganization =
+        testRestTemplate.postForEntity(
+            getBaseOrganizationsUrl(), organizationRequestDto, OrganizationResponseDto.class);
+    removePermissionsForUser(secondOrganization.getBody(), loggedInAdminUser);
+
+    ResponseEntity<List<OrganizationResponseDto>> organizations =
+        this.testRestTemplate.exchange(
+            getBaseOrganizationsUrl() + "/by-permission/" + OrganizationPermission.CREATE_PRODUCT.name(),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<>() {});
+
+    assertEquals(1, organizations.getBody().size());
+    assertEquals(organizations.getBody().get(0).getId(), firstOrganization.getBody().getId());
+  }
+
+  private ResponseEntity<OrganizationSingleMemberResponseDto> removePermissionsForUser(
+      OrganizationResponseDto secondOrganization, User user) {
+    UpdateUserInOrganizationRequest request = new UpdateUserInOrganizationRequest();
+    request.setOrganizationPermission(new ArrayList<>());
+    ResponseEntity<OrganizationSingleMemberResponseDto> changedPermissionsOrganization =
+        this.testRestTemplate.exchange(
+            getOrganizationUsersUrl(secondOrganization.getId(), user.getId()),
+            HttpMethod.PUT,
+            new HttpEntity<>(request),
+            OrganizationSingleMemberResponseDto.class);
+    return changedPermissionsOrganization;
   }
 
   @Nullable
