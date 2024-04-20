@@ -8,9 +8,9 @@ import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
-import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.exception.organization.OrphanProductsInOrganizationException;
 import jewellery.inventory.exception.organization.OrphanResourcesInOrganizationException;
+import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.*;
@@ -82,6 +82,42 @@ public class OrganizationService implements EntityFetcher {
         organization.getId());
   }
 
+  public List<OrganizationResponseDto> getOrganizationsByPermission(
+      OrganizationPermission organizationPermission) {
+    User currentUser = userService.getUser(authService.getCurrentUser().getId());
+    return getAll().stream()
+        .filter(
+            organization ->
+                doesUserHavePermissionForOrganization(
+                    organization, currentUser, organizationPermission))
+        .map(organizationMapper::toResponse)
+        .toList();
+  }
+
+  public void validateCurrentUserPermission(
+      Organization organization, OrganizationPermission permission) {
+    User currentUser = userService.getUser(authService.getCurrentUser().getId());
+    if (!hasPermission(currentUser, organization, permission)) {
+      throw new MissingOrganizationPermissionException(
+          currentUser.getId(), organization.getId(), permission);
+    }
+    logger.debug(
+        "User permission validation successful. User ID: {}, Organization ID: {}",
+        currentUser.getId(),
+        organization.getId());
+  }
+
+  private boolean doesUserHavePermissionForOrganization(
+          Organization organization, User currentUser, OrganizationPermission organizationPermission) {
+    return organization.getUsersInOrganization().stream()
+            .anyMatch(
+                    userInOrganization ->
+                            userInOrganization.getUser().getId().equals(currentUser.getId())
+                                    && userInOrganization
+                                    .getOrganizationPermission()
+                                    .contains(organizationPermission));
+  }
+
   private void makeCurrentUserOwner(Organization organization) {
     UserInOrganization userInOrganizationOwner = new UserInOrganization();
     User user = userService.getUser(authService.getCurrentUser().getId());
@@ -103,19 +139,6 @@ public class OrganizationService implements EntityFetcher {
     if (!organization.getResourceInOrganization().isEmpty()) {
       throw new OrphanResourcesInOrganizationException(organization.getId());
     }
-  }
-
-  public void validateCurrentUserPermission(
-      Organization organization, OrganizationPermission permission) {
-    User currentUser = userService.getUser(authService.getCurrentUser().getId());
-    if (!hasPermission(currentUser, organization, permission)) {
-      throw new MissingOrganizationPermissionException(
-          currentUser.getId(), organization.getId(), permission);
-    }
-    logger.debug(
-        "User permission validation successful. User ID: {}, Organization ID: {}",
-        currentUser.getId(),
-        organization.getId());
   }
 
   private boolean hasPermission(

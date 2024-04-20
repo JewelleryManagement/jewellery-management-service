@@ -10,6 +10,7 @@ import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationMembersResponseDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.OrganizationSingleMemberResponseDto;
+import jewellery.inventory.model.OrganizationPermission;
 import jewellery.inventory.service.OrganizationService;
 import jewellery.inventory.service.UserInOrganizationService;
 import lombok.AllArgsConstructor;
@@ -36,6 +37,14 @@ public class OrganizationController {
   @GetMapping("/{id}")
   public OrganizationResponseDto getOrganizationById(@PathVariable UUID id) {
     return organizationService.getOrganizationResponse(id);
+  }
+
+  @Operation(summary = "Get organizations by permission")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/by-permission/{organizationPermission}")
+  public List<OrganizationResponseDto> getOrganizationsByPermission(
+      @PathVariable OrganizationPermission organizationPermission) {
+    return organizationService.getOrganizationsByPermission(organizationPermission);
   }
 
   @Operation(summary = "Create a new organization")
