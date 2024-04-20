@@ -52,6 +52,7 @@ abstract class AuthenticatedIntegrationTestBase {
   @Autowired private ImageRepository imageRepository;
 
   protected HttpHeaders headers;
+  protected User loggedInAdminUser;
 
   @BeforeEach
   void setup() {
@@ -65,10 +66,11 @@ abstract class AuthenticatedIntegrationTestBase {
     resourceInUserRepository.deleteAll();
     resourceInProductRepository.deleteAll();
     systemEventRepository.deleteAll();
-    User adminUser = createTestAdminUser();
-    setupMockSecurityContext(adminUser);
+    loggedInAdminUser = createTestAdminUser();
+    setupMockSecurityContext(loggedInAdminUser);
     setupTestRestTemplateWithAuthHeaders();
-    adminUser.setId(createUserInDatabase(UserTestHelper.getTestUserRequest(adminUser)).getId());
+    loggedInAdminUser.setId(
+        createUserInDatabase(UserTestHelper.getTestUserRequest(loggedInAdminUser)).getId());
   }
 
   private void deleteAllImages() {
