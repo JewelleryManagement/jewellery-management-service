@@ -122,7 +122,7 @@ public class SaleService {
     return saleRepository.findById(saleId).orElseThrow(() -> new SaleNotFoundException(saleId));
   }
 
-  private void throwExceptionIfProductIsPartOfAnotherProduct(List<ProductPriceDiscount> products) {
+  public void throwExceptionIfProductIsPartOfAnotherProduct(List<ProductPriceDiscount> products) {
     for (ProductPriceDiscount productPriceDiscount : products) {
       Product product = productPriceDiscount.getProduct();
       if (product.getContentOf() != null) {
@@ -143,7 +143,7 @@ public class SaleService {
     }
   }
 
-  private void throwExceptionIfProductIsSold(List<ProductPriceDiscount> products) {
+  public void throwExceptionIfProductIsSold(List<ProductPriceDiscount> products) {
     for (ProductPriceDiscount productPriceDiscount : products) {
       Product product = productPriceDiscount.getProduct();
       if (product.getPartOfSale() != null) {
@@ -152,7 +152,7 @@ public class SaleService {
     }
   }
 
-  private void updateProductOwnersAndSale(
+  public void updateProductOwnersAndSale(
       List<ProductPriceDiscount> products, UUID buyerId, Sale sale) {
     User newOwner = userService.getUser(buyerId);
 
@@ -162,7 +162,7 @@ public class SaleService {
     }
   }
 
-  private List<ProductPriceDiscount> getProductsFromSaleRequestDto(SaleRequestDto saleRequestDto) {
+  public List<ProductPriceDiscount> getProductsFromSaleRequestDto(SaleRequestDto saleRequestDto) {
     if (saleRequestDto.getProducts() != null) {
       return saleRequestDto.getProducts().stream()
           .map(
@@ -210,7 +210,7 @@ public class SaleService {
         resourceToReturn, saleMapper.mapEntityToResponseDto(sale));
   }
 
-  private void setFieldsOfResourcesAfterSale(Sale sale) {
+  public void setFieldsOfResourcesAfterSale(Sale sale) {
     List<PurchasedResourceInUser> resources = sale.getResources();
     resources.forEach(
         resource -> {
@@ -252,7 +252,7 @@ public class SaleService {
     }
   }
 
-  private List<PurchasedResourceInUser> getResourcesFromSaleRequestDto(
+  public List<PurchasedResourceInUser> getResourcesFromSaleRequestDto(
       SaleRequestDto saleRequestDto) {
     List<PurchasedResourceInUser> resources = new ArrayList<>();
     if (saleRequestDto.getResources() != null) {
@@ -280,7 +280,7 @@ public class SaleService {
     return purchasedResourceInUser;
   }
 
-  private void setProductPriceDiscountSalePriceAndSale(Sale sale) {
+  public void setProductPriceDiscountSalePriceAndSale(Sale sale) {
     sale.getProducts()
         .forEach(
             productDto -> {
@@ -301,8 +301,8 @@ public class SaleService {
     }
   }
 
-  private static void throwExceptionIfNoResourcesAndProductsInRequest(
-      SaleRequestDto saleRequestDto) {
+ public static void throwExceptionIfNoResourcesAndProductsInRequest(
+          SaleRequestDto saleRequestDto) {
     if ((saleRequestDto.getProducts() == null || saleRequestDto.getProducts().isEmpty())
         && (saleRequestDto.getResources() == null || saleRequestDto.getResources().isEmpty())) {
       throw new EmptySaleException();
