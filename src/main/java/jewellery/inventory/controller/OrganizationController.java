@@ -25,11 +25,11 @@ public class OrganizationController {
   private final OrganizationService organizationService;
   private final UserInOrganizationService userInOrganizationService;
 
-  @Operation(summary = "Get all organizations")
+  @Operation(summary = "Get all organizations for current user")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping
-  public List<OrganizationResponseDto> getAllOrganizations() {
-    return organizationService.getAllOrganizationsResponses();
+  public List<OrganizationResponseDto> getAllOrganizationsForCurrentUser() {
+    return organizationService.getAllOrganizationsResponsesForCurrentUser();
   }
 
   @Operation(summary = "Get organization by id")

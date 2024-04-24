@@ -29,9 +29,9 @@ public class OrganizationService implements EntityFetcher {
   private final AuthService authService;
   private final UserService userService;
 
-  public List<OrganizationResponseDto> getAllOrganizationsResponses() {
-    logger.debug("Fetching all organizationsResponses");
-    return getAll().stream().map(organizationMapper::toResponse).toList();
+  public List<OrganizationResponseDto> getAllOrganizationsResponsesForCurrentUser() {
+    logger.debug("Fetching all organizationsResponses for current user ");
+    return getOrganizationsUserIsPartOf().stream().map(organizationMapper::toResponse).toList();
   }
 
   public OrganizationResponseDto getOrganizationResponse(UUID id) {
@@ -107,15 +107,24 @@ public class OrganizationService implements EntityFetcher {
         organization.getId());
   }
 
+  private List<Organization> getOrganizationsUserIsPartOf() {
+    User currentUser = userService.getUser(authService.getCurrentUser().getId());
+    return getAll().stream()
+            .filter(org ->
+                    org.getUsersInOrganization().stream()
+                            .anyMatch(userOrg -> userOrg.getUser().equals(currentUser)))
+            .toList();
+  }
+
   private boolean doesUserHavePermissionForOrganization(
-          Organization organization, User currentUser, OrganizationPermission organizationPermission) {
+      Organization organization, User currentUser, OrganizationPermission organizationPermission) {
     return organization.getUsersInOrganization().stream()
-            .anyMatch(
-                    userInOrganization ->
-                            userInOrganization.getUser().getId().equals(currentUser.getId())
-                                    && userInOrganization
-                                    .getOrganizationPermission()
-                                    .contains(organizationPermission));
+        .anyMatch(
+            userInOrganization ->
+                userInOrganization.getUser().getId().equals(currentUser.getId())
+                    && userInOrganization
+                        .getOrganizationPermission()
+                        .contains(organizationPermission));
   }
 
   private void makeCurrentUserOwner(Organization organization) {
