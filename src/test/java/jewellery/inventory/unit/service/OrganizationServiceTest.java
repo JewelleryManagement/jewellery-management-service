@@ -63,13 +63,13 @@ class OrganizationServiceTest {
 
   @Test
   void testGetAllOrganizations() {
-
     List<Organization> organizations =
-        Arrays.asList(organization, new Organization(), new Organization());
-
+        List.of(organizationWithUserAllPermission);
     when(organizationRepository.findAll()).thenReturn(organizations);
+    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(userService.getUser(user.getId())).thenReturn(user);
 
-    List<OrganizationResponseDto> responses = organizationService.getAllOrganizationsResponses();
+    List<OrganizationResponseDto> responses = organizationService.getAllOrganizationsResponsesForCurrentUser();
 
     assertEquals(organizations.size(), responses.size());
   }
