@@ -182,7 +182,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
     return resourceInOrganization;
   }
 
-  private ResourceInOrganization getResourceInOrganization(
+  public ResourceInOrganization getResourceInOrganization(
       Organization organization, Resource resource) {
     logger.debug(
         "Getting resource in organization. Organization: {}, Resource: {}", organization, resource);

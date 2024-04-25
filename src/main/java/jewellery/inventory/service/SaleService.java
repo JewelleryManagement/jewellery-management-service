@@ -108,7 +108,7 @@ public class SaleService {
     return validateSaleAfterReturnResource(sale, resourceToReturn);
   }
 
-  private static void removeResourceFromSale(Sale sale, PurchasedResourceInUser resourceToReturn) {
+  public void removeResourceFromSale(Sale sale, PurchasedResourceInUser resourceToReturn) {
     sale.getResources()
         .removeIf(
             purchasedResource ->
@@ -201,7 +201,7 @@ public class SaleService {
         saleMapper.mapEntityToResponseDto(sale), productToReturn);
   }
 
-  private ResourceReturnResponseDto validateSaleAfterReturnResource(
+  public ResourceReturnResponseDto validateSaleAfterReturnResource(
       Sale sale, PurchasedResourceInUser resourceToReturn) {
     if (sale.getResources().isEmpty() && sale.getProducts().isEmpty()) {
       sale = null;
@@ -230,7 +230,7 @@ public class SaleService {
     }
   }
 
-  private PurchasedResourceInUser getPurchasedResource(UUID resourceId, UUID saleId) {
+  public PurchasedResourceInUser getPurchasedResource(UUID resourceId, UUID saleId) {
     return purchasedResourceInUserRepository
         .findByResourceIdAndPartOfSaleId(resourceId, saleId)
         .orElseThrow(() -> new ResourceNotFoundInSaleException(resourceId, saleId));

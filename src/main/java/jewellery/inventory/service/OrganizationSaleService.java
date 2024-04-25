@@ -3,11 +3,14 @@ package jewellery.inventory.service;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.OrganizationSaleResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
+import jewellery.inventory.dto.response.ResourceReturnResponseDto;
+import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
@@ -19,7 +22,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class OrganizationSaleService {
+public class OrganizationSaleService implements EntityFetcher {
 
   private static final Logger logger = LogManager.getLogger(OrganizationSaleService.class);
 
@@ -60,7 +63,7 @@ public class OrganizationSaleService {
     saleService.setProductPriceDiscountSalePriceAndSale(sale);
     saleService.updateProductOwnersAndSale(
         sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
-    removeQuantityFromResourcesInOrganization(saleRequestDto, sale);
+    removeQuantityFromResourcesInOrganization(sale);
     saleService.setFieldsOfResourcesAfterSale(sale);
     logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
     return saleMapper.mamToOrganizationSaleResponseDto(createdSale);
@@ -91,6 +94,51 @@ public class OrganizationSaleService {
     saleService.deleteSaleIfProductsAndResourcesAreEmpty(sale);
     logger.info("Product returned successfully. Product ID: {}", productId);
     return saleService.validateSaleAfterReturnProduct(sale, productToReturn);
+  }
+
+  @LogCreateEvent(eventType = EventType.ORGANIZATION_SALE_RETURN_RESOURCE)
+  @Transactional
+  public ResourceReturnResponseDto returnResource(UUID saleId, UUID resourceId) {
+    Sale sale = saleService.getSale(saleId);
+    PurchasedResourceInUser resourceToReturn = saleService.getPurchasedResource(resourceId, saleId);
+
+    organizationService.validateUserInOrganization(
+        organizationService.getOrganization(sale.getOrganizationSeller().getId()));
+    organizationService.validateCurrentUserPermission(
+        organizationService.getOrganization(sale.getOrganizationSeller().getId()),
+        OrganizationPermission.RETURN_RESOURCE);
+
+    returnResourceFromSaleToOrganization(sale, resourceToReturn);
+    saleService.removeResourceFromSale(sale, resourceToReturn);
+
+    saleService.deleteSaleIfProductsAndResourcesAreEmpty(sale);
+    logger.info("Resource returned successfully. Resource ID: {}", resourceId);
+    return saleService.validateSaleAfterReturnResource(sale, resourceToReturn);
+  }
+
+  public List<OrganizationSaleResponseDto> getAllSales() {
+    logger.debug("Fetching all Sales from organization");
+    return saleRepository.findAll().stream()
+        .map(saleMapper::mamToOrganizationSaleResponseDto)
+        .toList();
+  }
+
+  public OrganizationSaleResponseDto getSale(UUID saleId) {
+    logger.debug("Fetching a Sale from organization");
+    return saleMapper.mamToOrganizationSaleResponseDto(getSaleById(saleId));
+  }
+
+  private Sale getSaleById(UUID saleId) {
+    return saleRepository.findById(saleId).orElseThrow(() -> new SaleNotFoundException(saleId));
+  }
+
+  private void returnResourceFromSaleToOrganization(
+      Sale sale, PurchasedResourceInUser resourceToReturn) {
+    ResourceInOrganization resourceInOrganization =
+        resourceInOrganizationService.getResourceInOrganization(
+            sale.getOrganizationSeller(), resourceToReturn.getResource());
+    resourceInOrganization.setQuantity(
+        resourceInOrganization.getQuantity().add(resourceToReturn.getQuantity()));
   }
 
   private void updateProductsOrganizationOwner(
@@ -131,10 +179,15 @@ public class OrganizationSaleService {
     }
   }
 
-  private void removeQuantityFromResourcesInOrganization(SaleRequestDto saleRequestDto, Sale sale) {
+  private void removeQuantityFromResourcesInOrganization(Sale sale) {
     for (PurchasedResourceInUser resource : sale.getResources()) {
+      ResourceInOrganization resourceInOrganization =
+          resourceInOrganizationService.getResourceInOrganization(
+              sale.getOrganizationSeller(), resource.getResource());
       resourceInOrganizationService.removeQuantityFromResource(
-          saleRequestDto.getSellerId(), resource.getId(), resource.getQuantity());
+          sale.getOrganizationSeller().getId(),
+          resourceInOrganization.getResource().getId(),
+          resource.getQuantity());
     }
   }
 
@@ -156,5 +209,14 @@ public class OrganizationSaleService {
             resource.getResourceAndQuantity().getResourceId());
       }
     }
+  }
+
+  @Override
+  public Object fetchEntity(Object... ids) {
+    Sale sale = saleRepository.findById((UUID) ids[0]).orElse(null);
+    if (sale == null) {
+      return null;
+    }
+    return saleMapper.mamToOrganizationSaleResponseDto(sale);
   }
 }
