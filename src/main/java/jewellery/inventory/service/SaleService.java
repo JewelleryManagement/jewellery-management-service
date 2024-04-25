@@ -118,7 +118,7 @@ public class SaleService {
                     .equals(resourceToReturn.getResource().getId()));
   }
 
-  private Sale getSale(UUID saleId) {
+  public Sale getSale(UUID saleId) {
     return saleRepository.findById(saleId).orElseThrow(() -> new SaleNotFoundException(saleId));
   }
 
@@ -131,13 +131,13 @@ public class SaleService {
     }
   }
 
-  private void throwExceptionIfProductIsPartOfAnotherProduct(Product product) {
+  public void throwExceptionIfProductIsPartOfAnotherProduct(Product product) {
     if (product.getContentOf() != null) {
       throw new ProductIsContentException(product.getId());
     }
   }
 
-  private void throwExceptionIfProductNotSold(Product product) {
+  public void throwExceptionIfProductNotSold(Product product) {
     if (product.getPartOfSale() == null) {
       throw new ProductNotSoldException(product.getId());
     }
@@ -178,7 +178,7 @@ public class SaleService {
     return new ArrayList<>();
   }
 
-  private void deleteSaleIfProductsAndResourcesAreEmpty(Sale sale) {
+  public void deleteSaleIfProductsAndResourcesAreEmpty(Sale sale) {
     if (sale.getProducts().isEmpty() && sale.getResources().isEmpty()) {
       logger.info(
           "Deleting sale with ID: {} since the both products list and resources list are empty.",
@@ -192,7 +192,7 @@ public class SaleService {
     }
   }
 
-  private ProductReturnResponseDto validateSaleAfterReturnProduct(
+  public ProductReturnResponseDto validateSaleAfterReturnProduct(
       Sale sale, Product productToReturn) {
     if (sale.getProducts().isEmpty() && sale.getResources().isEmpty()) {
       return productService.getProductReturnResponseDto(null, productToReturn);
