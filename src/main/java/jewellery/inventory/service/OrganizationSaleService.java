@@ -3,7 +3,6 @@ package jewellery.inventory.service;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.UUID;
-import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
@@ -22,7 +21,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class OrganizationSaleService implements EntityFetcher {
+public class OrganizationSaleService {
 
   private static final Logger logger = LogManager.getLogger(OrganizationSaleService.class);
 
@@ -209,14 +208,5 @@ public class OrganizationSaleService implements EntityFetcher {
             resource.getResourceAndQuantity().getResourceId());
       }
     }
-  }
-
-  @Override
-  public Object fetchEntity(Object... ids) {
-    Sale sale = saleRepository.findById((UUID) ids[0]).orElse(null);
-    if (sale == null) {
-      return null;
-    }
-    return saleMapper.mamToOrganizationSaleResponseDto(sale);
   }
 }
