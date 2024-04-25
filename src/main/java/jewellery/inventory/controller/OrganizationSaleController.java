@@ -29,14 +29,14 @@ public class OrganizationSaleController {
 
   @Operation(summary = "Return of a sold product from user to organization")
   @ResponseStatus(HttpStatus.OK)
-  @PutMapping("/return-product/{productId}")
+  @PutMapping("/sales/return-product/{productId}")
   public ProductReturnResponseDto returnProduct(@PathVariable("productId") UUID productId) {
     return organizationSaleService.returnProduct(productId);
   }
 
   @Operation(summary = "Return of a sold resource from user to organization")
   @ResponseStatus(HttpStatus.OK)
-  @PutMapping("/{saleId}/return-resource/{resourceId}")
+  @PutMapping("/sales/{saleId}/return-resource/{resourceId}")
   public ResourceReturnResponseDto returnResource(
       @PathVariable("saleId") UUID saleId, @PathVariable("resourceId") UUID resourceId) {
     return organizationSaleService.returnResource(saleId, resourceId);
@@ -51,7 +51,7 @@ public class OrganizationSaleController {
 
   @Operation(summary = "Get sale from organization to user")
   @ResponseStatus(HttpStatus.OK)
-  @GetMapping("/sale/{saleId}")
+  @GetMapping("/sales/{saleId}")
   public OrganizationSaleResponseDto getSale(@PathVariable("saleId") UUID saleId) {
     return organizationSaleService.getSale(saleId);
   }
