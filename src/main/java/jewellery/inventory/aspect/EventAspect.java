@@ -1,6 +1,5 @@
 package jewellery.inventory.aspect;
 
-import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
@@ -50,8 +49,8 @@ public class EventAspect {
     return newEntity;
   }
 
-  @Before("@annotation(logDeleteEvent) && args(id)")
-  public void logDeletion(JoinPoint joinPoint, LogDeleteEvent logDeleteEvent, UUID id) {
+  @Before("@annotation(logDeleteEvent)")
+  public void logDeletion(JoinPoint joinPoint, LogDeleteEvent logDeleteEvent) {
     EventType eventType = logDeleteEvent.eventType();
     Object service = joinPoint.getTarget();
 
@@ -61,12 +60,12 @@ public class EventAspect {
       return;
     }
 
-    Object entityBeforeDeletion = entityFetcher.fetchEntity(id);
+    Object entityBeforeDeletion = entityFetcher.fetchEntity(joinPoint.getArgs());
 
     if (entityBeforeDeletion != null) {
       eventService.logEvent(eventType, entityBeforeDeletion);
     } else {
-      logger.error("Entity with id: {} not found for deletion logging", id);
+      logger.error("Entity with id: {} not found for deletion logging", joinPoint.getArgs());
     }
   }
 }

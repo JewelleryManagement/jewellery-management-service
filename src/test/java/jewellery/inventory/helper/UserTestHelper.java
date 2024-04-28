@@ -1,7 +1,7 @@
 package jewellery.inventory.helper;
 
+import java.math.BigDecimal;
 import java.util.UUID;
-import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.UserUpdateRequestDto;
@@ -22,11 +22,31 @@ public class UserTestHelper {
     return user;
   }
 
+  public static UserRequestDto getTestUserRequest(User user) {
+    UserRequestDto userRequestDto = new UserRequestDto();
+    userRequestDto.setRole(user.getRole());
+    userRequestDto.setPassword(user.getPassword());
+    userRequestDto.setEmail(user.getEmail());
+    userRequestDto.setFirstName(user.getFirstName());
+    userRequestDto.setLastName(user.getLastName());
+    return userRequestDto;
+  }
+
   public static User createTestUser() {
     User user = new User();
     user.setFirstName(FIRST_NAME);
     user.setLastName(LAST_NAME);
     user.setEmail(USER_EMAIL);
+    user.setPassword(USER_PASSWORD);
+    user.setRole(Role.ADMIN);
+    return user;
+  }
+
+  public static User createTestAdminUser() {
+    User user = new User();
+    user.setFirstName("admin");
+    user.setLastName("admin");
+    user.setEmail("admin@example.com");
     user.setPassword(USER_PASSWORD);
     user.setRole(Role.ADMIN);
     return user;
@@ -73,6 +93,7 @@ public class UserTestHelper {
     userRequest.setLastName(LAST_NAME);
     userRequest.setEmail(USER_EMAIL);
     userRequest.setPassword(USER_PASSWORD);
+    userRequest.setRole(Role.ADMIN);
     return userRequest;
   }
 
@@ -101,17 +122,18 @@ public class UserTestHelper {
     return invalidUserRequest;
   }
 
-  public static @NotNull ResourceInUserRequestDto createResourceInUserRequestDto(
-      UUID userId, UUID resourceId, double quantity) {
-    ResourceInUserRequestDto requestDto = new ResourceInUserRequestDto();
+  public static @NotNull ResourcePurchaseRequestDto createResourcePurchaseRequestDto(
+      UUID userId, UUID resourceId, BigDecimal quantity, BigDecimal price) {
+    ResourcePurchaseRequestDto requestDto = new ResourcePurchaseRequestDto();
     requestDto.setUserId(userId);
     requestDto.setResourceId(resourceId);
     requestDto.setQuantity(quantity);
+    requestDto.setDealPrice(price);
     return requestDto;
   }
 
   public static ResourcePurchaseRequestDto createResourcePurchaseRequest(
-      UUID userId, UUID resourceId, double quantity, double price) {
+      UUID userId, UUID resourceId, BigDecimal quantity, BigDecimal price) {
     return ResourcePurchaseRequestDto.builder()
         .userId(userId)
         .resourceId(resourceId)

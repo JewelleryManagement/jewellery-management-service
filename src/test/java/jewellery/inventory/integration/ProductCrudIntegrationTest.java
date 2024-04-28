@@ -2,11 +2,9 @@ package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.ProductTestHelper.*;
 import static jewellery.inventory.helper.SystemEventTestHelper.*;
-import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
-import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
-import static jewellery.inventory.model.EventType.PRODUCT_CREATE;
-import static jewellery.inventory.model.EventType.PRODUCT_DISASSEMBLY;
-import static jewellery.inventory.model.EventType.PRODUCT_TRANSFER;
+import static jewellery.inventory.helper.UserTestHelper.*;
+import static jewellery.inventory.model.EventType.*;
+import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -18,7 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ProductRequestDto;
-import jewellery.inventory.dto.request.ResourceInUserRequestDto;
+import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ImageResponseDto;
@@ -53,7 +51,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private User user;
   private PreciousStone preciousStone;
   private User differentUser;
-  private ResourceInUserRequestDto resourceInUserRequestDto;
+  private ResourcePurchaseRequestDto resourcePurchaseRequestDto;
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
   private ProductRequestDto productRequestDto;
   private ProductRequestDto productRequestDto2;
@@ -94,10 +92,10 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void setUp() {
     user = createUserInDatabase(createTestUserRequest());
     preciousStone = createPreciousStoneInDatabase();
-    resourceInUserRequestDto =
+    resourcePurchaseRequestDto =
         getResourceInUserRequestDto(user, Objects.requireNonNull(preciousStone));
     differentUser = createUserInDatabase(createDifferentUserRequest());
-    resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
+    resourcesInUserResponseDto = getResourcesInUserResponseDto(resourcePurchaseRequestDto);
     productRequestDto =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), user);
     productRequestDto2 =
@@ -155,7 +153,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void imageAttachedToProducOverrideSuccessfully() {
+  void imageAttachedToProductOverrideSuccessfully() {
     ProductResponseDto productResponse = createProductWithRequest(productRequestDto);
 
     uploadImageAndAssertSuccessfulResponse(productResponse);
@@ -246,23 +244,35 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void createProductSuccessfully() throws JsonProcessingException {
-
     ResponseEntity<ProductResponseDto> response =
         this.testRestTemplate.postForEntity(
             getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
     ProductResponseDto productResponseDto = response.getBody();
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
-    assertEquals(
-        productRequestDto.getResourcesContent().get(0).getId(),
-        productResponseDto.getResourcesContent().get(0).getResource().getId());
-    assertEquals(productRequestDto.getOwnerId(), productResponseDto.getOwner().getId());
-    assertEquals(productRequestDto.getProductionNumber(), productResponseDto.getProductionNumber());
-    assertEquals(productRequestDto.getCatalogNumber(), productResponseDto.getCatalogNumber());
-
+    assertCreatedProductMatchesRequest(productRequestDto, response);
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(productResponseDto, objectMapper);
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_CREATE, expectedEventPayload);
+  }
 
+  @Test
+  void createProductWithProductWithImageSuccessfully() throws JsonProcessingException {
+    ResponseEntity<ProductResponseDto> productResponse =
+            this.testRestTemplate.postForEntity(
+                    getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+    ProductResponseDto productResponseDto = productResponse.getBody();
+    uploadImageAndAssertSuccessfulResponse(productResponseDto);
+    productRequestDto2.setProductsContent(List.of(productResponse.getBody().getId()));
+
+    ResponseEntity<ProductResponseDto> productWithProductResponse =
+            this.testRestTemplate.postForEntity(
+                    getBaseProductUrl(), productRequestDto2, ProductResponseDto.class);
+
+    assertEquals(HttpStatus.CREATED, productWithProductResponse.getStatusCode());
+    assertCreatedProductMatchesRequest(productRequestDto2, productWithProductResponse);
+    Map<String, Object> expectedEventPayload =
+            getCreateOrDeleteEventPayload(productWithProductResponse.getBody(), objectMapper);
     systemEventTestHelper.assertEventWasLogged(PRODUCT_CREATE, expectedEventPayload);
   }
 
@@ -278,7 +288,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ProductResponseDto responseBody = response.getBody();
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertEquals(productRequestDto.getOwnerId(), responseBody.getOwner().getId());
-    assertEquals(productRequestDto.getSalePrice(), responseBody.getSalePrice());
     assertEquals(
         productRequestDto.getResourcesContent().size(), responseBody.getResourcesContent().size());
     assertEquals(productRequestDto.getCatalogNumber(), responseBody.getCatalogNumber());
@@ -366,6 +375,78 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.NOT_FOUND, byteResponse.getStatusCode());
   }
 
+  @Test
+  void updateProductSuccessfully() throws JsonProcessingException {
+    ProductResponseDto product = createProductWithRequest(productRequestDto);
+    UUID productId = product.getId();
+
+    productRequestDto.setResourcesContent(productRequestDto2.getResourcesContent());
+    HttpEntity<ProductRequestDto> requestEntity = new HttpEntity<>(productRequestDto, headers);
+
+    ResponseEntity<ProductResponseDto> response =
+        this.testRestTemplate.exchange(
+            getProductUrl(productId), HttpMethod.PUT, requestEntity, ProductResponseDto.class);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+
+    ProductResponseDto productResponseDto = response.getBody();
+
+    Map<String, Object> expectedEventPayload =
+        getUpdateEventPayload(product, productResponseDto, objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_UPDATE, expectedEventPayload);
+
+    assertEquals(
+        productRequestDto.getResourcesContent().get(0).getQuantity(),
+        productResponseDto.getResourcesContent().get(0).getQuantity());
+  }
+
+  @Test
+  void updateProductSuccessfullyShouldNotChangeOwner() throws JsonProcessingException {
+    ProductResponseDto product = createProductWithRequest(productRequestDto);
+    UUID productId = product.getId();
+    UUID oldOwnerId = productRequestDto.getOwnerId();
+    productRequestDto.setOwnerId(UUID.randomUUID());
+    HttpEntity<ProductRequestDto> requestEntity = new HttpEntity<>(productRequestDto, headers);
+
+    ResponseEntity<ProductResponseDto> response =
+        this.testRestTemplate.exchange(
+            getProductUrl(productId), HttpMethod.PUT, requestEntity, ProductResponseDto.class);
+    ProductResponseDto productResponseDto = response.getBody();
+    Map<String, Object> expectedEventPayload =
+        getUpdateEventPayload(product, productResponseDto, objectMapper);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    systemEventTestHelper.assertEventWasLogged(PRODUCT_UPDATE, expectedEventPayload);
+    assertEquals(oldOwnerId, productResponseDto.getOwner().getId());
+    assertNotEquals(productRequestDto.getOwnerId(), productResponseDto.getOwner().getId());
+  }
+
+  @Test
+  void productUpdateShouldThrowWhenProductContentsItself() {
+    ProductResponseDto product = createProductWithRequest(productRequestDto);
+    UUID productId = product.getId();
+
+    productRequestDto.setResourcesContent(productRequestDto2.getResourcesContent());
+    productRequestDto.setProductsContent(List.of(productId));
+    HttpEntity<ProductRequestDto> requestEntity = new HttpEntity<>(productRequestDto, headers);
+
+    ResponseEntity<ProductResponseDto> response =
+        this.testRestTemplate.exchange(
+            getProductUrl(productId), HttpMethod.PUT, requestEntity, ProductResponseDto.class);
+
+    assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+  }
+
+  private void assertCreatedProductMatchesRequest(ProductRequestDto comparisonRequest, ResponseEntity<ProductResponseDto> productWithProductResponse) {
+    assertEquals(
+            comparisonRequest.getResourcesContent().get(0).getResourceId(),
+            productWithProductResponse.getBody().getResourcesContent().get(0).getResource().getId());
+    assertEquals(comparisonRequest.getOwnerId(), productWithProductResponse.getBody().getOwner().getId());
+    assertEquals(comparisonRequest.getProductionNumber(), productWithProductResponse.getBody().getProductionNumber());
+    assertEquals(comparisonRequest.getCatalogNumber(), productWithProductResponse.getBody().getCatalogNumber());
+  }
+
   private void uploadImageAndAssertSuccessfulResponse(ProductResponseDto productResponse) {
     ResponseEntity<ImageResponseDto> response =
         this.testRestTemplate.postForEntity(
@@ -380,13 +461,14 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @NotNull
-  private static ResourceInUserRequestDto getResourceInUserRequestDto(
+  private static ResourcePurchaseRequestDto getResourceInUserRequestDto(
       User user, PreciousStone preciousStone) {
-    ResourceInUserRequestDto resourceInUserRequestDto = new ResourceInUserRequestDto();
-    resourceInUserRequestDto.setUserId(user.getId());
-    resourceInUserRequestDto.setResourceId(preciousStone.getId());
-    resourceInUserRequestDto.setQuantity(20);
-    return resourceInUserRequestDto;
+    ResourcePurchaseRequestDto resourcePurchaseRequestDto = new ResourcePurchaseRequestDto();
+    resourcePurchaseRequestDto.setUserId(user.getId());
+    resourcePurchaseRequestDto.setResourceId(preciousStone.getId());
+    resourcePurchaseRequestDto.setQuantity(getBigDecimal("20"));
+    resourcePurchaseRequestDto.setDealPrice(getBigDecimal("10"));
+    return resourcePurchaseRequestDto;
   }
 
   private void assertResponseMatchesCreatedRequest(
@@ -410,7 +492,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Nullable
   private ResourcesInUserResponseDto getResourcesInUserResponseDto(
-      ResourceInUserRequestDto resourceInUserRequestDto) {
+      ResourcePurchaseRequestDto resourceInUserRequestDto) {
     ResponseEntity<ResourcesInUserResponseDto> createResourceInUser =
         this.testRestTemplate.postForEntity(
             getBaseResourceAvailabilityUrl(),

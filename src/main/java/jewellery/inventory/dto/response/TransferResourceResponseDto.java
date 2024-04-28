@@ -1,6 +1,5 @@
 package jewellery.inventory.dto.response;
 
-import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
 import lombok.*;
 
 @Getter

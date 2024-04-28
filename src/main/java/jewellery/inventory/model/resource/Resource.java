@@ -1,6 +1,7 @@
 package jewellery.inventory.model.resource;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.model.ResourceInUser;
@@ -18,7 +19,7 @@ public class Resource {
 
   private String clazz;
   private String quantityType;
-  private Double pricePerQuantity;
+  private BigDecimal pricePerQuantity;
   private String note;
 
   @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL)

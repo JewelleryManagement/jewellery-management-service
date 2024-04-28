@@ -15,10 +15,7 @@ import jewellery.inventory.helper.ProductTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.mapper.UserMapper;
-import jewellery.inventory.model.Product;
-import jewellery.inventory.model.ResourceInUser;
-import jewellery.inventory.model.Sale;
-import jewellery.inventory.model.User;
+import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.ImageService;
@@ -90,7 +87,7 @@ class ProductServiceTest {
 
   @Test
   void testTransferProductThrowsExceptionWhenProductIsSold() {
-    product.setPartOfSale(new Sale());
+    product.setPartOfSale(new ProductPriceDiscount());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
     assertThrows(
@@ -262,7 +259,7 @@ class ProductServiceTest {
 
   @Test
   void testDeleteProductShouldThrowExceptionWhenProductIsSold() {
-    product.setPartOfSale(new Sale());
+    product.setPartOfSale(new ProductPriceDiscount());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
     assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
@@ -286,8 +283,7 @@ class ProductServiceTest {
 
   @Test
   void deleteProductShouldThrowExceptionWhenProductIsSold() {
-    product.setPartOfSale(new Sale());
-
+    product.setPartOfSale(new ProductPriceDiscount());
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     UUID productId = product.getId();
     assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
@@ -297,5 +293,54 @@ class ProductServiceTest {
   void deleteProductShouldThrowExceptionWhenProductIdDoesNotExist() {
     UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
     assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(fakeId));
+  }
+
+  @Test
+  void updateProductShouldThrowWhenProductNotFound() {
+    assertThrows(ProductNotFoundException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
+  }
+
+  @Test
+  void updateProductShouldThrowWhenProductIsSold() {
+    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+    product.setPartOfSale(new ProductPriceDiscount());
+    assertThrows(ProductIsSoldException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
+  }
+
+  @Test
+  void testUpdateProductShouldThrowWhenProductIsPartOfItself() {
+    productRequestDto.setProductsContent(List.of(product.getId()));
+    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+    assertThrows(ProductPartOfItselfException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
+  }
+
+  @Test
+  void testUpdateProductSuccessfullyWhenProductIsPartOfAnotherProduct() {
+    Product innerProduct = getTestProduct(user,pearl);
+    innerProduct.setContentOf(product);
+    when(productRepository.findById(innerProduct.getId())).thenReturn(Optional.of(innerProduct));
+    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+    when(resourceInUserRepository
+            .findByResourceIdAndOwnerId(pearl.getId(), user.getId())).thenReturn(Optional.of(resourceInUser));
+
+    productService.updateProduct(innerProduct.getId(), productRequestDto);
+
+    verify(productRepository, times(1)).findById(innerProduct.getId());
+    verify(userRepository,times(1)).findById(user.getId());
+    verify(resourceInUserRepository, times(1))
+            .findByResourceIdAndOwnerId(pearl.getId(), user.getId());
+    verify(productRepository, times(2)).save(innerProduct);
+  }
+
+  @Test
+  void updateInnerProductShouldThrowWhenProductIsSold() {
+    product.setPartOfSale(new ProductPriceDiscount());
+
+    Product innerProduct = getTestProduct(user,pearl);
+    innerProduct.setContentOf(product);
+
+    when(productRepository.findById(innerProduct.getId())).thenReturn(Optional.of(innerProduct));
+    assertThrows(ProductIsSoldException.class, () -> productService.updateProduct(innerProduct.getId(), productRequestDto));
   }
 }

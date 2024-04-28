@@ -2,9 +2,17 @@ package jewellery.inventory.helper;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import jakarta.annotation.PostConstruct;
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,5 +78,22 @@ public class SystemEventTestHelper {
 
     ResponseEntity<String> response = testRestTemplate.getForEntity("/system-events", String.class);
     return objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+  }
+
+  @PostConstruct
+  public void configureObjectMapper() {
+    SimpleModule module = new SimpleModule();
+    module.addSerializer(BigDecimal.class, new ToStringSerializer());
+    module.addDeserializer(
+        BigDecimal.class,
+        new StdScalarDeserializer<>(BigDecimal.class) {
+          @Override
+          public BigDecimal deserialize(JsonParser p, DeserializationContext ctxt)
+              throws IOException {
+            return new BigDecimal(p.getValueAsString());
+          }
+        });
+
+    objectMapper.registerModule(module);
   }
 }

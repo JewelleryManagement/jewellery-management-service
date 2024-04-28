@@ -6,20 +6,24 @@ import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPay
 import static jewellery.inventory.model.EventType.RESOURCE_CREATE;
 import static jewellery.inventory.model.EventType.RESOURCE_DELETE;
 import static jewellery.inventory.model.EventType.RESOURCE_UPDATE;
+import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
-import jewellery.inventory.dto.response.resource.ResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ResourceMapper;
+import org.hibernate.AssertionFailure;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -86,7 +90,9 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     resourceQuantityResponseDtos.forEach(
         resourceQuantityDto -> {
-          assertEquals(0.0, resourceQuantityDto.getQuantity());
+          assertEquals(
+              getBigDecimal("0"),
+              resourceQuantityDto.getQuantity().setScale(2, RoundingMode.HALF_UP));
         });
     assertEquals(
         createdResources,
@@ -103,8 +109,12 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResourceQuantityResponseDto fetchedResourceQuantity =
         getResourceQuantityWithRequest(createdResources.get(0).getId());
 
-    assertEquals(0.0, fetchedResourceQuantity.getQuantity());
-    assertEquals(createdResources.get(0), fetchedResourceQuantity.getResource());
+    assertEquals(
+        getBigDecimal("0"),
+        fetchedResourceQuantity.getQuantity().setScale(2, RoundingMode.HALF_UP));
+    assertEquals(
+        createdResources.get(0).getPricePerQuantity(),
+        fetchedResourceQuantity.getResource().getPricePerQuantity());
   }
 
   @Test
@@ -118,7 +128,10 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertInputMatchesFetchedFromServer(updatedInputDtos);
 
     Map<String, Object> expectedEventPayload =
-        getUpdateEventPayload(createdDtos.get(0), updatedDtos.get(0), objectMapper);
+            getUpdateEventPayload(
+                    createdDtos.get(0),
+                    getMatchingUpdatedDto(createdDtos.get(0).getId(), updatedDtos),
+                    objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(RESOURCE_UPDATE, expectedEventPayload);
   }
@@ -228,13 +241,20 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     List<ResourceResponseDto> updatedResources = getResourcesWithRequest();
     updatedResources.forEach(resourceResponseDto -> resourceResponseDto.setId(null));
 
-    assertEquals(
+    List<ResourceResponseDto> mappedDtos =
         updatedInputDtos.stream()
             .map(
                 resourceRequestDto ->
                     resourceMapper.toResourceResponse(
                         resourceMapper.toResourceEntity(resourceRequestDto)))
-            .toList(),
-        updatedResources);
+            .toList();
+
+    assertThat(mappedDtos).containsExactlyInAnyOrderElementsOf(updatedResources);
+  }
+  private ResourceResponseDto getMatchingUpdatedDto(UUID id, List<ResourceResponseDto> updatedDtos) {
+    return updatedDtos.stream()
+            .filter(resourceResponseDto -> resourceResponseDto.getId().equals(id))
+            .findFirst()
+            .orElseThrow(() -> new AssertionFailure("Can't find id: " + id + " in responses"));
   }
 }
