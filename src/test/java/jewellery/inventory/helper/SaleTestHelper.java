@@ -14,12 +14,7 @@ import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
-import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.dto.response.ProductReturnResponseDto;
-import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
-import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
-import jewellery.inventory.dto.response.SaleResponseDto;
-import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.Product;
@@ -101,6 +96,29 @@ public class SaleTestHelper {
     return dto;
   }
 
+  public static OrganizationSaleResponseDto getOrganizationSaleResponseDto(Sale sale) {
+    OrganizationSaleResponseDto dto = new OrganizationSaleResponseDto();
+    OrganizationResponseDto organizationResponseDto =
+        OrganizationTestHelper.getTestOrganizationResponseDto(
+            OrganizationTestHelper.getTestOrganization());
+    UserResponseDto userResponseDtoBuyer = createUserResponseDto(sale.getBuyer());
+
+    dto.setOrganizationSeller(organizationResponseDto);
+    dto.setBuyer(userResponseDtoBuyer);
+    ProductResponseDto productResponseDto = new ProductResponseDto();
+    dto.setTotalDiscountedPrice(sale.getProducts().get(0).getSalePrice());
+    dto.setTotalDiscount(BigDecimal.ZERO);
+    dto.setProducts(List.of(productResponseDto));
+
+    calculateOrganizationProductsDiscounts(sale, dto);
+    calculateOrganizationResourcesDiscounts(sale, dto);
+
+    dto.setProducts(createOrganizationProductsResponse(sale, dto));
+    dto.setResources(createResourcesResponse(sale));
+
+    return dto;
+  }
+
   @NotNull
   private static List<ProductResponseDto> createProductsResponse(Sale sale, SaleResponseDto dto) {
     return sale.getProducts().stream()
@@ -109,10 +127,20 @@ public class SaleTestHelper {
   }
 
   @NotNull
+  private static List<ProductResponseDto> createOrganizationProductsResponse(
+      Sale sale, OrganizationSaleResponseDto dto) {
+    return sale.getProducts().stream()
+        .map(product -> createProductResponseDto(dto.getBuyer()))
+        .collect(Collectors.toList());
+  }
+
   private static List<PurchasedResourceQuantityResponseDto> createResourcesResponse(Sale sale) {
-    return sale.getResources().stream()
-        .map(resource -> createPurchasedResourceResponseDto())
-        .toList();
+    if (sale.getResources() != null) {
+      return sale.getResources().stream()
+          .map(resource -> createPurchasedResourceResponseDto())
+          .toList();
+    }
+    return null;
   }
 
   private static void calculateResourcesDiscounts(Sale sale, SaleResponseDto dto) {
@@ -131,7 +159,43 @@ public class SaleTestHelper {
             });
   }
 
+  private static void calculateOrganizationResourcesDiscounts(
+      Sale sale, OrganizationSaleResponseDto dto) {
+    if (sale.getResources() != null) {
+      sale.getResources()
+          .forEach(
+              resource -> {
+                BigDecimal salePrice =
+                    Optional.ofNullable(resource.getSalePrice()).orElse(BigDecimal.ZERO);
+                BigDecimal discount =
+                    Optional.ofNullable(resource.getDiscount()).orElse(BigDecimal.ZERO);
+                dto.setTotalDiscountedPrice(dto.getTotalDiscountedPrice().add(salePrice));
+                dto.setTotalDiscount(
+                    (dto.getTotalDiscount().add(discount))
+                        .divide(salePrice, MathContext.DECIMAL128)
+                        .multiply(getBigDecimal("100")));
+              });
+    }
+  }
+
   private static void calculateProductsDiscounts(Sale sale, SaleResponseDto dto) {
+    sale.getProducts()
+        .forEach(
+            product -> {
+              BigDecimal salePrice =
+                  Optional.ofNullable(product.getSalePrice()).orElse(BigDecimal.ZERO);
+              BigDecimal discount =
+                  Optional.ofNullable(product.getDiscount()).orElse(BigDecimal.ZERO);
+              dto.setTotalDiscountedPrice(dto.getTotalDiscountedPrice().add(salePrice));
+              dto.setTotalDiscount(
+                  (dto.getTotalDiscount().add(discount))
+                      .divide(salePrice, MathContext.DECIMAL128)
+                      .multiply(getBigDecimal("100")));
+            });
+  }
+
+  private static void calculateOrganizationProductsDiscounts(
+      Sale sale, OrganizationSaleResponseDto dto) {
     sale.getProducts()
         .forEach(
             product -> {
@@ -217,5 +281,20 @@ public class SaleTestHelper {
     productPriceDiscount.setSale(sale);
     productPriceDiscount.setSalePrice(BigDecimal.ONE);
     return productPriceDiscount;
+  }
+
+  public static Sale createSaleInOrganization(
+      Organization seller,
+      User buyer,
+      List<ProductPriceDiscount> products,
+      List<PurchasedResourceInUser> resources) {
+    Sale sale = new Sale();
+    sale.setId(UUID.randomUUID());
+    sale.setOrganizationSeller(seller);
+    sale.setBuyer(buyer);
+    sale.setDate(LocalDate.now());
+    sale.setResources(resources);
+    sale.setProducts(products);
+    return sale;
   }
 }

@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
+import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.OrganizationSaleResponseDto;
@@ -11,6 +12,8 @@ import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.ResourceReturnResponseDto;
 import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
+import jewellery.inventory.exception.product.ProductIsContentException;
+import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.SaleRepository;
@@ -53,9 +56,9 @@ public class OrganizationSaleService {
         organizationService.getOrganization(saleRequestDto.getSellerId()),
         OrganizationPermission.CREATE_SALE);
 
-    saleService.throwExceptionIfProductIsSold(sale.getProducts());
-    saleService.throwExceptionIfProductIsPartOfAnotherProduct(sale.getProducts());
-    throwExceptionIfSellerNotProductOwner(sale.getProducts(), saleRequestDto.getSellerId());
+    throwExceptionIfProductIsSold(saleRequestDto);
+    throwExceptionIfProductIsPartOfAnotherProduct(saleRequestDto);
+    throwExceptionIfSellerNotProductOwner(saleRequestDto);
     throwExceptionIfResourceIsNotOwned(saleRequestDto);
 
     Sale createdSale = saleRepository.save(sale);
@@ -65,7 +68,7 @@ public class OrganizationSaleService {
     removeQuantityFromResourcesInOrganization(sale);
     saleService.setFieldsOfResourcesAfterSale(sale);
     logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
-    return saleMapper.mamToOrganizationSaleResponseDto(createdSale);
+    return saleMapper.mapToOrganizationSaleResponseDto(createdSale);
   }
 
   @LogCreateEvent(eventType = EventType.ORGANIZATION_SALE_RETURN_PRODUCT)
@@ -118,13 +121,13 @@ public class OrganizationSaleService {
   public List<OrganizationSaleResponseDto> getAllSales() {
     logger.debug("Fetching all Sales from organization");
     return saleRepository.findAll().stream()
-        .map(saleMapper::mamToOrganizationSaleResponseDto)
+        .map(saleMapper::mapToOrganizationSaleResponseDto)
         .toList();
   }
 
   public OrganizationSaleResponseDto getSale(UUID saleId) {
     logger.debug("Fetching a Sale from organization");
-    return saleMapper.mamToOrganizationSaleResponseDto(getSaleById(saleId));
+    return saleMapper.mapToOrganizationSaleResponseDto(getSaleById(saleId));
   }
 
   private Sale getSaleById(UUID saleId) {
@@ -179,23 +182,27 @@ public class OrganizationSaleService {
   }
 
   private void removeQuantityFromResourcesInOrganization(Sale sale) {
-    for (PurchasedResourceInUser resource : sale.getResources()) {
-      ResourceInOrganization resourceInOrganization =
-          resourceInOrganizationService.getResourceInOrganization(
-              sale.getOrganizationSeller(), resource.getResource());
-      resourceInOrganizationService.removeQuantityFromResource(
-          sale.getOrganizationSeller().getId(),
-          resourceInOrganization.getResource().getId(),
-          resource.getQuantity());
+    if (sale.getResources() != null) {
+      for (PurchasedResourceInUser resource : sale.getResources()) {
+        ResourceInOrganization resourceInOrganization =
+            resourceInOrganizationService.getResourceInOrganization(
+                sale.getOrganizationSeller(), resource.getResource());
+        resourceInOrganizationService.removeQuantityFromResource(
+            sale.getOrganizationSeller().getId(),
+            resourceInOrganization.getResource().getId(),
+            resource.getQuantity());
+      }
     }
   }
 
-  private void throwExceptionIfSellerNotProductOwner(
-      List<ProductPriceDiscount> products, UUID sellerId) {
-    for (ProductPriceDiscount productPriceDiscount : products) {
-      Product product = productPriceDiscount.getProduct();
-      if (!product.getOrganization().getId().equals(sellerId)) {
-        throw new OrganizationNotOwnerException(product.getOwner().getId(), sellerId);
+  private void throwExceptionIfSellerNotProductOwner(SaleRequestDto saleRequestDto) {
+    if (saleRequestDto.getProducts() != null) {
+      for (ProductDiscountRequestDto productDiscountRequestDto : saleRequestDto.getProducts()) {
+        Product product = productService.getProduct(productDiscountRequestDto.getProductId());
+        if (!product.getOrganization().getId().equals(saleRequestDto.getSellerId())) {
+          throw new OrganizationNotOwnerException(
+              product.getOwner().getId(), saleRequestDto.getSellerId());
+        }
       }
     }
   }
@@ -206,6 +213,28 @@ public class OrganizationSaleService {
         resourceInOrganizationService.findResourceInOrganizationOrThrow(
             organizationService.getOrganization(saleRequestDto.getSellerId()),
             resource.getResourceAndQuantity().getResourceId());
+      }
+    }
+  }
+
+  public void throwExceptionIfProductIsSold(SaleRequestDto saleRequestDto) {
+    if (saleRequestDto.getProducts() != null) {
+      for (ProductDiscountRequestDto productDiscountRequestDto : saleRequestDto.getProducts()) {
+        Product product = productService.getProduct(productDiscountRequestDto.getProductId());
+        if (product.getPartOfSale() != null) {
+          throw new ProductIsSoldException(product.getId());
+        }
+      }
+    }
+  }
+
+  public void throwExceptionIfProductIsPartOfAnotherProduct(SaleRequestDto saleRequestDto) {
+    if (saleRequestDto.getProducts() != null) {
+      for (ProductDiscountRequestDto productDiscountRequestDto : saleRequestDto.getProducts()) {
+        Product product = productService.getProduct(productDiscountRequestDto.getProductId());
+        if (product.getContentOf() != null) {
+          throw new ProductIsContentException(product.getId());
+        }
       }
     }
   }

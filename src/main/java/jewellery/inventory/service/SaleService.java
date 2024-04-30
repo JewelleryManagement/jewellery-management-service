@@ -254,15 +254,19 @@ public class SaleService {
 
   public List<PurchasedResourceInUser> getResourcesFromSaleRequestDto(
       SaleRequestDto saleRequestDto) {
-    List<PurchasedResourceInUser> resources = new ArrayList<>();
     if (saleRequestDto.getResources() != null) {
-      for (PurchasedResourceQuantityRequestDto resourceRequest : saleRequestDto.getResources()) {
-        PurchasedResourceInUser purchasedResourceInUser =
-            getPurchasedResourceInUser(resourceRequest);
-        resources.add(purchasedResourceInUser);
+      List<PurchasedResourceInUser> resources = new ArrayList<>();
+      if (saleRequestDto.getResources() != null) {
+        for (PurchasedResourceQuantityRequestDto resourceRequest : saleRequestDto.getResources()) {
+          PurchasedResourceInUser purchasedResourceInUser =
+              getPurchasedResourceInUser(resourceRequest);
+          resources.add(purchasedResourceInUser);
+        }
       }
+
+      return resources;
     }
-    return resources;
+    return null;
   }
 
   private PurchasedResourceInUser getPurchasedResourceInUser(

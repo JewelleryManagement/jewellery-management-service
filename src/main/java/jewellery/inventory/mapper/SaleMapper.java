@@ -105,7 +105,7 @@ public class SaleMapper {
     return sale;
   }
 
-  public OrganizationSaleResponseDto mamToOrganizationSaleResponseDto(Sale sale) {
+  public OrganizationSaleResponseDto mapToOrganizationSaleResponseDto(Sale sale) {
     OrganizationSaleResponseDto response = new OrganizationSaleResponseDto();
     response.setId(sale.getId());
     response.setOrganizationSeller(organizationMapper.toResponse(sale.getOrganizationSeller()));
