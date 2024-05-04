@@ -2,10 +2,10 @@ version: '3.8'
 name: jms-docker-be
 services:
   jms-be:
-    image: jms-be
-    build:
-      context: .
-      dockerfile: Dockerfile_app
+    image: vladokat/jms-be:883e70a
+#    build:
+#      context: .
+#      dockerfile: Dockerfile_app
     container_name: jms-be
     depends_on:
       - db
@@ -17,8 +17,8 @@ services:
       SECRET_KEY: ${SECRET_KEY}
     ports:
       - "8080:8080"
-    volumes:
-      - ./jewellery-inventory-0.0.1-SNAPSHOT.jar:/jar/app.jar
+#    volumes:
+#      - ./jewellery-inventory-0.0.1-SNAPSHOT.jar:/jar/app.jar
   db:
     container_name: postgres
     image: jms-db
