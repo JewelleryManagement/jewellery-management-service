@@ -36,17 +36,7 @@ jobs:
         role-session-name: GithubAction
         aws-region: ${{ env.AWS_REGION }}
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: maven
-    - name: Build with Maven
-      run: mvn clean install --file pom.xml
-
     - name: Push jar and docker files to AWS S3
       run: |
-#        cp ./target/*.jar ./aws/docker
         zip -r backend_codedeploy.zip aws
         aws s3 cp backend_codedeploy.zip s3://${{ secrets.S3BUCKET }}/
