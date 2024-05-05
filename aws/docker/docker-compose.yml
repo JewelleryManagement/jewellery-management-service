@@ -20,7 +20,7 @@ services:
 #    volumes:
 #      - ./jewellery-inventory-0.0.1-SNAPSHOT.jar:/jar/app.jar
   db:
-    container_name: postgres
+#    container_name: postgres
     image: jms-db
     build:
       context: .

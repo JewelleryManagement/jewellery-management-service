@@ -10,7 +10,7 @@ name: Build and push jms-be to docker hub
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "*" ]
 
 permissions:
   id-token: write
