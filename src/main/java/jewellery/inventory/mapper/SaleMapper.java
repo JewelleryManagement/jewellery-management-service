@@ -82,20 +82,18 @@ public class SaleMapper {
 
   public List<PurchasedResourceQuantityResponseDto> mapAllResourcesToResponse(Sale sale) {
     List<PurchasedResourceQuantityResponseDto> resources = new ArrayList<>();
-    if (sale.getResources() != null) {
-      for (PurchasedResourceInUser resource : sale.getResources()) {
-        resources.add(getPurchasedResourceInUserResponseDto(resource));
-      }
+    for (PurchasedResourceInUser resource : sale.getResources()) {
+      resources.add(getPurchasedResourceInUserResponseDto(resource));
     }
     return resources;
   }
 
   public Sale mapSaleFromOrganization(
-          SaleRequestDto saleRequestDto,
-          Organization organization,
-          User buyer,
-          List<ProductPriceDiscount> products,
-          List<PurchasedResourceInUser> resources) {
+      SaleRequestDto saleRequestDto,
+      Organization organization,
+      User buyer,
+      List<ProductPriceDiscount> products,
+      List<PurchasedResourceInUser> resources) {
     Sale sale = new Sale();
     sale.setOrganizationSeller(organization);
     sale.setBuyer(buyer);
@@ -115,9 +113,9 @@ public class SaleMapper {
     response.setResources(mapAllResourcesToResponse(sale));
     response.setTotalPrice(getTotalPriceFromEntities(sale.getProducts(), sale.getResources()));
     response.setTotalDiscount(
-            calculateDiscount(sale.getProducts(), sale.getResources(), PERCENTAGE));
+        calculateDiscount(sale.getProducts(), sale.getResources(), PERCENTAGE));
     response.setTotalDiscountedPrice(
-            calculateDiscount(sale.getProducts(), sale.getResources(), AMOUNT));
+        calculateDiscount(sale.getProducts(), sale.getResources(), AMOUNT));
 
     return response;
   }
@@ -147,10 +145,12 @@ public class SaleMapper {
             .map(ProductPriceDiscount::getSalePrice)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-    totalPrice =
-        resources.stream()
-            .map(PurchasedResourceInUser::getSalePrice)
-            .reduce(totalPrice, BigDecimal::add);
+    if (resources != null) {
+      totalPrice =
+          resources.stream()
+              .map(PurchasedResourceInUser::getSalePrice)
+              .reduce(totalPrice, BigDecimal::add);
+    }
 
     return totalPrice;
   }

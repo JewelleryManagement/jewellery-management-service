@@ -1,11 +1,13 @@
 package jewellery.inventory.helper;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.model.*;
+import jewellery.inventory.model.resource.Resource;
 
 public class OrganizationTestHelper {
   private static final String ORGANIZATION_NAME = "Test Name";
@@ -111,5 +113,15 @@ public class OrganizationTestHelper {
     dto.setOrganizationPermission(
         organization.getUsersInOrganization().get(0).getOrganizationPermission());
     return dto;
+  }
+
+  public static ResourceInOrganization createTestResourceInOrganization(Resource resource, Organization organization) {
+    ResourceInOrganization resourceInOrganization = new ResourceInOrganization();
+    resourceInOrganization.setResource(resource);
+    resourceInOrganization.setId(UUID.randomUUID());
+    resourceInOrganization.setQuantity(BigDecimal.ONE);
+    resourceInOrganization.setDealPrice(BigDecimal.TEN);
+    resourceInOrganization.setOrganization(organization);
+    return resourceInOrganization;
   }
 }

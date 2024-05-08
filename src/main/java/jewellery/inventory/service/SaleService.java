@@ -122,7 +122,7 @@ public class SaleService {
     return saleRepository.findById(saleId).orElseThrow(() -> new SaleNotFoundException(saleId));
   }
 
-  public void throwExceptionIfProductIsPartOfAnotherProduct(List<ProductPriceDiscount> products) {
+  private void throwExceptionIfProductIsPartOfAnotherProduct(List<ProductPriceDiscount> products) {
     for (ProductPriceDiscount productPriceDiscount : products) {
       Product product = productPriceDiscount.getProduct();
       if (product.getContentOf() != null) {
@@ -131,19 +131,19 @@ public class SaleService {
     }
   }
 
-  public void throwExceptionIfProductIsPartOfAnotherProduct(Product product) {
+  private void throwExceptionIfProductIsPartOfAnotherProduct(Product product) {
     if (product.getContentOf() != null) {
       throw new ProductIsContentException(product.getId());
     }
   }
 
-  public void throwExceptionIfProductNotSold(Product product) {
+  private void throwExceptionIfProductNotSold(Product product) {
     if (product.getPartOfSale() == null) {
       throw new ProductNotSoldException(product.getId());
     }
   }
 
-  public void throwExceptionIfProductIsSold(List<ProductPriceDiscount> products) {
+  private void throwExceptionIfProductIsSold(List<ProductPriceDiscount> products) {
     for (ProductPriceDiscount productPriceDiscount : products) {
       Product product = productPriceDiscount.getProduct();
       if (product.getPartOfSale() != null) {
@@ -211,15 +211,17 @@ public class SaleService {
   }
 
   public void setFieldsOfResourcesAfterSale(Sale sale) {
-    List<PurchasedResourceInUser> resources = sale.getResources();
-    resources.forEach(
-        resource -> {
-          resource.setPartOfSale(sale);
-          resource.setOwner(sale.getBuyer());
-          resource.setSalePrice(
-              resource.getQuantity().multiply(resource.getResource().getPricePerQuantity()));
-        });
-    purchasedResourceInUserRepository.saveAll(resources);
+    if (sale.getResources() != null) {
+      List<PurchasedResourceInUser> resources = sale.getResources();
+      resources.forEach(
+          resource -> {
+            resource.setPartOfSale(sale);
+            resource.setOwner(sale.getBuyer());
+            resource.setSalePrice(
+                resource.getQuantity().multiply(resource.getResource().getPricePerQuantity()));
+          });
+      purchasedResourceInUserRepository.saveAll(resources);
+    }
   }
 
   private void removeQuantityFromResourcesInUser(Sale sale) {
@@ -305,8 +307,8 @@ public class SaleService {
     }
   }
 
- public static void throwExceptionIfNoResourcesAndProductsInRequest(
-          SaleRequestDto saleRequestDto) {
+  public static void throwExceptionIfNoResourcesAndProductsInRequest(
+      SaleRequestDto saleRequestDto) {
     if ((saleRequestDto.getProducts() == null || saleRequestDto.getProducts().isEmpty())
         && (saleRequestDto.getResources() == null || saleRequestDto.getResources().isEmpty())) {
       throw new EmptySaleException();

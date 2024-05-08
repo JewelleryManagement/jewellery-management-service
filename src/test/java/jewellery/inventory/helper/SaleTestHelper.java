@@ -284,17 +284,17 @@ public class SaleTestHelper {
   }
 
   public static Sale createSaleInOrganization(
-      Organization seller,
-      User buyer,
-      List<ProductPriceDiscount> products,
-      List<PurchasedResourceInUser> resources) {
+          Organization seller,
+          User buyer,
+          List<ProductPriceDiscount> products,
+          List<PurchasedResourceInUser> resources) {
     Sale sale = new Sale();
     sale.setId(UUID.randomUUID());
     sale.setOrganizationSeller(seller);
     sale.setBuyer(buyer);
+    sale.setProducts(new ArrayList<>(products));
+    sale.setResources(new ArrayList<>(resources));
     sale.setDate(LocalDate.now());
-    sale.setResources(resources);
-    sale.setProducts(products);
     return sale;
   }
 }
