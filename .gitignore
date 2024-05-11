@@ -36,6 +36,7 @@ build/
 .gradle/
 
 # Spring Boot properties
+aws/docker/.env
 .env
 /src/main/resources/data.sql
 
