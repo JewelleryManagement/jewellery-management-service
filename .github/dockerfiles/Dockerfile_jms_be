@@ -1,3 +1,4 @@
 FROM amazoncorretto:17-alpine-jdk
 COPY ./app.jar .
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENV SPRING_PROFILE=local
+ENTRYPOINT java -jar -Dspring.profiles.active=$SPRING_PROFILE app.jar

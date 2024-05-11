@@ -1,0 +1,40 @@
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Build and copy to S3
+
+on:
+  push:
+    branches: [ "release*" ]
+
+env:
+  AWS_REGION : eu-central-1
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      name: Checkout repository
+
+    - uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: ${{ secrets.IAMROLE_GITHUB }}
+        role-session-name: GithubAction
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Push jar and docker files to AWS S3
+      run: |
+        zip -r backend_codedeploy.zip aws
+        aws s3 cp backend_codedeploy.zip s3://${{ secrets.S3BUCKET }}/
