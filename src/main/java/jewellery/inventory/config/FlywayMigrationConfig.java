@@ -1,23 +1,21 @@
 package jewellery.inventory.config;
 
-import org.flywaydb.core.Flyway;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-
 import javax.sql.DataSource;
+import org.flywaydb.core.Flyway;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class FlywayMigrationConfig {
 
-  private static final String LOCATION = "db/migration/prod";
-
-  @Autowired
-  FlywayMigrationConfig(DataSource dataSource) {
+  public FlywayMigrationConfig(
+      DataSource dataSource,
+      @Value("${flyway.migration.location}") String flywayMigrationLocation) {
     Flyway.configure()
         .baselineOnMigrate(true)
         .validateMigrationNaming(true)
         .dataSource(dataSource)
-        .locations(LOCATION)
+        .locations(flywayMigrationLocation)
         .load()
         .migrate();
   }

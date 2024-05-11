@@ -10,6 +10,7 @@ services:
     depends_on:
       - db
     environment:
+      SPRING_PROFILE: cloud
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${JMS_DATABASE_NAME}?autoreconnect=true&createDatabaseIfNotExist=true&characterEncoding=utf8
       JMS_DATABASE_NAME: ${JMS_DATABASE_NAME}
       JMS_DATABASE_USER: ${JMS_DATABASE_USER}
@@ -44,5 +45,6 @@ volumes:
 
 networks:
   jms-network:
+    name: jms-network
     driver: bridge
 
