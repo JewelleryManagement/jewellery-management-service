@@ -10,9 +10,7 @@ name: Build and copy to S3
 
 on:
   push:
-    branches: [ "*" ]
-  pull_request:
-    branches: [ "*" ]
+    branches: [ "release*" ]
 
 env:
   AWS_REGION : eu-central-1
