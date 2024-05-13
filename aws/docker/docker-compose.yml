@@ -42,7 +42,11 @@ services:
 
 volumes:
   postgres_data:
-
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/data/var/lib/docker/volumes/jms-docker-be_postgres_data'
 networks:
   jms-network:
     name: jms-network
