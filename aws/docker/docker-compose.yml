@@ -2,7 +2,7 @@ version: '3.8'
 name: jms-docker-be
 services:
   jms-be:
-    image: vladokat/jms-be:0dd08a7
+    image: vladokat/jms-be:13052024
 #    build:
 #      context: .
 #      dockerfile: Dockerfile_app
