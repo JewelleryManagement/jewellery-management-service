@@ -21,7 +21,7 @@ public class OrganizationSaleController {
   private final OrganizationSaleService organizationSaleService;
 
   @Operation(summary = "Create sale from organization to user")
-  @ResponseStatus(HttpStatus.OK)
+  @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/sales")
   public OrganizationSaleResponseDto createSale(@Valid @RequestBody SaleRequestDto saleRequestDto) {
     return organizationSaleService.createSale(saleRequestDto);

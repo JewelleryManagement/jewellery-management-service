@@ -1,5 +1,6 @@
 package jewellery.inventory.integration;
 
+import static jewellery.inventory.helper.OrganizationTestHelper.getTestUserInOrganizationRequest;
 import static jewellery.inventory.helper.ProductTestHelper.getProductRequestDto;
 import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
@@ -20,7 +21,10 @@ import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.ResourceReturnResponseDto;
+import jewellery.inventory.helper.OrganizationTestHelper;
+import jewellery.inventory.helper.ResourceInOrganizationTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
+import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Pearl;
 import jewellery.inventory.model.resource.PreciousStone;
@@ -37,14 +41,20 @@ import org.springframework.http.ResponseEntity;
 
 class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
+  private static final BigDecimal RESOURCE_QUANTITY = getBigDecimal("100");
+  private static final BigDecimal RESOURCE_PRICE = getBigDecimal("105");
   private static final BigDecimal SALE_TOTAL_PRICE = getBigDecimal("505");
   private static final BigDecimal SALE_DISCOUNT = getBigDecimal("10");
   private static final BigDecimal SALE_PRODUCT_DISCOUNTED_PRICE = getBigDecimal("454.50");
   private static final BigDecimal SALE_RESOURCE_DISCOUNTED_PRICE = getBigDecimal("45.45");
+  private Organization organizationSeller;
   private User seller;
   private User buyer;
+  private OrganizationSingleMemberResponseDto organizationSingleMemberResponseDto;
   private PreciousStone preciousStone;
   private ResponseEntity<Pearl> pearl;
+  private ResourceInOrganizationRequestDto resourceInOrganizationRequestDto;
+  private ResourcesInOrganizationResponseDto resourcesInOrganizationResponseDto;
   private ResourcePurchaseRequestDto resourceInUserRequestDto;
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
   private ProductRequestDto productRequestDto;
@@ -57,6 +67,10 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private String getBaseResourceAvailabilityUrl() {
     return buildUrl("resources", "availability");
+  }
+
+  private String getBaseResourceInOrganizationAvailabilityUrl() {
+    return buildUrl("organizations", "resources-availability");
   }
 
   private String getBaseResourceUrl() {
@@ -75,6 +89,14 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return "/sales";
   }
 
+  private String getBaseOrganizationSaleUrl() {
+    return "/organizations/sales";
+  }
+
+  private String getBaseProductsInOrganizationUrl() {
+    return buildUrl("organizations", "products");
+  }
+
   private String getSaleReturnProductUrl(UUID productId) {
     return getBaseSaleUrl() + "/return-product/" + productId;
   }
@@ -87,11 +109,37 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return "/resources/availability/purchased/" + userId;
   }
 
+  private String getBaseOrganizationsUrl() {
+    return "/organizations";
+  }
+
+  private String getOrganizationUsersUrl(UUID organizationId) {
+    return "/organizations/" + organizationId + "/users";
+  }
+
+  private String getOrganizationSaleReturnResourceUrl(UUID saleId, UUID resourceId) {
+    return "/organizations/sales/" + saleId + "/return-resource/" + resourceId;
+  }
+
+  private String getOrganizationSaleReturnProductUrl(UUID productId) {
+    return "/organizations/sales/return-product/" + productId;
+  }
+
   @BeforeEach
   void setUp() {
+    organizationSeller =
+        createOrganizationInDatabase(OrganizationTestHelper.getTestOrganizationRequest());
     seller = createUserInDatabase(createTestUserRequest());
     buyer = createUserInDatabase(createDifferentUserRequest());
+    organizationSingleMemberResponseDto =
+        createUserInOrganization(
+            organizationSeller, getTestUserInOrganizationRequest(seller.getId()));
     preciousStone = createPreciousStoneInDatabase();
+    resourceInOrganizationRequestDto =
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organizationSeller.getId(), preciousStone.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
+    resourcesInOrganizationResponseDto =
+        createResourceInOrganization(resourceInOrganizationRequestDto);
     resourceInUserRequestDto =
         getResourceInUserRequestDto(seller, Objects.requireNonNull(preciousStone));
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
@@ -102,6 +150,135 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     pearl = createPearlInDatabase();
     pearlRequest = getResourceInUserRequestDto(seller, Objects.requireNonNull(pearl.getBody()));
     getResourcesInUserResponseDto(pearlRequest);
+  }
+
+  @Test
+  void removeOrganizationSaleAfterReturnAllResourcesAndProductsFromSaleInOrganization() {
+    productRequestDto.setOwnerId(organizationSeller.getId());
+    ProductsInOrganizationResponseDto productResponse =
+        createProductInOrganization(productRequestDto);
+    SaleRequestDto saleRequestDto =
+        getSaleInOrganizationRequestDto(
+            organizationSeller, buyer, productResponse, resourcesInOrganizationResponseDto);
+
+    ResponseEntity<OrganizationSaleResponseDto> saleResponse =
+        createSaleInOrganization(saleRequestDto);
+
+    ResponseEntity<ResourceReturnResponseDto> resourceReturnResponse =
+        createReturnResourceResponse(
+            saleRequestDto, Objects.requireNonNull(saleResponse.getBody()));
+
+    ResponseEntity<ProductReturnResponseDto> productReturnResponse =
+        this.testRestTemplate.exchange(
+            getOrganizationSaleReturnProductUrl(productResponse.getProducts().get(0).getId()),
+            HttpMethod.PUT,
+            null,
+            new ParameterizedTypeReference<>() {});
+
+    assertEquals(HttpStatus.OK, productReturnResponse.getStatusCode());
+    assertNotNull(productReturnResponse.getBody());
+    assertNull(productReturnResponse.getBody().getSaleAfter());
+    assertEquals(
+        saleResponse.getBody().getProducts().get(0).getId(),
+        productReturnResponse.getBody().getReturnedProduct().getId());
+    assertEquals(
+        saleResponse.getBody().getResources().get(0).getResourceAndQuantity().getResource().getId(),
+        resourceReturnResponse.getBody().getReturnedResource().getId());
+  }
+
+  @Test
+  void returnProductFromSaleInOrganizationSuccessfully() throws JsonProcessingException {
+    productRequestDto.setOwnerId(organizationSeller.getId());
+    ProductsInOrganizationResponseDto productResponse =
+        createProductInOrganization(productRequestDto);
+    SaleRequestDto saleRequestDto =
+        getSaleInOrganizationRequestDto(
+            organizationSeller, buyer, productResponse, resourcesInOrganizationResponseDto);
+
+    ResponseEntity<OrganizationSaleResponseDto> saleResponse =
+        createSaleInOrganization(saleRequestDto);
+
+    ResponseEntity<ProductReturnResponseDto> response =
+        this.testRestTemplate.exchange(
+            getOrganizationSaleReturnProductUrl(productResponse.getProducts().get(0).getId()),
+            HttpMethod.PUT,
+            null,
+            new ParameterizedTypeReference<>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertNotNull(response.getBody().getSaleAfter());
+    assertEquals(
+        saleResponse.getBody().getProducts().get(0).getId(),
+        response.getBody().getReturnedProduct().getId());
+
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_SALE_RETURN_PRODUCT, expectedEventPayload);
+  }
+
+  @Test
+  void returnResourceFromSaleInOrganizationSuccessfully() throws JsonProcessingException {
+    productRequestDto.setOwnerId(organizationSeller.getId());
+    ProductsInOrganizationResponseDto productResponse =
+        createProductInOrganization(productRequestDto);
+    SaleRequestDto saleRequestDto =
+        getSaleInOrganizationRequestDto(
+            organizationSeller, buyer, productResponse, resourcesInOrganizationResponseDto);
+    ResponseEntity<OrganizationSaleResponseDto> saleResponse =
+        createSaleInOrganization(saleRequestDto);
+
+    ResponseEntity<ResourceReturnResponseDto> response =
+        createReturnResourceResponse(
+            saleRequestDto, Objects.requireNonNull(saleResponse.getBody()));
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertNotNull(response.getBody().getSaleAfter());
+    assertEquals(
+        saleResponse.getBody().getResources().get(0).getResourceAndQuantity().getResource().getId(),
+        response.getBody().getReturnedResource().getId());
+
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_SALE_RETURN_RESOURCE, expectedEventPayload);
+  }
+
+  @Test
+  void createSaleInOrganizationSuccessfully() throws JsonProcessingException {
+    productRequestDto.setOwnerId(organizationSeller.getId());
+    ProductsInOrganizationResponseDto productResponse =
+        createProductInOrganization(productRequestDto);
+    SaleRequestDto saleRequestDto =
+        getSaleInOrganizationRequestDto(
+            organizationSeller, buyer, productResponse, resourcesInOrganizationResponseDto);
+
+    ResponseEntity<OrganizationSaleResponseDto> saleResponse =
+        createSaleInOrganization(saleRequestDto);
+
+    assertEquals(HttpStatus.CREATED, saleResponse.getStatusCode());
+    assertEquals(saleRequestDto.getBuyerId(), saleResponse.getBody().getBuyer().getId());
+    assertEquals(
+        saleRequestDto.getSellerId(), saleResponse.getBody().getOrganizationSeller().getId());
+    assertEquals(saleRequestDto.getDate(), saleResponse.getBody().getDate());
+    assertEquals(
+        saleRequestDto.getResources().size(), saleResponse.getBody().getResources().size());
+    assertEquals(saleRequestDto.getProducts().size(), saleResponse.getBody().getProducts().size());
+    assertEquals(
+        saleRequestDto.getProducts().get(0).getProductId(),
+        saleResponse.getBody().getProducts().get(0).getId());
+    assertEquals(
+        saleResponse.getBody().getProducts().get(0).getPartOfSale(),
+        saleResponse.getBody().getId());
+
+    Map<String, Object> expectedEventPayload =
+        getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
+
+    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_CREATE_SALE, expectedEventPayload);
   }
 
   @Test
@@ -213,8 +390,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(saleRequestDto.getSellerId(), saleResponse.getBody().getSeller().getId());
     assertEquals(saleRequestDto.getDate(), saleResponse.getBody().getDate());
     assertEquals(
-        saleRequestDto.getResources().size(),
-        saleResponse.getBody().getResources().size());
+        saleRequestDto.getResources().size(), saleResponse.getBody().getResources().size());
     assertEquals(saleRequestDto.getProducts().size(), saleResponse.getBody().getProducts().size());
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(),
@@ -229,7 +405,9 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         SALE_PRODUCT_DISCOUNTED_PRICE.add(SALE_RESOURCE_DISCOUNTED_PRICE),
         saleResponse.getBody().getTotalDiscountedPrice().setScale(2, RoundingMode.HALF_UP));
 
-    assertEquals(saleResponse.getBody().getProducts().get(0).getPartOfSale(), saleResponse.getBody().getId());
+    assertEquals(
+        saleResponse.getBody().getProducts().get(0).getPartOfSale(),
+        saleResponse.getBody().getId());
 
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
@@ -253,8 +431,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(saleRequestDto.getSellerId(), saleResponse.getBody().getSeller().getId());
     assertEquals(saleRequestDto.getDate(), saleResponse.getBody().getDate());
     assertEquals(
-        saleRequestDto.getResources().size(),
-        saleResponse.getBody().getResources().size());
+        saleRequestDto.getResources().size(), saleResponse.getBody().getResources().size());
     assertEquals(
         saleRequestDto.getResources().get(0).getResourceAndQuantity().getResourceId(),
         saleResponse
@@ -352,6 +529,18 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private ResponseEntity<ProductResponseDto> createProduct(ProductRequestDto productRequestDto) {
     return this.testRestTemplate.postForEntity(
         getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+  }
+
+  private ProductsInOrganizationResponseDto createProductInOrganization(
+      ProductRequestDto productRequestDto) {
+    ResponseEntity<ProductsInOrganizationResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseProductsInOrganizationUrl(),
+            productRequestDto,
+            ProductsInOrganizationResponseDto.class);
+
+    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    return response.getBody();
   }
 
   @Nullable
@@ -469,6 +658,90 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
       ResponseEntity<SaleResponseDto> saleResponse) {
     return this.testRestTemplate.exchange(
         getSaleReturnResourceUrl(saleResponse.getBody().getId(), pearl.getBody().getId()),
+        HttpMethod.PUT,
+        null,
+        ResourceReturnResponseDto.class);
+  }
+
+  private Organization createOrganizationInDatabase(
+      OrganizationRequestDto testOrganizationRequest) {
+    ResponseEntity<Organization> response =
+        this.testRestTemplate.postForEntity(
+            getBaseOrganizationsUrl(), testOrganizationRequest, Organization.class);
+
+    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    return response.getBody();
+  }
+
+  private OrganizationSingleMemberResponseDto createUserInOrganization(
+      Organization organizationSeller, UserInOrganizationRequestDto userInOrganizationRequestDto) {
+    return this.testRestTemplate
+        .postForEntity(
+            getOrganizationUsersUrl(organizationSeller.getId()),
+            userInOrganizationRequestDto,
+            OrganizationSingleMemberResponseDto.class)
+        .getBody();
+  }
+
+  private ResourcesInOrganizationResponseDto createResourceInOrganization(
+      ResourceInOrganizationRequestDto request) {
+    ResponseEntity<ResourcesInOrganizationResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseResourceInOrganizationAvailabilityUrl(),
+            request,
+            ResourcesInOrganizationResponseDto.class);
+
+    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    return response.getBody();
+  }
+
+  @NotNull
+  private static SaleRequestDto getSaleInOrganizationRequestDto(
+      Organization seller,
+      User buyer,
+      ProductsInOrganizationResponseDto productsInOrganizationResponseDto,
+      ResourcesInOrganizationResponseDto resourcesInOrganizationResponseDto) {
+    SaleRequestDto saleRequestDto = new SaleRequestDto();
+    saleRequestDto.setBuyerId(buyer.getId());
+    saleRequestDto.setSellerId(seller.getId());
+    saleRequestDto.setDate(LocalDate.now());
+    PurchasedResourceQuantityRequestDto purchasedResourceQuantityRequestDto =
+        new PurchasedResourceQuantityRequestDto();
+    ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
+    resourceQuantityRequestDto.setResourceId(
+        resourcesInOrganizationResponseDto
+            .getResourcesAndQuantities()
+            .get(0)
+            .getResource()
+            .getId());
+    resourceQuantityRequestDto.setQuantity(BigDecimal.ONE);
+    purchasedResourceQuantityRequestDto.setResourceAndQuantity(resourceQuantityRequestDto);
+    purchasedResourceQuantityRequestDto.setDiscount(SALE_DISCOUNT);
+    List<PurchasedResourceQuantityRequestDto> resources = new ArrayList<>();
+    resources.add(purchasedResourceQuantityRequestDto);
+    saleRequestDto.setResources(resources);
+    ProductDiscountRequestDto productDiscountRequestDto = new ProductDiscountRequestDto();
+    productDiscountRequestDto.setProductId(
+        productsInOrganizationResponseDto.getProducts().get(0).getId());
+    productDiscountRequestDto.setDiscount(SALE_DISCOUNT);
+    List<ProductDiscountRequestDto> list = new ArrayList<>();
+    list.add(productDiscountRequestDto);
+    saleRequestDto.setProducts(list);
+    return saleRequestDto;
+  }
+
+  private ResponseEntity<OrganizationSaleResponseDto> createSaleInOrganization(
+      SaleRequestDto saleRequestDto) {
+    return this.testRestTemplate.postForEntity(
+        getBaseOrganizationSaleUrl(), saleRequestDto, OrganizationSaleResponseDto.class);
+  }
+
+  private ResponseEntity<ResourceReturnResponseDto> createReturnResourceResponse(
+      SaleRequestDto saleRequestDto, OrganizationSaleResponseDto saleResponse) {
+    return this.testRestTemplate.exchange(
+        getOrganizationSaleReturnResourceUrl(
+            saleResponse.getId(),
+            saleRequestDto.getResources().get(0).getResourceAndQuantity().getResourceId()),
         HttpMethod.PUT,
         null,
         ResourceReturnResponseDto.class);
