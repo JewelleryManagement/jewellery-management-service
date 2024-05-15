@@ -2,6 +2,7 @@ package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.OrganizationTestHelper.getTestUserInOrganizationRequest;
 import static jewellery.inventory.helper.ProductTestHelper.getProductRequestDto;
+import static jewellery.inventory.helper.SaleTestHelper.getSaleInOrganizationRequestDto;
 import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.model.EventType.*;
@@ -159,11 +160,13 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         createProductInOrganization(productRequestDto);
     SaleRequestDto saleRequestDto =
         getSaleInOrganizationRequestDto(
-            organizationSeller, buyer, productResponse, resourcesInOrganizationResponseDto);
-
+            organizationSeller,
+            buyer,
+            productResponse,
+            resourcesInOrganizationResponseDto,
+            SALE_DISCOUNT);
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
-
     ResponseEntity<ResourceReturnResponseDto> resourceReturnResponse =
         createReturnResourceResponse(
             saleRequestDto, Objects.requireNonNull(saleResponse.getBody()));
@@ -193,8 +196,11 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         createProductInOrganization(productRequestDto);
     SaleRequestDto saleRequestDto =
         getSaleInOrganizationRequestDto(
-            organizationSeller, buyer, productResponse, resourcesInOrganizationResponseDto);
-
+            organizationSeller,
+            buyer,
+            productResponse,
+            resourcesInOrganizationResponseDto,
+            SALE_DISCOUNT);
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
 
@@ -226,7 +232,11 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         createProductInOrganization(productRequestDto);
     SaleRequestDto saleRequestDto =
         getSaleInOrganizationRequestDto(
-            organizationSeller, buyer, productResponse, resourcesInOrganizationResponseDto);
+            organizationSeller,
+            buyer,
+            productResponse,
+            resourcesInOrganizationResponseDto,
+            SALE_DISCOUNT);
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
 
@@ -255,7 +265,11 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         createProductInOrganization(productRequestDto);
     SaleRequestDto saleRequestDto =
         getSaleInOrganizationRequestDto(
-            organizationSeller, buyer, productResponse, resourcesInOrganizationResponseDto);
+            organizationSeller,
+            buyer,
+            productResponse,
+            resourcesInOrganizationResponseDto,
+            SALE_DISCOUNT);
 
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
@@ -693,41 +707,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     return response.getBody();
-  }
-
-  @NotNull
-  private static SaleRequestDto getSaleInOrganizationRequestDto(
-      Organization seller,
-      User buyer,
-      ProductsInOrganizationResponseDto productsInOrganizationResponseDto,
-      ResourcesInOrganizationResponseDto resourcesInOrganizationResponseDto) {
-    SaleRequestDto saleRequestDto = new SaleRequestDto();
-    saleRequestDto.setBuyerId(buyer.getId());
-    saleRequestDto.setSellerId(seller.getId());
-    saleRequestDto.setDate(LocalDate.now());
-    PurchasedResourceQuantityRequestDto purchasedResourceQuantityRequestDto =
-        new PurchasedResourceQuantityRequestDto();
-    ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
-    resourceQuantityRequestDto.setResourceId(
-        resourcesInOrganizationResponseDto
-            .getResourcesAndQuantities()
-            .get(0)
-            .getResource()
-            .getId());
-    resourceQuantityRequestDto.setQuantity(BigDecimal.ONE);
-    purchasedResourceQuantityRequestDto.setResourceAndQuantity(resourceQuantityRequestDto);
-    purchasedResourceQuantityRequestDto.setDiscount(SALE_DISCOUNT);
-    List<PurchasedResourceQuantityRequestDto> resources = new ArrayList<>();
-    resources.add(purchasedResourceQuantityRequestDto);
-    saleRequestDto.setResources(resources);
-    ProductDiscountRequestDto productDiscountRequestDto = new ProductDiscountRequestDto();
-    productDiscountRequestDto.setProductId(
-        productsInOrganizationResponseDto.getProducts().get(0).getId());
-    productDiscountRequestDto.setDiscount(SALE_DISCOUNT);
-    List<ProductDiscountRequestDto> list = new ArrayList<>();
-    list.add(productDiscountRequestDto);
-    saleRequestDto.setProducts(list);
-    return saleRequestDto;
   }
 
   private ResponseEntity<OrganizationSaleResponseDto> createSaleInOrganization(

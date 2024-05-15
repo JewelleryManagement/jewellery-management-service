@@ -1,11 +1,12 @@
 package jewellery.inventory.mapper;
 
-import java.util.List;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.model.Organization;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor

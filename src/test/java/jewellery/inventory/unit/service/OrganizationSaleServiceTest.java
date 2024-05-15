@@ -116,7 +116,7 @@ class OrganizationSaleServiceTest {
         .thenReturn(sale);
     when(saleRepository.save(sale)).thenReturn(sale);
     OrganizationSaleResponseDto organizationSaleResponseDto =
-        SaleTestHelper.getOrganizationSaleResponseDto(sale);
+        SaleTestHelper.getOrganizationSaleResponseDto(sale, BigDecimal.ONE, BigDecimal.TEN);
     when(saleMapper.mapToOrganizationSaleResponseDto(sale)).thenReturn(organizationSaleResponseDto);
 
     OrganizationSaleResponseDto actualSale = organizationSaleService.createSale(saleRequestDto);
@@ -136,7 +136,7 @@ class OrganizationSaleServiceTest {
     when(userService.getUser(buyer.getId())).thenReturn(buyer);
     when(resourceInOrganizationService.getResourceInOrganization(
             sale.getOrganizationSeller(), sale.getResources().get(0).getResource()))
-            .thenReturn(resourceInOrganization);
+        .thenReturn(resourceInOrganization);
 
     saleRequestDto.setProducts(null);
     when(saleMapper.mapSaleFromOrganization(
@@ -144,7 +144,7 @@ class OrganizationSaleServiceTest {
         .thenReturn(sale);
     when(saleRepository.save(sale)).thenReturn(sale);
     OrganizationSaleResponseDto organizationSaleResponseDto =
-        SaleTestHelper.getOrganizationSaleResponseDto(sale);
+        SaleTestHelper.getOrganizationSaleResponseDto(sale, BigDecimal.ONE, BigDecimal.TEN);
     when(saleMapper.mapToOrganizationSaleResponseDto(sale)).thenReturn(organizationSaleResponseDto);
 
     OrganizationSaleResponseDto actualSale = organizationSaleService.createSale(saleRequestDto);
@@ -165,13 +165,13 @@ class OrganizationSaleServiceTest {
     when(productService.getProduct(product.getId())).thenReturn(product);
     when(resourceInOrganizationService.getResourceInOrganization(
             sale.getOrganizationSeller(), sale.getResources().get(0).getResource()))
-            .thenReturn(resourceInOrganization);
+        .thenReturn(resourceInOrganization);
     when(saleMapper.mapSaleFromOrganization(
             saleRequestDto, seller, buyer, new ArrayList<>(), new ArrayList<>()))
         .thenReturn(sale);
     when(saleRepository.save(sale)).thenReturn(sale);
     OrganizationSaleResponseDto organizationSaleResponseDto =
-        SaleTestHelper.getOrganizationSaleResponseDto(sale);
+        SaleTestHelper.getOrganizationSaleResponseDto(sale, BigDecimal.ONE, BigDecimal.TEN);
     when(saleMapper.mapToOrganizationSaleResponseDto(sale)).thenReturn(organizationSaleResponseDto);
 
     OrganizationSaleResponseDto actualSale = organizationSaleService.createSale(saleRequestDto);
@@ -348,8 +348,7 @@ class OrganizationSaleServiceTest {
 
   @Test
   void testGetSaleShouldThrowWhenSaleNotFound() {
-    assertThrows(SaleNotFoundException.class,
-            () -> organizationSaleService.getSale(sale.getId()));
+    assertThrows(SaleNotFoundException.class, () -> organizationSaleService.getSale(sale.getId()));
   }
 
   @Test
