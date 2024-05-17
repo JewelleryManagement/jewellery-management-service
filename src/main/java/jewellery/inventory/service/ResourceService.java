@@ -1,5 +1,11 @@
 package jewellery.inventory.service;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -10,6 +16,8 @@ import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
+import jewellery.inventory.exception.image.MultipartFileContentTypeException;
+import jewellery.inventory.exception.image.MultipartFileNotSelectedException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.model.EventType;
@@ -20,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -88,6 +97,50 @@ public class ResourceService implements EntityFetcher {
                     .quantity(resourceInUserRepository.sumQuantityByResource(resource.getId()))
                     .build())
         .toList();
+  }
+
+  @LogUpdateEvent(eventType = EventType.RESOURCE_IMPORT)
+  public List<ResourceResponseDto> importResources(MultipartFile file) {
+    csvVerification(file);
+
+    List<ResourceRequestDto> resourcesDto = getImportedResources(file);
+
+    List<ResourceResponseDto> savedResources = new ArrayList<>();
+    for (ResourceRequestDto resourceRequestDto : resourcesDto) {
+      ResourceResponseDto savedResource = createResource(resourceRequestDto);
+      savedResources.add(savedResource);
+    }
+
+    return savedResources;
+  }
+
+  private void csvVerification(MultipartFile file) {
+    if (file == null || file.isEmpty()) {
+      throw new MultipartFileNotSelectedException();
+    }
+
+    if (!file.getContentType().equals("text/csv")) {
+      throw new MultipartFileContentTypeException("Only CSV files are allowed");
+    }
+  }
+
+  private List<ResourceRequestDto> getImportedResources(MultipartFile file) {
+    CsvMapper mapper = new CsvMapper();
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+    CsvSchema schema = CsvSchema.emptySchema().withHeader();
+
+    MappingIterator<ResourceRequestDto> resourcesIterator;
+    List<ResourceRequestDto> resourcesDto;
+    try {
+      resourcesIterator =
+          mapper.readerFor(ResourceRequestDto.class).with(schema).readValues(file.getInputStream());
+      resourcesDto = resourcesIterator.readAll();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    return resourcesDto;
   }
 
   @Override
