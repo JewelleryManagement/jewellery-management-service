@@ -61,4 +61,4 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           file: Dockerfile_jms_be
-          tags: vladokat/jms-be:${{git_hash}}
+          tags: vladokat/jms-be:${{git rev-parse --short "$GITHUB_SHA"}}
