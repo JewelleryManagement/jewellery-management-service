@@ -118,7 +118,7 @@ public class ResourceService implements EntityFetcher {
       throw new MultipartFileNotSelectedException();
     }
 
-      if (file.getContentType() != null && !file.getContentType().equals("text/csv")) {
+      if (!"text/csv".equals(file.getContentType())) {
         throw new MultipartFileContentTypeException("Only CSV files are allowed");
       }
   }
