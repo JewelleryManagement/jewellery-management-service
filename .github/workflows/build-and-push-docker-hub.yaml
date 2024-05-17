@@ -37,10 +37,14 @@ jobs:
       - name: Copy jar to dockerfiles
         run: cp ./target/*.jar .github/dockerfiles/app.jar
 
-      - name: Get shortened git hash
-        run: |
-          git_hash=$(git rev-parse --short "$GITHUB_SHA")
-          echo "git_hash=$git_hash" >> $GITHUB_ENV
+#      - name: Get shortened git hash
+#        run: |
+#          git_hash=$(git rev-parse --short "$GITHUB_SHA")
+#          echo "git_hash=$git_hash" >> $GITHUB_ENV
+
+      - name: Extract git hash
+        id: get_hash
+        run: echo "::set-output name=hash::$(git rev-parse --short HEAD)"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -61,4 +65,4 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           file: Dockerfile_jms_be
-          tags: vladokat/jms-be:${{git rev-parse --short "$GITHUB_SHA"}}
+          tags: vladokat/jms-be:${{ steps.get_hash.outputs.hash }}
