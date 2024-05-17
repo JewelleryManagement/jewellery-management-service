@@ -99,7 +99,6 @@ public class ResourceService implements EntityFetcher {
         .toList();
   }
 
-  @LogUpdateEvent(eventType = EventType.RESOURCE_IMPORT)
   public List<ResourceResponseDto> importResources(MultipartFile file) {
     csvVerification(file);
 

@@ -185,8 +185,6 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   public void willThrowWhenFileIsEmpty() {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.MULTIPART_FORM_DATA);
     MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
     body.add("file", getEmptyTestFile().getResource());
     HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
@@ -199,8 +197,6 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   public void willThrowWhenFileContentIsWrong() {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.MULTIPART_FORM_DATA);
     MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
     body.add("file", getTestWrongContentFile().getResource());
     HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
@@ -213,8 +209,6 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   public void willImportResourcesSuccessfully() {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.MULTIPART_FORM_DATA);
     MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
     body.add("file", getTestFile().getResource());
     HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
