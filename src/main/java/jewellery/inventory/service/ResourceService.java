@@ -100,7 +100,7 @@ public class ResourceService implements EntityFetcher {
   }
 
   public List<ResourceResponseDto> importResources(MultipartFile file) {
-    csvVerification(file);
+    verifyIsCsv(file);
 
     List<ResourceRequestDto> resourcesDto = getImportedResources(file);
 
@@ -113,14 +113,14 @@ public class ResourceService implements EntityFetcher {
     return savedResources;
   }
 
-  private void csvVerification(MultipartFile file) {
+  private void verifyIsCsv(MultipartFile file) {
     if (file == null || file.isEmpty()) {
       throw new MultipartFileNotSelectedException();
     }
 
-      if (!"text/csv".equals(file.getContentType())) {
-        throw new MultipartFileContentTypeException("Only CSV files are allowed");
-      }
+    if (!"text/csv".equals(file.getContentType())) {
+      throw new MultipartFileContentTypeException("Only CSV files are allowed");
+    }
   }
 
   private List<ResourceRequestDto> getImportedResources(MultipartFile file) {
@@ -130,16 +130,16 @@ public class ResourceService implements EntityFetcher {
     CsvSchema schema = CsvSchema.emptySchema().withHeader();
 
     MappingIterator<ResourceRequestDto> resourcesIterator;
-    List<ResourceRequestDto> resourcesDto;
+    List<ResourceRequestDto> resourceDtos;
     try {
       resourcesIterator =
           mapper.readerFor(ResourceRequestDto.class).with(schema).readValues(file.getInputStream());
-      resourcesDto = resourcesIterator.readAll();
+      resourceDtos = resourcesIterator.readAll();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
 
-    return resourcesDto;
+    return resourceDtos;
   }
 
   @Override
