@@ -6,11 +6,11 @@ import jewellery.inventory.model.resource.SemiPreciousStone;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = StringTrimmer.class)
 public interface SemiPreciousStoneMapper {
-    SemiPreciousStoneMapper INSTANCE = Mappers.getMapper(SemiPreciousStoneMapper.class);
+  SemiPreciousStoneMapper INSTANCE = Mappers.getMapper(SemiPreciousStoneMapper.class);
 
-    SemiPreciousStoneResponseDto toResourceResponse(SemiPreciousStone entity);
+  SemiPreciousStoneResponseDto toResourceResponse(SemiPreciousStone entity);
 
-    SemiPreciousStone toResourceEntity(SemiPreciousStoneRequestDto dto);
+  SemiPreciousStone toResourceEntity(SemiPreciousStoneRequestDto dto);
 }

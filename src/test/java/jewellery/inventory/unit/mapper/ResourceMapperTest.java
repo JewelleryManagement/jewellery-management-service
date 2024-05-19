@@ -7,26 +7,28 @@ import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.exception.MappingException;
 import jewellery.inventory.mapper.*;
-import jewellery.inventory.mapper.MetalMapper;
 import jewellery.inventory.model.resource.Resource;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(
+    classes = {
+      PearlMapperImpl.class,
+      PreciousStoneMapperImpl.class,
+      ElementMapperImpl.class,
+      MetalMapperImpl.class,
+      SemiPreciousStoneMapperImpl.class,
+      StringTrimmer.class,
+      ResourceMapper.class
+    })
 class ResourceMapperTest {
-  private ResourceMapper resourceMapper;
-
-  @BeforeEach
-  void setUp() {
-    PearlMapper pearlMapper = PearlMapper.INSTANCE;
-    PreciousStoneMapper preciousStoneMapper = PreciousStoneMapper.INSTANCE;
-    ElementMapper elementMapper = ElementMapper.INSTANCE;
-    MetalMapper metalMapper = MetalMapper.INSTANCE;
-    SemiPreciousStoneMapper semiPreciousStoneMapper = SemiPreciousStoneMapper.INSTANCE;
-    resourceMapper =
-        new ResourceMapper(pearlMapper, preciousStoneMapper, elementMapper, metalMapper, semiPreciousStoneMapper);
-  }
+  @Autowired private ResourceMapper resourceMapper;
 
   @ParameterizedTest
   @MethodSource("jewellery.inventory.helper.ResourceTestHelper#provideResourcesAndResponseDtos")
