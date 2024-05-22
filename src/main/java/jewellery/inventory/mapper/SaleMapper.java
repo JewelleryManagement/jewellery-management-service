@@ -6,15 +6,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 import jewellery.inventory.dto.request.SaleRequestDto;
-import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
-import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
-import jewellery.inventory.dto.response.ResourceReturnResponseDto;
-import jewellery.inventory.dto.response.SaleResponseDto;
-import jewellery.inventory.model.ProductPriceDiscount;
-import jewellery.inventory.model.PurchasedResourceInUser;
-import jewellery.inventory.model.Sale;
-import jewellery.inventory.model.User;
+import jewellery.inventory.dto.response.*;
+import jewellery.inventory.model.*;
 import jewellery.inventory.utils.BigDecimalUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -25,6 +18,7 @@ public class SaleMapper {
   private final UserMapper userMapper;
   private final ProductMapper productMapper;
   private final ResourceMapper resourceMapper;
+  private final OrganizationMapper organizationMapper;
   private static final String AMOUNT = "amount";
   private static final String PERCENTAGE = "percentage";
 
@@ -96,6 +90,38 @@ public class SaleMapper {
     return resources;
   }
 
+  public Sale mapSaleFromOrganization(
+      SaleRequestDto saleRequestDto,
+      Organization organization,
+      User buyer,
+      List<ProductPriceDiscount> products,
+      List<PurchasedResourceInUser> resources) {
+    Sale sale = new Sale();
+    sale.setOrganizationSeller(organization);
+    sale.setBuyer(buyer);
+    sale.setResources(resources);
+    sale.setProducts(products);
+    sale.setDate(saleRequestDto.getDate());
+    return sale;
+  }
+
+  public OrganizationSaleResponseDto mapToOrganizationSaleResponseDto(Sale sale) {
+    OrganizationSaleResponseDto response = new OrganizationSaleResponseDto();
+    response.setId(sale.getId());
+    response.setOrganizationSeller(organizationMapper.toResponse(sale.getOrganizationSeller()));
+    response.setBuyer(userMapper.toUserResponse(sale.getBuyer()));
+    response.setDate(sale.getDate());
+    response.setProducts(mapAllProductsToResponse(sale));
+    response.setResources(mapAllResourcesToResponse(sale));
+    response.setTotalPrice(getTotalPriceFromEntities(sale.getProducts(), sale.getResources()));
+    response.setTotalDiscount(
+        calculateDiscount(sale.getProducts(), sale.getResources(), PERCENTAGE));
+    response.setTotalDiscountedPrice(
+        calculateDiscount(sale.getProducts(), sale.getResources(), AMOUNT));
+
+    return response;
+  }
+
   private PurchasedResourceQuantityResponseDto getPurchasedResourceInUserResponseDto(
       PurchasedResourceInUser resource) {
     return PurchasedResourceQuantityResponseDto.builder()
@@ -121,10 +147,12 @@ public class SaleMapper {
             .map(ProductPriceDiscount::getSalePrice)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-    totalPrice =
-        resources.stream()
-            .map(PurchasedResourceInUser::getSalePrice)
-            .reduce(totalPrice, BigDecimal::add);
+    if (resources != null) {
+      totalPrice =
+          resources.stream()
+              .map(PurchasedResourceInUser::getSalePrice)
+              .reduce(totalPrice, BigDecimal::add);
+    }
 
     return totalPrice;
   }

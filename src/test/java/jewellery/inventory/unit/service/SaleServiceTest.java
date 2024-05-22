@@ -12,12 +12,12 @@ import static org.mockito.Mockito.*;
 import java.math.BigDecimal;
 import java.util.*;
 import jewellery.inventory.dto.request.ProductDiscountRequestDto;
-import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
+import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
-import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.ResourceReturnResponseDto;
+import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.exception.not_found.ResourceNotFoundInSaleException;
 import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
@@ -102,7 +102,7 @@ class SaleServiceTest {
             buyer.getId(),
             List.of(productDiscountRequestDto),
             List.of(purchasedResourceQuantityRequestDto));
-    saleResponseDto = SaleTestHelper.getSaleResponseDto(sale);
+    saleResponseDto = SaleTestHelper.getSaleResponseDto(sale, BigDecimal.ONE, BigDecimal.TEN);
     productReturnResponseDto = SaleTestHelper.createProductReturnResponseDto(product, buyer);
   }
 

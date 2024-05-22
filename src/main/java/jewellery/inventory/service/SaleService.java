@@ -108,7 +108,7 @@ public class SaleService {
     return validateSaleAfterReturnResource(sale, resourceToReturn);
   }
 
-  private static void removeResourceFromSale(Sale sale, PurchasedResourceInUser resourceToReturn) {
+  public void removeResourceFromSale(Sale sale, PurchasedResourceInUser resourceToReturn) {
     sale.getResources()
         .removeIf(
             purchasedResource ->
@@ -118,7 +118,7 @@ public class SaleService {
                     .equals(resourceToReturn.getResource().getId()));
   }
 
-  private Sale getSale(UUID saleId) {
+  public Sale getSale(UUID saleId) {
     return saleRepository.findById(saleId).orElseThrow(() -> new SaleNotFoundException(saleId));
   }
 
@@ -152,7 +152,7 @@ public class SaleService {
     }
   }
 
-  private void updateProductOwnersAndSale(
+  public void updateProductOwnersAndSale(
       List<ProductPriceDiscount> products, UUID buyerId, Sale sale) {
     User newOwner = userService.getUser(buyerId);
 
@@ -162,7 +162,7 @@ public class SaleService {
     }
   }
 
-  private List<ProductPriceDiscount> getProductsFromSaleRequestDto(SaleRequestDto saleRequestDto) {
+  public List<ProductPriceDiscount> getProductsFromSaleRequestDto(SaleRequestDto saleRequestDto) {
     if (saleRequestDto.getProducts() != null) {
       return saleRequestDto.getProducts().stream()
           .map(
@@ -178,7 +178,7 @@ public class SaleService {
     return new ArrayList<>();
   }
 
-  private void deleteSaleIfProductsAndResourcesAreEmpty(Sale sale) {
+  public void deleteSaleIfProductsAndResourcesAreEmpty(Sale sale) {
     if (sale.getProducts().isEmpty() && sale.getResources().isEmpty()) {
       logger.info(
           "Deleting sale with ID: {} since the both products list and resources list are empty.",
@@ -192,7 +192,7 @@ public class SaleService {
     }
   }
 
-  private ProductReturnResponseDto validateSaleAfterReturnProduct(
+  public ProductReturnResponseDto validateSaleAfterReturnProduct(
       Sale sale, Product productToReturn) {
     if (sale.getProducts().isEmpty() && sale.getResources().isEmpty()) {
       return productService.getProductReturnResponseDto(null, productToReturn);
@@ -201,7 +201,7 @@ public class SaleService {
         saleMapper.mapEntityToResponseDto(sale), productToReturn);
   }
 
-  private ResourceReturnResponseDto validateSaleAfterReturnResource(
+  public ResourceReturnResponseDto validateSaleAfterReturnResource(
       Sale sale, PurchasedResourceInUser resourceToReturn) {
     if (sale.getResources().isEmpty() && sale.getProducts().isEmpty()) {
       sale = null;
@@ -210,16 +210,18 @@ public class SaleService {
         resourceToReturn, saleMapper.mapEntityToResponseDto(sale));
   }
 
-  private void setFieldsOfResourcesAfterSale(Sale sale) {
-    List<PurchasedResourceInUser> resources = sale.getResources();
-    resources.forEach(
-        resource -> {
-          resource.setPartOfSale(sale);
-          resource.setOwner(sale.getBuyer());
-          resource.setSalePrice(
-              resource.getQuantity().multiply(resource.getResource().getPricePerQuantity()));
-        });
-    purchasedResourceInUserRepository.saveAll(resources);
+  public void setFieldsOfResourcesAfterSale(Sale sale) {
+    if (sale.getResources() != null) {
+      List<PurchasedResourceInUser> resources = sale.getResources();
+      resources.forEach(
+          resource -> {
+            resource.setPartOfSale(sale);
+            resource.setOwner(sale.getBuyer());
+            resource.setSalePrice(
+                resource.getQuantity().multiply(resource.getResource().getPricePerQuantity()));
+          });
+      purchasedResourceInUserRepository.saveAll(resources);
+    }
   }
 
   private void removeQuantityFromResourcesInUser(Sale sale) {
@@ -230,7 +232,7 @@ public class SaleService {
     }
   }
 
-  private PurchasedResourceInUser getPurchasedResource(UUID resourceId, UUID saleId) {
+  public PurchasedResourceInUser getPurchasedResource(UUID resourceId, UUID saleId) {
     return purchasedResourceInUserRepository
         .findByResourceIdAndPartOfSaleId(resourceId, saleId)
         .orElseThrow(() -> new ResourceNotFoundInSaleException(resourceId, saleId));
@@ -252,17 +254,19 @@ public class SaleService {
     }
   }
 
-  private List<PurchasedResourceInUser> getResourcesFromSaleRequestDto(
+  public List<PurchasedResourceInUser> getResourcesFromSaleRequestDto(
       SaleRequestDto saleRequestDto) {
-    List<PurchasedResourceInUser> resources = new ArrayList<>();
     if (saleRequestDto.getResources() != null) {
+      List<PurchasedResourceInUser> resources = new ArrayList<>();
       for (PurchasedResourceQuantityRequestDto resourceRequest : saleRequestDto.getResources()) {
         PurchasedResourceInUser purchasedResourceInUser =
             getPurchasedResourceInUser(resourceRequest);
         resources.add(purchasedResourceInUser);
       }
+
+      return resources;
     }
-    return resources;
+    return new ArrayList<>();
   }
 
   private PurchasedResourceInUser getPurchasedResourceInUser(
@@ -280,7 +284,7 @@ public class SaleService {
     return purchasedResourceInUser;
   }
 
-  private void setProductPriceDiscountSalePriceAndSale(Sale sale) {
+  public void setProductPriceDiscountSalePriceAndSale(Sale sale) {
     sale.getProducts()
         .forEach(
             productDto -> {
@@ -301,7 +305,7 @@ public class SaleService {
     }
   }
 
-  private static void throwExceptionIfNoResourcesAndProductsInRequest(
+  public static void throwExceptionIfNoResourcesAndProductsInRequest(
       SaleRequestDto saleRequestDto) {
     if ((saleRequestDto.getProducts() == null || saleRequestDto.getProducts().isEmpty())
         && (saleRequestDto.getResources() == null || saleRequestDto.getResources().isEmpty())) {
