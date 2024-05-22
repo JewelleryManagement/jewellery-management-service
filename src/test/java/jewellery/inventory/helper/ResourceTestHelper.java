@@ -58,6 +58,10 @@ public class ResourceTestHelper {
     return getPearl(PRICE_PER_QUANTITY);
   }
 
+  public static Resource getPearlWithNullFields() {
+    return Pearl.builder().id(RESOURCE_ID).clazz(CLAZZ_PEARL).build();
+  }
+
   public static Resource getPearl(BigDecimal price) {
     return Pearl.builder()
         .id(RESOURCE_ID)
@@ -145,6 +149,10 @@ public class ResourceTestHelper {
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
         .build();
+  }
+
+  public static ResourceResponseDto getPearlResponseDtoWithNullFields() {
+    return PearlResponseDto.builder().id(RESOURCE_ID).clazz(CLAZZ_PEARL).build();
   }
 
   public static ResourceRequestDto getPearlRequestDto() {
@@ -364,6 +372,7 @@ public class ResourceTestHelper {
         Arguments.of(getSemiPreciousStone(), getSemiPreciousStoneResponseDto()),
         Arguments.of(getElement(), getElementResponseDto()),
         Arguments.of(getPearl(), getPearlResponseDto()),
+        Arguments.of(getPearlWithNullFields(), getPearlResponseDtoWithNullFields()),
         Arguments.of(getMetal(), getMetalResponseDto()));
   }
 
