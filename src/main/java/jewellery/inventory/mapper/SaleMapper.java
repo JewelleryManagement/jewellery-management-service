@@ -82,8 +82,10 @@ public class SaleMapper {
 
   public List<PurchasedResourceQuantityResponseDto> mapAllResourcesToResponse(Sale sale) {
     List<PurchasedResourceQuantityResponseDto> resources = new ArrayList<>();
-    for (PurchasedResourceInUser resource : sale.getResources()) {
-      resources.add(getPurchasedResourceInUserResponseDto(resource));
+    if (sale.getResources() != null) {
+      for (PurchasedResourceInUser resource : sale.getResources()) {
+        resources.add(getPurchasedResourceInUserResponseDto(resource));
+      }
     }
     return resources;
   }
