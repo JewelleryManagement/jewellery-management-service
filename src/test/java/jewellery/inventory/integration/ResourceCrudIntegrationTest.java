@@ -184,31 +184,21 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  public void willThrowWhenFileIsEmpty() {
-    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-    body.add("file", getEmptyTestFile().getResource());
-    HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-    ResponseEntity<String> response =
-        testRestTemplate.postForEntity(getImportUrl(), requestEntity, String.class);
-
-    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  void willThrowWhenFileIsEmpty() {
+    willImportCsvReturnsBadRequest(getEmptyTestFile());
   }
 
   @Test
-  public void willThrowWhenFileContentIsWrong() {
-    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-    body.add("file", getTestWrongContentFile().getResource());
-    HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-    ResponseEntity<String> response =
-        testRestTemplate.postForEntity(getImportUrl(), requestEntity, String.class);
-
-    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  void willThrowWhenFileContentIsWrong() {
+    willImportCsvReturnsBadRequest(getTestWrongContentFile());
+  }
+  @Test
+  void willThrowWhenFileContentIsInInvalidFormat() {
+    willImportCsvReturnsBadRequest(getTestInvalidFormatFile());
   }
 
   @Test
-  public void willImportResourcesSuccessfully() {
+  void willImportResourcesSuccessfully() {
     MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
     body.add("file", getTestFile().getResource());
     HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
@@ -227,6 +217,18 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(responseDto.get(0).getNote(), "smth");
   }
 
+  private void willImportCsvReturnsBadRequest(MockMultipartFile TestWrongContentFile) {
+    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+    body.add("file", TestWrongContentFile.getResource());
+    HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+    ResponseEntity<String> response =
+            testRestTemplate.postForEntity(getImportUrl(), requestEntity, String.class);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
+
+
   private MockMultipartFile getEmptyTestFile() {
     return new MockMultipartFile("file", "test-file.txt", "text/plain", "".getBytes());
   }
@@ -234,6 +236,13 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private MockMultipartFile getTestWrongContentFile() {
     String data = "smth";
     return new MockMultipartFile("file", "test-file.txt", "text/plain", data.getBytes());
+  }
+
+  private MockMultipartFile getTestInvalidFormatFile() {
+    String data =
+        "\"clazz\",\"note\",\"pricePerQuantity\",\"quantityType\",\"description\",\"color\",\"plating\",\"purity\",\"type\",\"quality\",\"shape\",\"size\",\"carat\",\"clarity\",\"cut\",\"dimensionX\",\"dimensionY\",\"dimensionZ\"\n"
+            + "PreciousStone,Note,invalid,unit,,ruby,,,,,octagon,,5.10,opaque,diamond,4.50,4.90,2.50";
+    return new MockMultipartFile("file", "test-file.csv", "text/csv", data.getBytes());
   }
 
   private MockMultipartFile getTestFile() {

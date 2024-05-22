@@ -1,5 +1,6 @@
 package jewellery.inventory.exception;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import io.jsonwebtoken.security.SignatureException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -65,7 +66,8 @@ public class GlobalExceptionHandler {
     MultipartFileNotSelectedException.class,
     MultipartFileSizeException.class,
     ConstraintViolationException.class,
-    HttpMessageNotReadableException.class
+    HttpMessageNotReadableException.class,
+    InvalidFormatException.class
   })
   public ResponseEntity<Object> handleBadDataExceptions(RuntimeException ex) {
     String errorMessage = ex.getMessage();
@@ -113,7 +115,7 @@ public class GlobalExceptionHandler {
     String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT_PATTERN));
     body.put(TIMESTAMP_KEY, date);
     body.put(ERROR_KEY, error);
-    logger.error("Error occurred: {} " , ex.getMessage(), ex);
+    logger.error("Error occurred: {} ", ex.getMessage(), ex);
     return new ResponseEntity<>(body, status);
   }
 
