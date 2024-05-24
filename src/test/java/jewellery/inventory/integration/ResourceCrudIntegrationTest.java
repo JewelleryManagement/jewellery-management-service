@@ -8,11 +8,11 @@ import static jewellery.inventory.model.EventType.RESOURCE_DELETE;
 import static jewellery.inventory.model.EventType.RESOURCE_UPDATE;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,12 +28,13 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.util.Pair;
 import org.springframework.data.util.StreamUtils;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Autowired private ResourceMapper resourceMapper;
@@ -128,10 +129,10 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertInputMatchesFetchedFromServer(updatedInputDtos);
 
     Map<String, Object> expectedEventPayload =
-            getUpdateEventPayload(
-                    createdDtos.get(0),
-                    getMatchingUpdatedDto(createdDtos.get(0).getId(), updatedDtos),
-                    objectMapper);
+        getUpdateEventPayload(
+            createdDtos.get(0),
+            getMatchingUpdatedDto(createdDtos.get(0).getId(), updatedDtos),
+            objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(RESOURCE_UPDATE, expectedEventPayload);
   }
@@ -180,6 +181,78 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             HttpEntity.EMPTY,
             String.class);
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+  }
+
+  @Test
+  void willThrowWhenFileIsEmpty() {
+    willImportCsvReturnsBadRequest(getEmptyTestFile());
+  }
+
+  @Test
+  void willThrowWhenFileContentIsWrong() {
+    willImportCsvReturnsBadRequest(getTestWrongContentFile());
+  }
+  @Test
+  void willThrowWhenFileContentIsInInvalidFormat() {
+    willImportCsvReturnsBadRequest(getTestInvalidFormatFile());
+  }
+
+  @Test
+  void willImportResourcesSuccessfully() {
+    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+    body.add("file", getTestFile().getResource());
+    HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+    ParameterizedTypeReference<List<ResourceResponseDto>> responseType =
+        new ParameterizedTypeReference<List<ResourceResponseDto>>() {};
+
+    ResponseEntity<List<ResourceResponseDto>> response =
+        testRestTemplate.exchange(getImportUrl(), HttpMethod.POST, requestEntity, responseType);
+
+    List<ResourceResponseDto> responseDto = response.getBody();
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(responseDto);
+    assertEquals(responseDto.get(0).getClazz(), "Element");
+    assertEquals(responseDto.get(0).getQuantityType(), "28");
+    assertEquals(responseDto.get(0).getPricePerQuantity(), BigDecimal.valueOf(30));
+    assertEquals(responseDto.get(0).getNote(), "smth");
+  }
+
+  private void willImportCsvReturnsBadRequest(MockMultipartFile TestWrongContentFile) {
+    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+    body.add("file", TestWrongContentFile.getResource());
+    HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+    ResponseEntity<String> response =
+            testRestTemplate.postForEntity(getImportUrl(), requestEntity, String.class);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
+
+
+  private MockMultipartFile getEmptyTestFile() {
+    return new MockMultipartFile("file", "test-file.txt", "text/plain", "".getBytes());
+  }
+
+  private MockMultipartFile getTestWrongContentFile() {
+    String data = "smth";
+    return new MockMultipartFile("file", "test-file.txt", "text/plain", data.getBytes());
+  }
+
+  private MockMultipartFile getTestInvalidFormatFile() {
+    String data =
+        "\"clazz\",\"note\",\"pricePerQuantity\",\"quantityType\",\"description\",\"color\",\"plating\",\"purity\",\"type\",\"quality\",\"shape\",\"size\",\"carat\",\"clarity\",\"cut\",\"dimensionX\",\"dimensionY\",\"dimensionZ\"\n"
+            + "PreciousStone,Note,invalid,unit,,ruby,,,,,octagon,,5.10,opaque,diamond,4.50,4.90,2.50";
+    return new MockMultipartFile("file", "test-file.csv", "text/csv", data.getBytes());
+  }
+
+  private MockMultipartFile getTestFile() {
+    String csvData =
+        "clazz,quantityType,pricePerQuantity,note,description\nElement,28,30,smth,Element description\n";
+    return new MockMultipartFile("file", "test-file.csv", "text/csv", csvData.getBytes());
+  }
+
+  private String getImportUrl() {
+    return getBaseResourceUrl() + "/" + "import";
   }
 
   @NotNull
@@ -251,10 +324,12 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertThat(mappedDtos).containsExactlyInAnyOrderElementsOf(updatedResources);
   }
-  private ResourceResponseDto getMatchingUpdatedDto(UUID id, List<ResourceResponseDto> updatedDtos) {
+
+  private ResourceResponseDto getMatchingUpdatedDto(
+      UUID id, List<ResourceResponseDto> updatedDtos) {
     return updatedDtos.stream()
-            .filter(resourceResponseDto -> resourceResponseDto.getId().equals(id))
-            .findFirst()
-            .orElseThrow(() -> new AssertionFailure("Can't find id: " + id + " in responses"));
+        .filter(resourceResponseDto -> resourceResponseDto.getId().equals(id))
+        .findFirst()
+        .orElseThrow(() -> new AssertionFailure("Can't find id: " + id + " in responses"));
   }
 }

@@ -24,12 +24,15 @@ public class OrganizationMapper {
   }
 
   public OrganizationResponseDto toResponse(Organization organization) {
-    OrganizationResponseDto organizationResponseDto = new OrganizationResponseDto();
-    organizationResponseDto.setId(organization.getId());
-    organizationResponseDto.setName(organization.getName());
-    organizationResponseDto.setAddress(organization.getAddress());
-    organizationResponseDto.setNote(organization.getNote());
-    return organizationResponseDto;
+    if(organization != null) {
+      OrganizationResponseDto organizationResponseDto = new OrganizationResponseDto();
+      organizationResponseDto.setId(organization.getId());
+      organizationResponseDto.setName(organization.getName());
+      organizationResponseDto.setAddress(organization.getAddress());
+      organizationResponseDto.setNote(organization.getNote());
+      return organizationResponseDto;
+    }
+    return null;
   }
 
   public OrganizationMembersResponseDto toOrganizationMembersResponseDto(

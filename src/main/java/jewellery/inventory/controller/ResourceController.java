@@ -11,6 +11,7 @@ import jewellery.inventory.service.ResourceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/resources")
@@ -68,5 +69,12 @@ public class ResourceController {
   @GetMapping("/quantity")
   public List<ResourceQuantityResponseDto> getAllResourceQuantities() {
     return resourceService.getAllResourceQuantities();
+  }
+
+  @Operation(summary = "Import resources from CSV")
+  @ResponseStatus(HttpStatus.OK)
+  @PostMapping("/import")
+  public List<ResourceResponseDto> importResources(@RequestParam("file") MultipartFile file) {
+    return resourceService.importResources(file);
   }
 }

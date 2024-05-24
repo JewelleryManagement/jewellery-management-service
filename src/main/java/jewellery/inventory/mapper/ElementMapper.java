@@ -6,7 +6,7 @@ import jewellery.inventory.model.resource.Element;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = StringTrimmer.class)
 public interface ElementMapper {
   ElementMapper INSTANCE = Mappers.getMapper(ElementMapper.class);
 
