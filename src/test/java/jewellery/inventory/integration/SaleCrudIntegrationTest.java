@@ -296,6 +296,26 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
+  void getAllOrganizationSalesSuccessfully() throws JsonProcessingException {
+    createSaleInOrganizationSuccessfully();
+    createSaleWithResourcesOnlySuccessfully();
+
+    ResponseEntity<List<OrganizationSaleResponseDto>> response =
+        this.testRestTemplate.exchange(
+            getBaseOrganizationSaleUrl(),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(
+        1,
+        response.getBody().size(),
+        "Expected 1 sale in get sales response. Got " + response.getBody().size());
+  }
+
+  @Test
   void returnResourceSuccessfully() throws JsonProcessingException {
     ResponseEntity<ProductResponseDto> productResponse = createProduct(productRequestDto);
     SaleRequestDto saleRequestDto = getSaleRequestDto(seller, buyer, productResponse, pearlRequest);

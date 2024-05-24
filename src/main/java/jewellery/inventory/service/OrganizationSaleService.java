@@ -117,6 +117,7 @@ public class OrganizationSaleService {
   public List<OrganizationSaleResponseDto> getAllSales() {
     logger.debug("Fetching all Sales from organization");
     return saleRepository.findAll().stream()
+        .filter(sale -> sale.getOrganizationSeller() != null)
         .map(saleMapper::mapToOrganizationSaleResponseDto)
         .toList();
   }
