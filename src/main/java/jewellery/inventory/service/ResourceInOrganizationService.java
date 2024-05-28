@@ -11,6 +11,7 @@ import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.OrganizationTransferResourceResponseDto;
+import jewellery.inventory.dto.response.ResourceOwnedByOrganizationsResponseDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInOrganizationNotFoundException;
@@ -108,6 +109,11 @@ public class ResourceInOrganizationService implements EntityFetcher {
     organizationService.validateUserInOrganization(organization);
 
     return resourceInOrganizationMapper.toResourcesInOrganizationResponse(organization);
+  }
+
+  public ResourceOwnedByOrganizationsResponseDto getOrganizationsAndQuantities(UUID resourceId) {
+    Resource resource = resourceService.getResourceById(resourceId);
+    return resourceInOrganizationMapper.toResourcesOwnedByOrganizationsResponseDto(resource);
   }
 
   private ResourcesInOrganizationResponseDto removeQuantityFromResourceNoLog(

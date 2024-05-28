@@ -6,13 +6,14 @@ import static org.mockito.Mockito.*;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
-
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
+import jewellery.inventory.dto.response.ResourceOwnedByOrganizationsResponseDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInOrganizationNotFoundException;
+import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.helper.OrganizationTestHelper;
@@ -283,5 +284,36 @@ class ResourceInOrganizationServiceTest {
     verify(organizationService, times(1)).getOrganization(secondOrganization.getId());
     verify(organizationService, times(1)).saveOrganization(organization);
     verify(resourceInOrganizationRepository, times(1)).save(resourceInOrganization);
+  }
+
+  @Test
+  void testGetOrganizationsAndQuantitiesSuccessfully() {
+    when(resourceService.getResourceById(resource.getId())).thenReturn(resource);
+    ResourceOwnedByOrganizationsResponseDto response =
+        ResourceInOrganizationTestHelper.getResourceOwnedByOrganizationsResponseDto(organization);
+    when(resourceInOrganizationService.getOrganizationsAndQuantities(resource.getId()))
+        .thenReturn(response);
+
+    ResourceOwnedByOrganizationsResponseDto actual =
+        resourceInOrganizationService.getOrganizationsAndQuantities(resource.getId());
+
+    Assertions.assertEquals(1, actual.getOrganizationsAndQuantities().size());
+    Assertions.assertEquals(resource.getId(), actual.getResource().getId());
+    Assertions.assertEquals(
+        organization.getId(), actual.getOrganizationsAndQuantities().get(0).getOwner().getId());
+    Assertions.assertEquals(
+        BigDecimal.TEN, actual.getOrganizationsAndQuantities().get(0).getQuantity());
+    verify(resourceInOrganizationMapper, times(1))
+        .toResourcesOwnedByOrganizationsResponseDto(resource);
+  }
+
+  @Test
+  void testGetOrganizationsAndQuantitiesShouldThrowWhenResourceNotFound() {
+    when(resourceInOrganizationService.getOrganizationsAndQuantities(resource.getId()))
+        .thenThrow(new ResourceNotFoundException(resource.getId()));
+
+    Assertions.assertThrows(
+        ResourceNotFoundException.class,
+        () -> resourceInOrganizationService.getOrganizationsAndQuantities(resource.getId()));
   }
 }

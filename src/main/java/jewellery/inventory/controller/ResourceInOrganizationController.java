@@ -8,6 +8,8 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.OrganizationTransferResourceResponseDto;
+import jewellery.inventory.dto.response.ResourceOwnedByOrganizationsResponseDto;
+import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.service.ResourceInOrganizationService;
 import lombok.RequiredArgsConstructor;
@@ -60,5 +62,13 @@ public class ResourceInOrganizationController {
   public OrganizationTransferResourceResponseDto transferResources(
           @RequestBody @Valid TransferResourceRequestDto transferResourceRequestDto) {
     return resourceInOrganizationService.transferResource(transferResourceRequestDto);
+  }
+
+  @Operation(summary = "Get all resources quantities from organizations by resourceId")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/by-resource/{resourceId}")
+  public ResourceOwnedByOrganizationsResponseDto getAllOrganizationsAndQuantitiesByResource(
+          @PathVariable UUID resourceId) {
+    return resourceInOrganizationService.getOrganizationsAndQuantities(resourceId);
   }
 }
