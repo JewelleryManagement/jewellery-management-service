@@ -2,10 +2,7 @@ package jewellery.inventory.mapper;
 
 import java.math.BigDecimal;
 import java.util.List;
-
-import jewellery.inventory.dto.response.OrganizationTransferResourceResponseDto;
-import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
-import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.ResourceInOrganization;
 import jewellery.inventory.model.resource.Resource;
@@ -51,6 +48,22 @@ public class ResourceInOrganizationMapper {
         .resourcesAndQuantities(getResourcesQuantitiesResponseDto(organization))
         .owner(organizationMapper.toResponse(organization))
         .build();
+  }
+
+  public ResourceOwnedByOrganizationsResponseDto toResourcesOwnedByOrganizationsResponseDto(Resource resource) {
+    List<OrganizationQuantityResponseDto> organizationQuantityResponseDtos =
+            resource.getOrganizationAffiliations().stream()
+                    .map(
+                            resourceInOrganization ->
+                                    OrganizationQuantityResponseDto.builder()
+                                            .owner(organizationMapper.toResponse(resourceInOrganization.getOrganization()))
+                                            .quantity(resourceInOrganization.getQuantity())
+                                            .build())
+                    .toList();
+    return ResourceOwnedByOrganizationsResponseDto.builder()
+            .organizationsAndQuantities(organizationQuantityResponseDtos)
+            .resource(resourceMapper.toResourceResponse(resource))
+            .build();
   }
 
   private List<ResourceQuantityResponseDto> getResourcesQuantitiesResponseDto(

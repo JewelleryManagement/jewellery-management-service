@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+
+import jewellery.inventory.model.ResourceInOrganization;
 import jewellery.inventory.model.ResourceInUser;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,6 +26,9 @@ public class Resource {
 
   @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL)
   private List<ResourceInUser> userAffiliations;
+
+  @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL)
+  private List<ResourceInOrganization> organizationAffiliations;
 
   @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL)
   private List<ResourceInProduct> productAffiliations;
