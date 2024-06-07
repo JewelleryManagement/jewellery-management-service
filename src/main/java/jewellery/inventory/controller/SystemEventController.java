@@ -5,11 +5,9 @@ import java.util.List;
 import jewellery.inventory.model.SystemEvent;
 import jewellery.inventory.service.SystemEventService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/system-events")
@@ -23,5 +21,13 @@ public class SystemEventController {
   @GetMapping
   public List<SystemEvent> getAllEvents() {
     return eventService.getAllEvents();
+  }
+
+  @Operation(summary = "Get all system events with pagination")
+  @GetMapping("/{page}/{pageSize}")
+  @ResponseStatus(HttpStatus.OK)
+  public Page<SystemEvent> getAllSystemEventsWithPagination(
+      @PathVariable int page, @PathVariable int pageSize) {
+    return eventService.getAllEventsWithPagination(page, pageSize);
   }
 }

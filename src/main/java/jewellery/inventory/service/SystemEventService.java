@@ -12,6 +12,9 @@ import jewellery.inventory.model.SystemEvent;
 import jewellery.inventory.repository.SystemEventRepository;
 import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +25,15 @@ public class SystemEventService {
   private final SystemEventRepository systemEventRepository;
   private final AuthService authService;
   private final ObjectMapper objectMapper;
+
+  public Page<SystemEvent> getAllEventsWithPagination(int page, int pageSize) {
+    Page<SystemEvent> systemEventPage =
+        systemEventRepository.findAll(PageRequest.of(page, pageSize));
+    return new PageImpl<>(
+        systemEventPage.getContent(),
+        systemEventPage.getPageable(),
+        systemEventPage.getTotalElements());
+  }
 
   public List<SystemEvent> getAllEvents() {
     return systemEventRepository.findAll();
