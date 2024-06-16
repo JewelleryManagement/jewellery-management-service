@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.UserUpdateRequestDto;
-import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.dto.response.DetailedUserResponseDto;
 import jewellery.inventory.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,14 +31,14 @@ public class UserController {
   @Operation(summary = "Get all users")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping
-  public List<UserResponseDto> getAllUsers() {
+  public List<DetailedUserResponseDto> getAllUsers() {
     return userService.getAllUsers();
   }
 
   @Operation(summary = "Get user by id")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")
-  public UserResponseDto getUser(@PathVariable UUID id) {
+  public DetailedUserResponseDto getUser(@PathVariable UUID id) {
     return userService.getUserResponse(id);
   }
 
@@ -49,14 +49,14 @@ public class UserController {
   })
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
-  public UserResponseDto createUser(@Valid @RequestBody UserRequestDto newUser) {
+  public DetailedUserResponseDto createUser(@Valid @RequestBody UserRequestDto newUser) {
     return userService.createUser(newUser);
   }
 
   @Operation(summary = "Update user by id")
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{id}")
-  public UserResponseDto updateUser(
+  public DetailedUserResponseDto updateUser(
       @PathVariable UUID id, @Valid @RequestBody UserUpdateRequestDto userRequest) {
     return userService.updateUser(userRequest, id);
   }

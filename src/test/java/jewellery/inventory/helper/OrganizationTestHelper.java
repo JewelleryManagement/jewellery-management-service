@@ -3,13 +3,11 @@ package jewellery.inventory.helper;
 import java.math.BigDecimal;
 import java.util.*;
 
-import io.micrometer.common.lang.Nullable;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
-import org.springframework.http.ResponseEntity;
 
 public class OrganizationTestHelper {
   private static final String ORGANIZATION_NAME = "Test Name";
@@ -89,8 +87,8 @@ public class OrganizationTestHelper {
     return request;
   }
 
-  public static ExecutorResponseDto getTestExecutor(User user) {
-    ExecutorResponseDto responseDto = new ExecutorResponseDto();
+  public static UserResponseDto getTestExecutor(User user) {
+    UserResponseDto responseDto = new UserResponseDto();
     responseDto.setId(user.getId());
     responseDto.setFirstName(user.getFirstName());
     responseDto.setLastName(user.getLastName());
