@@ -204,6 +204,7 @@ public class ProductInOrganizationService implements EntityFetcher {
             Product product = productService.getProduct(productId);
             productService.throwExceptionIfProductIsPartOfItself(product, parentProduct.getId());
             productService.throwExceptionIfProductIsSold(product);
+            productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
             if ((product.getOrganization() != null)
                 && parentProduct
                     .getOrganization()

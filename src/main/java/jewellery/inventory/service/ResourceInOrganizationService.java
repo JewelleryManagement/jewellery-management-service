@@ -184,6 +184,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
             .resource(resource)
             .quantity(quantity)
             .build();
+    organization.getResourceInOrganization().add(resourceInOrganization);
     logger.info("New resource in organization created: {}", resourceInOrganization);
     return resourceInOrganization;
   }
