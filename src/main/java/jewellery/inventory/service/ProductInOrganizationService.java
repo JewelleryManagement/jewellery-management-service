@@ -267,7 +267,7 @@ public class ProductInOrganizationService implements EntityFetcher {
 
     checkResourceAvailability(resourceInOrganization, incomingResourceInProduct);
 
-    resourceInOrganizationService.removeQuantityFromResource(
+    resourceInOrganizationService.removeQuantityFromResourceNoLog(
         organization.getId(),
         incomingResourceInProduct.getResourceId(),
         incomingResourceInProduct.getQuantity());

@@ -116,8 +116,8 @@ public class ResourceInOrganizationService implements EntityFetcher {
     return resourceInOrganizationMapper.toResourcesOwnedByOrganizationsResponseDto(resource);
   }
 
-  private ResourcesInOrganizationResponseDto removeQuantityFromResourceNoLog(
-      UUID organizationId, UUID resourceId, BigDecimal quantity) {
+  public ResourcesInOrganizationResponseDto removeQuantityFromResourceNoLog(
+          UUID organizationId, UUID resourceId, BigDecimal quantity) {
     Organization organization = organizationService.getOrganization(organizationId);
 
     organizationService.validateCurrentUserPermission(
@@ -144,7 +144,7 @@ public class ResourceInOrganizationService implements EntityFetcher {
     Organization organization = resourceInOrganization.getOrganization();
     if (isApproachingZero(newQuantity)) {
       organization.getResourceInOrganization().remove(resourceInOrganization);
-      resourceInOrganization = null;
+      resourceInOrganizationRepository.delete(resourceInOrganization);
     }
     organizationService.saveOrganization(organization);
     logger.debug("ResourceInOrganization after quantity removal: {}", resourceInOrganization);

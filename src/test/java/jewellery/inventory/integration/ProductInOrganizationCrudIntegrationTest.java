@@ -162,6 +162,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             RESOURCE_PRICE);
     ResponseEntity<ResourcesInOrganizationResponseDto> resource =
         sendResourceToOrganization(resourceInOrganizationRequest);
+    assertResourcesInOrganizationSize(organizationResponseDto.getId().toString(), 1);
     ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
         createProduct(
             setOwnerAndResourceToProductRequest(
@@ -169,6 +170,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
                 organizationResponseDto.getId(),
                 resourceResponse.getId(),
                 RESOURCE_QUANTITY));
+    assertResourcesInOrganizationSize(organizationResponseDto.getId().toString(), 0);
 
     ResponseEntity<ProductsInOrganizationResponseDto> updatedProductInOrganizationResponse =
         updateProduct(
@@ -183,6 +185,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             objectMapper);
     systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_UPDATE, expectedEventPayload);
     assertProductsInOrganizationSize(organizationResponseDto.getId().toString(), 1);
+    assertResourcesInOrganizationSize(organizationResponseDto.getId().toString(), 0);
   }
 
   @Test
@@ -288,6 +291,16 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             ProductsInOrganizationResponseDto.class);
 
     assertEquals(assertSize, organizationProductsResponse.getBody().getProducts().size());
+  }
+  private void assertResourcesInOrganizationSize(String organizationId, int assertSize) {
+    ResponseEntity<ResourcesInOrganizationResponseDto> organizationResourcesResponse =
+            this.testRestTemplate.exchange(
+                    getBaseResourceAvailabilityUrl() + "/" + organizationId,
+                    HttpMethod.GET,
+                    null,
+                    ResourcesInOrganizationResponseDto.class);
+
+    assertEquals(assertSize, organizationResourcesResponse.getBody().getResourcesAndQuantities().size());
   }
 
   private OrganizationResponseDto createOrganization() {

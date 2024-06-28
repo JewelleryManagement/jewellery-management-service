@@ -184,7 +184,7 @@ public class OrganizationSaleService {
         ResourceInOrganization resourceInOrganization =
             resourceInOrganizationService.getResourceInOrganization(
                 sale.getOrganizationSeller(), resource.getResource());
-        resourceInOrganizationService.removeQuantityFromResource(
+        resourceInOrganizationService.removeQuantityFromResourceNoLog(
             sale.getOrganizationSeller().getId(),
             resourceInOrganization.getResource().getId(),
             resource.getQuantity());
