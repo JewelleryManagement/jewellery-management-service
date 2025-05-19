@@ -248,9 +248,9 @@ class JwtTokenServiceTest {
     Date expiredDate = new Date(System.currentTimeMillis() - ONE_DAY_IN_MILLISECONDS);
 
     return Jwts.builder()
-        .subject("testUser") // replaces .setSubject()
-        .expiration(expiredDate) // replaces .setExpiration()
-        .signWith(jwtUtils.getSigningKey()) // no need to pass algorithm explicitly
+        .subject("testUser")
+        .expiration(expiredDate)
+        .signWith(jwtUtils.getSigningKey())
         .compact();
   }
 }
