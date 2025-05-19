@@ -60,9 +60,9 @@ abstract class AuthenticatedIntegrationTestBase {
   void setup() {
     resourceInOrganizationRepository.deleteAll();
     deleteAllImages();
+    saleRepository.deleteAll();
     productRepository.deleteAll();
     purchasedResourceInUserRepository.deleteAll();
-    saleRepository.deleteAll();
     userRepository.deleteAll();
     resourceRepository.deleteAll();
     resourceInUserRepository.deleteAll();

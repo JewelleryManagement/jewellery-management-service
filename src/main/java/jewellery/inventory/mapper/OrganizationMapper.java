@@ -1,5 +1,7 @@
 package jewellery.inventory.mapper;
 
+import java.util.ArrayList;
+import java.util.List;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationMembersResponseDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
@@ -8,12 +10,11 @@ import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
 import jewellery.inventory.model.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 @AllArgsConstructor
 public class OrganizationMapper {
+  private UserMapper userMapper;
 
   public Organization toEntity(OrganizationRequestDto dto) {
     Organization organization = new Organization();
@@ -24,7 +25,7 @@ public class OrganizationMapper {
   }
 
   public OrganizationResponseDto toResponse(Organization organization) {
-    if(organization != null) {
+    if (organization != null) {
       OrganizationResponseDto organizationResponseDto = new OrganizationResponseDto();
       organizationResponseDto.setId(organization.getId());
       organizationResponseDto.setName(organization.getName());
@@ -60,9 +61,8 @@ public class OrganizationMapper {
         .getUsersInOrganization()
         .forEach(
             userInOrg -> {
-              UserInOrganizationResponseDto userResponseDto = new UserInOrganizationResponseDto();
-              userResponseDto.setUserId(userInOrg.getUser().getId());
-              userResponseDto.setOrganizationPermissions(userInOrg.getOrganizationPermission());
+              UserInOrganizationResponseDto userResponseDto =
+                  toUserInOrganizationResponseDto(userInOrg);
               userResponseDtoList.add(userResponseDto);
             });
 
@@ -73,7 +73,7 @@ public class OrganizationMapper {
       UserInOrganization userInOrganization) {
     UserInOrganizationResponseDto userResponseDto = new UserInOrganizationResponseDto();
 
-    userResponseDto.setUserId(userInOrganization.getUser().getId());
+    userResponseDto.setUser(userMapper.toUserResponse(userInOrganization.getUser()));
     userResponseDto.setOrganizationPermissions(userInOrganization.getOrganizationPermission());
 
     return userResponseDto;

@@ -10,15 +10,14 @@ import static org.mockito.Mockito.*;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import java.security.Key;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
+import javax.crypto.SecretKey;
 import jewellery.inventory.exception.security.jwt.JwtExpiredException;
 import jewellery.inventory.exception.security.jwt.JwtIsNotValidException;
 import jewellery.inventory.security.JwtUtils;
@@ -48,7 +47,7 @@ class JwtTokenServiceTest {
       "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyb290QGdtYWlsLmNvbSIsImlhdCI6MTY5NjI0OTQxOSwiZXhwIjoxNjk2MzM1ODE5fQ.z5ZNMMRkFzJ7qYdIy-lI9ii2hLjomgav0prE2_DKUkQ";
   private static final String INVALID_TOKEN =
       "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyb290QGdtYWlsLmNvbSIsImlhdCI6MTY5NTk5NTI4MCwiZXhwIjoxNjk1OTk2NzIwfQ.WZopY5dSj0v3g28dorFHk7XhuH2R-e6k6zmZ_G5C9ow";
-  private Key key;
+  private SecretKey key;
 
   @BeforeEach
   public void setUp() {
@@ -116,8 +115,9 @@ class JwtTokenServiceTest {
   void isTokenValidWithExpiredTokenThrowsJwtExpiredException() {
     Claims expiredClaims =
         Jwts.claims()
-            .setSubject(USER_EMAIL)
-            .setExpiration(Date.from(Instant.now().minusMillis(10200L)));
+            .add("sub", USER_EMAIL) // subject
+            .add("exp", Date.from(Instant.now().minusMillis(10200L))) // expiration
+            .build();
     doReturn(expiredClaims).when(jwtUtils).extractAllClaims(anyString());
 
     assertThatThrownBy(() -> jwtTokenService.isTokenValid(TOKEN_MOCK, userDetails))
@@ -155,7 +155,7 @@ class JwtTokenServiceTest {
 
   @Test
   void isTokenValidWithNullTokenExpirationThrowsJwtExpiredException() {
-    Claims expiredClaims = Jwts.claims().setSubject(USER_EMAIL).setExpiration(null);
+    Claims expiredClaims = Jwts.claims().add("sub", USER_EMAIL).add("exp", null).build();
     doReturn(expiredClaims).when(jwtUtils).extractAllClaims(anyString());
 
     assertThatThrownBy(() -> jwtTokenService.isTokenValid(TOKEN_MOCK, userDetails))
@@ -226,13 +226,16 @@ class JwtTokenServiceTest {
 
   private Claims parseClaimsFromToken(String token) {
     byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
-    Key key = Keys.hmacShaKeyFor(keyBytes);
-    return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+    SecretKey key = Keys.hmacShaKeyFor(keyBytes);
+    return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
   }
 
   private void setupDefaultExtractAllClaimsBehavior() {
-    Claims claims = Jwts.claims().setSubject(USER_EMAIL);
-    claims.setExpiration(Date.from(Instant.now().plusMillis(TOKEN_EXPIRATION)));
+    Claims claims =
+        Jwts.claims()
+            .add("sub", USER_EMAIL) // subject
+            .add("exp", Date.from(Instant.now().plusMillis(TOKEN_EXPIRATION))) // expiration
+            .build();
 
     lenient().doReturn(claims).when(jwtUtils).extractAllClaims(anyString());
   }
@@ -245,9 +248,9 @@ class JwtTokenServiceTest {
     Date expiredDate = new Date(System.currentTimeMillis() - ONE_DAY_IN_MILLISECONDS);
 
     return Jwts.builder()
-        .setSubject("testUser")
-        .setExpiration(expiredDate)
-        .signWith(jwtUtils.getSigningKey(), SignatureAlgorithm.HS256)
+        .subject("testUser")
+        .expiration(expiredDate)
+        .signWith(jwtUtils.getSigningKey())
         .compact();
   }
 }

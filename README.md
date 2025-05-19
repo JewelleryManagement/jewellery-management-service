@@ -8,7 +8,7 @@ This is the backend service for a jewellery management administration system.
 
 You would need the following tools installed before running the project locally:
 
-- Java 17
+- Java 21
 - Maven
 - IntelliJ IDEA (or any preferred IDE)
 - Docker

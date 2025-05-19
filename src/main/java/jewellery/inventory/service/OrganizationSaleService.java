@@ -184,7 +184,7 @@ public class OrganizationSaleService {
         ResourceInOrganization resourceInOrganization =
             resourceInOrganizationService.getResourceInOrganization(
                 sale.getOrganizationSeller(), resource.getResource());
-        resourceInOrganizationService.removeQuantityFromResource(
+        resourceInOrganizationService.removeQuantityFromResourceNoLog(
             sale.getOrganizationSeller().getId(),
             resourceInOrganization.getResource().getId(),
             resource.getQuantity());
@@ -263,6 +263,11 @@ public class OrganizationSaleService {
   }
 
   private void removeProductFromSale(UUID productId, Sale sale) {
+    sale.getProducts().stream()
+        .filter(productPriceDiscount -> productPriceDiscount.getProduct().getId() == productId)
+        .findFirst()
+        .ifPresent(productPriceDiscount -> productPriceDiscount.getProduct().setPartOfSale(null));
+
     sale.getProducts()
         .removeIf(
             productPriceDiscount -> productPriceDiscount.getProduct().getId().equals(productId));

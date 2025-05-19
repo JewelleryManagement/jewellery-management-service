@@ -48,7 +48,7 @@ class OrganizationServiceTest {
   private User user;
   private OrganizationRequestDto organizationRequestDto;
   private OrganizationResponseDto organizationResponseDto;
-  private ExecutorResponseDto executorResponseDto;
+  private UserResponseDto userResponseDto;
 
   @BeforeEach
   void setUp() {
@@ -57,7 +57,7 @@ class OrganizationServiceTest {
     user = UserTestHelper.createSecondTestUser();
     organizationWithNoUserPermissions = getOrganizationWithUserWithNoPermissions(organization, user);
     organizationWithUserAllPermission = getTestOrganizationWithUserWithAllPermissions(user);
-    executorResponseDto = getTestExecutor(user);
+    userResponseDto = getTestExecutor(user);
     organizationResponseDto = getTestOrganizationResponseDto(organization);
   }
 
@@ -66,7 +66,7 @@ class OrganizationServiceTest {
     List<Organization> organizations =
         List.of(organizationWithUserAllPermission);
     when(organizationRepository.findAll()).thenReturn(organizations);
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
     when(userService.getUser(user.getId())).thenReturn(user);
 
     List<OrganizationResponseDto> responses = organizationService.getAllOrganizationsResponsesForCurrentUser();
@@ -96,7 +96,7 @@ class OrganizationServiceTest {
   @Test
   void createOrganizationSuccessfully() {
     when(organizationMapper.toEntity(organizationRequestDto)).thenReturn(organization);
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
     when(userService.getUser(user.getId())).thenReturn(user);
     when(organizationRepository.save(organization)).thenReturn(organization);
     when(organizationMapper.toResponse(organization)).thenReturn(organizationResponseDto);
@@ -110,7 +110,7 @@ class OrganizationServiceTest {
   void deleteOrganizationSuccessfully() {
     when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
         .thenReturn(Optional.of(organizationWithUserAllPermission));
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
     when(userService.getUser(user.getId())).thenReturn(user);
 
     organizationService.delete(organizationWithUserAllPermission.getId());
@@ -123,7 +123,7 @@ class OrganizationServiceTest {
   void deleteOrganizationThrowMissingOrganizationPermissionException() {
     when(organizationRepository.findById(organizationWithNoUserPermissions.getId()))
         .thenReturn(Optional.of(organizationWithNoUserPermissions));
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
     when(userService.getUser(user.getId())).thenReturn(user);
 
     assertThrows(
@@ -147,7 +147,7 @@ class OrganizationServiceTest {
     when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
         .thenReturn(Optional.of(organizationWithUserAllPermission));
 
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
     when(userService.getUser(user.getId())).thenReturn(user);
 
     assertThrows(
@@ -162,7 +162,7 @@ class OrganizationServiceTest {
     when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
         .thenReturn(Optional.of(organizationWithUserAllPermission));
 
-    when(authService.getCurrentUser()).thenReturn(executorResponseDto);
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
     when(userService.getUser(user.getId())).thenReturn(user);
 
     assertThrows(

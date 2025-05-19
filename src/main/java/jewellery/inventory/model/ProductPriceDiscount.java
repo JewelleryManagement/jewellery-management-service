@@ -15,8 +15,8 @@ import java.util.UUID;
 public class ProductPriceDiscount {
   @Id @GeneratedValue private UUID id;
 
-  @ManyToOne
-  @JoinColumn(name = "product_id")
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "product_id", nullable = false)
   private Product product;
 
   @ManyToOne

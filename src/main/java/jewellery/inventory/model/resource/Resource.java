@@ -9,6 +9,7 @@ import jewellery.inventory.model.ResourceInOrganization;
 import jewellery.inventory.model.ResourceInUser;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 @Entity
@@ -25,11 +26,14 @@ public class Resource {
   private String note;
 
   @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL)
+  @ToString.Exclude
   private List<ResourceInUser> userAffiliations;
 
   @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL)
+  @ToString.Exclude
   private List<ResourceInOrganization> organizationAffiliations;
 
   @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL)
+  @ToString.Exclude
   private List<ResourceInProduct> productAffiliations;
 }

@@ -20,7 +20,7 @@ public class Sale {
   @JoinColumn(name = "organization_seller_id")
   @ManyToOne private Organization organizationSeller;
 
-  @OneToMany(mappedBy = "sale", orphanRemoval = true, cascade = CascadeType.PERSIST)
+  @OneToMany(mappedBy = "sale", orphanRemoval = true, cascade = CascadeType.ALL)
   private List<ProductPriceDiscount> products;
 
   @OneToMany(mappedBy = "partOfSale", orphanRemoval = true, cascade = CascadeType.PERSIST)

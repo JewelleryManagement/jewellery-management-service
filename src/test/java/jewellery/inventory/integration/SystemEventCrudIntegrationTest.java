@@ -9,7 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import java.util.Map;
 import jewellery.inventory.dto.request.UserRequestDto;
-import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.dto.response.DetailedUserResponseDto;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.SystemEvent;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ import org.springframework.http.ResponseEntity;
 class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
   void willGetAllSystemEvents() throws JsonProcessingException {
-    UserResponseDto userResponseDto = createAndSaveUser();
+    DetailedUserResponseDto detailedUserResponseDto = createAndSaveUser();
 
     ResponseEntity<List<SystemEvent>> eventResponse =
         this.testRestTemplate.exchange(
@@ -31,7 +31,7 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertNotNull(events, "Retrieved events list is empty");
 
     Map<String, Object> expectedEventPayload =
-        getCreateOrDeleteEventPayload(userResponseDto, objectMapper);
+        getCreateOrDeleteEventPayload(detailedUserResponseDto, objectMapper);
 
     ResponseEntity<String> response =
         testRestTemplate.getForEntity(getBaseSystemEventUrl(), String.class);
@@ -43,11 +43,11 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return "/system-events";
   }
 
-  private UserResponseDto createAndSaveUser() {
+  private DetailedUserResponseDto createAndSaveUser() {
     UserRequestDto userRequest = createTestUserRequest();
 
     return this.testRestTemplate
-        .postForEntity("/users", userRequest, UserResponseDto.class)
+        .postForEntity("/users", userRequest, DetailedUserResponseDto.class)
         .getBody();
   }
 }

@@ -1,7 +1,6 @@
 package jewellery.inventory.service.security;
 
 import jewellery.inventory.dto.request.AuthenticationRequestDto;
-import jewellery.inventory.dto.response.ExecutorResponseDto;
 import jewellery.inventory.dto.response.UserAuthDetailsDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.not_found.NoAuthenticatedUserException;
@@ -32,10 +31,10 @@ public class AuthService {
     return createAuthUserResponse(user);
   }
 
-  public ExecutorResponseDto getCurrentUser() {
+  public UserResponseDto getCurrentUser() {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     if (auth != null && auth.getPrincipal() instanceof User user) {
-      return userMapper.toExecutorResponse(user);
+      return userMapper.toUserResponse(user);
     }
     throw new NoAuthenticatedUserException();
   }

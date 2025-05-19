@@ -38,13 +38,11 @@ class UserInOrganizationServiceTest {
   private Organization organizationWithUserAllPermission;
   private User user;
   private UserInOrganization userInOrganization;
-  private ExecutorResponseDto executorResponseDto;
 
   @BeforeEach
   void setUp() {
     user = UserTestHelper.createSecondTestUser();
     organizationWithUserAllPermission = getTestOrganizationWithUserWithAllPermissions(user);
-    executorResponseDto = getTestExecutor(user);
     userInOrganization = getTestUserInOrganization(organizationWithUserAllPermission);
   }
 

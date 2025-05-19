@@ -1,12 +1,6 @@
 package jewellery.inventory.unit.service;
 
-import static jewellery.inventory.helper.UserTestHelper.USER_EMAIL;
-import static jewellery.inventory.helper.UserTestHelper.createSecondTestUser;
-import static jewellery.inventory.helper.UserTestHelper.createTestUser;
-import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
-import static jewellery.inventory.helper.UserTestHelper.createTestUserResponseDto;
-import static jewellery.inventory.helper.UserTestHelper.createUpdateUserRequest;
-import static jewellery.inventory.helper.UserTestHelper.createUserFromUserUpdateRequestDto;
+import static jewellery.inventory.helper.UserTestHelper.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -16,6 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.UserUpdateRequestDto;
+import jewellery.inventory.dto.response.DetailedUserResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.duplicate.DuplicateEmailException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
@@ -41,13 +36,13 @@ class UserServiceTest {
   @InjectMocks private UserService userService;
 
   private User user;
-  private UserResponseDto userResponse;
+  private DetailedUserResponseDto userResponse;
   private UUID userId;
 
   @BeforeEach
   void setUp() {
     user = createTestUser();
-    userResponse = createTestUserResponseDto(user);
+    userResponse = createDetailedTestUserResponseDto(user);
     userId = UUID.randomUUID();
   }
 
@@ -57,11 +52,14 @@ class UserServiceTest {
     List<User> users = Arrays.asList(user, new User(), new User());
 
     when(userRepository.findAll()).thenReturn(users);
-    when(userMapper.toUserResponseList(users))
+    when(userMapper.toDetailedUserResponseList(users))
         .thenReturn(
-            Arrays.asList(new UserResponseDto(), new UserResponseDto(), new UserResponseDto()));
+            Arrays.asList(
+                new DetailedUserResponseDto(),
+                new DetailedUserResponseDto(),
+                new DetailedUserResponseDto()));
 
-    List<UserResponseDto> returnedUsers = userService.getAllUsers();
+    List<DetailedUserResponseDto> returnedUsers = userService.getAllUsers();
 
     assertEquals(users.size(), returnedUsers.size());
     verify(userRepository, times(1)).findAll();
@@ -81,9 +79,10 @@ class UserServiceTest {
   @DisplayName("Should return the user when the user id exists")
   void getUserWhenUserIdExists() {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(userMapper.toUserResponse(user)).thenReturn(createTestUserResponseDto(user));
+    when(userMapper.toDetailedUserResponse(user))
+        .thenReturn(createDetailedTestUserResponseDto(user));
 
-    UserResponseDto result = userService.getUserResponse(userId);
+    DetailedUserResponseDto result = userService.getUserResponse(userId);
 
     assertEquals(userResponse, result);
     verify(userRepository, times(1)).findById(userId);
@@ -111,12 +110,12 @@ class UserServiceTest {
     when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
     when(userRepository.save(any(User.class))).thenReturn(user);
     when(userMapper.toUserEntity(userRequest)).thenReturn(user);
-    when(userMapper.toUserResponse(user)).thenReturn(userResponse);
+    when(userMapper.toDetailedUserResponse(user)).thenReturn(userResponse);
 
     when(passwordEncoder.encode(any()))
         .thenReturn("$2a$10$WIgDfys.uGK53Q3V13l8AOYCH7M1cVHulX8klIq0PLB/KweY/Onhi");
 
-    UserResponseDto createdUser = userService.createUser(userMapper.toUserRequest(user));
+    DetailedUserResponseDto createdUser = userService.createUser(userMapper.toUserRequest(user));
 
     assertEquals(userResponse, createdUser);
     verify(userRepository, times(1)).findByEmail(user.getEmail());

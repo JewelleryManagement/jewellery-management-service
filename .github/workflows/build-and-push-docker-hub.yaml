@@ -10,7 +10,7 @@ name: Build and push jms-be to docker hub
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "feat-bypass-docker-hub" ]
 
 permissions:
   id-token: write
@@ -25,10 +25,10 @@ jobs:
       - uses: actions/checkout@v3
         name: Checkout repository
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: maven
       - name: Build with Maven

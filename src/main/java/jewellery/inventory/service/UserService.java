@@ -10,7 +10,7 @@ import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.UserUpdateRequestDto;
-import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.dto.response.DetailedUserResponseDto;
 import jewellery.inventory.exception.duplicate.DuplicateEmailException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.mapper.UserMapper;
@@ -32,13 +32,13 @@ public class UserService implements EntityFetcher {
   private final UserMapper userMapper;
   private final PasswordEncoder passwordEncoder;
 
-  public List<UserResponseDto> getAllUsers() {
+  public List<DetailedUserResponseDto> getAllUsers() {
     logger.debug("Fetching all users.");
-    return userMapper.toUserResponseList(userRepository.findAll());
+    return userMapper.toDetailedUserResponseList(userRepository.findAll());
   }
 
-  public UserResponseDto getUserResponse(UUID id) {
-    return userMapper.toUserResponse(getUser(id));
+  public DetailedUserResponseDto getUserResponse(UUID id) {
+    return userMapper.toDetailedUserResponse(getUser(id));
   }
 
   public User getUser(UUID id) {
@@ -51,16 +51,16 @@ public class UserService implements EntityFetcher {
   }
 
   @LogCreateEvent(eventType = EventType.USER_CREATE)
-  public UserResponseDto createUser(UserRequestDto user) {
+  public DetailedUserResponseDto createUser(UserRequestDto user) {
     User userToCreate = userMapper.toUserEntity(user);
     validateUserEmail(userToCreate);
     userToCreate.setPassword(passwordEncoder.encode(userToCreate.getPassword()));
     logger.info("Create new User");
-    return userMapper.toUserResponse(saveUser(userToCreate));
+    return userMapper.toDetailedUserResponse(saveUser(userToCreate));
   }
 
   @LogUpdateEvent(eventType = EventType.USER_UPDATE)
-  public UserResponseDto updateUser(UserUpdateRequestDto userRequest, UUID id) {
+  public DetailedUserResponseDto updateUser(UserUpdateRequestDto userRequest, UUID id) {
     User oldUser = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
 
     User userToUpdate = userMapper.toUserEntity(userRequest);
@@ -69,7 +69,7 @@ public class UserService implements EntityFetcher {
 
     validateUserEmail(userToUpdate);
     logger.info("User with ID: {} updated successfully.", id);
-    return userMapper.toUserResponse(saveUser(userToUpdate));
+    return userMapper.toDetailedUserResponse(saveUser(userToUpdate));
   }
 
   @LogDeleteEvent(eventType = EventType.USER_DELETE)
@@ -95,6 +95,6 @@ public class UserService implements EntityFetcher {
   @Override
   public Object fetchEntity(Object... ids) {
     ids = Arrays.stream(ids).filter(UUID.class::isInstance).toArray();
-    return userMapper.toUserResponse(userRepository.findById((UUID) ids[0]).orElse(null));
+    return userMapper.toDetailedUserResponse(userRepository.findById((UUID) ids[0]).orElse(null));
   }
 }

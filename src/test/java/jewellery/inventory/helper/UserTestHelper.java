@@ -5,6 +5,7 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.UserUpdateRequestDto;
+import jewellery.inventory.dto.response.DetailedUserResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.Role;
 import jewellery.inventory.model.User;
@@ -63,6 +64,15 @@ public class UserTestHelper {
 
   public static UserResponseDto createTestUserResponseDto(User user) {
     UserResponseDto userResponseDto = new UserResponseDto();
+    userResponseDto.setId(user.getId());
+    userResponseDto.setEmail(user.getEmail());
+    userResponseDto.setFirstName(user.getFirstName());
+    userResponseDto.setLastName(user.getLastName());
+    return userResponseDto;
+  }
+
+  public static DetailedUserResponseDto createDetailedTestUserResponseDto(User user) {
+    DetailedUserResponseDto userResponseDto = new DetailedUserResponseDto();
     userResponseDto.setId(user.getId());
     userResponseDto.setEmail(user.getEmail());
     userResponseDto.setFirstName(user.getFirstName());
