@@ -5,10 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
@@ -280,6 +277,7 @@ class OrganizationSaleServiceTest {
 
   @Test
   void testReturnProductSuccessfully() {
+    sale.setProducts(new ArrayList<>(List.of(productPriceDiscount)));
     product.setPartOfSale(productPriceDiscount);
     Product productBeforeReturn = product;
 
@@ -289,8 +287,7 @@ class OrganizationSaleServiceTest {
     sale.setResources(new ArrayList<>());
     when(productService.getProduct(product.getId())).thenReturn(product);
     when(saleRepository.findById(sale.getId())).thenReturn(Optional.of(sale));
-    when(organizationSaleService.returnProduct(product.getId()))
-        .thenReturn(productReturnResponseDto);
+    when(saleService.validateSaleAfterReturnProduct(sale, product)).thenReturn(productReturnResponseDto);
 
     ProductReturnResponseDto actual = organizationSaleService.returnProduct(product.getId());
 

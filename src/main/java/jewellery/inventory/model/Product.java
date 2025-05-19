@@ -44,7 +44,7 @@ public class Product {
   private String description;
   private BigDecimal additionalPrice;
 
-  @OneToOne(mappedBy = "product", cascade = CascadeType.REMOVE, orphanRemoval = true)
+  @OneToOne(mappedBy = "product", fetch = FetchType.LAZY)
   private ProductPriceDiscount partOfSale;
 
   @ManyToOne private Organization organization;

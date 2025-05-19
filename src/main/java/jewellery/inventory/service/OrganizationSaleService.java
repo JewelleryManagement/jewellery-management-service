@@ -263,6 +263,11 @@ public class OrganizationSaleService {
   }
 
   private void removeProductFromSale(UUID productId, Sale sale) {
+    sale.getProducts().stream()
+        .filter(productPriceDiscount -> productPriceDiscount.getProduct().getId() == productId)
+        .findFirst()
+        .ifPresent(productPriceDiscount -> productPriceDiscount.getProduct().setPartOfSale(null));
+
     sale.getProducts()
         .removeIf(
             productPriceDiscount -> productPriceDiscount.getProduct().getId().equals(productId));
