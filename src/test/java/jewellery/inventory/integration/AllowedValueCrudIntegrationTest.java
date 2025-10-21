@@ -10,13 +10,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class AllowedValueCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
-
     private final String baseUrl = "/allowed-values";
-
-    @AfterEach
-    void cleanup() {
-        // Optionally implement cleanup if needed
-    }
 
     @Test
     void canAddAndFetchAllowedValue() throws Exception {
@@ -47,7 +41,6 @@ class AllowedValueCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         String url = baseUrl + "?resourceClazz=Metal&fieldName=color";
         ResponseEntity<String> getResponse = testRestTemplate.getForEntity(url, String.class);
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-        // Should not contain the deleted value
         assertThat(getResponse.getBody()).doesNotContain("silver");
     }
 

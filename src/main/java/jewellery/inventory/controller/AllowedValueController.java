@@ -4,6 +4,7 @@ import jewellery.inventory.model.resource.AllowedValue;
 import jewellery.inventory.service.AllowedValueService;
 import jewellery.inventory.dto.response.resource.AllowedValueResponseDto;
 import jewellery.inventory.dto.request.resource.AllowedValueRequestDto;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,12 +12,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/allowed-values")
+@RequiredArgsConstructor
 public class AllowedValueController {
     private final AllowedValueService allowedValueService;
-
-    public AllowedValueController(AllowedValueService allowedValueService) {
-        this.allowedValueService = allowedValueService;
-    }
 
     @PostMapping
     public ResponseEntity<AllowedValue> addAllowedValue(@RequestBody AllowedValueRequestDto dto) {

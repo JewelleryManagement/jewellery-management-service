@@ -19,7 +19,7 @@ public class AllowedValue {
     @NoArgsConstructor
     @SuperBuilder
     @Embeddable
-    public static class AllowedValueId implements Serializable {
+    public static class AllowedValueId {
         private String resourceClazz;
         private String fieldName;
         private String value;
