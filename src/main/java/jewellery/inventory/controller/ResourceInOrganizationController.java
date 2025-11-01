@@ -9,7 +9,6 @@ import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.OrganizationTransferResourceResponseDto;
 import jewellery.inventory.dto.response.ResourceOwnedByOrganizationsResponseDto;
-import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.service.ResourceInOrganizationService;
 import lombok.RequiredArgsConstructor;
