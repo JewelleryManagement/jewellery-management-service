@@ -12,5 +12,5 @@ export JMS_DATABASE_PASSWORD="$JMS_DATABASE_PASSWORD"
 export SECRET_KEY="$SECRET_KEY"
 
 service docker start
-docker-compose build --no-cache --file /tmp/be/docker-compose.yml
-docker-compose --file /tmp/be/docker-compose.yml up -d --build
+docker compose build --no-cache -f /tmp/be/docker-compose.yml
+docker compose -f /tmp/be/docker-compose.yml up -d --build
