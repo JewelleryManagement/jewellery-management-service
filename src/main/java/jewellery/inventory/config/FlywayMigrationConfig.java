@@ -10,7 +10,7 @@ public class FlywayMigrationConfig {
 
   public FlywayMigrationConfig(
       DataSource dataSource,
-      @Value("${flyway.migration.location}") String flywayMigrationLocation) {
+      @Value("${flyway.migration.location}") String[] flywayMigrationLocation) {
     Flyway.configure()
         .baselineOnMigrate(true)
         .validateMigrationNaming(true)

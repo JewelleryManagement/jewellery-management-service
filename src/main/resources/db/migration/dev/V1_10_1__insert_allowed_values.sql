@@ -1,11 +1,3 @@
--- Create allowed_value table
-CREATE TABLE allowed_value (
-    resource_clazz VARCHAR(255) NOT NULL,
-    field_name VARCHAR(255) NOT NULL,
-    value VARCHAR(255) NOT NULL,
-    PRIMARY KEY (resource_clazz, field_name, value)
-);
-
 -- Initial entries for Metal
 INSERT INTO allowed_value (resource_clazz, field_name, value) VALUES
     ('Metal', 'type', 'gold'),
@@ -54,4 +46,4 @@ INSERT INTO allowed_value (resource_clazz, field_name, value) VALUES
 
 -- Initial entries for Element (only description field, example value)
 INSERT INTO allowed_value (resource_clazz, field_name, value) VALUES
-    ('Element', 'description', 'example description'); 
+    ('Element', 'description', 'example description');
