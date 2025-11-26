@@ -8,7 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AllowedValueResponseDto {
-    private String resourceClazz;
-    private String fieldName;
-    private String value;
-} 
+  private String resourceClazz;
+  private String fieldName;
+  private String value;
+  private String sku;
+}

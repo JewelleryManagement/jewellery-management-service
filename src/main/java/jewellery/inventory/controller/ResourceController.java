@@ -38,7 +38,6 @@ public class ResourceController {
   @PostMapping
   public ResourceResponseDto createResource(
       @RequestBody @Valid ResourceRequestDto resourceRequestDto) {
-
     return resourceService.createResource(resourceRequestDto);
   }
 

@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -192,6 +193,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void willThrowWhenFileContentIsWrong() {
     willImportCsvReturnsBadRequest(getTestWrongContentFile());
   }
+
   @Test
   void willThrowWhenFileContentIsInInvalidFormat() {
     willImportCsvReturnsBadRequest(getTestInvalidFormatFile());
@@ -215,6 +217,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(responseDto.get(0).getQuantityType(), "28");
     assertEquals(responseDto.get(0).getPricePerQuantity(), BigDecimal.valueOf(30));
     assertEquals(responseDto.get(0).getNote(), "smth");
+    assertEquals(responseDto.get(0).getSku(), "S.K.U");
   }
 
   private void willImportCsvReturnsBadRequest(MockMultipartFile TestWrongContentFile) {
@@ -223,11 +226,10 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
     ResponseEntity<String> response =
-            testRestTemplate.postForEntity(getImportUrl(), requestEntity, String.class);
+        testRestTemplate.postForEntity(getImportUrl(), requestEntity, String.class);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
-
 
   private MockMultipartFile getEmptyTestFile() {
     return new MockMultipartFile("file", "test-file.txt", "text/plain", "".getBytes());
@@ -247,7 +249,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private MockMultipartFile getTestFile() {
     String csvData =
-        "clazz,quantityType,pricePerQuantity,note,description\nElement,28,30,smth,Element description\n";
+        "clazz,quantityType,pricePerQuantity,note,description,sku\nElement,28,30,smth,Element description,S.K.U\n";
     return new MockMultipartFile("file", "test-file.csv", "text/csv", csvData.getBytes());
   }
 

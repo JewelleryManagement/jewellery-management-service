@@ -12,4 +12,5 @@ public class AllowedValueRequestDto {
   @NotEmpty private String resourceClazz;
   @NotEmpty private String fieldName;
   @NotEmpty private String value;
+  private String sku;
 }

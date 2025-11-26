@@ -28,4 +28,5 @@ public class ResourceRequestDto {
   private String quantityType;
   @Positive private BigDecimal pricePerQuantity;
   private String note;
+  private String sku;
 }

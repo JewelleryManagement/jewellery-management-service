@@ -40,6 +40,7 @@ public class ResourceTestHelper {
   private static final BigDecimal DIMENSION_Y = getBigDecimal("4.9");
   private static final BigDecimal DIMENSION_Z = getBigDecimal("2.5");
   private static final BigDecimal SIZE = getBigDecimal("0.55");
+  private static final String PEARL_SIZE = "0.55";
   private static final Integer PURITY = 925;
   public static final int UPDATED_PURITY = PURITY + 1;
   private static final BigDecimal CARAT_PRECIOUS_STONE = getBigDecimal("5.1");
@@ -51,6 +52,7 @@ public class ResourceTestHelper {
   public static final String UPDATED_DESCRIPTION = DESCRIPTION + " and \"real\" silver";
   public static final BigDecimal PRICE_PER_QUANTITY = getBigDecimal("50.5");
   public static final String NOTE = "Note";
+  public static final String SKU = "S.K.U";
 
   private ResourceTestHelper() {}
 
@@ -68,12 +70,13 @@ public class ResourceTestHelper {
         .clazz(CLAZZ_PEARL)
         .quantityType(QUANTITY_TYPE_UNIT)
         .type(TYPE_PEARL)
-        .size(SIZE)
+        .size(PEARL_SIZE)
         .quality(QUALITY)
         .color(COLOR_PEARL)
         .shape(SHAPE_PEARL)
         .pricePerQuantity(price)
         .note(NOTE)
+        .sku(SKU)
         .build();
   }
 
@@ -89,6 +92,7 @@ public class ResourceTestHelper {
         .purity(PURITY)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
+        .sku(SKU)
         .build();
   }
 
@@ -107,6 +111,7 @@ public class ResourceTestHelper {
         .shape(SHAPE_PRECIOUS_STONE)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
+        .sku(SKU)
         .build();
   }
 
@@ -122,6 +127,7 @@ public class ResourceTestHelper {
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
         .size(SIZE)
+        .sku(SKU)
         .build();
   }
 
@@ -133,6 +139,7 @@ public class ResourceTestHelper {
         .description(DESCRIPTION)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
+        .sku(SKU)
         .build();
   }
 
@@ -142,12 +149,13 @@ public class ResourceTestHelper {
         .clazz(CLAZZ_PEARL)
         .quantityType(QUANTITY_TYPE_UNIT)
         .type(TYPE_PEARL)
-        .size(SIZE)
+        .size(PEARL_SIZE)
         .quality(QUALITY)
         .color(COLOR_PEARL)
         .shape(SHAPE_PEARL)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
+        .sku(SKU)
         .build();
   }
 
@@ -160,12 +168,13 @@ public class ResourceTestHelper {
         .clazz(CLAZZ_PEARL)
         .quantityType(QUANTITY_TYPE_UNIT)
         .type(TYPE_PEARL)
-        .size(SIZE)
+        .size(PEARL_SIZE)
         .quality(QUALITY)
         .color(COLOR_PEARL)
         .shape(SHAPE_PEARL)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
+        .sku(SKU)
         .build();
   }
 
@@ -197,6 +206,7 @@ public class ResourceTestHelper {
         .purity(PURITY)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
+        .sku(SKU)
         .build();
   }
 
@@ -211,6 +221,7 @@ public class ResourceTestHelper {
         .purity(PURITY)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
+        .sku(SKU)
         .build();
   }
 
@@ -243,6 +254,7 @@ public class ResourceTestHelper {
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
         .size(DIMENSION_SIZE)
+        .sku(SKU)
         .build();
   }
 
@@ -260,6 +272,7 @@ public class ResourceTestHelper {
         .shape(SHAPE_PRECIOUS_STONE)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
+        .sku(SKU)
         .build();
   }
 
@@ -292,6 +305,7 @@ public class ResourceTestHelper {
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
         .size(SIZE)
+        .sku(SKU)
         .build();
   }
 
@@ -306,6 +320,7 @@ public class ResourceTestHelper {
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
         .size(SIZE)
+        .sku(SKU)
         .build();
   }
 
@@ -332,6 +347,7 @@ public class ResourceTestHelper {
         .description(DESCRIPTION)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
+        .sku(SKU)
         .build();
   }
 
@@ -342,6 +358,7 @@ public class ResourceTestHelper {
         .description(DESCRIPTION)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
+        .sku(SKU)
         .build();
   }
 

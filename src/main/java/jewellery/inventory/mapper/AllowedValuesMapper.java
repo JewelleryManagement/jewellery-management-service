@@ -13,6 +13,7 @@ public class AllowedValuesMapper {
     return new AllowedValueResponseDto(
         allowedValue.getId().getResourceClazz(),
         allowedValue.getId().getFieldName(),
-        allowedValue.getId().getValue());
+        allowedValue.getId().getValue(),
+        allowedValue.getId().getSku());
   }
 }
