@@ -1,7 +1,7 @@
 package jewellery.inventory.integration;
 
+import static jewellery.inventory.helper.ResourceTestHelper.getDiamondMeleeRequestDto;
 import static jewellery.inventory.helper.ResourceTestHelper.getDiamondRequestDto;
-import static jewellery.inventory.helper.ResourceTestHelper.getSemiPreciousStoneRequestDto;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.helper.UserTestHelper.*;
@@ -27,9 +27,9 @@ import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.resource.DiamondMeleeResponseDto;
 import jewellery.inventory.dto.response.resource.DiamondResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
-import jewellery.inventory.dto.response.resource.SemiPreciousStoneResponseDto;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.*;
@@ -150,7 +150,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   void getAllResourcesFromUserSuccessfully() {
     UserResponseDto createdUser = sendCreateUserRequest();
     DiamondResponseDto firstCreatedResource = sendCreateDiamondRequest();
-    SemiPreciousStoneResponseDto secondCreatedResource = sendCreateSemiPreciousStoneRequest();
+    DiamondMeleeResponseDto secondCreatedResource = sendCreateDiamondMeleeRequest();
     sendAddResourceInUserRequest(
         createResourcePurchaseRequestDto(
             createdUser.getId(), firstCreatedResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
@@ -390,15 +390,15 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     return createdResource;
   }
 
-  private SemiPreciousStoneResponseDto sendCreateSemiPreciousStoneRequest() {
-    ResourceRequestDto resourceRequest = getSemiPreciousStoneRequestDto();
-    ResponseEntity<SemiPreciousStoneResponseDto> resourceResponseEntity =
+  private DiamondMeleeResponseDto sendCreateDiamondMeleeRequest() {
+    ResourceRequestDto resourceRequest = getDiamondMeleeRequestDto();
+    ResponseEntity<DiamondMeleeResponseDto> resourceResponseEntity =
         this.testRestTemplate.postForEntity(
-            getBaseResourceUrl(), resourceRequest, SemiPreciousStoneResponseDto.class);
+            getBaseResourceUrl(), resourceRequest, DiamondMeleeResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, resourceResponseEntity.getStatusCode());
 
-    SemiPreciousStoneResponseDto createdResource = resourceResponseEntity.getBody();
+    DiamondMeleeResponseDto createdResource = resourceResponseEntity.getBody();
     assertNotNull(createdResource);
     assertNotNull(createdResource.getId());
     return createdResource;

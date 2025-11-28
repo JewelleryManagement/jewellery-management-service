@@ -18,7 +18,7 @@ import lombok.experimental.SuperBuilder;
   @JsonSubTypes.Type(value = DiamondRequestDto.class, name = "Diamond"),
   @JsonSubTypes.Type(value = MetalRequestDto.class, name = "Metal"),
   @JsonSubTypes.Type(value = ElementRequestDto.class, name = "Element"),
-  @JsonSubTypes.Type(value = SemiPreciousStoneRequestDto.class, name = "DiamondMelee")
+  @JsonSubTypes.Type(value = DiamondMeleeRequestDto.class, name = "DiamondMelee")
 })
 @SuperBuilder
 @Data

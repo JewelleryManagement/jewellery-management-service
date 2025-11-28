@@ -44,3 +44,12 @@ WHERE dtype = 'PreciousStone' OR clazz = 'PreciousStone';
 UPDATE public.allowed_value
 SET resource_clazz = 'Diamond'
 WHERE resource_clazz = 'PreciousStone';
+
+UPDATE public.resource
+SET dtype = 'DiamondMelee',
+    clazz = 'DiamondMelee'
+WHERE dtype = 'SemiPreciousStone' OR clazz = 'SemiPreciousStone';
+
+UPDATE public.allowed_value
+SET resource_clazz = 'DiamondMelee'
+WHERE resource_clazz = 'SemiPreciousStone';

@@ -23,7 +23,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
       DiamondMapperImpl.class,
       ElementMapperImpl.class,
       MetalMapperImpl.class,
-      SemiPreciousStoneMapperImpl.class,
+      DiamondMeleeStoneMapperImpl.class,
       StringTrimmer.class,
       ResourceMapper.class
     })

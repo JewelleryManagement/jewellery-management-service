@@ -14,7 +14,7 @@ public class ResourceTestHelper {
   private static final UUID RESOURCE_ID = UUID.randomUUID();
   private static final String CLAZZ_PEARL = "Pearl";
   private static final String CLAZZ_DIAMOND = "Diamond";
-  private static final String CLAZZ_SEMI_PRECIOUS_STONE = "SemiPreciousStone";
+  private static final String CLAZZ_DIAMOND_MELEE = "DiamondMelee";
   private static final String CLAZZ_METAL = "Metal";
   private static final String CLAZZ_ELEMENT = "Element";
   private static final String QUANTITY_TYPE_UNIT = "unit";
@@ -32,7 +32,7 @@ public class ResourceTestHelper {
   public static final String UPDATED_COLOR_DIAMOND = COLOR_DIAMOND + "ish";
   private static final String TYPE_PEARL = "Akoya";
   private static final String TYPE_METAL = "gold";
-  private static final String TYPE_SEMI_PRECIOUS_STONE = "Natural";
+  private static final String TYPE_DIAMOND_MELEE = "Natural";
   private static final String PLATING = "silver";
   public static final String UPDATED_PLATING = PLATING + "ish";
   private static final String CUT = "diamond";
@@ -42,11 +42,11 @@ public class ResourceTestHelper {
   private static final BigDecimal DIMENSION_Z = getBigDecimal("2.5");
   private static final BigDecimal SIZE = getBigDecimal("0.55");
   private static final String PEARL_SIZE = "0.55";
-  private static final String SEMI_PRECIOUS_STONE_SIZE = "1.00 - 1.05";
+  private static final String DIAMOND_MELEE_SIZE = "1.00 - 1.05";
   private static final Integer PURITY = 925;
   public static final int UPDATED_PURITY = PURITY + 1;
   private static final BigDecimal CARAT_DIAMOND = getBigDecimal("5.1");
-  private static final BigDecimal CARAT_SEMI_PRECIOUS_STONE = getBigDecimal("0.0005");
+  private static final BigDecimal CARAT_DIAMOND_MELEE = getBigDecimal("0.0005");
   ;
   public static final BigDecimal UPDATED_CARAT_DIAMOND = CARAT_DIAMOND.add(getBigDecimal("2.1"));
   private static final String CLARITY = "opaque";
@@ -58,7 +58,7 @@ public class ResourceTestHelper {
   public static final String PEARL_SKU = UUID.randomUUID().toString();
   public static final String METAL_SKU = UUID.randomUUID().toString();
   public static final String DIAMOND_SKU = UUID.randomUUID().toString();
-  public static final String SEMI_PRECIOUS_STONE_SKU = UUID.randomUUID().toString();
+  public static final String DIAMOND_MELEE_SKU = UUID.randomUUID().toString();
   public static final String ELEMENT_SKU = UUID.randomUUID().toString();
   public static final String POLISH = "Good";
   public static final String SYMMETRY = "Good";
@@ -130,10 +130,10 @@ public class ResourceTestHelper {
         .build();
   }
 
-  public static Resource getSemiPreciousStone() {
-    return SemiPreciousStone.builder()
+  public static Resource getDiamondMelee() {
+    return DiamondMelee.builder()
         .id(RESOURCE_ID)
-        .clazz(CLAZZ_SEMI_PRECIOUS_STONE)
+        .clazz(CLAZZ_DIAMOND_MELEE)
         .quantityType(QUANTITY_TYPE_UNIT)
         .color(COLOR_DIAMOND)
         .cut(CUT)
@@ -141,10 +141,10 @@ public class ResourceTestHelper {
         .shape(SHAPE_DIAMOND)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .size(SEMI_PRECIOUS_STONE_SIZE)
-        .type(TYPE_SEMI_PRECIOUS_STONE)
-        .carat(CARAT_SEMI_PRECIOUS_STONE)
-        .sku(SEMI_PRECIOUS_STONE_SKU)
+        .size(DIAMOND_MELEE_SIZE)
+        .type(TYPE_DIAMOND_MELEE)
+        .carat(CARAT_DIAMOND_MELEE)
+        .sku(DIAMOND_MELEE_SKU)
         .build();
   }
 
@@ -317,10 +317,10 @@ public class ResourceTestHelper {
     return diamond;
   }
 
-  public static ResourceResponseDto getSemiPreciousStoneResponseDto() {
-    return SemiPreciousStoneResponseDto.builder()
+  public static ResourceResponseDto getDiamondMeleeResponseDto() {
+    return DiamondMeleeResponseDto.builder()
         .id(RESOURCE_ID)
-        .clazz(CLAZZ_SEMI_PRECIOUS_STONE)
+        .clazz(CLAZZ_DIAMOND_MELEE)
         .quantityType(QUANTITY_TYPE_UNIT)
         .color(COLOR_DIAMOND)
         .cut(CUT)
@@ -328,16 +328,16 @@ public class ResourceTestHelper {
         .shape(SHAPE_DIAMOND)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .size(SEMI_PRECIOUS_STONE_SIZE)
-        .type(TYPE_SEMI_PRECIOUS_STONE)
-        .carat(CARAT_SEMI_PRECIOUS_STONE)
-        .sku(SEMI_PRECIOUS_STONE_SKU)
+        .size(DIAMOND_MELEE_SIZE)
+        .type(TYPE_DIAMOND_MELEE)
+        .carat(CARAT_DIAMOND_MELEE)
+        .sku(DIAMOND_MELEE_SKU)
         .build();
   }
 
-  public static ResourceRequestDto getSemiPreciousStoneRequestDto() {
-    return SemiPreciousStoneRequestDto.builder()
-        .clazz(CLAZZ_SEMI_PRECIOUS_STONE)
+  public static ResourceRequestDto getDiamondMeleeRequestDto() {
+    return DiamondMeleeRequestDto.builder()
+        .clazz(CLAZZ_DIAMOND_MELEE)
         .quantityType(QUANTITY_TYPE_UNIT)
         .color(COLOR_DIAMOND)
         .cut(CUT)
@@ -345,26 +345,26 @@ public class ResourceTestHelper {
         .shape(SHAPE_DIAMOND)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .size(SEMI_PRECIOUS_STONE_SIZE)
-        .type(TYPE_SEMI_PRECIOUS_STONE)
-        .carat(CARAT_SEMI_PRECIOUS_STONE)
-        .sku(SEMI_PRECIOUS_STONE_SKU)
+        .size(DIAMOND_MELEE_SIZE)
+        .type(TYPE_DIAMOND_MELEE)
+        .carat(CARAT_DIAMOND_MELEE)
+        .sku(DIAMOND_MELEE_SKU)
         .build();
   }
 
-  public static SemiPreciousStoneRequestDto getUpdatedSemiPreciousStoneRequestDto() {
-    SemiPreciousStoneRequestDto semiPreciousStoneRequestDto =
-        (SemiPreciousStoneRequestDto) getSemiPreciousStoneRequestDto();
-    semiPreciousStoneRequestDto.setClarity(UPDATED_CLARITY);
-    semiPreciousStoneRequestDto.setColor(UPDATED_COLOR_DIAMOND);
-    return semiPreciousStoneRequestDto;
+  public static DiamondMeleeRequestDto getUpdatedDiamondMeleeRequestDto() {
+    DiamondMeleeRequestDto diamondMeleeRequestDto =
+        (DiamondMeleeRequestDto) getDiamondMeleeRequestDto();
+    diamondMeleeRequestDto.setClarity(UPDATED_CLARITY);
+    diamondMeleeRequestDto.setColor(UPDATED_COLOR_DIAMOND);
+    return diamondMeleeRequestDto;
   }
 
-  private static Resource getUpdatedSemiPreciousStone() {
-    SemiPreciousStone semiPreciousStone = (SemiPreciousStone) getSemiPreciousStone();
-    semiPreciousStone.setClarity(UPDATED_CLARITY);
-    semiPreciousStone.setColor(UPDATED_COLOR_DIAMOND);
-    return semiPreciousStone;
+  private static Resource getUpdatedDiamondMelee() {
+    DiamondMelee diamondMelee = (DiamondMelee) getDiamondMelee();
+    diamondMelee.setClarity(UPDATED_CLARITY);
+    diamondMelee.setColor(UPDATED_COLOR_DIAMOND);
+    return diamondMelee;
   }
 
   public static ResourceResponseDto getElementResponseDto() {
@@ -405,7 +405,7 @@ public class ResourceTestHelper {
   public static Stream<Arguments> provideResourcesAndRequestDtos() {
     return Stream.of(
         Arguments.of(getDiamond(), getDiamondRequestDto()),
-        Arguments.of(getSemiPreciousStone(), getSemiPreciousStoneRequestDto()),
+        Arguments.of(getDiamondMelee(), getDiamondMeleeRequestDto()),
         Arguments.of(getElement(), getElementRequestDto()),
         Arguments.of(getPearl(), getPearlRequestDto()),
         Arguments.of(getMetal(), getMetalRequestDto()));
@@ -414,7 +414,7 @@ public class ResourceTestHelper {
   public static Stream<Arguments> provideResourcesAndResponseDtos() {
     return Stream.of(
         Arguments.of(getDiamond(), getDiamondResponseDto()),
-        Arguments.of(getSemiPreciousStone(), getSemiPreciousStoneResponseDto()),
+        Arguments.of(getDiamondMelee(), getDiamondMeleeResponseDto()),
         Arguments.of(getElement(), getElementResponseDto()),
         Arguments.of(getPearl(), getPearlResponseDto()),
         Arguments.of(getPearlWithNullFields(), getPearlResponseDtoWithNullFields()),
@@ -424,7 +424,7 @@ public class ResourceTestHelper {
   public static Stream<Arguments> provideUpdatedResourcesAndUpdatedRequestDtos() {
     return Stream.of(
         Arguments.of(getUpdatedDiamond(), getUpdatedDiamondRequestDto()),
-        Arguments.of(getUpdatedSemiPreciousStone(), getUpdatedSemiPreciousStoneRequestDto()),
+        Arguments.of(getUpdatedDiamondMelee(), getUpdatedDiamondMeleeRequestDto()),
         Arguments.of(getUpdatedElement(), getUpdatedElementRequestDto()),
         Arguments.of(getUpdatedPearl(), getUpdatedPearlRequestDto()),
         Arguments.of(getUpdatedMetal(), getUpdatedMetalRequestDto()));
@@ -433,7 +433,7 @@ public class ResourceTestHelper {
   public static Stream<ResourceRequestDto> provideUpdatedResourceRequestDtos() {
     return Stream.of(
         getUpdatedDiamondRequestDto(),
-        getUpdatedSemiPreciousStoneRequestDto(),
+        getUpdatedDiamondMeleeRequestDto(),
         getUpdatedElementRequestDto(),
         getUpdatedPearlRequestDto(),
         getUpdatedMetalRequestDto());
@@ -442,13 +442,13 @@ public class ResourceTestHelper {
   public static Stream<ResourceRequestDto> provideResourceRequestDtos() {
     return Stream.of(
         getDiamondRequestDto(),
-        getSemiPreciousStoneRequestDto(),
+        getDiamondMeleeRequestDto(),
         getElementRequestDto(),
         getPearlRequestDto(),
         getMetalRequestDto());
   }
 
   public static Stream<Resource> provideResources() {
-    return Stream.of(getDiamond(), getSemiPreciousStone(), getElement(), getPearl(), getMetal());
+    return Stream.of(getDiamond(), getDiamondMelee(), getElement(), getPearl(), getMetal());
   }
 }

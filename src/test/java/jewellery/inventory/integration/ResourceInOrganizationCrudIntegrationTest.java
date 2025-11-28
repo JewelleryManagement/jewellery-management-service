@@ -370,7 +370,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
           case "Pearl" -> getPearlRequestDto();
           case "Metal" -> getMetalRequestDto();
           case "Diamond" -> getDiamondRequestDto();
-          case "Semi Precious Stone" -> getSemiPreciousStoneRequestDto();
+          case "Diamond Melee" -> getDiamondMeleeRequestDto();
           case "Element" -> getElementRequestDto();
           default -> throw new IllegalArgumentException("Unknown resource type: " + resourceClazz);
         };
