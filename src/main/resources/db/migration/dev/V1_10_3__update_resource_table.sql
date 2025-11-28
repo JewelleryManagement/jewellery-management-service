@@ -35,3 +35,12 @@ UPDATE public.resource SET sku = 'E.C' WHERE id = 'eeb95277-9d4a-46ea-a876-2f786
 
 ALTER TABLE public.resource
 ALTER COLUMN sku SET NOT NULL;
+
+UPDATE public.resource
+SET dtype = 'Diamond',
+    clazz = 'Diamond'
+WHERE dtype = 'PreciousStone' OR clazz = 'PreciousStone';
+
+UPDATE public.allowed_value
+SET resource_clazz = 'Diamond'
+WHERE resource_clazz = 'PreciousStone';

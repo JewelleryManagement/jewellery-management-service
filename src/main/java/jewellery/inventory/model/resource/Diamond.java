@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
 @ToString(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class PreciousStone extends Resource {
+public class Diamond extends Resource {
   private String color;
   private BigDecimal carat;
   private String cut;

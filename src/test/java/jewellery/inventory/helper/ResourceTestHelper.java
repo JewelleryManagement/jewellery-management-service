@@ -13,7 +13,7 @@ import org.junit.jupiter.params.provider.Arguments;
 public class ResourceTestHelper {
   private static final UUID RESOURCE_ID = UUID.randomUUID();
   private static final String CLAZZ_PEARL = "Pearl";
-  private static final String CLAZZ_PRECIOUS_STONE = "PreciousStone";
+  private static final String CLAZZ_DIAMOND = "Diamond";
   private static final String CLAZZ_SEMI_PRECIOUS_STONE = "SemiPreciousStone";
   private static final String CLAZZ_METAL = "Metal";
   private static final String CLAZZ_ELEMENT = "Element";
@@ -104,10 +104,10 @@ public class ResourceTestHelper {
         .build();
   }
 
-  public static Resource getPreciousStone() {
-    return PreciousStone.builder()
+  public static Resource getDiamond() {
+    return Diamond.builder()
         .id(RESOURCE_ID)
-        .clazz(CLAZZ_PRECIOUS_STONE)
+        .clazz(CLAZZ_DIAMOND)
         .quantityType(QUANTITY_TYPE_UNIT)
         .carat(CARAT_PRECIOUS_STONE)
         .color(COLOR_PRECIOUS_STONE)
@@ -253,10 +253,10 @@ public class ResourceTestHelper {
     return metal;
   }
 
-  public static ResourceResponseDto getPreciousStoneResponseDto() {
-    return PreciousStoneResponseDto.builder()
+  public static ResourceResponseDto getDiamondResponseDto() {
+    return DiamondResponseDto.builder()
         .id(RESOURCE_ID)
-        .clazz(CLAZZ_PRECIOUS_STONE)
+        .clazz(CLAZZ_DIAMOND)
         .quantityType(QUANTITY_TYPE_UNIT)
         .carat(CARAT_PRECIOUS_STONE)
         .color(COLOR_PRECIOUS_STONE)
@@ -274,9 +274,9 @@ public class ResourceTestHelper {
         .build();
   }
 
-  public static ResourceRequestDto getPreciousStoneRequestDto() {
-    return PreciousStoneRequestDto.builder()
-        .clazz(CLAZZ_PRECIOUS_STONE)
+  public static ResourceRequestDto getDiamondRequestDto() {
+    return DiamondRequestDto.builder()
+        .clazz(CLAZZ_DIAMOND)
         .quantityType(QUANTITY_TYPE_UNIT)
         .carat(CARAT_PRECIOUS_STONE)
         .color(COLOR_PRECIOUS_STONE)
@@ -296,21 +296,20 @@ public class ResourceTestHelper {
         .build();
   }
 
-  public static PreciousStoneRequestDto getUpdatedPreciousStoneRequestDto() {
-    PreciousStoneRequestDto preciousStoneRequestDto =
-        (PreciousStoneRequestDto) getPreciousStoneRequestDto();
-    preciousStoneRequestDto.setCarat(UPDATED_CARAT_PRECIOUS_STONE);
-    preciousStoneRequestDto.setClarity(UPDATED_CLARITY);
-    preciousStoneRequestDto.setColor(UPDATED_COLOR_PRECIOUS_STONE);
-    return preciousStoneRequestDto;
+  public static DiamondRequestDto getUpdatedDiamondRequestDto() {
+    DiamondRequestDto diamondRequestDto = (DiamondRequestDto) getDiamondRequestDto();
+    diamondRequestDto.setCarat(UPDATED_CARAT_PRECIOUS_STONE);
+    diamondRequestDto.setClarity(UPDATED_CLARITY);
+    diamondRequestDto.setColor(UPDATED_COLOR_PRECIOUS_STONE);
+    return diamondRequestDto;
   }
 
-  private static Resource getUpdatedPreciousStone() {
-    PreciousStone preciousStone = (PreciousStone) getPreciousStone();
-    preciousStone.setCarat(UPDATED_CARAT_PRECIOUS_STONE);
-    preciousStone.setClarity(UPDATED_CLARITY);
-    preciousStone.setColor(UPDATED_COLOR_PRECIOUS_STONE);
-    return preciousStone;
+  private static Resource getUpdatedDiamond() {
+    Diamond diamond = (Diamond) getDiamond();
+    diamond.setCarat(UPDATED_CARAT_PRECIOUS_STONE);
+    diamond.setClarity(UPDATED_CLARITY);
+    diamond.setColor(UPDATED_COLOR_PRECIOUS_STONE);
+    return diamond;
   }
 
   public static ResourceResponseDto getSemiPreciousStoneResponseDto() {
@@ -396,7 +395,7 @@ public class ResourceTestHelper {
 
   public static Stream<Arguments> provideResourcesAndRequestDtos() {
     return Stream.of(
-        Arguments.of(getPreciousStone(), getPreciousStoneRequestDto()),
+        Arguments.of(getDiamond(), getDiamondRequestDto()),
         Arguments.of(getSemiPreciousStone(), getSemiPreciousStoneRequestDto()),
         Arguments.of(getElement(), getElementRequestDto()),
         Arguments.of(getPearl(), getPearlRequestDto()),
@@ -405,7 +404,7 @@ public class ResourceTestHelper {
 
   public static Stream<Arguments> provideResourcesAndResponseDtos() {
     return Stream.of(
-        Arguments.of(getPreciousStone(), getPreciousStoneResponseDto()),
+        Arguments.of(getDiamond(), getDiamondResponseDto()),
         Arguments.of(getSemiPreciousStone(), getSemiPreciousStoneResponseDto()),
         Arguments.of(getElement(), getElementResponseDto()),
         Arguments.of(getPearl(), getPearlResponseDto()),
@@ -415,7 +414,7 @@ public class ResourceTestHelper {
 
   public static Stream<Arguments> provideUpdatedResourcesAndUpdatedRequestDtos() {
     return Stream.of(
-        Arguments.of(getUpdatedPreciousStone(), getUpdatedPreciousStoneRequestDto()),
+        Arguments.of(getUpdatedDiamond(), getUpdatedDiamondRequestDto()),
         Arguments.of(getUpdatedSemiPreciousStone(), getUpdatedSemiPreciousStoneRequestDto()),
         Arguments.of(getUpdatedElement(), getUpdatedElementRequestDto()),
         Arguments.of(getUpdatedPearl(), getUpdatedPearlRequestDto()),
@@ -424,7 +423,7 @@ public class ResourceTestHelper {
 
   public static Stream<ResourceRequestDto> provideUpdatedResourceRequestDtos() {
     return Stream.of(
-        getUpdatedPreciousStoneRequestDto(),
+        getUpdatedDiamondRequestDto(),
         getUpdatedSemiPreciousStoneRequestDto(),
         getUpdatedElementRequestDto(),
         getUpdatedPearlRequestDto(),
@@ -433,7 +432,7 @@ public class ResourceTestHelper {
 
   public static Stream<ResourceRequestDto> provideResourceRequestDtos() {
     return Stream.of(
-        getPreciousStoneRequestDto(),
+        getDiamondRequestDto(),
         getSemiPreciousStoneRequestDto(),
         getElementRequestDto(),
         getPearlRequestDto(),
@@ -441,7 +440,6 @@ public class ResourceTestHelper {
   }
 
   public static Stream<Resource> provideResources() {
-    return Stream.of(
-        getPreciousStone(), getSemiPreciousStone(), getElement(), getPearl(), getMetal());
+    return Stream.of(getDiamond(), getSemiPreciousStone(), getElement(), getPearl(), getMetal());
   }
 }

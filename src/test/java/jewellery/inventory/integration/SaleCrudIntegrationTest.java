@@ -27,8 +27,8 @@ import jewellery.inventory.helper.ResourceInOrganizationTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.User;
+import jewellery.inventory.model.resource.Diamond;
 import jewellery.inventory.model.resource.Pearl;
-import jewellery.inventory.model.resource.PreciousStone;
 import jewellery.inventory.model.resource.Resource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -52,7 +52,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private User seller;
   private User buyer;
   private OrganizationSingleMemberResponseDto organizationSingleMemberResponseDto;
-  private PreciousStone preciousStone;
+  private Diamond diamond;
   private ResponseEntity<Pearl> pearl;
   private ResourceInOrganizationRequestDto resourceInOrganizationRequestDto;
   private ResourcesInOrganizationResponseDto resourcesInOrganizationResponseDto;
@@ -135,14 +135,13 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     organizationSingleMemberResponseDto =
         createUserInOrganization(
             organizationSeller, getTestUserInOrganizationRequest(seller.getId()));
-    preciousStone = createPreciousStoneInDatabase();
+    diamond = createDiamondInDatabase();
     resourceInOrganizationRequestDto =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organizationSeller.getId(), preciousStone.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
+            organizationSeller.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
     resourcesInOrganizationResponseDto =
         createResourceInOrganization(resourceInOrganizationRequestDto);
-    resourceInUserRequestDto =
-        getResourceInUserRequestDto(seller, Objects.requireNonNull(preciousStone));
+    resourceInUserRequestDto = getResourceInUserRequestDto(seller, Objects.requireNonNull(diamond));
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourceInUserRequestDto);
     productRequestDto =
         getProductRequestDto(Objects.requireNonNull(resourcesInUserResponseDto), seller);
@@ -646,11 +645,10 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Nullable
-  private PreciousStone createPreciousStoneInDatabase() {
-    ResourceRequestDto resourceRequest = ResourceTestHelper.getPreciousStoneRequestDto();
-    ResponseEntity<PreciousStone> createResource =
-        this.testRestTemplate.postForEntity(
-            getBaseResourceUrl(), resourceRequest, PreciousStone.class);
+  private Diamond createDiamondInDatabase() {
+    ResourceRequestDto resourceRequest = ResourceTestHelper.getDiamondRequestDto();
+    ResponseEntity<Diamond> createResource =
+        this.testRestTemplate.postForEntity(getBaseResourceUrl(), resourceRequest, Diamond.class);
 
     return createResource.getBody();
   }

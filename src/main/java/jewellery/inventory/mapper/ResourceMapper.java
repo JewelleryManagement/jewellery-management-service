@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ResourceMapper {
   private final PearlMapper pearlMapper;
-  private final PreciousStoneMapper preciousStoneMapper;
+  private final DiamondMapper diamondMapper;
   private final ElementMapper elementMapper;
   private final MetalMapper metalMapper;
   private final SemiPreciousStoneMapper semiPreciousStoneMapper;
@@ -23,8 +23,8 @@ public class ResourceMapper {
     }
     if (resource instanceof Pearl pearl) {
       return pearlMapper.toResourceResponse(pearl);
-    } else if (resource instanceof PreciousStone preciousStone) {
-      return toPreciousStoneResponseWithSize (preciousStone, preciousStoneMapper.toResourceResponse(preciousStone));
+    } else if (resource instanceof Diamond diamond) {
+      return toDiamondResponseWithSize(diamond, diamondMapper.toResourceResponse(diamond));
     } else if (resource instanceof Element element) {
       return elementMapper.toResourceResponse(element);
     } else if (resource instanceof Metal metal) {
@@ -39,8 +39,8 @@ public class ResourceMapper {
     if (resourceRequestDto instanceof PearlRequestDto pearlDto) {
       return pearlMapper.toResourceEntity(pearlDto);
     }
-    if (resourceRequestDto instanceof PreciousStoneRequestDto preciousStoneDTO) {
-      return preciousStoneMapper.toResourceEntity(preciousStoneDTO);
+    if (resourceRequestDto instanceof DiamondRequestDto DiamondDTO) {
+      return diamondMapper.toResourceEntity(DiamondDTO);
     }
     if (resourceRequestDto instanceof MetalRequestDto metalDto) {
       return metalMapper.toResourceEntity(metalDto);
@@ -54,16 +54,16 @@ public class ResourceMapper {
     throw new MappingException(resourceRequestDto);
   }
 
-  private ResourceResponseDto toPreciousStoneResponseWithSize(
-      PreciousStone preciousStone, PreciousStoneResponseDto preciousStoneResponseDto) {
+  private ResourceResponseDto toDiamondResponseWithSize(
+      Diamond diamond, DiamondResponseDto diamondResponseDto) {
     String size =
         String.format(
             Locale.US,
             "%.2fx%.2fx%.2f",
-                preciousStone.getDimensionX(),
-                preciousStone.getDimensionY(),
-                preciousStone.getDimensionZ());
-    preciousStoneResponseDto.setSize(size);
-    return preciousStoneResponseDto;
+            diamond.getDimensionX(),
+            diamond.getDimensionY(),
+            diamond.getDimensionZ());
+    diamondResponseDto.setSize(size);
+    return diamondResponseDto;
   }
 }

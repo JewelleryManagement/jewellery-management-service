@@ -12,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -72,7 +71,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void willGetAResourceFromDatabase() throws JsonProcessingException {
-    sendCreateRequestsFor(List.of(ResourceTestHelper.getPreciousStoneRequestDto()));
+    sendCreateRequestsFor(List.of(ResourceTestHelper.getDiamondRequestDto()));
     List<ResourceResponseDto> createdDtos = getResourcesWithRequest();
 
     testRestTemplate.getForEntity(
@@ -106,7 +105,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
   void willGetSingleResourceQuantity() throws JsonProcessingException {
     List<ResourceResponseDto> createdResources =
-        sendCreateRequestsFor(List.of(ResourceTestHelper.getPreciousStoneRequestDto()));
+        sendCreateRequestsFor(List.of(ResourceTestHelper.getDiamondRequestDto()));
 
     ResourceQuantityResponseDto fetchedResourceQuantity =
         getResourceQuantityWithRequest(createdResources.get(0).getId());
@@ -140,7 +139,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void willDeleteAResourceFromDatabase() throws JsonProcessingException {
-    sendCreateRequestsFor(List.of(ResourceTestHelper.getPreciousStoneRequestDto()));
+    sendCreateRequestsFor(List.of(ResourceTestHelper.getDiamondRequestDto()));
     List<ResourceResponseDto> createdDtos = getResourcesWithRequest();
 
     testRestTemplate.delete(getBaseResourceUrl() + "/" + createdDtos.get(0).getId());
@@ -168,7 +167,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         testRestTemplate.exchange(
             getBaseResourceUrl() + "/" + UUID.randomUUID(),
             HttpMethod.PUT,
-            new HttpEntity<>(getPreciousStoneResponseDto()),
+            new HttpEntity<>(getDiamondResponseDto()),
             String.class);
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
@@ -243,7 +242,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private MockMultipartFile getTestInvalidFormatFile() {
     String data =
         "\"clazz\",\"note\",\"pricePerQuantity\",\"quantityType\",\"description\",\"color\",\"plating\",\"purity\",\"type\",\"quality\",\"shape\",\"size\",\"carat\",\"clarity\",\"cut\",\"dimensionX\",\"dimensionY\",\"dimensionZ\"\n"
-            + "PreciousStone,Note,invalid,unit,,ruby,,,,,octagon,,5.10,opaque,diamond,4.50,4.90,2.50";
+            + "Diamond,Note,invalid,unit,,ruby,,,,,octagon,,5.10,opaque,diamond,4.50,4.90,2.50";
     return new MockMultipartFile("file", "test-file.csv", "text/csv", data.getBytes());
   }
 

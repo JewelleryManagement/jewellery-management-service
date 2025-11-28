@@ -24,7 +24,7 @@ import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.model.User;
-import jewellery.inventory.model.resource.PreciousStone;
+import jewellery.inventory.model.resource.Diamond;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.ImageService;
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +49,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private String PATH_TO_IMAGES;
 
   private User user;
-  private PreciousStone preciousStone;
+  private Diamond diamond;
   private User differentUser;
   private ResourcePurchaseRequestDto resourcePurchaseRequestDto;
   private ResourcesInUserResponseDto resourcesInUserResponseDto;
@@ -91,9 +91,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @BeforeEach
   void setUp() {
     user = createUserInDatabase(createTestUserRequest());
-    preciousStone = createPreciousStoneInDatabase();
-    resourcePurchaseRequestDto =
-        getResourceInUserRequestDto(user, Objects.requireNonNull(preciousStone));
+    diamond = createDiamondInDatabase();
+    resourcePurchaseRequestDto = getResourceInUserRequestDto(user, Objects.requireNonNull(diamond));
     differentUser = createUserInDatabase(createDifferentUserRequest());
     resourcesInUserResponseDto = getResourcesInUserResponseDto(resourcePurchaseRequestDto);
     productRequestDto =
@@ -259,20 +258,20 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
   void createProductWithProductWithImageSuccessfully() throws JsonProcessingException {
     ResponseEntity<ProductResponseDto> productResponse =
-            this.testRestTemplate.postForEntity(
-                    getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
+        this.testRestTemplate.postForEntity(
+            getBaseProductUrl(), productRequestDto, ProductResponseDto.class);
     ProductResponseDto productResponseDto = productResponse.getBody();
     uploadImageAndAssertSuccessfulResponse(productResponseDto);
     productRequestDto2.setProductsContent(List.of(productResponse.getBody().getId()));
 
     ResponseEntity<ProductResponseDto> productWithProductResponse =
-            this.testRestTemplate.postForEntity(
-                    getBaseProductUrl(), productRequestDto2, ProductResponseDto.class);
+        this.testRestTemplate.postForEntity(
+            getBaseProductUrl(), productRequestDto2, ProductResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, productWithProductResponse.getStatusCode());
     assertCreatedProductMatchesRequest(productRequestDto2, productWithProductResponse);
     Map<String, Object> expectedEventPayload =
-            getCreateOrDeleteEventPayload(productWithProductResponse.getBody(), objectMapper);
+        getCreateOrDeleteEventPayload(productWithProductResponse.getBody(), objectMapper);
     systemEventTestHelper.assertEventWasLogged(PRODUCT_CREATE, expectedEventPayload);
   }
 
@@ -438,13 +437,20 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
   }
 
-  private void assertCreatedProductMatchesRequest(ProductRequestDto comparisonRequest, ResponseEntity<ProductResponseDto> productWithProductResponse) {
+  private void assertCreatedProductMatchesRequest(
+      ProductRequestDto comparisonRequest,
+      ResponseEntity<ProductResponseDto> productWithProductResponse) {
     assertEquals(
-            comparisonRequest.getResourcesContent().get(0).getResourceId(),
-            productWithProductResponse.getBody().getResourcesContent().get(0).getResource().getId());
-    assertEquals(comparisonRequest.getOwnerId(), productWithProductResponse.getBody().getOwner().getId());
-    assertEquals(comparisonRequest.getProductionNumber(), productWithProductResponse.getBody().getProductionNumber());
-    assertEquals(comparisonRequest.getCatalogNumber(), productWithProductResponse.getBody().getCatalogNumber());
+        comparisonRequest.getResourcesContent().get(0).getResourceId(),
+        productWithProductResponse.getBody().getResourcesContent().get(0).getResource().getId());
+    assertEquals(
+        comparisonRequest.getOwnerId(), productWithProductResponse.getBody().getOwner().getId());
+    assertEquals(
+        comparisonRequest.getProductionNumber(),
+        productWithProductResponse.getBody().getProductionNumber());
+    assertEquals(
+        comparisonRequest.getCatalogNumber(),
+        productWithProductResponse.getBody().getCatalogNumber());
   }
 
   private void uploadImageAndAssertSuccessfulResponse(ProductResponseDto productResponse) {
@@ -462,10 +468,10 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @NotNull
   private static ResourcePurchaseRequestDto getResourceInUserRequestDto(
-      User user, PreciousStone preciousStone) {
+      User user, Diamond diamond) {
     ResourcePurchaseRequestDto resourcePurchaseRequestDto = new ResourcePurchaseRequestDto();
     resourcePurchaseRequestDto.setUserId(user.getId());
-    resourcePurchaseRequestDto.setResourceId(preciousStone.getId());
+    resourcePurchaseRequestDto.setResourceId(diamond.getId());
     resourcePurchaseRequestDto.setQuantity(getBigDecimal("20"));
     resourcePurchaseRequestDto.setDealPrice(getBigDecimal("10"));
     return resourcePurchaseRequestDto;
@@ -503,11 +509,10 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Nullable
-  private PreciousStone createPreciousStoneInDatabase() {
-    ResourceRequestDto resourceRequest = ResourceTestHelper.getPreciousStoneRequestDto();
-    ResponseEntity<PreciousStone> createResource =
-        this.testRestTemplate.postForEntity(
-            getBaseResourceUrl(), resourceRequest, PreciousStone.class);
+  private Diamond createDiamondInDatabase() {
+    ResourceRequestDto resourceRequest = ResourceTestHelper.getDiamondRequestDto();
+    ResponseEntity<Diamond> createResource =
+        this.testRestTemplate.postForEntity(getBaseResourceUrl(), resourceRequest, Diamond.class);
 
     return createResource.getBody();
   }

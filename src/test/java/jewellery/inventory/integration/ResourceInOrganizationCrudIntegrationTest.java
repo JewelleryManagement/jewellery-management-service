@@ -369,7 +369,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
         switch (resourceClazz) {
           case "Pearl" -> getPearlRequestDto();
           case "Metal" -> getMetalRequestDto();
-          case "Precious Stone" -> getPreciousStoneRequestDto();
+          case "Precious Stone" -> getDiamondRequestDto();
           case "Semi Precious Stone" -> getSemiPreciousStoneRequestDto();
           case "Element" -> getElementRequestDto();
           default -> throw new IllegalArgumentException("Unknown resource type: " + resourceClazz);

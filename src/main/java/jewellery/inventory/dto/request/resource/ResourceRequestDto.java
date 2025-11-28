@@ -15,7 +15,7 @@ import lombok.experimental.SuperBuilder;
     include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = PearlRequestDto.class, name = "Pearl"),
-  @JsonSubTypes.Type(value = PreciousStoneRequestDto.class, name = "PreciousStone"),
+  @JsonSubTypes.Type(value = DiamondRequestDto.class, name = "Diamond"),
   @JsonSubTypes.Type(value = MetalRequestDto.class, name = "Metal"),
   @JsonSubTypes.Type(value = ElementRequestDto.class, name = "Element"),
   @JsonSubTypes.Type(value = SemiPreciousStoneRequestDto.class, name = "SemiPreciousStone")
