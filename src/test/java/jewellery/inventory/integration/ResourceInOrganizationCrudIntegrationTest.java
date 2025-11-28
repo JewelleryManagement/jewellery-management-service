@@ -32,7 +32,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   private static final BigDecimal RESOURCE_PRICE = getBigDecimal("105");
   private static final BigDecimal RESOURCE_QUANTITY_TO_REMOVE = getBigDecimal("5");
   private static final String PEARL_CLAZZ = "Pearl";
-  private static final String PRECIOUS_STONE_CLAZZ = "Precious Stone";
+  private static final String DIAMOND_CLAZZ = "Diamond";
 
   private String buildUrl(String... paths) {
     return "/" + String.join("/", paths);
@@ -189,7 +189,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   void getAllResourcesFromOrganizationSuccessfully() {
     OrganizationResponseDto organizationResponseDto = createOrganization();
     ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
-    ResourceResponseDto otherResource = createResourceResponse(PRECIOUS_STONE_CLAZZ);
+    ResourceResponseDto otherResource = createResourceResponse(DIAMOND_CLAZZ);
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organizationResponseDto.getId(),
@@ -369,7 +369,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
         switch (resourceClazz) {
           case "Pearl" -> getPearlRequestDto();
           case "Metal" -> getMetalRequestDto();
-          case "Precious Stone" -> getDiamondRequestDto();
+          case "Diamond" -> getDiamondRequestDto();
           case "Semi Precious Stone" -> getSemiPreciousStoneRequestDto();
           case "Element" -> getElementRequestDto();
           default -> throw new IllegalArgumentException("Unknown resource type: " + resourceClazz);

@@ -10,10 +10,12 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class SemiPreciousStoneResponseDto extends ResourceResponseDto{
-    private String color;
-    private String cut;
-    private String clarity;
-    private String shape;
-    private BigDecimal size;
+public class SemiPreciousStoneResponseDto extends ResourceResponseDto {
+  private String color;
+  private String cut;
+  private String clarity;
+  private String shape;
+  private String size;
+  private String type;
+  private BigDecimal carat;
 }

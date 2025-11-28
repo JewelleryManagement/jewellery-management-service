@@ -23,15 +23,16 @@ public class ResourceTestHelper {
   public static final String UPDATED_QUALITY = QUALITY + "A";
   private static final String SHAPE_PEARL = "oval";
   public static final String UPDATED_SHAPE_PEARL = SHAPE_PEARL + "ish";
-  private static final String SHAPE_PRECIOUS_STONE = "octagon";
+  private static final String SHAPE_DIAMOND = "octagon";
   private static final String COLOR_PEARL = "black";
   public static final String UPDATED_COLOR_PEARL = COLOR_PEARL + "ish";
   private static final String COLOR_METAL = "white";
   public static final String UPDATED_COLOR_METAL = COLOR_METAL + "ish";
-  private static final String COLOR_PRECIOUS_STONE = "ruby";
-  public static final String UPDATED_COLOR_PRECIOUS_STONE = COLOR_PRECIOUS_STONE + "ish";
+  private static final String COLOR_DIAMOND = "ruby";
+  public static final String UPDATED_COLOR_DIAMOND = COLOR_DIAMOND + "ish";
   private static final String TYPE_PEARL = "Akoya";
   private static final String TYPE_METAL = "gold";
+  private static final String TYPE_SEMI_PRECIOUS_STONE = "Natural";
   private static final String PLATING = "silver";
   public static final String UPDATED_PLATING = PLATING + "ish";
   private static final String CUT = "diamond";
@@ -41,11 +42,13 @@ public class ResourceTestHelper {
   private static final BigDecimal DIMENSION_Z = getBigDecimal("2.5");
   private static final BigDecimal SIZE = getBigDecimal("0.55");
   private static final String PEARL_SIZE = "0.55";
+  private static final String SEMI_PRECIOUS_STONE_SIZE = "1.00 - 1.05";
   private static final Integer PURITY = 925;
   public static final int UPDATED_PURITY = PURITY + 1;
-  private static final BigDecimal CARAT_PRECIOUS_STONE = getBigDecimal("5.1");
-  public static final BigDecimal UPDATED_CARAT_PRECIOUS_STONE =
-      CARAT_PRECIOUS_STONE.add(getBigDecimal("2.1"));
+  private static final BigDecimal CARAT_DIAMOND = getBigDecimal("5.1");
+  private static final BigDecimal CARAT_SEMI_PRECIOUS_STONE = getBigDecimal("0.0005");
+  ;
+  public static final BigDecimal UPDATED_CARAT_DIAMOND = CARAT_DIAMOND.add(getBigDecimal("2.1"));
   private static final String CLARITY = "opaque";
   public static final String UPDATED_CLARITY = CLARITY + "ish";
   private static final String DESCRIPTION = "A linking part made of gold";
@@ -54,7 +57,7 @@ public class ResourceTestHelper {
   public static final String NOTE = "Note";
   public static final String PEARL_SKU = UUID.randomUUID().toString();
   public static final String METAL_SKU = UUID.randomUUID().toString();
-  public static final String PRECIOUS_STONE_SKU = UUID.randomUUID().toString();
+  public static final String DIAMOND_SKU = UUID.randomUUID().toString();
   public static final String SEMI_PRECIOUS_STONE_SKU = UUID.randomUUID().toString();
   public static final String ELEMENT_SKU = UUID.randomUUID().toString();
   public static final String POLISH = "Good";
@@ -109,21 +112,21 @@ public class ResourceTestHelper {
         .id(RESOURCE_ID)
         .clazz(CLAZZ_DIAMOND)
         .quantityType(QUANTITY_TYPE_UNIT)
-        .carat(CARAT_PRECIOUS_STONE)
-        .color(COLOR_PRECIOUS_STONE)
+        .carat(CARAT_DIAMOND)
+        .color(COLOR_DIAMOND)
         .cut(CUT)
         .clarity(CLARITY)
         .dimensionX(DIMENSION_X)
         .dimensionY(DIMENSION_Y)
         .dimensionZ(DIMENSION_Z)
-        .shape(SHAPE_PRECIOUS_STONE)
+        .shape(SHAPE_DIAMOND)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
         .polish(POLISH)
         .symmetry(SYMMETRY)
         .fluorescence(FLUORESCENCE)
         .certificate(CERTIFICATE)
-        .sku(PRECIOUS_STONE_SKU)
+        .sku(DIAMOND_SKU)
         .build();
   }
 
@@ -132,13 +135,15 @@ public class ResourceTestHelper {
         .id(RESOURCE_ID)
         .clazz(CLAZZ_SEMI_PRECIOUS_STONE)
         .quantityType(QUANTITY_TYPE_UNIT)
-        .color(COLOR_PRECIOUS_STONE)
+        .color(COLOR_DIAMOND)
         .cut(CUT)
         .clarity(CLARITY)
-        .shape(SHAPE_PRECIOUS_STONE)
+        .shape(SHAPE_DIAMOND)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .size(SIZE)
+        .size(SEMI_PRECIOUS_STONE_SIZE)
+        .type(TYPE_SEMI_PRECIOUS_STONE)
+        .carat(CARAT_SEMI_PRECIOUS_STONE)
         .sku(SEMI_PRECIOUS_STONE_SKU)
         .build();
   }
@@ -258,11 +263,11 @@ public class ResourceTestHelper {
         .id(RESOURCE_ID)
         .clazz(CLAZZ_DIAMOND)
         .quantityType(QUANTITY_TYPE_UNIT)
-        .carat(CARAT_PRECIOUS_STONE)
-        .color(COLOR_PRECIOUS_STONE)
+        .carat(CARAT_DIAMOND)
+        .color(COLOR_DIAMOND)
         .cut(CUT)
         .clarity(CLARITY)
-        .shape(SHAPE_PRECIOUS_STONE)
+        .shape(SHAPE_DIAMOND)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
         .size(DIMENSION_SIZE)
@@ -270,7 +275,7 @@ public class ResourceTestHelper {
         .symmetry(SYMMETRY)
         .fluorescence(FLUORESCENCE)
         .certificate(CERTIFICATE)
-        .sku(PRECIOUS_STONE_SKU)
+        .sku(DIAMOND_SKU)
         .build();
   }
 
@@ -278,37 +283,37 @@ public class ResourceTestHelper {
     return DiamondRequestDto.builder()
         .clazz(CLAZZ_DIAMOND)
         .quantityType(QUANTITY_TYPE_UNIT)
-        .carat(CARAT_PRECIOUS_STONE)
-        .color(COLOR_PRECIOUS_STONE)
+        .carat(CARAT_DIAMOND)
+        .color(COLOR_DIAMOND)
         .cut(CUT)
         .clarity(CLARITY)
         .dimensionX(DIMENSION_X)
         .dimensionY(DIMENSION_Y)
         .dimensionZ(DIMENSION_Z)
-        .shape(SHAPE_PRECIOUS_STONE)
+        .shape(SHAPE_DIAMOND)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
         .polish(POLISH)
         .symmetry(SYMMETRY)
         .fluorescence(FLUORESCENCE)
         .certificate(CERTIFICATE)
-        .sku(PRECIOUS_STONE_SKU)
+        .sku(DIAMOND_SKU)
         .build();
   }
 
   public static DiamondRequestDto getUpdatedDiamondRequestDto() {
     DiamondRequestDto diamondRequestDto = (DiamondRequestDto) getDiamondRequestDto();
-    diamondRequestDto.setCarat(UPDATED_CARAT_PRECIOUS_STONE);
+    diamondRequestDto.setCarat(UPDATED_CARAT_DIAMOND);
     diamondRequestDto.setClarity(UPDATED_CLARITY);
-    diamondRequestDto.setColor(UPDATED_COLOR_PRECIOUS_STONE);
+    diamondRequestDto.setColor(UPDATED_COLOR_DIAMOND);
     return diamondRequestDto;
   }
 
   private static Resource getUpdatedDiamond() {
     Diamond diamond = (Diamond) getDiamond();
-    diamond.setCarat(UPDATED_CARAT_PRECIOUS_STONE);
+    diamond.setCarat(UPDATED_CARAT_DIAMOND);
     diamond.setClarity(UPDATED_CLARITY);
-    diamond.setColor(UPDATED_COLOR_PRECIOUS_STONE);
+    diamond.setColor(UPDATED_COLOR_DIAMOND);
     return diamond;
   }
 
@@ -317,13 +322,15 @@ public class ResourceTestHelper {
         .id(RESOURCE_ID)
         .clazz(CLAZZ_SEMI_PRECIOUS_STONE)
         .quantityType(QUANTITY_TYPE_UNIT)
-        .color(COLOR_PRECIOUS_STONE)
+        .color(COLOR_DIAMOND)
         .cut(CUT)
         .clarity(CLARITY)
-        .shape(SHAPE_PRECIOUS_STONE)
+        .shape(SHAPE_DIAMOND)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .size(SIZE)
+        .size(SEMI_PRECIOUS_STONE_SIZE)
+        .type(TYPE_SEMI_PRECIOUS_STONE)
+        .carat(CARAT_SEMI_PRECIOUS_STONE)
         .sku(SEMI_PRECIOUS_STONE_SKU)
         .build();
   }
@@ -332,13 +339,15 @@ public class ResourceTestHelper {
     return SemiPreciousStoneRequestDto.builder()
         .clazz(CLAZZ_SEMI_PRECIOUS_STONE)
         .quantityType(QUANTITY_TYPE_UNIT)
-        .color(COLOR_PRECIOUS_STONE)
+        .color(COLOR_DIAMOND)
         .cut(CUT)
         .clarity(CLARITY)
-        .shape(SHAPE_PRECIOUS_STONE)
+        .shape(SHAPE_DIAMOND)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .size(SIZE)
+        .size(SEMI_PRECIOUS_STONE_SIZE)
+        .type(TYPE_SEMI_PRECIOUS_STONE)
+        .carat(CARAT_SEMI_PRECIOUS_STONE)
         .sku(SEMI_PRECIOUS_STONE_SKU)
         .build();
   }
@@ -347,14 +356,14 @@ public class ResourceTestHelper {
     SemiPreciousStoneRequestDto semiPreciousStoneRequestDto =
         (SemiPreciousStoneRequestDto) getSemiPreciousStoneRequestDto();
     semiPreciousStoneRequestDto.setClarity(UPDATED_CLARITY);
-    semiPreciousStoneRequestDto.setColor(UPDATED_COLOR_PRECIOUS_STONE);
+    semiPreciousStoneRequestDto.setColor(UPDATED_COLOR_DIAMOND);
     return semiPreciousStoneRequestDto;
   }
 
   private static Resource getUpdatedSemiPreciousStone() {
     SemiPreciousStone semiPreciousStone = (SemiPreciousStone) getSemiPreciousStone();
     semiPreciousStone.setClarity(UPDATED_CLARITY);
-    semiPreciousStone.setColor(UPDATED_COLOR_PRECIOUS_STONE);
+    semiPreciousStone.setColor(UPDATED_COLOR_DIAMOND);
     return semiPreciousStone;
   }
 

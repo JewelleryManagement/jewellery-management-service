@@ -13,9 +13,11 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 public class SemiPreciousStone extends Resource {
-    private String color;
-    private String cut;
-    private String clarity;
-    private String shape;
-    private BigDecimal size;
+  private String color;
+  private String cut;
+  private String clarity;
+  private String shape;
+  private String size;
+  private String type;
+  private BigDecimal carat;
 }
