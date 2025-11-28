@@ -20,4 +20,10 @@ public class PreciousStoneRequestDto extends ResourceRequestDto {
   @Positive private BigDecimal dimensionY;
   @Positive private BigDecimal dimensionZ;
   private String shape;
+  private String type;
+  private String colorHue;
+  private String polish;
+  private String symmetry;
+  private String fluorescence;
+  private String certificate;
 }

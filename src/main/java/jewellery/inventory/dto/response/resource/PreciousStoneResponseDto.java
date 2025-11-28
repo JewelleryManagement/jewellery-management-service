@@ -18,4 +18,10 @@ public class PreciousStoneResponseDto extends ResourceResponseDto {
   private String clarity;
   private String size;
   private String shape;
+  private String type;
+  private String colorHue;
+  private String polish;
+  private String symmetry;
+  private String fluorescence;
+  private String certificate;
 }

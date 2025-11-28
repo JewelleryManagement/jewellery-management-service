@@ -21,4 +21,10 @@ public class PreciousStone extends Resource {
   private BigDecimal dimensionY;
   private BigDecimal dimensionZ;
   private String shape;
+  private String type;
+  private String colorHue;
+  private String polish;
+  private String symmetry;
+  private String fluorescence;
+  private String certificate;
 }

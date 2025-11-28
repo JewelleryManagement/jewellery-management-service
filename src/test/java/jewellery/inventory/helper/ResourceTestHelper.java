@@ -52,7 +52,15 @@ public class ResourceTestHelper {
   public static final String UPDATED_DESCRIPTION = DESCRIPTION + " and \"real\" silver";
   public static final BigDecimal PRICE_PER_QUANTITY = getBigDecimal("50.5");
   public static final String NOTE = "Note";
-  public static final String SKU = "S.K.U";
+  public static final String PEARL_SKU = UUID.randomUUID().toString();
+  public static final String METAL_SKU = UUID.randomUUID().toString();
+  public static final String PRECIOUS_STONE_SKU = UUID.randomUUID().toString();
+  public static final String SEMI_PRECIOUS_STONE_SKU = UUID.randomUUID().toString();
+  public static final String ELEMENT_SKU = UUID.randomUUID().toString();
+  public static final String POLISH = "Good";
+  public static final String SYMMETRY = "Good";
+  public static final String FLUORESCENCE = "Good";
+  public static final String CERTIFICATE = "None";
 
   private ResourceTestHelper() {}
 
@@ -76,7 +84,7 @@ public class ResourceTestHelper {
         .shape(SHAPE_PEARL)
         .pricePerQuantity(price)
         .note(NOTE)
-        .sku(SKU)
+        .sku(PEARL_SKU)
         .build();
   }
 
@@ -92,7 +100,7 @@ public class ResourceTestHelper {
         .purity(PURITY)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .sku(SKU)
+        .sku(METAL_SKU)
         .build();
   }
 
@@ -111,7 +119,11 @@ public class ResourceTestHelper {
         .shape(SHAPE_PRECIOUS_STONE)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .sku(SKU)
+        .polish(POLISH)
+        .symmetry(SYMMETRY)
+        .fluorescence(FLUORESCENCE)
+        .certificate(CERTIFICATE)
+        .sku(PRECIOUS_STONE_SKU)
         .build();
   }
 
@@ -127,7 +139,7 @@ public class ResourceTestHelper {
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
         .size(SIZE)
-        .sku(SKU)
+        .sku(SEMI_PRECIOUS_STONE_SKU)
         .build();
   }
 
@@ -139,7 +151,7 @@ public class ResourceTestHelper {
         .description(DESCRIPTION)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .sku(SKU)
+        .sku(ELEMENT_SKU)
         .build();
   }
 
@@ -155,7 +167,7 @@ public class ResourceTestHelper {
         .shape(SHAPE_PEARL)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .sku(SKU)
+        .sku(PEARL_SKU)
         .build();
   }
 
@@ -174,7 +186,7 @@ public class ResourceTestHelper {
         .shape(SHAPE_PEARL)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .sku(SKU)
+        .sku(PEARL_SKU)
         .build();
   }
 
@@ -206,11 +218,11 @@ public class ResourceTestHelper {
         .purity(PURITY)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .sku(SKU)
+        .sku(METAL_SKU)
         .build();
   }
 
-  private static ResourceRequestDto getMetalRequestDto() {
+  public static ResourceRequestDto getMetalRequestDto() {
     return MetalRequestDto.builder()
         .clazz(CLAZZ_METAL)
         .quantityType(QUANTITY_TYPE_WEIGHT)
@@ -221,7 +233,7 @@ public class ResourceTestHelper {
         .purity(PURITY)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .sku(SKU)
+        .sku(METAL_SKU)
         .build();
   }
 
@@ -254,7 +266,11 @@ public class ResourceTestHelper {
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
         .size(DIMENSION_SIZE)
-        .sku(SKU)
+        .polish(POLISH)
+        .symmetry(SYMMETRY)
+        .fluorescence(FLUORESCENCE)
+        .certificate(CERTIFICATE)
+        .sku(PRECIOUS_STONE_SKU)
         .build();
   }
 
@@ -272,7 +288,11 @@ public class ResourceTestHelper {
         .shape(SHAPE_PRECIOUS_STONE)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .sku(SKU)
+        .polish(POLISH)
+        .symmetry(SYMMETRY)
+        .fluorescence(FLUORESCENCE)
+        .certificate(CERTIFICATE)
+        .sku(PRECIOUS_STONE_SKU)
         .build();
   }
 
@@ -305,7 +325,7 @@ public class ResourceTestHelper {
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
         .size(SIZE)
-        .sku(SKU)
+        .sku(SEMI_PRECIOUS_STONE_SKU)
         .build();
   }
 
@@ -320,7 +340,7 @@ public class ResourceTestHelper {
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
         .size(SIZE)
-        .sku(SKU)
+        .sku(SEMI_PRECIOUS_STONE_SKU)
         .build();
   }
 
@@ -347,18 +367,18 @@ public class ResourceTestHelper {
         .description(DESCRIPTION)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .sku(SKU)
+        .sku(ELEMENT_SKU)
         .build();
   }
 
-  private static ResourceRequestDto getElementRequestDto() {
+  public static ResourceRequestDto getElementRequestDto() {
     return ElementRequestDto.builder()
         .clazz(CLAZZ_ELEMENT)
         .quantityType(QUANTITY_TYPE_UNIT)
         .description(DESCRIPTION)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .sku(SKU)
+        .sku(ELEMENT_SKU)
         .build();
   }
 
