@@ -21,6 +21,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
     classes = {
       PearlMapperImpl.class,
       DiamondMapperImpl.class,
+      ColoredStoneMapperImpl.class,
       ElementMapperImpl.class,
       MetalMapperImpl.class,
       DiamondMeleeStoneMapperImpl.class,

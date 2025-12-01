@@ -1,5 +1,6 @@
 package jewellery.inventory.mapper;
 
+import java.math.BigDecimal;
 import java.util.Locale;
 import jewellery.inventory.dto.request.resource.*;
 import jewellery.inventory.dto.response.resource.*;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 public class ResourceMapper {
   private final PearlMapper pearlMapper;
   private final DiamondMapper diamondMapper;
+  private final ColoredStoneMapper coloredStoneMapper;
   private final ElementMapper elementMapper;
   private final MetalMapper metalMapper;
   private final DiamondMeleeStoneMapper diamondMeleeStoneMapper;
@@ -25,6 +27,9 @@ public class ResourceMapper {
       return pearlMapper.toResourceResponse(pearl);
     } else if (resource instanceof Diamond diamond) {
       return toDiamondResponseWithSize(diamond, diamondMapper.toResourceResponse(diamond));
+    } else if (resource instanceof ColoredStone coloredStone) {
+      return toColoredStoneResponseWithSize(
+          coloredStone, coloredStoneMapper.toResourceResponse(coloredStone));
     } else if (resource instanceof Element element) {
       return elementMapper.toResourceResponse(element);
     } else if (resource instanceof Metal metal) {
@@ -42,6 +47,9 @@ public class ResourceMapper {
     if (resourceRequestDto instanceof DiamondRequestDto DiamondDTO) {
       return diamondMapper.toResourceEntity(DiamondDTO);
     }
+    if (resourceRequestDto instanceof ColoredStoneRequestDto coloredStoneRequestDto) {
+      return coloredStoneMapper.toResourceEntity(coloredStoneRequestDto);
+    }
     if (resourceRequestDto instanceof MetalRequestDto metalDto) {
       return metalMapper.toResourceEntity(metalDto);
     }
@@ -57,13 +65,25 @@ public class ResourceMapper {
   private ResourceResponseDto toDiamondResponseWithSize(
       Diamond diamond, DiamondResponseDto diamondResponseDto) {
     String size =
-        String.format(
-            Locale.US,
-            "%.2fx%.2fx%.2f",
-            diamond.getDimensionX(),
-            diamond.getDimensionY(),
-            diamond.getDimensionZ());
+        formatSize(diamond.getDimensionX(), diamond.getDimensionY(), diamond.getDimensionZ());
+
     diamondResponseDto.setSize(size);
     return diamondResponseDto;
+  }
+
+  private ResourceResponseDto toColoredStoneResponseWithSize(
+      ColoredStone coloredStone, ColoredStoneResponseDto coloredStoneResponseDto) {
+    String size =
+        formatSize(
+            coloredStone.getDimensionX(),
+            coloredStone.getDimensionY(),
+            coloredStone.getDimensionZ());
+
+    coloredStoneResponseDto.setSize(size);
+    return coloredStoneResponseDto;
+  }
+
+  private String formatSize(BigDecimal x, BigDecimal y, BigDecimal z) {
+    return String.format(Locale.US, "%.2fx%.2fx%.2f", x, y, z);
   }
 }
