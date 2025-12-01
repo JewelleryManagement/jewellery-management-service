@@ -15,9 +15,10 @@ public class ResourceMapper {
   private final PearlMapper pearlMapper;
   private final DiamondMapper diamondMapper;
   private final ColoredStoneMapper coloredStoneMapper;
+  private final ColoredStoneMeleeMapper coloredStoneMeleeMapper;
   private final ElementMapper elementMapper;
   private final MetalMapper metalMapper;
-  private final DiamondMeleeStoneMapper diamondMeleeStoneMapper;
+  private final DiamondMeleeMapper diamondMeleeMapper;
 
   public ResourceResponseDto toResourceResponse(Resource resource) {
     if (resource == null) {
@@ -30,12 +31,14 @@ public class ResourceMapper {
     } else if (resource instanceof ColoredStone coloredStone) {
       return toColoredStoneResponseWithSize(
           coloredStone, coloredStoneMapper.toResourceResponse(coloredStone));
+    } else if (resource instanceof ColoredStoneMelee coloredStoneMelee) {
+      return coloredStoneMeleeMapper.toResourceResponse(coloredStoneMelee);
     } else if (resource instanceof Element element) {
       return elementMapper.toResourceResponse(element);
     } else if (resource instanceof Metal metal) {
       return metalMapper.toResourceResponse(metal);
     } else if (resource instanceof DiamondMelee diamondMelee) {
-      return (diamondMeleeStoneMapper.toResourceResponse(diamondMelee));
+      return (diamondMeleeMapper.toResourceResponse(diamondMelee));
     }
     throw new MappingException(resource);
   }
@@ -50,6 +53,9 @@ public class ResourceMapper {
     if (resourceRequestDto instanceof ColoredStoneRequestDto coloredStoneRequestDto) {
       return coloredStoneMapper.toResourceEntity(coloredStoneRequestDto);
     }
+    if (resourceRequestDto instanceof ColoredStoneMeleeRequestDto coloredStoneMeleeRequestDto) {
+      return coloredStoneMeleeMapper.toResourceEntity(coloredStoneMeleeRequestDto);
+    }
     if (resourceRequestDto instanceof MetalRequestDto metalDto) {
       return metalMapper.toResourceEntity(metalDto);
     }
@@ -57,7 +63,7 @@ public class ResourceMapper {
       return elementMapper.toResourceEntity(linkingPartDTO);
     }
     if (resourceRequestDto instanceof DiamondMeleeRequestDto diamondMeleeRequestDto) {
-      return diamondMeleeStoneMapper.toResourceEntity(diamondMeleeRequestDto);
+      return diamondMeleeMapper.toResourceEntity(diamondMeleeRequestDto);
     }
     throw new MappingException(resourceRequestDto);
   }

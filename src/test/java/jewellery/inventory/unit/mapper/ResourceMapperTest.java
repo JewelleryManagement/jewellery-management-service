@@ -22,11 +22,12 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
       PearlMapperImpl.class,
       DiamondMapperImpl.class,
       ColoredStoneMapperImpl.class,
+      ColoredStoneMeleeMapperImpl.class,
       ElementMapperImpl.class,
       MetalMapperImpl.class,
-      DiamondMeleeStoneMapperImpl.class,
+      DiamondMeleeMapperImpl.class,
       StringTrimmer.class,
-      ResourceMapper.class
+      ResourceMapper.class,
     })
 class ResourceMapperTest {
   @Autowired private ResourceMapper resourceMapper;

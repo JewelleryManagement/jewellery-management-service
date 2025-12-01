@@ -7,8 +7,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring", uses = StringTrimmer.class)
-public interface DiamondMeleeStoneMapper {
-  DiamondMeleeStoneMapper INSTANCE = Mappers.getMapper(DiamondMeleeStoneMapper.class);
+public interface DiamondMeleeMapper {
+  DiamondMeleeMapper INSTANCE = Mappers.getMapper(DiamondMeleeMapper.class);
 
   DiamondMeleeResponseDto toResourceResponse(DiamondMelee entity);
 
