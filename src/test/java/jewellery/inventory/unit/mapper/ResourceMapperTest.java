@@ -28,6 +28,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
       DiamondMeleeMapperImpl.class,
       StringTrimmer.class,
       ResourceMapper.class,
+      SemiPreciousStoneMapperImpl.class,
     })
 class ResourceMapperTest {
   @Autowired private ResourceMapper resourceMapper;

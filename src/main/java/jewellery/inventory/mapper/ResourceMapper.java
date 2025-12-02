@@ -19,6 +19,7 @@ public class ResourceMapper {
   private final ElementMapper elementMapper;
   private final MetalMapper metalMapper;
   private final DiamondMeleeMapper diamondMeleeMapper;
+  private final SemiPreciousStoneMapper semiPreciousStoneMapper;
 
   public ResourceResponseDto toResourceResponse(Resource resource) {
     if (resource == null) {
@@ -39,6 +40,8 @@ public class ResourceMapper {
       return metalMapper.toResourceResponse(metal);
     } else if (resource instanceof DiamondMelee diamondMelee) {
       return (diamondMeleeMapper.toResourceResponse(diamondMelee));
+    } else if (resource instanceof SemiPreciousStone semiPreciousStone) {
+      return (semiPreciousStoneMapper.toResourceResponse(semiPreciousStone));
     }
     throw new MappingException(resource);
   }
@@ -64,6 +67,9 @@ public class ResourceMapper {
     }
     if (resourceRequestDto instanceof DiamondMeleeRequestDto diamondMeleeRequestDto) {
       return diamondMeleeMapper.toResourceEntity(diamondMeleeRequestDto);
+    }
+    if (resourceRequestDto instanceof SemiPreciousStoneRequestDto semiPreciousStoneRequestDto) {
+      return semiPreciousStoneMapper.toResourceEntity(semiPreciousStoneRequestDto);
     }
     throw new MappingException(resourceRequestDto);
   }
