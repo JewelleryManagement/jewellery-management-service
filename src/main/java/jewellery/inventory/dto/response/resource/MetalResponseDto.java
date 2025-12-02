@@ -13,5 +13,4 @@ public class MetalResponseDto extends ResourceResponseDto {
   private String type;
   private int purity;
   private String color;
-  private String plating;
 }

@@ -241,7 +241,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private MockMultipartFile getTestInvalidFormatFile() {
     String data =
-        "\"clazz\",\"note\",\"pricePerQuantity\",\"quantityType\",\"description\",\"color\",\"plating\",\"purity\",\"type\",\"quality\",\"shape\",\"size\",\"carat\",\"clarity\",\"cut\",\"dimensionX\",\"dimensionY\",\"dimensionZ\"\n"
+        "\"clazz\",\"note\",\"pricePerQuantity\",\"quantityType\",\"description\",\"color\",\"purity\",\"type\",\"quality\",\"shape\",\"size\",\"carat\",\"clarity\",\"cut\",\"dimensionX\",\"dimensionY\",\"dimensionZ\"\n"
             + "Diamond,Note,invalid,unit,,ruby,,,,,octagon,,5.10,opaque,diamond,4.50,4.90,2.50";
     return new MockMultipartFile("file", "test-file.csv", "text/csv", data.getBytes());
   }

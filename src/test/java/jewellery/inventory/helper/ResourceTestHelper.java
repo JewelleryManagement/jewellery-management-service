@@ -33,8 +33,6 @@ public class ResourceTestHelper {
   private static final String TYPE_PEARL = "Akoya";
   private static final String TYPE_METAL = "gold";
   private static final String TYPE_DIAMOND_MELEE = "Natural";
-  private static final String PLATING = "silver";
-  public static final String UPDATED_PLATING = PLATING + "ish";
   private static final String CUT = "diamond";
   private static final String DIMENSION_SIZE = "4.50x4.90x2.50";
   private static final BigDecimal DIMENSION_X = getBigDecimal("4.5");
@@ -97,7 +95,6 @@ public class ResourceTestHelper {
         .clazz(CLAZZ_METAL)
         .quantityType(QUANTITY_TYPE_WEIGHT)
         .type(TYPE_METAL)
-        .plating(PLATING)
         .color(COLOR_METAL)
         .type(TYPE_METAL)
         .purity(PURITY)
@@ -217,7 +214,6 @@ public class ResourceTestHelper {
         .clazz(CLAZZ_METAL)
         .quantityType(QUANTITY_TYPE_WEIGHT)
         .type(TYPE_METAL)
-        .plating(PLATING)
         .color(COLOR_METAL)
         .type(TYPE_METAL)
         .purity(PURITY)
@@ -232,7 +228,6 @@ public class ResourceTestHelper {
         .clazz(CLAZZ_METAL)
         .quantityType(QUANTITY_TYPE_WEIGHT)
         .type(TYPE_METAL)
-        .plating(PLATING)
         .color(COLOR_METAL)
         .type(TYPE_METAL)
         .purity(PURITY)
@@ -245,7 +240,6 @@ public class ResourceTestHelper {
   public static MetalRequestDto getUpdatedMetalRequestDto() {
     MetalRequestDto metalDTO = (MetalRequestDto) getMetalRequestDto();
     metalDTO.setColor(UPDATED_COLOR_METAL);
-    metalDTO.setPlating(UPDATED_PLATING);
     metalDTO.setPurity(UPDATED_PURITY);
     return metalDTO;
   }
@@ -253,7 +247,6 @@ public class ResourceTestHelper {
   public static Metal getUpdatedMetal() {
     Metal metal = (Metal) getMetal();
     metal.setColor(UPDATED_COLOR_METAL);
-    metal.setPlating(UPDATED_PLATING);
     metal.setPurity(UPDATED_PURITY);
     return metal;
   }

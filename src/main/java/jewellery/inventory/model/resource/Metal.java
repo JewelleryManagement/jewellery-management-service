@@ -12,8 +12,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 public class Metal extends Resource {
-    private String type;
-    private Integer purity;
-    private String color;
-    private String plating;
+  private String type;
+  private Integer purity;
+  private String color;
 }

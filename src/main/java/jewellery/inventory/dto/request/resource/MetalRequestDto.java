@@ -13,5 +13,4 @@ public class MetalRequestDto extends ResourceRequestDto {
   private String type;
   private int purity;
   private String color;
-  private String plating;
 }
