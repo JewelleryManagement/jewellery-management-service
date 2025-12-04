@@ -38,13 +38,12 @@ public class ResourceTestHelper {
   private static final BigDecimal DIMENSION_X = getBigDecimal("4.5");
   private static final BigDecimal DIMENSION_Y = getBigDecimal("4.9");
   private static final BigDecimal DIMENSION_Z = getBigDecimal("2.5");
-  private static final BigDecimal SIZE = getBigDecimal("0.55");
   private static final String PEARL_SIZE = "0.55";
   private static final String DIAMOND_MELEE_SIZE = "1.00 - 1.05";
   private static final Integer PURITY = 925;
   public static final int UPDATED_PURITY = PURITY + 1;
-  private static final BigDecimal CARAT_DIAMOND = getBigDecimal("5.1");
-  private static final BigDecimal CARAT_DIAMOND_MELEE = getBigDecimal("0.0005");
+  private static final BigDecimal CARAT_DIAMOND = getBigDecimal("5.10000", 5);
+  private static final BigDecimal CARAT_DIAMOND_MELEE = getBigDecimal("0.00005", 5);
   ;
   public static final BigDecimal UPDATED_CARAT_DIAMOND = CARAT_DIAMOND.add(getBigDecimal("2.1"));
   private static final String CLARITY = "opaque";
