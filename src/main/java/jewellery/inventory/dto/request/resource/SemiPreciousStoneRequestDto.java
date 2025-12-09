@@ -1,5 +1,6 @@
 package jewellery.inventory.dto.request.resource;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -10,11 +11,11 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 public class SemiPreciousStoneRequestDto extends ResourceRequestDto {
-  private String type;
-  private String size;
-  private String quality;
-  private String color;
-  private String shape;
-  private String shapeSpecification;
+  @NotBlank private String type;
+  @NotBlank private String size;
+  @NotBlank private String quality;
+  @NotBlank private String color;
+  @NotBlank private String shape;
+  @NotBlank private String shapeSpecification;
   private String colorHue;
 }

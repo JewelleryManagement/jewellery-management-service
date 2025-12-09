@@ -1,7 +1,5 @@
 package jewellery.inventory.mapper;
 
-import java.math.BigDecimal;
-import java.util.Locale;
 import jewellery.inventory.dto.request.resource.*;
 import jewellery.inventory.dto.response.resource.*;
 import jewellery.inventory.exception.MappingException;
@@ -28,10 +26,9 @@ public class ResourceMapper {
     if (resource instanceof Pearl pearl) {
       return pearlMapper.toResourceResponse(pearl);
     } else if (resource instanceof Diamond diamond) {
-      return toDiamondResponseWithSize(diamond, diamondMapper.toResourceResponse(diamond));
+      return diamondMapper.toResourceResponse(diamond);
     } else if (resource instanceof ColoredStone coloredStone) {
-      return toColoredStoneResponseWithSize(
-          coloredStone, coloredStoneMapper.toResourceResponse(coloredStone));
+      return coloredStoneMapper.toResourceResponse(coloredStone);
     } else if (resource instanceof ColoredStoneMelee coloredStoneMelee) {
       return coloredStoneMeleeMapper.toResourceResponse(coloredStoneMelee);
     } else if (resource instanceof Element element) {
@@ -72,30 +69,5 @@ public class ResourceMapper {
       return semiPreciousStoneMapper.toResourceEntity(semiPreciousStoneRequestDto);
     }
     throw new MappingException(resourceRequestDto);
-  }
-
-  private ResourceResponseDto toDiamondResponseWithSize(
-      Diamond diamond, DiamondResponseDto diamondResponseDto) {
-    String size =
-        formatSize(diamond.getDimensionX(), diamond.getDimensionY(), diamond.getDimensionZ());
-
-    diamondResponseDto.setSize(size);
-    return diamondResponseDto;
-  }
-
-  private ResourceResponseDto toColoredStoneResponseWithSize(
-      ColoredStone coloredStone, ColoredStoneResponseDto coloredStoneResponseDto) {
-    String size =
-        formatSize(
-            coloredStone.getDimensionX(),
-            coloredStone.getDimensionY(),
-            coloredStone.getDimensionZ());
-
-    coloredStoneResponseDto.setSize(size);
-    return coloredStoneResponseDto;
-  }
-
-  private String formatSize(BigDecimal x, BigDecimal y, BigDecimal z) {
-    return String.format(Locale.US, "%.2fx%.2fx%.2f", x, y, z);
   }
 }

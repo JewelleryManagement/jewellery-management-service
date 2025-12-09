@@ -15,7 +15,9 @@ public class DiamondResponseDto extends ResourceResponseDto {
   private BigDecimal carat;
   private String cut;
   private String clarity;
-  private String size;
+  private BigDecimal dimensionX;
+  private BigDecimal dimensionY;
+  private BigDecimal dimensionZ;
   private String shape;
   private String type;
   private String colorHue;

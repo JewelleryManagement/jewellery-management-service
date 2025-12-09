@@ -2,6 +2,8 @@ package jewellery.inventory.dto.request.resource;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import lombok.Data;
@@ -27,9 +29,9 @@ import lombok.experimental.SuperBuilder;
 @Data
 @NoArgsConstructor
 public class ResourceRequestDto {
-  private String clazz;
-  private String quantityType;
-  @Positive private BigDecimal pricePerQuantity;
+  @NotBlank private String clazz;
+  @NotBlank private String quantityType;
+  @NotNull @Positive private BigDecimal pricePerQuantity;
   private String note;
-  private String sku;
+  @NotBlank private String sku;
 }

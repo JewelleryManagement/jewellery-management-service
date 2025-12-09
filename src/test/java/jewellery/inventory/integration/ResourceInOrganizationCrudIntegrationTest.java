@@ -367,11 +367,8 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   private ResourceResponseDto createResourceResponse(String resourceClazz) {
     ResourceRequestDto resourceRequest =
         switch (resourceClazz) {
-          case "Pearl" -> getPearlRequestDto();
-          case "Metal" -> getMetalRequestDto();
-          case "Diamond" -> getDiamondRequestDto();
-          case "Diamond Melee" -> getDiamondMeleeRequestDto();
-          case "Element" -> getElementRequestDto();
+          case PEARL_CLAZZ -> getPearlRequestDto();
+          case DIAMOND_CLAZZ -> getDiamondRequestDto();
           default -> throw new IllegalArgumentException("Unknown resource type: " + resourceClazz);
         };
 

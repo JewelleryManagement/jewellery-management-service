@@ -15,6 +15,8 @@ public class ResourceTestHelper {
   private static final String CLAZZ_PEARL = "Pearl";
   private static final String CLAZZ_DIAMOND = "Diamond";
   private static final String CLAZZ_DIAMOND_MELEE = "DiamondMelee";
+  private static final String CLAZZ_COLORED_STONE = "ColoredStone";
+  private static final String CLAZZ_SEMI_PRECIOUS_STONE = "SemiPreciousStone";
   private static final String CLAZZ_METAL = "Metal";
   private static final String CLAZZ_ELEMENT = "Element";
   private static final String QUANTITY_TYPE_UNIT = "unit";
@@ -24,30 +26,42 @@ public class ResourceTestHelper {
   private static final String SHAPE_PEARL = "oval";
   public static final String UPDATED_SHAPE_PEARL = SHAPE_PEARL + "ish";
   private static final String SHAPE_DIAMOND = "octagon";
+  private static final String SHAPE_COLORED_STONE = "Round";
+  private static final String SHAPE_SEMI_PRECIOUS_STONE = "Round";
+  private static final String SHAPE_SPECIFICATION = "Smooth";
   private static final String COLOR_PEARL = "black";
   public static final String UPDATED_COLOR_PEARL = COLOR_PEARL + "ish";
   private static final String COLOR_METAL = "white";
   public static final String UPDATED_COLOR_METAL = COLOR_METAL + "ish";
   private static final String COLOR_DIAMOND = "ruby";
   public static final String UPDATED_COLOR_DIAMOND = COLOR_DIAMOND + "ish";
+  private static final String COLOR_COLORED_STONE = "Blue";
+  private static final String COLOR_SEMI_PRECIOUS_STONE = "White";
+  private static final String COLOR_HUE = "Yellowish";
   private static final String TYPE_PEARL = "Akoya";
   private static final String TYPE_METAL = "gold";
+  private static final String TYPE_DIAMOND = "Natural";
   private static final String TYPE_DIAMOND_MELEE = "Natural";
-  private static final String CUT = "diamond";
-  private static final String DIMENSION_SIZE = "4.50x4.90x2.50";
+  private static final String TYPE_COLORED_STONE = "Sapphire";
+  private static final String TYPE_SEMI_PRECIOUS_STONE = "Amethyst";
+  private static final String CUT_DIAMOND = "diamond";
+  private static final String CUT_COLORED_STONE = "Good";
   private static final BigDecimal DIMENSION_X = getBigDecimal("4.5");
   private static final BigDecimal DIMENSION_Y = getBigDecimal("4.9");
   private static final BigDecimal DIMENSION_Z = getBigDecimal("2.5");
   private static final String PEARL_SIZE = "0.55";
   private static final String DIAMOND_MELEE_SIZE = "1.00 - 1.05";
+  private static final String COLORED_STONE_MELEE_SIZE = "1.00 - 1.05";
+  private static final String SEMI_PRECIOUS_STONE_SIZE = "0.5 - 1.5";
   private static final Integer PURITY = 925;
   public static final int UPDATED_PURITY = PURITY + 1;
   private static final BigDecimal CARAT_DIAMOND = getBigDecimal("5.10000", 5);
   private static final BigDecimal CARAT_DIAMOND_MELEE = getBigDecimal("0.00005", 5);
-  ;
   public static final BigDecimal UPDATED_CARAT_DIAMOND = CARAT_DIAMOND.add(getBigDecimal("2.1"));
+  public static final BigDecimal CARAT_COLORED_STONE = getBigDecimal("1.05", 2);
   private static final String CLARITY = "opaque";
   public static final String UPDATED_CLARITY = CLARITY + "ish";
+  private static final String TREATMENT_COLORED_STONE = "None";
   private static final String DESCRIPTION = "A linking part made of gold";
   public static final String UPDATED_DESCRIPTION = DESCRIPTION + " and \"real\" silver";
   public static final BigDecimal PRICE_PER_QUANTITY = getBigDecimal("50.5");
@@ -108,9 +122,10 @@ public class ResourceTestHelper {
         .id(RESOURCE_ID)
         .clazz(CLAZZ_DIAMOND)
         .quantityType(QUANTITY_TYPE_UNIT)
+        .type(TYPE_DIAMOND)
         .carat(CARAT_DIAMOND)
         .color(COLOR_DIAMOND)
-        .cut(CUT)
+        .cut(CUT_DIAMOND)
         .clarity(CLARITY)
         .dimensionX(DIMENSION_X)
         .dimensionY(DIMENSION_Y)
@@ -132,7 +147,7 @@ public class ResourceTestHelper {
         .clazz(CLAZZ_DIAMOND_MELEE)
         .quantityType(QUANTITY_TYPE_UNIT)
         .color(COLOR_DIAMOND)
-        .cut(CUT)
+        .cut(CUT_DIAMOND)
         .clarity(CLARITY)
         .shape(SHAPE_DIAMOND)
         .pricePerQuantity(PRICE_PER_QUANTITY)
@@ -141,6 +156,64 @@ public class ResourceTestHelper {
         .type(TYPE_DIAMOND_MELEE)
         .carat(CARAT_DIAMOND_MELEE)
         .sku(DIAMOND_MELEE_SKU)
+        .build();
+  }
+
+  public static Resource getColoredStone() {
+    return ColoredStone.builder()
+        .id(RESOURCE_ID)
+        .clazz(CLAZZ_COLORED_STONE)
+        .quantityType(QUANTITY_TYPE_WEIGHT)
+        .type(TYPE_COLORED_STONE)
+        .shape(SHAPE_COLORED_STONE)
+        .dimensionX(DIMENSION_X)
+        .dimensionY(DIMENSION_Y)
+        .dimensionZ(DIMENSION_Z)
+        .carat(CARAT_COLORED_STONE)
+        .color(COLOR_COLORED_STONE)
+        .colorHue(COLOR_HUE)
+        .clarity(CLARITY)
+        .cut(CUT_COLORED_STONE)
+        .treatment(TREATMENT_COLORED_STONE)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .certificate(CERTIFICATE)
+        .note(NOTE)
+        .build();
+  }
+
+  public static Resource getColoredStoneMelee() {
+    return ColoredStoneMelee.builder()
+        .id(RESOURCE_ID)
+        .clazz(CLAZZ_COLORED_STONE)
+        .quantityType(QUANTITY_TYPE_WEIGHT)
+        .type(TYPE_COLORED_STONE)
+        .shape(SHAPE_COLORED_STONE)
+        .size(COLORED_STONE_MELEE_SIZE)
+        .carat(CARAT_COLORED_STONE)
+        .color(COLOR_COLORED_STONE)
+        .colorHue(COLOR_COLORED_STONE)
+        .clarity(CLARITY)
+        .cut(CUT_COLORED_STONE)
+        .treatment(TREATMENT_COLORED_STONE)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
+        .build();
+  }
+
+  public static Resource getSemiPreciousStone() {
+    return SemiPreciousStone.builder()
+        .id(RESOURCE_ID)
+        .clazz(CLAZZ_SEMI_PRECIOUS_STONE)
+        .quantityType(QUANTITY_TYPE_WEIGHT)
+        .type(TYPE_SEMI_PRECIOUS_STONE)
+        .quality(QUALITY)
+        .shape(SHAPE_SEMI_PRECIOUS_STONE)
+        .shapeSpecification(SHAPE_SPECIFICATION)
+        .color(COLOR_SEMI_PRECIOUS_STONE)
+        .colorHue(COLOR_HUE)
+        .size(SEMI_PRECIOUS_STONE_SIZE)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
         .build();
   }
 
@@ -255,14 +328,17 @@ public class ResourceTestHelper {
         .id(RESOURCE_ID)
         .clazz(CLAZZ_DIAMOND)
         .quantityType(QUANTITY_TYPE_UNIT)
+        .type(TYPE_DIAMOND)
         .carat(CARAT_DIAMOND)
         .color(COLOR_DIAMOND)
-        .cut(CUT)
+        .cut(CUT_DIAMOND)
         .clarity(CLARITY)
         .shape(SHAPE_DIAMOND)
         .pricePerQuantity(PRICE_PER_QUANTITY)
         .note(NOTE)
-        .size(DIMENSION_SIZE)
+        .dimensionX(DIMENSION_X)
+        .dimensionY(DIMENSION_Y)
+        .dimensionZ(DIMENSION_Z)
         .polish(POLISH)
         .symmetry(SYMMETRY)
         .fluorescence(FLUORESCENCE)
@@ -275,9 +351,10 @@ public class ResourceTestHelper {
     return DiamondRequestDto.builder()
         .clazz(CLAZZ_DIAMOND)
         .quantityType(QUANTITY_TYPE_UNIT)
+        .type(TYPE_DIAMOND)
         .carat(CARAT_DIAMOND)
         .color(COLOR_DIAMOND)
-        .cut(CUT)
+        .cut(CUT_DIAMOND)
         .clarity(CLARITY)
         .dimensionX(DIMENSION_X)
         .dimensionY(DIMENSION_Y)
@@ -315,7 +392,7 @@ public class ResourceTestHelper {
         .clazz(CLAZZ_DIAMOND_MELEE)
         .quantityType(QUANTITY_TYPE_UNIT)
         .color(COLOR_DIAMOND)
-        .cut(CUT)
+        .cut(CUT_DIAMOND)
         .clarity(CLARITY)
         .shape(SHAPE_DIAMOND)
         .pricePerQuantity(PRICE_PER_QUANTITY)
@@ -332,7 +409,7 @@ public class ResourceTestHelper {
         .clazz(CLAZZ_DIAMOND_MELEE)
         .quantityType(QUANTITY_TYPE_UNIT)
         .color(COLOR_DIAMOND)
-        .cut(CUT)
+        .cut(CUT_DIAMOND)
         .clarity(CLARITY)
         .shape(SHAPE_DIAMOND)
         .pricePerQuantity(PRICE_PER_QUANTITY)
@@ -357,6 +434,119 @@ public class ResourceTestHelper {
     diamondMelee.setClarity(UPDATED_CLARITY);
     diamondMelee.setColor(UPDATED_COLOR_DIAMOND);
     return diamondMelee;
+  }
+
+  public static ResourceResponseDto getColoredStoneResponseDto() {
+    return ColoredStoneResponseDto.builder()
+        .id(RESOURCE_ID)
+        .clazz(CLAZZ_COLORED_STONE)
+        .quantityType(QUANTITY_TYPE_WEIGHT)
+        .type(TYPE_COLORED_STONE)
+        .shape(SHAPE_COLORED_STONE)
+        .dimensionX(DIMENSION_X)
+        .dimensionY(DIMENSION_Y)
+        .dimensionZ(DIMENSION_Z)
+        .carat(CARAT_COLORED_STONE)
+        .color(COLOR_COLORED_STONE)
+        .colorHue(COLOR_HUE)
+        .clarity(CLARITY)
+        .cut(CUT_COLORED_STONE)
+        .treatment(TREATMENT_COLORED_STONE)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .certificate(CERTIFICATE)
+        .note(NOTE)
+        .build();
+  }
+
+  public static ResourceRequestDto getColoredStoneRequestDto() {
+    return ColoredStoneRequestDto.builder()
+        .clazz(CLAZZ_COLORED_STONE)
+        .quantityType(QUANTITY_TYPE_WEIGHT)
+        .type(TYPE_COLORED_STONE)
+        .shape(SHAPE_COLORED_STONE)
+        .dimensionX(DIMENSION_X)
+        .dimensionY(DIMENSION_Y)
+        .dimensionZ(DIMENSION_Z)
+        .carat(CARAT_COLORED_STONE)
+        .color(COLOR_COLORED_STONE)
+        .colorHue(COLOR_HUE)
+        .clarity(CLARITY)
+        .cut(CUT_COLORED_STONE)
+        .treatment(TREATMENT_COLORED_STONE)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .certificate(CERTIFICATE)
+        .note(NOTE)
+        .build();
+  }
+
+  public static ResourceResponseDto getColoredStoneMeleeResponseDto() {
+    return ColoredStoneMeleeResponseDto.builder()
+        .id(RESOURCE_ID)
+        .clazz(CLAZZ_COLORED_STONE)
+        .quantityType(QUANTITY_TYPE_WEIGHT)
+        .type(TYPE_COLORED_STONE)
+        .shape(SHAPE_COLORED_STONE)
+        .size(COLORED_STONE_MELEE_SIZE)
+        .carat(CARAT_COLORED_STONE)
+        .color(COLOR_COLORED_STONE)
+        .colorHue(COLOR_COLORED_STONE)
+        .clarity(CLARITY)
+        .cut(CUT_COLORED_STONE)
+        .treatment(TREATMENT_COLORED_STONE)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
+        .build();
+  }
+
+  public static ResourceRequestDto getColoredStoneMeleeRequestDto() {
+    return ColoredStoneMeleeRequestDto.builder()
+        .clazz(CLAZZ_COLORED_STONE)
+        .quantityType(QUANTITY_TYPE_WEIGHT)
+        .type(TYPE_COLORED_STONE)
+        .shape(SHAPE_COLORED_STONE)
+        .size(COLORED_STONE_MELEE_SIZE)
+        .carat(CARAT_COLORED_STONE)
+        .color(COLOR_COLORED_STONE)
+        .colorHue(COLOR_COLORED_STONE)
+        .clarity(CLARITY)
+        .cut(CUT_COLORED_STONE)
+        .treatment(TREATMENT_COLORED_STONE)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
+        .build();
+  }
+
+  public static ResourceResponseDto getSemiPreciousStoneResponseDto() {
+    return SemiPreciousStoneResponseDto.builder()
+        .id(RESOURCE_ID)
+        .clazz(CLAZZ_SEMI_PRECIOUS_STONE)
+        .quantityType(QUANTITY_TYPE_WEIGHT)
+        .type(TYPE_SEMI_PRECIOUS_STONE)
+        .quality(QUALITY)
+        .shape(SHAPE_SEMI_PRECIOUS_STONE)
+        .shapeSpecification(SHAPE_SPECIFICATION)
+        .color(COLOR_SEMI_PRECIOUS_STONE)
+        .colorHue(COLOR_HUE)
+        .size(SEMI_PRECIOUS_STONE_SIZE)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
+        .build();
+  }
+
+  public static ResourceRequestDto getSemiPreciousStoneRequestDto() {
+    return SemiPreciousStoneRequestDto.builder()
+        .clazz(CLAZZ_SEMI_PRECIOUS_STONE)
+        .quantityType(QUANTITY_TYPE_WEIGHT)
+        .type(TYPE_SEMI_PRECIOUS_STONE)
+        .quality(QUALITY)
+        .shape(SHAPE_SEMI_PRECIOUS_STONE)
+        .shapeSpecification(SHAPE_SPECIFICATION)
+        .color(COLOR_SEMI_PRECIOUS_STONE)
+        .colorHue(COLOR_HUE)
+        .size(SEMI_PRECIOUS_STONE_SIZE)
+        .pricePerQuantity(PRICE_PER_QUANTITY)
+        .note(NOTE)
+        .build();
   }
 
   public static ResourceResponseDto getElementResponseDto() {
@@ -398,6 +588,9 @@ public class ResourceTestHelper {
     return Stream.of(
         Arguments.of(getDiamond(), getDiamondRequestDto()),
         Arguments.of(getDiamondMelee(), getDiamondMeleeRequestDto()),
+        Arguments.of(getColoredStone(), getColoredStoneRequestDto()),
+        Arguments.of(getColoredStoneMelee(), getColoredStoneMeleeRequestDto()),
+        Arguments.of(getSemiPreciousStone(), getSemiPreciousStoneRequestDto()),
         Arguments.of(getElement(), getElementRequestDto()),
         Arguments.of(getPearl(), getPearlRequestDto()),
         Arguments.of(getMetal(), getMetalRequestDto()));
@@ -407,6 +600,9 @@ public class ResourceTestHelper {
     return Stream.of(
         Arguments.of(getDiamond(), getDiamondResponseDto()),
         Arguments.of(getDiamondMelee(), getDiamondMeleeResponseDto()),
+        Arguments.of(getColoredStone(), getColoredStoneResponseDto()),
+        Arguments.of(getColoredStoneMelee(), getColoredStoneMeleeResponseDto()),
+        Arguments.of(getSemiPreciousStone(), getSemiPreciousStoneResponseDto()),
         Arguments.of(getElement(), getElementResponseDto()),
         Arguments.of(getPearl(), getPearlResponseDto()),
         Arguments.of(getPearlWithNullFields(), getPearlResponseDtoWithNullFields()),
