@@ -1,7 +1,7 @@
 name: jms-docker-be
 services:
   jms-be:
-    image: vladokat/jms-be:5df0cf3
+    image: vladokat/jms-be:502cca1
     #    build:
 #      context: .
 #      dockerfile: Dockerfile_app
