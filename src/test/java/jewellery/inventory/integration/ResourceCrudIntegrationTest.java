@@ -71,7 +71,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void willGetAResourceFromDatabase() throws JsonProcessingException {
-    sendCreateRequestsFor(List.of(ResourceTestHelper.getPreciousStoneRequestDto()));
+    sendCreateRequestsFor(List.of(ResourceTestHelper.getDiamondRequestDto()));
     List<ResourceResponseDto> createdDtos = getResourcesWithRequest();
 
     testRestTemplate.getForEntity(
@@ -105,7 +105,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
   void willGetSingleResourceQuantity() throws JsonProcessingException {
     List<ResourceResponseDto> createdResources =
-        sendCreateRequestsFor(List.of(ResourceTestHelper.getPreciousStoneRequestDto()));
+        sendCreateRequestsFor(List.of(ResourceTestHelper.getDiamondRequestDto()));
 
     ResourceQuantityResponseDto fetchedResourceQuantity =
         getResourceQuantityWithRequest(createdResources.get(0).getId());
@@ -139,7 +139,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void willDeleteAResourceFromDatabase() throws JsonProcessingException {
-    sendCreateRequestsFor(List.of(ResourceTestHelper.getPreciousStoneRequestDto()));
+    sendCreateRequestsFor(List.of(ResourceTestHelper.getDiamondRequestDto()));
     List<ResourceResponseDto> createdDtos = getResourcesWithRequest();
 
     testRestTemplate.delete(getBaseResourceUrl() + "/" + createdDtos.get(0).getId());
@@ -167,7 +167,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         testRestTemplate.exchange(
             getBaseResourceUrl() + "/" + UUID.randomUUID(),
             HttpMethod.PUT,
-            new HttpEntity<>(getPreciousStoneResponseDto()),
+            new HttpEntity<>(getDiamondResponseDto()),
             String.class);
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
@@ -192,6 +192,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void willThrowWhenFileContentIsWrong() {
     willImportCsvReturnsBadRequest(getTestWrongContentFile());
   }
+
   @Test
   void willThrowWhenFileContentIsInInvalidFormat() {
     willImportCsvReturnsBadRequest(getTestInvalidFormatFile());
@@ -215,6 +216,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(responseDto.get(0).getQuantityType(), "28");
     assertEquals(responseDto.get(0).getPricePerQuantity(), BigDecimal.valueOf(30));
     assertEquals(responseDto.get(0).getNote(), "smth");
+    assertEquals(responseDto.get(0).getSku(), "S.K.U");
   }
 
   private void willImportCsvReturnsBadRequest(MockMultipartFile TestWrongContentFile) {
@@ -223,11 +225,10 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
     ResponseEntity<String> response =
-            testRestTemplate.postForEntity(getImportUrl(), requestEntity, String.class);
+        testRestTemplate.postForEntity(getImportUrl(), requestEntity, String.class);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
-
 
   private MockMultipartFile getEmptyTestFile() {
     return new MockMultipartFile("file", "test-file.txt", "text/plain", "".getBytes());
@@ -240,14 +241,14 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private MockMultipartFile getTestInvalidFormatFile() {
     String data =
-        "\"clazz\",\"note\",\"pricePerQuantity\",\"quantityType\",\"description\",\"color\",\"plating\",\"purity\",\"type\",\"quality\",\"shape\",\"size\",\"carat\",\"clarity\",\"cut\",\"dimensionX\",\"dimensionY\",\"dimensionZ\"\n"
-            + "PreciousStone,Note,invalid,unit,,ruby,,,,,octagon,,5.10,opaque,diamond,4.50,4.90,2.50";
+        "\"clazz\",\"note\",\"pricePerQuantity\",\"quantityType\",\"description\",\"color\",\"purity\",\"type\",\"quality\",\"shape\",\"size\",\"carat\",\"clarity\",\"cut\",\"dimensionX\",\"dimensionY\",\"dimensionZ\"\n"
+            + "Diamond,Note,invalid,unit,,ruby,,,,,octagon,,5.10,opaque,diamond,4.50,4.90,2.50";
     return new MockMultipartFile("file", "test-file.csv", "text/csv", data.getBytes());
   }
 
   private MockMultipartFile getTestFile() {
     String csvData =
-        "clazz,quantityType,pricePerQuantity,note,description\nElement,28,30,smth,Element description\n";
+        "clazz,quantityType,pricePerQuantity,note,description,sku\nElement,28,30,smth,Element description,S.K.U\n";
     return new MockMultipartFile("file", "test-file.csv", "text/csv", csvData.getBytes());
   }
 

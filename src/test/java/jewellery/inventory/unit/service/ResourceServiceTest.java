@@ -113,7 +113,7 @@ class ResourceServiceTest {
 
   @Test
   void willDeleteAResource() {
-    Resource resource = getPreciousStone();
+    Resource resource = getDiamond();
     when(resourceRepository.findById(any())).thenReturn(Optional.ofNullable(resource));
 
     resourceService.deleteResourceById(resource.getId());

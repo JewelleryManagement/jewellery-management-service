@@ -1,5 +1,6 @@
 package jewellery.inventory.dto.response.resource;
 
+import java.math.BigDecimal;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -9,8 +10,12 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class MetalResponseDto extends ResourceResponseDto {
-  private String type;
-  private int purity;
+public class DiamondMeleeResponseDto extends ResourceResponseDto {
   private String color;
+  private String cut;
+  private String clarity;
+  private String shape;
+  private String size;
+  private String type;
+  private BigDecimal carat;
 }

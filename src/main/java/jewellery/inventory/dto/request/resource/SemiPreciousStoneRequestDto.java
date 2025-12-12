@@ -1,7 +1,6 @@
 package jewellery.inventory.dto.request.resource;
 
-import jakarta.validation.constraints.Positive;
-import java.math.BigDecimal;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -12,9 +11,11 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 public class SemiPreciousStoneRequestDto extends ResourceRequestDto {
-  private String color;
-  private String cut;
-  private String clarity;
-  private String shape;
-  @Positive private BigDecimal size;
+  @NotBlank private String type;
+  @NotBlank private String size;
+  @NotBlank private String quality;
+  @NotBlank private String color;
+  @NotBlank private String shape;
+  @NotBlank private String shapeSpecification;
+  private String colorHue;
 }

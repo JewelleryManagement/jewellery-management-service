@@ -16,6 +16,7 @@ import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
+import jewellery.inventory.exception.duplicate.DuplicateException;
 import jewellery.inventory.exception.image.MultipartFileContentTypeException;
 import jewellery.inventory.exception.image.MultipartFileNotSelectedException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
@@ -46,6 +47,9 @@ public class ResourceService implements EntityFetcher {
 
   @LogCreateEvent(eventType = EventType.RESOURCE_CREATE)
   public ResourceResponseDto createResource(ResourceRequestDto resourceRequestDto) {
+    if (resourceRepository.existsBySku(resourceRequestDto.getSku())) {
+      throw new DuplicateException("Stock Keeping Unit: " + resourceRequestDto.getSku() + " already exists!");
+    }
     Resource savedResource =
         resourceRepository.save(resourceMapper.toResourceEntity(resourceRequestDto));
     logger.info("Resource created successfully. Resource ID: {}", savedResource.getId());

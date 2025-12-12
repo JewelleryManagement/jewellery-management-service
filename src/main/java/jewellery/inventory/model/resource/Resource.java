@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
-
 import jewellery.inventory.model.ResourceInOrganization;
 import jewellery.inventory.model.ResourceInUser;
 import lombok.Data;
@@ -24,6 +23,8 @@ public class Resource {
   private String quantityType;
   private BigDecimal pricePerQuantity;
   private String note;
+  @Column(unique = true, nullable = false)
+  private String sku;
 
   @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL)
   @ToString.Exclude

@@ -2,6 +2,8 @@ package jewellery.inventory.dto.request.resource;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import lombok.Data;
@@ -15,17 +17,21 @@ import lombok.experimental.SuperBuilder;
     include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = PearlRequestDto.class, name = "Pearl"),
-  @JsonSubTypes.Type(value = PreciousStoneRequestDto.class, name = "PreciousStone"),
+  @JsonSubTypes.Type(value = DiamondRequestDto.class, name = "Diamond"),
+  @JsonSubTypes.Type(value = ColoredStoneRequestDto.class, name = "ColoredStone"),
+  @JsonSubTypes.Type(value = ColoredStoneMeleeRequestDto.class, name = "ColoredStoneMelee"),
   @JsonSubTypes.Type(value = MetalRequestDto.class, name = "Metal"),
   @JsonSubTypes.Type(value = ElementRequestDto.class, name = "Element"),
-  @JsonSubTypes.Type(value = SemiPreciousStoneRequestDto.class, name = "SemiPreciousStone")
+  @JsonSubTypes.Type(value = DiamondMeleeRequestDto.class, name = "DiamondMelee"),
+  @JsonSubTypes.Type(value = SemiPreciousStoneRequestDto.class, name = "SemiPreciousStone"),
 })
 @SuperBuilder
 @Data
 @NoArgsConstructor
 public class ResourceRequestDto {
-  private String clazz;
-  private String quantityType;
-  @Positive private BigDecimal pricePerQuantity;
+  @NotBlank private String clazz;
+  @NotBlank private String quantityType;
+  @NotNull @Positive private BigDecimal pricePerQuantity;
   private String note;
+  @NotBlank private String sku;
 }

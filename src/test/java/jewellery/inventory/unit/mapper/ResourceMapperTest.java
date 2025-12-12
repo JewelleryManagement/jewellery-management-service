@@ -20,12 +20,15 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ContextConfiguration(
     classes = {
       PearlMapperImpl.class,
-      PreciousStoneMapperImpl.class,
+      DiamondMapperImpl.class,
+      ColoredStoneMapperImpl.class,
+      ColoredStoneMeleeMapperImpl.class,
       ElementMapperImpl.class,
       MetalMapperImpl.class,
-      SemiPreciousStoneMapperImpl.class,
+      DiamondMeleeMapperImpl.class,
       StringTrimmer.class,
-      ResourceMapper.class
+      ResourceMapper.class,
+      SemiPreciousStoneMapperImpl.class,
     })
 class ResourceMapperTest {
   @Autowired private ResourceMapper resourceMapper;

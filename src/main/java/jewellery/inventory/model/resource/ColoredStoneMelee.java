@@ -5,20 +5,21 @@ import java.math.BigDecimal;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-@EqualsAndHashCode(callSuper = true)
 @Entity
 @Getter
 @Setter
+@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class PreciousStone extends Resource {
+public class ColoredStoneMelee extends Resource {
   private String color;
-  private BigDecimal carat;
   private String cut;
   private String clarity;
-  private BigDecimal dimensionX;
-  private BigDecimal dimensionY;
-  private BigDecimal dimensionZ;
   private String shape;
+  private String size;
+  private String type;
+  private BigDecimal carat;
+  private String colorHue;
+  private String treatment;
 }

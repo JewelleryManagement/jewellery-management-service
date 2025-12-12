@@ -1,6 +1,7 @@
 package jewellery.inventory.integration;
 
-import static jewellery.inventory.helper.ResourceTestHelper.getPreciousStoneRequestDto;
+import static jewellery.inventory.helper.ResourceTestHelper.getDiamondMeleeRequestDto;
+import static jewellery.inventory.helper.ResourceTestHelper.getDiamondRequestDto;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.helper.UserTestHelper.*;
@@ -25,8 +26,10 @@ import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
-import jewellery.inventory.dto.response.resource.PreciousStoneResponseDto;
 import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.resource.DiamondMeleeResponseDto;
+import jewellery.inventory.dto.response.resource.DiamondResponseDto;
+import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.*;
@@ -60,7 +63,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void addResourceToUserSuccessfully() throws JsonProcessingException {
     UserResponseDto createdUser = sendCreateUserRequest();
-    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
+    DiamondResponseDto createdResource = sendCreateDiamondRequest();
 
     ResponseEntity<ResourcePurchaseResponseDto> response =
         sendPurchaseResourceRequest(
@@ -80,7 +83,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   @Test
   void addResourceToUserFailsWhenUserNotFound() {
-    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
+    DiamondResponseDto createdResource = sendCreateDiamondRequest();
     UUID nonExistentUserId = UUID.randomUUID();
 
     ResponseEntity<ResourcesInUserResponseDto> response =
@@ -107,7 +110,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void addResourceToUserFailsWhenQuantityInvalid() {
     UserResponseDto createdUser = sendCreateUserRequest();
-    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
+    DiamondResponseDto createdResource = sendCreateDiamondRequest();
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendAddResourceInUserRequest(
@@ -123,7 +126,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void updateResourceInUserSuccessfullyWhenAddedMultipleTimes() {
     UserResponseDto createdUser = sendCreateUserRequest();
-    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
+    DiamondResponseDto createdResource = sendCreateDiamondRequest();
     ResourceInUserRequestDto resourceInUserRequestDto =
         createResourcePurchaseRequestDto(
             createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
@@ -146,8 +149,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void getAllResourcesFromUserSuccessfully() {
     UserResponseDto createdUser = sendCreateUserRequest();
-    PreciousStoneResponseDto firstCreatedResource = sendCreatePreciousStoneRequest();
-    PreciousStoneResponseDto secondCreatedResource = sendCreatePreciousStoneRequest();
+    DiamondResponseDto firstCreatedResource = sendCreateDiamondRequest();
+    DiamondMeleeResponseDto secondCreatedResource = sendCreateDiamondMeleeRequest();
     sendAddResourceInUserRequest(
         createResourcePurchaseRequestDto(
             createdUser.getId(), firstCreatedResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
@@ -169,7 +172,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   void getAllUsersOwningResourceSuccessfully() {
     UserResponseDto firstCreatedUser = sendCreateUserRequest(createTestUserRequest());
     UserResponseDto secondCreatedUser = sendCreateUserRequest(createDifferentUserRequest());
-    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
+    DiamondResponseDto createdResource = sendCreateDiamondRequest();
     sendAddResourceInUserRequest(
         createResourcePurchaseRequestDto(
             firstCreatedUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
@@ -200,7 +203,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void removeResourceFromUserSuccessfully() throws JsonProcessingException {
     UserResponseDto createdUser = sendCreateUserRequest();
-    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
+    DiamondResponseDto createdResource = sendCreateDiamondRequest();
 
     ResponseEntity<ResourcesInUserResponseDto> entity =
         sendAddResourceInUserRequest(
@@ -234,7 +237,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void removeResourceFromUserFailsWhenUserNotFound() {
     UUID nonExistentUserId = UUID.randomUUID();
-    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
+    DiamondResponseDto createdResource = sendCreateDiamondRequest();
 
     ResponseEntity<String> response =
         sendDeleteResourceInUserRequest(nonExistentUserId, createdResource.getId());
@@ -245,7 +248,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void removeResourceQuantityFromUserSuccessfully() throws JsonProcessingException {
     UserResponseDto createdUser = sendCreateUserRequest();
-    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
+    DiamondResponseDto createdResource = sendCreateDiamondRequest();
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendAddResourceInUserRequest(
             createResourcePurchaseRequestDto(
@@ -283,7 +286,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void removeResourceQuantityFromUserFailsWhenUserNotFound() {
     UUID nonExistentUserId = UUID.randomUUID();
-    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
+    DiamondResponseDto createdResource = sendCreateDiamondRequest();
 
     ResponseEntity<ResourcesInUserResponseDto> response =
         sendDeleteQuantityFromResourceInUserRequest(
@@ -295,7 +298,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void removeResourceQuantityFromUserFailsWhenInsufficientQuantity() {
     UserResponseDto createdUser = sendCreateUserRequest();
-    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
+    DiamondResponseDto createdResource = sendCreateDiamondRequest();
     sendAddResourceInUserRequest(
         createResourcePurchaseRequestDto(
             createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
@@ -312,7 +315,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void removeResourceQuantityFromUserFailsWhenQuantityNegative() {
     UserResponseDto createdUser = sendCreateUserRequest();
-    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
+    DiamondResponseDto createdResource = sendCreateDiamondRequest();
     sendAddResourceInUserRequest(
         createResourcePurchaseRequestDto(
             createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
@@ -327,7 +330,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   @Test
   void transferResourceFromUserToAnotherUserSuccessfully() throws JsonProcessingException {
     UserResponseDto sender = sendCreateUserRequest();
-    PreciousStoneResponseDto createdResource = sendCreatePreciousStoneRequest();
+    DiamondResponseDto createdResource = sendCreateDiamondRequest();
     sendAddResourceInUserRequest(
         createResourcePurchaseRequestDto(
             sender.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
@@ -364,7 +367,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   @NotNull
   private static TransferResourceRequestDto getTransferResourceRequestDto(
-      UserResponseDto sender, PreciousStoneResponseDto createdResource, UserResponseDto receiver) {
+      UserResponseDto sender, DiamondResponseDto createdResource, UserResponseDto receiver) {
     TransferResourceRequestDto requestDto = new TransferResourceRequestDto();
     requestDto.setPreviousOwnerId(sender.getId());
     requestDto.setNewOwnerId(receiver.getId());
@@ -373,15 +376,29 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     return requestDto;
   }
 
-  private PreciousStoneResponseDto sendCreatePreciousStoneRequest() {
-    ResourceRequestDto resourceRequest = getPreciousStoneRequestDto();
-    ResponseEntity<PreciousStoneResponseDto> resourceResponseEntity =
+  private DiamondResponseDto sendCreateDiamondRequest() {
+    ResourceRequestDto resourceRequest = getDiamondRequestDto();
+    ResponseEntity<DiamondResponseDto> resourceResponseEntity =
         this.testRestTemplate.postForEntity(
-            getBaseResourceUrl(), resourceRequest, PreciousStoneResponseDto.class);
+            getBaseResourceUrl(), resourceRequest, DiamondResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, resourceResponseEntity.getStatusCode());
 
-    PreciousStoneResponseDto createdResource = resourceResponseEntity.getBody();
+    DiamondResponseDto createdResource = resourceResponseEntity.getBody();
+    assertNotNull(createdResource);
+    assertNotNull(createdResource.getId());
+    return createdResource;
+  }
+
+  private DiamondMeleeResponseDto sendCreateDiamondMeleeRequest() {
+    ResourceRequestDto resourceRequest = getDiamondMeleeRequestDto();
+    ResponseEntity<DiamondMeleeResponseDto> resourceResponseEntity =
+        this.testRestTemplate.postForEntity(
+            getBaseResourceUrl(), resourceRequest, DiamondMeleeResponseDto.class);
+
+    assertEquals(HttpStatus.CREATED, resourceResponseEntity.getStatusCode());
+
+    DiamondMeleeResponseDto createdResource = resourceResponseEntity.getBody();
     assertNotNull(createdResource);
     assertNotNull(createdResource.getId());
     return createdResource;
@@ -447,7 +464,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   }
 
   private static void assertCreatedResourceIsInResourcesInUser(
-      PreciousStoneResponseDto firstCreatedResource,
+      ResourceResponseDto firstCreatedResource,
       ResponseEntity<ResourcesInUserResponseDto> response) {
     assertNotNull(response.getBody());
     assertTrue(

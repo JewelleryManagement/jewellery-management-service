@@ -1,21 +1,23 @@
-package jewellery.inventory.dto.response.resource;
+package jewellery.inventory.model.resource;
 
+import jakarta.persistence.Entity;
 import java.math.BigDecimal;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-
+@Entity
 @Getter
 @Setter
-@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-public class PreciousStoneResponseDto extends ResourceResponseDto {
+public class DiamondMelee extends Resource {
   private String color;
-  private BigDecimal carat;
   private String cut;
   private String clarity;
-  private String size;
   private String shape;
+  private String size;
+  private String type;
+  private BigDecimal carat;
 }
