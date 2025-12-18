@@ -293,17 +293,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void getAllProductsSuccessfully() {
-    productResponseDto = createProductWithRequest(productRequestDto);
-
-    ResponseEntity<List<ProductResponseDto>> response =
-        this.testRestTemplate.exchange(
-            getBaseProductUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
-
-    assertResponseMatchesCreatedRequest(response);
-  }
-
-  @Test
   void getProductsByOwnerSuccessfully() {
     createProductWithRequest(productRequestDto);
 

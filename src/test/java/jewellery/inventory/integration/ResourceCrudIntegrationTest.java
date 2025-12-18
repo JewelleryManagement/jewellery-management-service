@@ -103,22 +103,6 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void willGetSingleResourceQuantity() throws JsonProcessingException {
-    List<ResourceResponseDto> createdResources =
-        sendCreateRequestsFor(List.of(ResourceTestHelper.getDiamondRequestDto()));
-
-    ResourceQuantityResponseDto fetchedResourceQuantity =
-        getResourceQuantityWithRequest(createdResources.get(0).getId());
-
-    assertEquals(
-        getBigDecimal("0"),
-        fetchedResourceQuantity.getQuantity().setScale(2, RoundingMode.HALF_UP));
-    assertEquals(
-        createdResources.get(0).getPricePerQuantity(),
-        fetchedResourceQuantity.getResource().getPricePerQuantity());
-  }
-
-  @Test
   void willUpdateResourceToDatabase() throws JsonProcessingException {
     sendCreateRequestsFor(provideResourceRequestDtos().toList());
     List<ResourceResponseDto> createdDtos = getResourcesWithRequest();
@@ -267,15 +251,6 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
       throws JsonProcessingException {
     String response =
         this.testRestTemplate.getForObject(getBaseResourceUrl() + "/quantity", String.class);
-    return objectMapper.readValue(response, new TypeReference<>() {});
-  }
-
-  @NotNull
-  private ResourceQuantityResponseDto getResourceQuantityWithRequest(UUID resourceId)
-      throws JsonProcessingException {
-    String response =
-        this.testRestTemplate.getForObject(
-            getBaseResourceUrl() + "/quantity/" + resourceId, String.class);
     return objectMapper.readValue(response, new TypeReference<>() {});
   }
 

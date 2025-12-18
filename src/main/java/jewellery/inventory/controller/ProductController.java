@@ -30,13 +30,6 @@ public class ProductController {
     return productService.createProduct(productRequestDto);
   }
 
-  @Operation(summary = "Get all products")
-  @ResponseStatus(HttpStatus.OK)
-  @GetMapping
-  public List<ProductResponseDto> getAllProducts() {
-    return productService.getAllProducts();
-  }
-
   @Operation(summary = "Get products owned by user")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/by-owner/{ownerId}")

@@ -48,7 +48,8 @@ public class ResourceService implements EntityFetcher {
   @LogCreateEvent(eventType = EventType.RESOURCE_CREATE)
   public ResourceResponseDto createResource(ResourceRequestDto resourceRequestDto) {
     if (resourceRepository.existsBySku(resourceRequestDto.getSku())) {
-      throw new DuplicateException("Stock Keeping Unit: " + resourceRequestDto.getSku() + " already exists!");
+      throw new DuplicateException(
+          "Stock Keeping Unit: " + resourceRequestDto.getSku() + " already exists!");
     }
     Resource savedResource =
         resourceRepository.save(resourceMapper.toResourceEntity(resourceRequestDto));
@@ -77,18 +78,6 @@ public class ResourceService implements EntityFetcher {
     Resource updatedResource = resourceRepository.save(toUpdate);
     logger.info("Resource updated successfully. Resource ID: {}", updatedResource.getId());
     return resourceMapper.toResourceResponse(updatedResource);
-  }
-
-  public ResourceQuantityResponseDto getResourceQuantity(UUID id) {
-    logger.debug("Fetching resource quantity by ID: {}", id);
-    return ResourceQuantityResponseDto.builder()
-        .quantity(resourceInUserRepository.sumQuantityByResource(id))
-        .resource(
-            resourceMapper.toResourceResponse(
-                resourceRepository
-                    .findById(id)
-                    .orElseThrow(() -> new ResourceNotFoundException(id))))
-        .build();
   }
 
   public List<ResourceQuantityResponseDto> getAllResourceQuantities() {

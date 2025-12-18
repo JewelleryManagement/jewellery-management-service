@@ -56,13 +56,6 @@ public class ResourceController {
     resourceService.deleteResourceById(id);
   }
 
-  @Operation(summary = "Get resource quantity by resource id")
-  @ResponseStatus(HttpStatus.OK)
-  @GetMapping("/quantity/{id}")
-  public ResourceQuantityResponseDto getResourceQuantityById(@PathVariable("id") UUID id) {
-    return resourceService.getResourceQuantity(id);
-  }
-
   @Operation(summary = "Get all resource quantities")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/quantity")

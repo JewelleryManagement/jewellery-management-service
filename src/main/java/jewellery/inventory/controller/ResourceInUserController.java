@@ -9,7 +9,6 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
-import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.TransferResourceResponseDto;
 import jewellery.inventory.service.ResourceInUserService;
@@ -73,14 +72,6 @@ public class ResourceInUserController {
       @PathVariable("quantity") @PositiveOrZero(message = QUANTITY_MIN_VALUE_MSG)
           BigDecimal quantity) {
     return resourceAvailabilityService.removeQuantityFromResource(userId, resourceId, quantity);
-  }
-
-  @Operation(summary = "Get all resources quantities by resourceId")
-  @ResponseStatus(HttpStatus.OK)
-  @GetMapping("/by-resource/{resourceId}")
-  public ResourceOwnedByUsersResponseDto getAllUsersAndQuantitiesByResource(
-      @PathVariable UUID resourceId) {
-    return resourceAvailabilityService.getUsersAndQuantities(resourceId);
   }
 
   @Operation(summary = "Get all purchased resources")

@@ -68,7 +68,7 @@ class ProductServiceTest {
     productRequestDto.setProductsContent(List.of(product.getId()));
 
     assertThrows(
-            UserNotOwnerException.class, () -> productService.createProduct(productRequestDto));
+        UserNotOwnerException.class, () -> productService.createProduct(productRequestDto));
   }
 
   @Test
@@ -189,9 +189,7 @@ class ProductServiceTest {
   @Test
   void testGetProductShouldThrowWhenProductNotFound() {
     UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
-    assertThrows(
-        ProductNotFoundException.class,
-        () -> productService.getProductResponse(fakeId));
+    assertThrows(ProductNotFoundException.class, () -> productService.getProductResponse(fakeId));
   }
 
   @Test
@@ -202,25 +200,12 @@ class ProductServiceTest {
     ProductResponseDto response = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
 
-    ProductResponseDto actual =
-        productService.getProductResponse(product.getId());
+    ProductResponseDto actual = productService.getProductResponse(product.getId());
 
     assertEquals(response, actual);
     assertEquals(response.getId(), actual.getId());
     assertEquals(response.getAuthors(), actual.getAuthors());
     assertEquals(response.getCatalogNumber(), actual.getCatalogNumber());
-  }
-
-  @Test
-  void testGetAllProducts() {
-
-    List<Product> products = Arrays.asList(product, new Product(), new Product());
-
-    when(productRepository.findAll()).thenReturn(products);
-
-    List<ProductResponseDto> responses = productService.getAllProducts();
-
-    assertEquals(products.size(), responses.size());
   }
 
   @Test
@@ -297,14 +282,18 @@ class ProductServiceTest {
 
   @Test
   void updateProductShouldThrowWhenProductNotFound() {
-    assertThrows(ProductNotFoundException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
+    assertThrows(
+        ProductNotFoundException.class,
+        () -> productService.updateProduct(product.getId(), productRequestDto));
   }
 
   @Test
   void updateProductShouldThrowWhenProductIsSold() {
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     product.setPartOfSale(new ProductPriceDiscount());
-    assertThrows(ProductIsSoldException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
+    assertThrows(
+        ProductIsSoldException.class,
+        () -> productService.updateProduct(product.getId(), productRequestDto));
   }
 
   @Test
@@ -312,24 +301,26 @@ class ProductServiceTest {
     productRequestDto.setProductsContent(List.of(product.getId()));
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
     when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-    assertThrows(ProductPartOfItselfException.class, () -> productService.updateProduct(product.getId(), productRequestDto));
+    assertThrows(
+        ProductPartOfItselfException.class,
+        () -> productService.updateProduct(product.getId(), productRequestDto));
   }
 
   @Test
   void testUpdateProductSuccessfullyWhenProductIsPartOfAnotherProduct() {
-    Product innerProduct = getTestProduct(user,pearl);
+    Product innerProduct = getTestProduct(user, pearl);
     innerProduct.setContentOf(product);
     when(productRepository.findById(innerProduct.getId())).thenReturn(Optional.of(innerProduct));
     when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-    when(resourceInUserRepository
-            .findByResourceIdAndOwnerId(pearl.getId(), user.getId())).thenReturn(Optional.of(resourceInUser));
+    when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId()))
+        .thenReturn(Optional.of(resourceInUser));
 
     productService.updateProduct(innerProduct.getId(), productRequestDto);
 
     verify(productRepository, times(1)).findById(innerProduct.getId());
-    verify(userRepository,times(1)).findById(user.getId());
+    verify(userRepository, times(1)).findById(user.getId());
     verify(resourceInUserRepository, times(1))
-            .findByResourceIdAndOwnerId(pearl.getId(), user.getId());
+        .findByResourceIdAndOwnerId(pearl.getId(), user.getId());
     verify(productRepository, times(2)).save(innerProduct);
   }
 
@@ -337,10 +328,12 @@ class ProductServiceTest {
   void updateInnerProductShouldThrowWhenProductIsSold() {
     product.setPartOfSale(new ProductPriceDiscount());
 
-    Product innerProduct = getTestProduct(user,pearl);
+    Product innerProduct = getTestProduct(user, pearl);
     innerProduct.setContentOf(product);
 
     when(productRepository.findById(innerProduct.getId())).thenReturn(Optional.of(innerProduct));
-    assertThrows(ProductIsSoldException.class, () -> productService.updateProduct(innerProduct.getId(), productRequestDto));
+    assertThrows(
+        ProductIsSoldException.class,
+        () -> productService.updateProduct(innerProduct.getId(), productRequestDto));
   }
 }

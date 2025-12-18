@@ -169,26 +169,6 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   }
 
   @Test
-  void getAllUsersOwningResourceSuccessfully() {
-    UserResponseDto firstCreatedUser = sendCreateUserRequest(createTestUserRequest());
-    UserResponseDto secondCreatedUser = sendCreateUserRequest(createDifferentUserRequest());
-    DiamondResponseDto createdResource = sendCreateDiamondRequest();
-    sendAddResourceInUserRequest(
-        createResourcePurchaseRequestDto(
-            firstCreatedUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-    sendAddResourceInUserRequest(
-        createResourcePurchaseRequestDto(
-            secondCreatedUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-
-    ResponseEntity<ResourceOwnedByUsersResponseDto> response =
-        sendGetUsersAndQuantitiesForResourceRequest(createdResource.getId());
-
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertNotNull(response.getBody());
-    assertEquals(2, response.getBody().getUsersAndQuantities().size());
-  }
-
-  @Test
   void getAllResourcesFromUserReturnsEmptyWhenUserHasNoResources() {
     UserResponseDto createdUser = sendCreateUserRequest();
 

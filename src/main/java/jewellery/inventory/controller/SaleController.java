@@ -2,12 +2,11 @@ package jewellery.inventory.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
-import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
-import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.ResourceReturnResponseDto;
+import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.service.SaleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,13 +17,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class SaleController {
   private final SaleService saleService;
-
-  @Operation(summary = "Get all sales")
-  @ResponseStatus(HttpStatus.OK)
-  @GetMapping
-  public List<SaleResponseDto> getAllSales() {
-    return saleService.getAllSales();
-  }
 
   @Operation(summary = "Create a sale")
   @ResponseStatus(HttpStatus.CREATED)
@@ -44,8 +36,7 @@ public class SaleController {
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{saleId}/return-resource/{resourceId}")
   public ResourceReturnResponseDto returnResource(
-          @PathVariable("saleId") UUID saleId,
-          @PathVariable("resourceId") UUID resourceId) {
+      @PathVariable("saleId") UUID saleId, @PathVariable("resourceId") UUID resourceId) {
     return saleService.returnResource(saleId, resourceId);
   }
 }

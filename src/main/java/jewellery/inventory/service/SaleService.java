@@ -40,12 +40,6 @@ public class SaleService {
   private final UserService userService;
   private final ResourceService resourceService;
 
-  public List<SaleResponseDto> getAllSales() {
-    logger.debug("Fetching all Sales");
-    List<Sale> sales = saleRepository.findAll();
-    return sales.stream().map(saleMapper::mapEntityToResponseDto).toList();
-  }
-
   @LogCreateEvent(eventType = EventType.SALE_CREATE)
   @Transactional
   public SaleResponseDto createSale(SaleRequestDto saleRequestDto) {

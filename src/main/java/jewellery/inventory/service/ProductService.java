@@ -80,12 +80,6 @@ public class ProductService implements EntityFetcher {
     return ProductMapper.calculateTotalPrice(product);
   }
 
-  public List<ProductResponseDto> getAllProducts() {
-    List<Product> products = productRepository.findAll();
-    logger.debug("Fetching all products");
-    return products.stream().map(productMapper::mapToProductResponseDto).toList();
-  }
-
   public List<ProductResponseDto> getProductsResponse(List<Product> products) {
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
@@ -161,7 +155,8 @@ public class ProductService implements EntityFetcher {
     productRepository.deleteById(id);
     logger.info("Deleted product by ID: {}", id);
   }
-  public void deleteProductById(UUID productId){
+
+  public void deleteProductById(UUID productId) {
     productRepository.deleteById(productId);
   }
 

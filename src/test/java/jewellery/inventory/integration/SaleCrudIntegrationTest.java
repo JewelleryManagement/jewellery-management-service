@@ -37,7 +37,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
 class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
@@ -372,28 +371,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     assertNull((productResponse.getBody()).getPartOfSale());
     assertNull((response.getBody()).getReturnedProduct());
-  }
-
-  @Test
-  void getAllSalesSuccessfully() {
-    SaleRequestDto saleRequestDto =
-        getSaleRequestDto(seller, buyer, createProduct(productRequestDto), pearlRequest);
-
-    ResponseEntity<SaleResponseDto> saleResponse = createSale(saleRequestDto);
-
-    ResponseEntity<List<SaleResponseDto>> response =
-        this.testRestTemplate.exchange(
-            getBaseSaleUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
-
-    assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(200));
-    assertNotNull(response.getBody());
-    assertEquals(response.getBody().size(), saleResponse.getBody().getProducts().size());
-    assertEquals(
-        response.getBody().get(0).getBuyer(),
-        saleResponse.getBody().getProducts().get(0).getOwner());
-    assertNotEquals(
-        response.getBody().get(0).getSeller(),
-        saleResponse.getBody().getProducts().get(0).getOwner());
   }
 
   @Test

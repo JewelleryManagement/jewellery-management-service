@@ -1,5 +1,11 @@
 package jewellery.inventory.service;
 
+import static jewellery.inventory.model.EventType.RESOURCE_REMOVE_QUANTITY;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
@@ -24,13 +30,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static jewellery.inventory.model.EventType.RESOURCE_REMOVE_QUANTITY;
 
 @Service
 @RequiredArgsConstructor
@@ -126,11 +125,6 @@ public class ResourceInUserService implements EntityFetcher {
     return purchasedResourceInUserRepository.findAllByOwnerId(user.getId()).stream()
         .map(purchasedResourceInUserMapper::toPurchasedResourceQuantityResponseDto)
         .toList();
-  }
-
-  public ResourceOwnedByUsersResponseDto getUsersAndQuantities(UUID resourceId) {
-    Resource resource = findResourceById(resourceId);
-    return resourcesInUserMapper.toResourcesOwnedByUsersResponseDto(resource);
   }
 
   private ResourceInUser getResourceInUser(UUID userId, UUID resourceId) {
