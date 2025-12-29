@@ -6,7 +6,6 @@ import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
@@ -21,10 +20,7 @@ import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.exception.not_found.ResourceNotFoundInSaleException;
 import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
-import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductNotSoldException;
-import jewellery.inventory.exception.product.UserNotOwnerException;
-import jewellery.inventory.exception.sale.EmptySaleException;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.helper.SaleTestHelper;
 import jewellery.inventory.helper.UserTestHelper;
@@ -40,7 +36,6 @@ import jewellery.inventory.service.*;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.SaleService;
 import jewellery.inventory.service.UserService;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -89,7 +84,7 @@ class SaleServiceTest {
     ProductDiscountRequestDto productDiscountRequestDto =
         SaleTestHelper.createProductPriceDiscountRequest(product.getId(), getBigDecimal("10"));
     PurchasedResourceQuantityRequestDto purchasedResourceQuantityRequestDto =
-              SaleTestHelper.createPurchasedResourceRequestDto();
+        SaleTestHelper.createPurchasedResourceRequestDto();
     saleRequestDto =
         SaleTestHelper.createSaleRequest(
             seller.getId(),
@@ -104,81 +99,6 @@ class SaleServiceTest {
             List.of(purchasedResourceQuantityRequestDto));
     saleResponseDto = SaleTestHelper.getSaleResponseDto(sale, BigDecimal.ONE, BigDecimal.TEN);
     productReturnResponseDto = SaleTestHelper.createProductReturnResponseDto(product, buyer);
-  }
-
-  @Test
-  void testGetAllSales() {
-    List<Sale> sales = Arrays.asList(sale, new Sale(), new Sale());
-
-    when(saleRepository.findAll()).thenReturn(sales);
-
-    List<SaleResponseDto> responses = saleService.getAllSales();
-
-    Assertions.assertEquals(sales.size(), responses.size());
-  }
-
-  @Test
-  void testCreateSaleSuccessfully() {
-    when(resourceService.getResourceById(any())).thenReturn(resource);
-    when(saleMapper.mapRequestToEntity(
-            any(SaleRequestDto.class), any(User.class), any(User.class), anyList(), anyList()))
-        .thenReturn(sale);
-
-    when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
-    when(saleRepository.save(sale)).thenReturn(sale);
-    when(productService.getProduct(any(UUID.class))).thenReturn(product);
-    when(saleMapper.mapEntityToResponseDto(sale)).thenReturn(saleResponseDto);
-
-    SaleResponseDto actual = saleService.createSale(saleRequestDto);
-
-    assertNotNull(actual);
-    assertEquals(1, actual.getProducts().size());
-    assertEquals(saleRequestDto.getBuyerId(), actual.getProducts().get(0).getOwner().getId());
-    assertEquals(saleRequestDto.getSellerId(), actual.getSeller().getId());
-    assertNotEquals(actual.getBuyer(), actual.getSeller());
-    assertEquals(
-        saleRequestDto.getResources().get(0).getDiscount(),
-        actual.getResources().get(0).getDiscount());
-    assertEquals(saleResponseDto.getTotalDiscount(), actual.getTotalDiscount());
-  }
-
-  @Test
-  void testCreateSaleProductWillThrowsProductOwnerNotSeller() {
-    when(resourceService.getResourceById(any())).thenReturn(resource);
-    when(saleMapper.mapRequestToEntity(
-            any(SaleRequestDto.class), any(User.class), any(User.class), anyList(), anyList()))
-        .thenReturn(sale);
-    when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
-    when(productService.getProduct(any(UUID.class))).thenReturn(product);
-    assertThrows(
-        UserNotOwnerException.class, () -> saleService.createSale(saleRequestDtoSellerNotOwner));
-  }
-
-  @Test
-  void testCreateSaleProductWillThrowsProductIsSold() {
-    when(resourceService.getResourceById(any())).thenReturn(resource);
-    product.setPartOfSale(new ProductPriceDiscount());
-    when(saleMapper.mapRequestToEntity(
-            any(SaleRequestDto.class), any(User.class), any(User.class), anyList(), anyList()))
-        .thenReturn(sale);
-    when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
-    when(productService.getProduct(any(UUID.class))).thenReturn(product);
-
-    assertThrows(ProductIsSoldException.class, () -> saleService.createSale(saleRequestDto));
-  }
-
-  @Test
-  void testCreateSaleProductWillThrowsProductIsPartOfAnotherProduct() {
-    when(resourceService.getResourceById(any())).thenReturn(resource);
-    product.setContentOf(product2);
-
-    when(saleMapper.mapRequestToEntity(
-            any(SaleRequestDto.class), any(User.class), any(User.class), anyList(), anyList()))
-        .thenReturn(sale);
-    when(userService.getUser(any(UUID.class))).thenReturn(seller, buyer);
-    when(productService.getProduct(any(UUID.class))).thenReturn(product);
-
-    assertThrows(ProductIsContentException.class, () -> saleService.createSale(saleRequestDto));
   }
 
   @Test
@@ -292,16 +212,5 @@ class SaleServiceTest {
     assertEquals(
         purchasedResourceQuantityResponseDto.getResourceAndQuantity().getResource().getId(),
         actualResponse.get(0).getResourceAndQuantity().getResource().getId());
-  }
-
-  @Test
-  void testCreateSaleShouldThrowWhenResourcesAndProductsInRequestAreNullOrEmpty() {
-    saleRequestDto.setProducts(null);
-    saleRequestDto.setResources(null);
-    assertThrows(EmptySaleException.class, () -> saleService.createSale(saleRequestDto));
-
-    saleRequestDto.setProducts(new ArrayList<>());
-    saleRequestDto.setResources(new ArrayList<>());
-    assertThrows(EmptySaleException.class, () -> saleService.createSale(saleRequestDto));
   }
 }

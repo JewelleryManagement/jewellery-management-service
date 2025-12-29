@@ -40,8 +40,7 @@ public class ProductTestHelper {
   }
 
   public static ProductRequestDto getProductRequestDtoForOrganization(
-      User author,UUID organizationId,UUID resourceId,
-      BigDecimal quantity) {
+      User author, UUID organizationId, UUID resourceId, BigDecimal quantity) {
     ProductRequestDto productRequestDto = new ProductRequestDto();
     productRequestDto.setOwnerId(organizationId);
     productRequestDto.setProductionNumber("1234");

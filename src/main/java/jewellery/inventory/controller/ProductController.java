@@ -23,13 +23,6 @@ public class ProductController {
   private final ProductService productService;
   private final ImageService imageService;
 
-  @Operation(summary = "Create a new product")
-  @ResponseStatus(HttpStatus.CREATED)
-  @PostMapping
-  public ProductResponseDto createProduct(@RequestBody @Valid ProductRequestDto productRequestDto) {
-    return productService.createProduct(productRequestDto);
-  }
-
   @Operation(summary = "Get products owned by user")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/by-owner/{ownerId}")
@@ -87,8 +80,7 @@ public class ProductController {
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{productId}")
   public ProductResponseDto updateProduct(
-      @PathVariable("productId") UUID productId,
-      @Valid @RequestBody ProductRequestDto request) {
+      @PathVariable("productId") UUID productId, @Valid @RequestBody ProductRequestDto request) {
     return productService.updateProduct(productId, request);
   }
 }

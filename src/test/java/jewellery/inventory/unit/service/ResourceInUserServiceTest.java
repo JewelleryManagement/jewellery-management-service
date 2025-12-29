@@ -12,12 +12,10 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.*;
-import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
-import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.mapper.ResourcesInUserMapper;
 import jewellery.inventory.model.ResourceInUser;
@@ -73,50 +71,6 @@ class ResourceInUserServiceTest {
         .resource(resource)
         .quantity(INITIAL_QUANTITY)
         .build();
-  }
-
-  @Test
-  void willAddResourceToUser() {
-    user.setResourcesOwned(new ArrayList<>());
-    when(userService.getUser(userId)).thenReturn(user);
-    when(resourceService.getResourceById(resourceId)).thenReturn(resource);
-
-    ResourcePurchaseRequestDto purchaseRequestDto =
-        createResourcePurchaseRequest(userId, resourceId, getBigDecimal("16"), TEST_DEAL_PRICE);
-
-    resourceInUserService.addResourceToUser(purchaseRequestDto);
-
-    verify(userService, times(1)).getUser(userId);
-    verify(resourceService, times(1)).getResourceById(resourceId);
-    verify(resourceInUserRepository, times(1)).save(any(ResourceInUser.class));
-  }
-
-  @Test
-  void willThrowUserNotFoundExceptionWhenAddResourceToUserAndUserNonexistent() {
-    ResourcePurchaseRequestDto requestDto =
-        createResourcePurchaseRequest(userId, resourceId, getBigDecimal("10"), TEST_DEAL_PRICE);
-    when(userService.getUser(userId)).thenThrow(UserNotFoundException.class);
-
-    assertThrows(
-        UserNotFoundException.class, () -> resourceInUserService.addResourceToUser(requestDto));
-
-    verify(userService, times(1)).getUser(userId);
-    verify(resourceService, never()).getResourceById(resourceId);
-    verify(resourceInUserRepository, never()).save(any(ResourceInUser.class));
-  }
-
-  @Test
-  void willThrowResourceNotFoundExceptionWhenAddResourceToUserAndResourceNotFound() {
-    ResourcePurchaseRequestDto requestDto =
-        createResourcePurchaseRequest(userId, resourceId, getBigDecimal("10"), TEST_DEAL_PRICE);
-    when(userService.getUser(userId)).thenReturn(user);
-    when(resourceService.getResourceById(resourceId)).thenThrow(ResourceNotFoundException.class);
-
-    assertThrows(
-        ResourceNotFoundException.class, () -> resourceInUserService.addResourceToUser(requestDto));
-
-    verify(userService, times(1)).getUser(userId);
-    verify(resourceService, times(1)).getResourceById(resourceId);
   }
 
   @Test
@@ -238,48 +192,6 @@ class ResourceInUserServiceTest {
     assertThrows(
         ResourceInUserNotFoundException.class,
         () -> resourceInUserService.removeResourceFromUser(userId, nonExistentResourceId));
-
-    verify(userService, times(1)).getUser(userId);
-    verify(userService, never()).saveUser(any(User.class));
-  }
-
-  @Test
-  void willThrowUserNotFoundExceptionWhenTransferFromNonexistentUser() {
-    when(userService.getUser(userId)).thenThrow(UserNotFoundException.class);
-
-    assertThrows(
-        UserNotFoundException.class,
-        () -> resourceInUserService.transferResources(getTransferResourceRequestDto()));
-
-    verify(userService, times(1)).getUser(userId);
-    verify(userService, never()).saveUser(any(User.class));
-  }
-
-  @Test
-  void
-      willThrowInsufficientResourceQuantityExceptionWhenTransferResourceIsLessThanResourceInUser() {
-    when(userService.getUser(userId)).thenReturn(user);
-    when(userService.getUser(secondUserId)).thenReturn(secondUser);
-
-    assertThrows(
-        InsufficientResourceQuantityException.class,
-        () -> resourceInUserService.transferResources(getTransferResourceRequestDto()));
-
-    verify(userService, times(1)).getUser(userId);
-    verify(userService, never()).saveUser(any(User.class));
-  }
-
-  @Test
-  void willThrowResourceInUserNotFoundExceptionWhenTransferResourceNotOwnedByUser() {
-    when(userService.getUser(userId)).thenReturn(user);
-    when(userService.getUser(secondUserId)).thenReturn(secondUser);
-
-    TransferResourceRequestDto transferResourceRequestDto = getTransferResourceRequestDto();
-    transferResourceRequestDto.setTransferredResourceId(UUID.randomUUID());
-
-    assertThrows(
-        ResourceInUserNotFoundException.class,
-        () -> resourceInUserService.transferResources(transferResourceRequestDto));
 
     verify(userService, times(1)).getUser(userId);
     verify(userService, never()).saveUser(any(User.class));

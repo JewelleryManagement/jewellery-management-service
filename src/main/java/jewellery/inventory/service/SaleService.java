@@ -10,7 +10,6 @@ import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.ResourceReturnResponseDto;
-import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.exception.not_found.ResourceNotFoundInSaleException;
 import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.product.ProductIsContentException;
@@ -39,34 +38,6 @@ public class SaleService {
   private final ResourceInUserService resourceInUserService;
   private final UserService userService;
   private final ResourceService resourceService;
-
-  @LogCreateEvent(eventType = EventType.SALE_CREATE)
-  @Transactional
-  public SaleResponseDto createSale(SaleRequestDto saleRequestDto) {
-
-    throwExceptionIfNoResourcesAndProductsInRequest(saleRequestDto);
-
-    Sale sale =
-        saleMapper.mapRequestToEntity(
-            saleRequestDto,
-            userService.getUser(saleRequestDto.getSellerId()),
-            userService.getUser(saleRequestDto.getBuyerId()),
-            getProductsFromSaleRequestDto(saleRequestDto),
-            getResourcesFromSaleRequestDto(saleRequestDto));
-
-    throwExceptionIfProductIsSold(sale.getProducts());
-    throwExceptionIfSellerNotProductOwner(sale.getProducts(), saleRequestDto.getSellerId());
-    throwExceptionIfProductIsPartOfAnotherProduct(sale.getProducts());
-    throwExceptionIfResourceIsNotOwned(saleRequestDto);
-
-    Sale createdSale = saleRepository.save(sale);
-    setProductPriceDiscountSalePriceAndSale(createdSale);
-    updateProductOwnersAndSale(sale.getProducts(), saleRequestDto.getBuyerId(), createdSale);
-    removeQuantityFromResourcesInUser(sale);
-    setFieldsOfResourcesAfterSale(sale);
-    logger.info("Sale created successfully. Sale ID: {}", createdSale.getId());
-    return saleMapper.mapEntityToResponseDto(createdSale);
-  }
 
   @LogCreateEvent(eventType = EventType.SALE_RETURN_PRODUCT)
   public ProductReturnResponseDto returnProduct(UUID productId) {

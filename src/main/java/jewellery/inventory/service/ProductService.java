@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
-import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ProductRequestDto;
@@ -57,17 +56,6 @@ public class ProductService implements EntityFetcher {
     addProductsContentToProduct(productUpdateRequestDto, product);
     addResourcesToProduct(productUpdateRequestDto, product.getOwner(), product);
     logger.info("Product with ID: {} updated", product.getId());
-    return productMapper.mapToProductResponseDto(product);
-  }
-
-  @Transactional
-  @LogCreateEvent(eventType = EventType.PRODUCT_CREATE)
-  public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
-    User owner = getUser(productRequestDto.getOwnerId());
-    Product product = persistProductWithoutResourcesAndProducts(productRequestDto, owner);
-    addProductsContentToProduct(productRequestDto, product);
-    addResourcesToProduct(productRequestDto, owner, product);
-    logger.info("Product created with ID: {}", product.getId());
     return productMapper.mapToProductResponseDto(product);
   }
 

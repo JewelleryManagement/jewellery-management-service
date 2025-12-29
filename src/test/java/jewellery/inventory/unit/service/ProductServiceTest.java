@@ -59,19 +59,6 @@ class ProductServiceTest {
   }
 
   @Test
-  void testCreateProductShouldThrowWhenProductOwnerIsNotTheSameAsContentProductOwner() {
-    when(userRepository.findById(productRequestDto.getOwnerId())).thenReturn(Optional.of(user));
-    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-
-    User anotherUser = createTestUserWithRandomId();
-    product.setOwner(anotherUser);
-    productRequestDto.setProductsContent(List.of(product.getId()));
-
-    assertThrows(
-        UserNotOwnerException.class, () -> productService.createProduct(productRequestDto));
-  }
-
-  @Test
   void testTransferProductThrowsExceptionWhenProductIsContent() {
     Product contentProduct = getTestProduct(user, pearl);
     contentProduct.setContentOf(product);
@@ -120,70 +107,6 @@ class ProductServiceTest {
     assertNotEquals(recipient.getId(), user.getId());
     assertNull(product.getPartOfSale());
     assertNull(product.getContentOf());
-  }
-
-  @Test
-  void createProductSuccessfully() {
-
-    when(userRepository.findById(productRequestDto.getOwnerId())).thenReturn(Optional.of(user));
-    when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId()))
-        .thenReturn(Optional.of(resourceInUser));
-    user.setResourcesOwned(List.of(resourceInUser));
-
-    ProductResponseDto response = new ProductResponseDto();
-    when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
-
-    ProductResponseDto actual = productService.createProduct(productRequestDto);
-
-    assertEquals(actual, response);
-    assertEquals(actual.getProductionNumber(), response.getProductionNumber());
-    assertEquals(actual.getCatalogNumber(), response.getProductionNumber());
-  }
-
-  @Test
-  void testCreateProductShouldThrowWhenProductNotFound() {
-    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-    user.setResourcesOwned(List.of(resourceInUser));
-    productRequestDto.setProductsContent(List.of(UUID.randomUUID()));
-
-    assertThrows(
-        ProductNotFoundException.class, () -> productService.createProduct(productRequestDto));
-  }
-
-  @Test
-  void testCreateProductShouldSetContentProduct() {
-
-    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-    when(resourceInUserRepository.findByResourceIdAndOwnerId(pearl.getId(), user.getId()))
-        .thenReturn(Optional.of(resourceInUser));
-    user.setResourcesOwned(List.of(resourceInUser));
-    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-
-    productRequestDto.setProductsContent(List.of(product.getId()));
-
-    ProductResponseDto response = new ProductResponseDto();
-    when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
-
-    ProductResponseDto actual = productService.createProduct(productRequestDto);
-
-    assertEquals(response, actual);
-    assertEquals(response.getContentOf(), actual.getContentOf());
-    assertEquals(response.getProductsContent(), actual.getProductsContent());
-  }
-
-  @Test
-  void testCreateProductShouldThrowExceptionWhenResourceNotFound() {
-    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-
-    assertThrows(
-        ResourceInUserNotFoundException.class,
-        () -> productService.createProduct(productRequestDto));
-  }
-
-  @Test
-  void testCreateProductGetUserShouldThrowExceptionIfUserNotExist() {
-    assertThrows(
-        UserNotFoundException.class, () -> productService.createProduct(productRequestDto));
   }
 
   @Test

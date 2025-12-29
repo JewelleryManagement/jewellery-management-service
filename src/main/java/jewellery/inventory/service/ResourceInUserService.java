@@ -7,11 +7,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
-import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
-import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
@@ -19,7 +17,6 @@ import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
 import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.mapper.ResourcesInUserMapper;
 import jewellery.inventory.mapper.UserMapper;
-import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
@@ -44,37 +41,6 @@ public class ResourceInUserService implements EntityFetcher {
   private final UserService userService;
   private final ResourceService resourceService;
   private static final BigDecimal EPSILON = new BigDecimal("1e-10");
-
-  @Transactional
-  @LogCreateEvent(eventType = EventType.RESOURCE_TRANSFER)
-  public TransferResourceResponseDto transferResources(
-      TransferResourceRequestDto transferResourceRequestDto) {
-
-    User previousOwner = userService.getUser(transferResourceRequestDto.getPreviousOwnerId());
-    User newOwner = userService.getUser(transferResourceRequestDto.getNewOwnerId());
-    ResourceInUser resourceInPreviousOwner =
-        findResourceInUserOrThrow(
-            previousOwner, transferResourceRequestDto.getTransferredResourceId());
-
-    removeQuantityFromResource(resourceInPreviousOwner, transferResourceRequestDto.getQuantity());
-    addResourceToUser(
-        newOwner, resourceInPreviousOwner.getResource(), transferResourceRequestDto.getQuantity());
-
-    TransferResourceResponseDto transferResourceResponseDto =
-        getTransferResourceResponseDto(
-            previousOwner,
-            newOwner,
-            resourceInPreviousOwner.getResource(),
-            transferResourceRequestDto.getQuantity());
-    logger.info("Transfer completed successfully {}", transferResourceResponseDto);
-    return transferResourceResponseDto;
-  }
-
-  @Transactional
-  @LogUpdateEvent(eventType = EventType.RESOURCE_ADD_QUANTITY)
-  public ResourcesInUserResponseDto addResourceToUser(ResourcePurchaseRequestDto requestDto) {
-    return purchaseResource(requestDto);
-  }
 
   public void addResourceToUserNoLog(ResourceInUserRequestDto resourceUserDto) {
     User user = userService.getUser(resourceUserDto.getUserId());

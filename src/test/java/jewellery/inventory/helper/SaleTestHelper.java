@@ -295,24 +295,25 @@ public class SaleTestHelper {
   }
 
   public static SaleRequestDto getSaleInOrganizationRequestDto(
-          Organization seller,
-          User buyer,
-          ProductsInOrganizationResponseDto productsInOrganizationResponseDto,
-          ResourcesInOrganizationResponseDto resourcesInOrganizationResponseDto,
-          BigDecimal saleDiscount) {
+      Organization seller,
+      User buyer,
+      ProductsInOrganizationResponseDto productsInOrganizationResponseDto,
+      ResourcesInOrganizationResponseDto resourcesInOrganizationResponseDto,
+      BigDecimal saleDiscount) {
+    System.out.println(buyer.getId());
     SaleRequestDto saleRequestDto = new SaleRequestDto();
     saleRequestDto.setBuyerId(buyer.getId());
     saleRequestDto.setSellerId(seller.getId());
     saleRequestDto.setDate(LocalDate.now());
     PurchasedResourceQuantityRequestDto purchasedResourceQuantityRequestDto =
-            new PurchasedResourceQuantityRequestDto();
+        new PurchasedResourceQuantityRequestDto();
     ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
     resourceQuantityRequestDto.setResourceId(
-            resourcesInOrganizationResponseDto
-                    .getResourcesAndQuantities()
-                    .get(0)
-                    .getResource()
-                    .getId());
+        resourcesInOrganizationResponseDto
+            .getResourcesAndQuantities()
+            .get(0)
+            .getResource()
+            .getId());
     resourceQuantityRequestDto.setQuantity(BigDecimal.ONE);
     purchasedResourceQuantityRequestDto.setResourceAndQuantity(resourceQuantityRequestDto);
     purchasedResourceQuantityRequestDto.setDiscount(saleDiscount);
@@ -321,7 +322,7 @@ public class SaleTestHelper {
     saleRequestDto.setResources(resources);
     ProductDiscountRequestDto productDiscountRequestDto = new ProductDiscountRequestDto();
     productDiscountRequestDto.setProductId(
-            productsInOrganizationResponseDto.getProducts().get(0).getId());
+        productsInOrganizationResponseDto.getProducts().get(0).getId());
     productDiscountRequestDto.setDiscount(saleDiscount);
     List<ProductDiscountRequestDto> list = new ArrayList<>();
     list.add(productDiscountRequestDto);
