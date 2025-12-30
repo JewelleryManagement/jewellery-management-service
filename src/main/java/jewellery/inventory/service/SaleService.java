@@ -1,11 +1,9 @@
 package jewellery.inventory.service;
 
-import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
@@ -31,91 +29,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SaleService {
   private static final Logger logger = LogManager.getLogger(SaleService.class);
-  private final SaleRepository saleRepository;
   private final PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   private final SaleMapper saleMapper;
   private final ProductService productService;
-  private final ResourceInUserService resourceInUserService;
   private final UserService userService;
   private final ResourceService resourceService;
-
-  @LogCreateEvent(eventType = EventType.SALE_RETURN_PRODUCT)
-  public ProductReturnResponseDto returnProduct(UUID productId) {
-    Product productToReturn = productService.getProduct(productId);
-
-    throwExceptionIfProductIsPartOfAnotherProduct(productToReturn);
-    throwExceptionIfProductNotSold(productToReturn);
-
-    Sale sale = getSale(productToReturn.getPartOfSale().getSale().getId());
-
-    sale.getProducts()
-        .removeIf(
-            productPriceDiscount -> productPriceDiscount.getProduct().getId().equals(productId));
-
-    productService.updateProductOwnerAndSale(productToReturn, sale.getSeller(), null);
-    deleteSaleIfProductsAndResourcesAreEmpty(sale);
-    logger.info("Product returned successfully. Product ID: {}", productId);
-    return validateSaleAfterReturnProduct(sale, productToReturn);
-  }
-
-  @LogCreateEvent(eventType = EventType.SALE_RETURN_RESOURCE)
-  @Transactional
-  public ResourceReturnResponseDto returnResource(UUID saleId, UUID resourceId) {
-    Sale sale = getSale(saleId);
-    PurchasedResourceInUser resourceToReturn = getPurchasedResource(resourceId, saleId);
-
-    returnResourceFromSaleToUser(sale, resourceToReturn);
-    removeResourceFromSale(sale, resourceToReturn);
-
-    deleteSaleIfProductsAndResourcesAreEmpty(sale);
-    logger.info("Resource returned successfully. Resource ID: {}", resourceId);
-
-    return validateSaleAfterReturnResource(sale, resourceToReturn);
-  }
-
-  public void removeResourceFromSale(Sale sale, PurchasedResourceInUser resourceToReturn) {
-    sale.getResources()
-        .removeIf(
-            purchasedResource ->
-                purchasedResource
-                    .getResource()
-                    .getId()
-                    .equals(resourceToReturn.getResource().getId()));
-  }
-
-  public Sale getSale(UUID saleId) {
-    return saleRepository.findById(saleId).orElseThrow(() -> new SaleNotFoundException(saleId));
-  }
-
-  private void throwExceptionIfProductIsPartOfAnotherProduct(List<ProductPriceDiscount> products) {
-    for (ProductPriceDiscount productPriceDiscount : products) {
-      Product product = productPriceDiscount.getProduct();
-      if (product.getContentOf() != null) {
-        throw new ProductIsContentException(product.getId());
-      }
-    }
-  }
-
-  private void throwExceptionIfProductIsPartOfAnotherProduct(Product product) {
-    if (product.getContentOf() != null) {
-      throw new ProductIsContentException(product.getId());
-    }
-  }
-
-  private void throwExceptionIfProductNotSold(Product product) {
-    if (product.getPartOfSale() == null) {
-      throw new ProductNotSoldException(product.getId());
-    }
-  }
-
-  private void throwExceptionIfProductIsSold(List<ProductPriceDiscount> products) {
-    for (ProductPriceDiscount productPriceDiscount : products) {
-      Product product = productPriceDiscount.getProduct();
-      if (product.getPartOfSale() != null) {
-        throw new ProductIsSoldException(product.getId());
-      }
-    }
-  }
 
   public void updateProductOwnersAndSale(
       List<ProductPriceDiscount> products, UUID buyerId, Sale sale) {
@@ -141,20 +59,6 @@ public class SaleService {
           .toList();
     }
     return new ArrayList<>();
-  }
-
-  public void deleteSaleIfProductsAndResourcesAreEmpty(Sale sale) {
-    if (sale.getProducts().isEmpty() && sale.getResources().isEmpty()) {
-      logger.info(
-          "Deleting sale with ID: {} since the both products list and resources list are empty.",
-          sale.getId());
-      saleRepository.deleteById(sale.getId());
-    } else {
-      logger.info(
-          "Saving sale with ID: {} since the products list or the resources list are not empty.",
-          sale.getId());
-      saleRepository.save(sale);
-    }
   }
 
   public ProductReturnResponseDto validateSaleAfterReturnProduct(
@@ -189,34 +93,10 @@ public class SaleService {
     }
   }
 
-  private void removeQuantityFromResourcesInUser(Sale sale) {
-    for (PurchasedResourceInUser resource : sale.getResources()) {
-      ResourceInUser resourceInUser =
-          resourceInUserService.getResourceInUser(sale.getSeller(), resource.getResource());
-      resourceInUserService.removeQuantityFromResource(resourceInUser, resource.getQuantity());
-    }
-  }
-
   public PurchasedResourceInUser getPurchasedResource(UUID resourceId, UUID saleId) {
     return purchasedResourceInUserRepository
         .findByResourceIdAndPartOfSaleId(resourceId, saleId)
         .orElseThrow(() -> new ResourceNotFoundInSaleException(resourceId, saleId));
-  }
-
-  private void returnResourceFromSaleToUser(Sale sale, PurchasedResourceInUser resourceToReturn) {
-    ResourceInUser resourceInUser =
-        resourceInUserService.getResourceInUser(sale.getSeller(), resourceToReturn.getResource());
-    resourceInUser.setQuantity(resourceInUser.getQuantity().add(resourceToReturn.getQuantity()));
-  }
-
-  private void throwExceptionIfResourceIsNotOwned(SaleRequestDto saleRequestDto) {
-    if (saleRequestDto.getResources() != null) {
-      for (PurchasedResourceQuantityRequestDto resource : saleRequestDto.getResources()) {
-        resourceInUserService.findResourceInUserOrThrow(
-            userService.getUser(saleRequestDto.getSellerId()),
-            resource.getResourceAndQuantity().getResourceId());
-      }
-    }
   }
 
   public List<PurchasedResourceInUser> getResourcesFromSaleRequestDto(
@@ -258,16 +138,6 @@ public class SaleService {
               productDto.setSalePrice(salePrice);
               productDto.setSale(sale);
             });
-  }
-
-  private void throwExceptionIfSellerNotProductOwner(
-      List<ProductPriceDiscount> products, UUID sellerId) {
-    for (ProductPriceDiscount productPriceDiscount : products) {
-      Product product = productPriceDiscount.getProduct();
-      if (!product.getOwner().getId().equals(sellerId)) {
-        throw new UserNotOwnerException(product.getOwner().getId(), sellerId);
-      }
-    }
   }
 
   public static void throwExceptionIfNoResourcesAndProductsInRequest(

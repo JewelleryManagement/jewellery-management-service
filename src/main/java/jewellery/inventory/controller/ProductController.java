@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
-import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ImageResponseDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.service.ImageService;
@@ -37,14 +36,6 @@ public class ProductController {
     return productService.getProductResponse(id);
   }
 
-  @Operation(summary = "Transfer a product")
-  @ResponseStatus(HttpStatus.OK)
-  @PutMapping("/{productId}/transfer/{recipientId}")
-  public ProductResponseDto transferProduct(
-      @PathVariable("productId") UUID productId, @PathVariable("recipientId") UUID recipientId) {
-    return productService.transferProduct(productId, recipientId);
-  }
-
   @Operation(summary = "Upload new image in file system and attach to product")
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping(value = "/{productId}/picture")
@@ -67,13 +58,5 @@ public class ProductController {
   @DeleteMapping("/{productId}/picture")
   public void deleteImage(@PathVariable("productId") @Valid UUID productId) throws IOException {
     imageService.deleteImage(productId);
-  }
-
-  @Operation(summary = "Edit product")
-  @ResponseStatus(HttpStatus.OK)
-  @PutMapping("/{productId}")
-  public ProductResponseDto updateProduct(
-      @PathVariable("productId") UUID productId, @Valid @RequestBody ProductRequestDto request) {
-    return productService.updateProduct(productId, request);
   }
 }

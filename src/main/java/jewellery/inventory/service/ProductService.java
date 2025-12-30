@@ -36,27 +36,7 @@ public class ProductService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(ProductService.class);
   private final ProductRepository productRepository;
   private final UserRepository userRepository;
-  private final ResourceInUserRepository resourceInUserRepository;
-  private final ResourceInProductRepository resourceInProductRepository;
-  private final ImageService imageService;
-  private final ResourceInUserService resourceInUserService;
   private final ProductMapper productMapper;
-
-  @Transactional
-  @LogUpdateEvent(eventType = EventType.PRODUCT_UPDATE)
-  public ProductResponseDto updateProduct(UUID id, ProductRequestDto productUpdateRequestDto) {
-    Product product = getProduct(id);
-    throwExceptionIfProductIsSold(product);
-    moveQuantityFromResourcesInProductToResourcesInUser(product);
-    disassembleProductContent(product);
-
-    setProductFields(productUpdateRequestDto, product.getOwner(), product);
-    productRepository.save(product);
-    addProductsContentToProduct(productUpdateRequestDto, product);
-    addResourcesToProduct(productUpdateRequestDto, product.getOwner(), product);
-    logger.info("Product with ID: {} updated", product.getId());
-    return productMapper.mapToProductResponseDto(product);
-  }
 
   public ProductReturnResponseDto getProductReturnResponseDto(
       SaleResponseDto sale, Product product) {
@@ -130,31 +110,9 @@ public class ProductService implements EntityFetcher {
     productRepository.deleteById(productId);
   }
 
-  @LogUpdateEvent(eventType = EventType.PRODUCT_TRANSFER)
-  public ProductResponseDto transferProduct(UUID productId, UUID recipientId) {
-    Product productForChangeOwner = getProductForTransfer(recipientId, productId);
-    updateProductOwnerRecursively(productForChangeOwner, getUser(recipientId));
-    logger.info("Transferred product with ID {} to new owner with ID {}", productId, recipientId);
-    productRepository.save(productForChangeOwner);
-    return productMapper.mapToProductResponseDto(productForChangeOwner);
-  }
-
-  private void deleteImageWhenAttached(UUID id, Product product) throws IOException {
-    if (product.getImage() != null) {
-      imageService.deleteImage(id);
-      logger.debug("Deleted image for product with ID: {}", product.getId());
-    }
-  }
-
   public void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
     if (product.getContentOf() != null) {
       throw new ProductIsContentException(id);
-    }
-  }
-
-  private void throwExceptionIfProductOwnerEqualsRecipient(Product product, UUID recipientId) {
-    if (product.getOwner().getId().equals(recipientId)) {
-      throw new ProductOwnerEqualsRecipientException(recipientId);
     }
   }
 
@@ -181,120 +139,10 @@ public class ProductService implements EntityFetcher {
     }
   }
 
-  private void moveQuantityFromResourcesInProductToResourcesInUser(Product product) {
-    List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
-    resourcesInProduct.forEach(
-        resourceInProduct -> {
-          resourceInUserService.addResourceToUserNoLog(
-              getResourceInUserRequest(product.getOwner(), resourceInProduct));
-          resourceInProductRepository.delete(resourceInProduct);
-        });
-    product.setResourcesContent(null);
-  }
-
-  private ResourceInUserRequestDto getResourceInUserRequest(
-      User owner, ResourceInProduct resourceInProduct) {
-    logger.debug("Getting resourceInUserRequest for user with Id: {}", owner.getId());
-    return ResourceInUserRequestDto.builder()
-        .userId(owner.getId())
-        .resourceId(resourceInProduct.getResource().getId())
-        .quantity(resourceInProduct.getQuantity())
-        .build();
-  }
-
-  private ResourceInUser getResourceInUser(User owner, UUID resourceId) {
-    return resourceInUserRepository
-        .findByResourceIdAndOwnerId(resourceId, owner.getId())
-        .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, owner.getId()));
-  }
-
-  private Product getProductForTransfer(UUID recipientId, UUID productId) {
-    logger.debug(
-        "Getting product for transfer with ID: {}, recipient ID: {}", productId, recipientId);
-    Product product =
-        productRepository
-            .findById(productId)
-            .orElseThrow(() -> new ProductNotFoundException(productId));
-    validateProductForChangeOwner(recipientId, product);
-    logger.debug("Product for transfer retrieved successfully.");
-    return product;
-  }
-
-  private void validateProductForChangeOwner(UUID recipientId, Product productForChangeOwner) {
-    logger.debug(
-        "Validating product for change owner. Product ID: {}, Recipient ID: {}",
-        productForChangeOwner.getId(),
-        recipientId);
-    throwExceptionIfProductIsPartOfAnotherProduct(
-        productForChangeOwner.getId(), productForChangeOwner);
-    throwExceptionIfProductIsSold(productForChangeOwner);
-    throwExceptionIfProductOwnerEqualsRecipient(productForChangeOwner, recipientId);
-    logger.debug("Product validation for change owner successful.");
-  }
-
-  private List<Product> getProductsInProduct(
-      List<UUID> productsIdInRequest, Product parentProduct) {
-    logger.debug("Getting products in product. Parent Product ID: {}", parentProduct.getId());
-    List<Product> products = new ArrayList<>();
-    if (productsIdInRequest != null) {
-      productsIdInRequest.forEach(
-          productId -> {
-            logger.debug("Processing product with ID: {}", productId);
-            Product product = getProduct(productId);
-            throwExceptionIfProductIsPartOfItself(product, parentProduct.getId());
-            throwExceptionIfProductIsSold(product);
-            if (product.getOwner().getId().equals(parentProduct.getOwner().getId())) {
-              product.setContentOf(parentProduct);
-              products.add(product);
-              logger.debug("Added product with ID {} to the list.", productId);
-            } else {
-              throw new UserNotOwnerException(parentProduct.getOwner().getId(), product.getId());
-            }
-          });
-    }
-
-    return products;
-  }
-
   public void throwExceptionIfProductIsPartOfItself(Product product, UUID parentId) {
     if (product.getId().equals(parentId)) {
       throw new ProductPartOfItselfException();
     }
-  }
-
-  private User getUser(UUID userId) {
-    logger.debug("Getting user with ID: {}", userId);
-    return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
-  }
-
-  private Product persistProductWithoutResourcesAndProducts(
-      ProductRequestDto productRequestDto, User user) {
-    logger.debug(
-        "Persisting product without resources and products for user with ID: {}", user.getId());
-    Product product = getProductWithoutResourcesAndProduct(productRequestDto, user);
-    productRepository.save(product);
-    logger.debug("Product persisted successfully. Product ID: {}", product.getId());
-
-    return product;
-  }
-
-  private Product getProductWithoutResourcesAndProduct(
-      ProductRequestDto productRequestDto, User user) {
-    Product product = new Product();
-    setProductFields(productRequestDto, user, product);
-    return product;
-  }
-
-  private void setProductFields(ProductRequestDto productRequestDto, User user, Product product) {
-    product.setOwner(user);
-    product.setAuthors(getAuthors(productRequestDto));
-    product.setPartOfSale(null);
-    product.setDescription(productRequestDto.getDescription());
-    product.setProductionNumber(productRequestDto.getProductionNumber());
-    product.setCatalogNumber(productRequestDto.getCatalogNumber());
-    product.setAdditionalPrice(productRequestDto.getAdditionalPrice());
-    product.setProductsContent(new ArrayList<>());
-    product.setResourcesContent(new ArrayList<>());
   }
 
   public List<User> getAuthors(ProductRequestDto productRequestDto) {
@@ -310,89 +158,6 @@ public class ProductService implements EntityFetcher {
           logger.debug("Author with ID {} added to the list.", id);
         });
     return authors;
-  }
-
-  private void addProductsContentToProduct(ProductRequestDto productRequestDto, Product product) {
-    logger.debug("Adding products content to product. Product ID: {}", product.getId());
-
-    if (productRequestDto.getProductsContent() != null) {
-      product.setProductsContent(
-          getProductsInProduct(productRequestDto.getProductsContent(), product));
-      productRepository.save(product);
-      logger.debug(
-          "Products content added successfully to product. Count: {}",
-          productRequestDto.getProductsContent().size());
-    }
-  }
-
-  private void addResourcesToProduct(
-      ProductRequestDto productRequestDto, User user, Product product) {
-    logger.debug("Adding resources to product. Product ID: {}", product.getId());
-
-    List<ResourceInProduct> resourcesInProducts =
-        transferResourcesQuantitiesFromUserToProduct(
-            user, productRequestDto.getResourcesContent(), product);
-    product.setResourcesContent(resourcesInProducts);
-    logger.debug("Resources added successfully to product. Count: {}", resourcesInProducts.size());
-  }
-
-  private List<ResourceInProduct> transferResourcesQuantitiesFromUserToProduct(
-      User owner, List<ResourceQuantityRequestDto> incomingResourceInProductList, Product product) {
-    logger.debug("incomingResourceInProduct List: {}", incomingResourceInProductList);
-    logger.debug(
-        "Transferring resources quantities from user to product. User ID: {}, Product ID: {}",
-        owner.getId(),
-        product.getId());
-
-    return incomingResourceInProductList.stream()
-        .map(
-            incomingResourceInProduct ->
-                transferSingleResourceQuantityFromUserToProduct(
-                    owner, incomingResourceInProduct, product))
-        .toList();
-  }
-
-  private ResourceInProduct transferSingleResourceQuantityFromUserToProduct(
-      User owner, ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
-    logger.debug(
-        "Transferring single resource quantity from user to product. User ID: {}, Product ID: {}",
-        owner.getId(),
-        product.getId());
-
-    ResourceInUser resourceInUser =
-        getResourceInUser(owner, incomingResourceInProduct.getResourceId());
-    resourceInUserService.removeQuantityFromResourceNoLog(
-        owner.getId(),
-        resourceInUser.getResource().getId(),
-        incomingResourceInProduct.getQuantity());
-    ResourceInProduct resourceInProduct = getResourceInProduct(incomingResourceInProduct, product);
-    if (resourceInProduct != null) {
-      resourceInProduct.setQuantity(incomingResourceInProduct.getQuantity());
-      return resourceInProduct;
-    }
-    return createResourceInProduct(
-        incomingResourceInProduct, resourceInUser.getResource(), product);
-  }
-
-  private ResourceInProduct getResourceInProduct(
-      ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
-    return resourceInProductRepository
-        .findByResourceIdAndProductId(incomingResourceInProduct.getResourceId(), product.getId())
-        .orElse(null);
-  }
-
-  private ResourceInProduct createResourceInProduct(
-      ResourceQuantityRequestDto incomingResourceInProduct, Resource resource, Product product) {
-    ResourceInProduct resourceInProduct = new ResourceInProduct();
-    resourceInProduct.setResource(resource);
-    resourceInProduct.setQuantity(incomingResourceInProduct.getQuantity());
-    resourceInProduct.setProduct(product);
-    logger.debug(
-        "Resource in product created successfully. Resource ID: {}, Product ID: {}",
-        resourceInProduct.getResource().getId(),
-        resourceInProduct.getProduct().getId());
-
-    return resourceInProduct;
   }
 
   @Override
