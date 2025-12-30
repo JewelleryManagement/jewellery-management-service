@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
-import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
@@ -125,23 +124,6 @@ public class ProductService implements EntityFetcher {
         updateProductOwnerRecursively(subProduct, newOwner);
       }
     }
-  }
-
-  @Transactional
-  @LogDeleteEvent(eventType = EventType.PRODUCT_DISASSEMBLY)
-  public void deleteProduct(UUID id) throws IOException {
-
-    Product product = getProduct(id);
-
-    throwExceptionIfProductIsSold(product);
-    throwExceptionIfProductIsPartOfAnotherProduct(id, product);
-
-    moveQuantityFromResourcesInProductToResourcesInUser(product);
-    disassembleProductContent(product);
-    deleteImageWhenAttached(id, product);
-
-    productRepository.deleteById(id);
-    logger.info("Deleted product by ID: {}", id);
   }
 
   public void deleteProductById(UUID productId) {

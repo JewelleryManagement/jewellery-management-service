@@ -4,8 +4,6 @@ import static jewellery.inventory.helper.ResourceTestHelper.getPearl;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,8 +12,6 @@ import java.math.BigDecimal;
 import java.util.*;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
-import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
-import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.mapper.ResourcesInUserMapper;
 import jewellery.inventory.model.ResourceInUser;
@@ -93,108 +89,6 @@ class ResourceInUserServiceTest {
         UserNotFoundException.class, () -> resourceInUserService.getAllResourcesFromUser(userId));
 
     verify(userService, times(1)).getUser(userId);
-  }
-
-  @Test
-  void willThrowUserNotFoundExceptionWhenRemovingResourceFromNonexistentUser() {
-    when(userService.getUser(userId)).thenThrow(UserNotFoundException.class);
-
-    assertThrows(
-        UserNotFoundException.class,
-        () ->
-            resourceInUserService.removeQuantityFromResource(
-                userId, resourceId, getBigDecimal("10")));
-
-    verify(userService, times(1)).getUser(userId);
-  }
-
-  @Test
-  void willThrowResourceInUserNotFoundExceptionWhenRemoveQuantityOfNotOwnedResource() {
-    user.setResourcesOwned(List.of());
-    when(userService.getUser(userId)).thenReturn(user);
-
-    assertThrows(
-        ResourceInUserNotFoundException.class,
-        () ->
-            resourceInUserService.removeQuantityFromResource(
-                userId, resourceId, getBigDecimal("10")));
-
-    verify(userService, times(1)).getUser(userId);
-  }
-
-  @Test
-  void willThrowInsufficientResourceQuantityExceptionWhenRemoveQuantityMoreThanAvailable() {
-    when(userService.getUser(userId)).thenReturn(user);
-
-    assertThrows(
-        InsufficientResourceQuantityException.class,
-        () ->
-            resourceInUserService.removeQuantityFromResource(
-                userId, resourceId, getBigDecimal("10")));
-
-    verify(userService, times(1)).getUser(userId);
-  }
-
-  @Test
-  void willRemoveQuantityFromResourceInUserSuccessfully() {
-    when(userService.getUser(userId)).thenReturn(user);
-    final BigDecimal initialQuantity = resourceInUser.getQuantity();
-    final BigDecimal quantityToRemove = getBigDecimal("2");
-
-    resourceInUserService.removeQuantityFromResource(userId, resourceId, quantityToRemove);
-
-    verify(userService, times(1)).getUser(userId);
-    verify(userService, times(1)).saveUser(any(User.class));
-
-    BigDecimal expectedQuantity = initialQuantity.subtract(quantityToRemove);
-    assertEquals(expectedQuantity, resourceInUser.getQuantity());
-  }
-
-  @Test
-  void willRemoveResourceFromResourceInUserSuccessfullyWhenExactQuantityPassed() {
-    when(userService.getUser(userId)).thenReturn(user);
-
-    resourceInUserService.removeQuantityFromResource(userId, resourceId, INITIAL_QUANTITY);
-
-    verify(userService, times(1)).getUser(userId);
-    verify(userService, times(1)).saveUser(any(User.class));
-    assertTrue(user.getResourcesOwned().isEmpty());
-  }
-
-  @Test
-  void willRemoveResourceInUserSuccessfully() {
-    when(userService.getUser(userId)).thenReturn(user);
-
-    resourceInUserService.removeResourceFromUser(userId, resourceId);
-
-    verify(userService, times(1)).getUser(userId);
-    verify(userService, times(1)).saveUser(any(User.class));
-  }
-
-  @Test
-  void willThrowUserNotFoundExceptionWhenRemoveFromNonexistentUser() {
-    when(userService.getUser(userId)).thenThrow(UserNotFoundException.class);
-
-    assertThrows(
-        UserNotFoundException.class,
-        () -> resourceInUserService.removeResourceFromUser(userId, resourceId));
-
-    verify(userService, times(1)).getUser(userId);
-    verify(userService, never()).saveUser(any(User.class));
-  }
-
-  @Test
-  void willThrowResourceInUserNotFoundExceptionWhenRemoveResourceNotOwnedByUser() {
-    UUID nonExistentResourceId = UUID.randomUUID();
-
-    when(userService.getUser(userId)).thenReturn(user);
-
-    assertThrows(
-        ResourceInUserNotFoundException.class,
-        () -> resourceInUserService.removeResourceFromUser(userId, nonExistentResourceId));
-
-    verify(userService, times(1)).getUser(userId);
-    verify(userService, never()).saveUser(any(User.class));
   }
 
   @NotNull

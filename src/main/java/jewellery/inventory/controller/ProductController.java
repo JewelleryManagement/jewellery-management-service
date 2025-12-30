@@ -45,13 +45,6 @@ public class ProductController {
     return productService.transferProduct(productId, recipientId);
   }
 
-  @Operation(summary = "Delete a product by Id")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @DeleteMapping("/{id}")
-  public void deleteProduct(@PathVariable("id") UUID id) throws IOException {
-    productService.deleteProduct(id);
-  }
-
   @Operation(summary = "Upload new image in file system and attach to product")
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping(value = "/{productId}/picture")

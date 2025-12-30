@@ -1,8 +1,6 @@
 package jewellery.inventory.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.validation.constraints.PositiveOrZero;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
@@ -11,7 +9,6 @@ import jewellery.inventory.service.ResourceInUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,25 +28,6 @@ public class ResourceInUserController {
   @GetMapping("/{userId}")
   public ResourcesInUserResponseDto getAllResourcesFromUser(@PathVariable UUID userId) {
     return resourceAvailabilityService.getAllResourcesFromUser(userId);
-  }
-
-  @Operation(summary = "Delete resources from user by userId and resourceId")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @DeleteMapping("/{userId}/{resourceId}")
-  public void removeResourceFromUser(@PathVariable UUID userId, @PathVariable UUID resourceId) {
-    resourceAvailabilityService.removeResourceFromUser(userId, resourceId);
-  }
-
-  @Operation(
-      summary = "Delete specific amount of resource from user by userId, resourceId and quantity")
-  @ResponseStatus(HttpStatus.OK)
-  @DeleteMapping("/{userId}/{resourceId}/{quantity}")
-  public ResourcesInUserResponseDto removeQuantityFromUserResource(
-      @PathVariable UUID userId,
-      @PathVariable UUID resourceId,
-      @PathVariable("quantity") @PositiveOrZero(message = QUANTITY_MIN_VALUE_MSG)
-          BigDecimal quantity) {
-    return resourceAvailabilityService.removeQuantityFromResource(userId, resourceId, quantity);
   }
 
   @Operation(summary = "Get all purchased resources")

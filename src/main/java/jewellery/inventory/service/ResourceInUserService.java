@@ -1,13 +1,11 @@
 package jewellery.inventory.service;
 
-import static jewellery.inventory.model.EventType.RESOURCE_REMOVE_QUANTITY;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
-import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.response.*;
@@ -26,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -55,13 +52,6 @@ public class ResourceInUserService implements EntityFetcher {
     return resourcesInUserMapper.toResourcesInUserResponseDto(user);
   }
 
-  @Transactional
-  @LogUpdateEvent(eventType = RESOURCE_REMOVE_QUANTITY)
-  public ResourcesInUserResponseDto removeQuantityFromResource(
-      UUID userId, UUID resourceId, BigDecimal quantity) {
-    return removeQuantityFromResourceNoLog(userId, resourceId, quantity);
-  }
-
   public ResourcesInUserResponseDto removeQuantityFromResourceNoLog(
       UUID userId, UUID resourceId, BigDecimal quantity) {
     User user = userService.getUser(userId);
@@ -72,18 +62,6 @@ public class ResourceInUserService implements EntityFetcher {
       return resourcesInUserMapper.toResourcesInUserResponseDto(resourceInUser);
     }
     return new ResourcesInUserResponseDto();
-  }
-
-  @Transactional
-  @LogUpdateEvent(eventType = RESOURCE_REMOVE_QUANTITY)
-  public void removeResourceFromUser(UUID userId, UUID resourceId) {
-    logger.info("Removing resource from user. UserId: {}, ResourceId: {}", userId, resourceId);
-    User user = userService.getUser(userId);
-    ResourceInUser resourceToRemove = findResourceInUserOrThrow(user, resourceId);
-
-    user.getResourcesOwned().remove(resourceToRemove);
-    logger.debug("Resource to remove: {}", resourceToRemove);
-    userService.saveUser(user);
   }
 
   public List<PurchasedResourceQuantityResponseDto> getAllPurchasedResources(UUID userId) {

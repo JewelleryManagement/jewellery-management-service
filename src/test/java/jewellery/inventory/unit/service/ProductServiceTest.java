@@ -5,7 +5,6 @@ import static jewellery.inventory.helper.UserTestHelper.createTestUserWithRandom
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.io.IOException;
 import java.util.*;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
@@ -129,78 +128,6 @@ class ProductServiceTest {
     assertEquals(response.getId(), actual.getId());
     assertEquals(response.getAuthors(), actual.getAuthors());
     assertEquals(response.getCatalogNumber(), actual.getCatalogNumber());
-  }
-
-  @Test
-  void testDeleteProductSuccessfully() throws IOException {
-
-    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-
-    productService.deleteProduct(product.getId());
-
-    assertEquals(0, productRepository.count());
-    verify(productRepository, times(1)).deleteById(product.getId());
-  }
-
-  @Test
-  void testDeleteProductDisassembleContentProduct() throws IOException {
-    Product content1 = getTestProduct(user, pearl);
-    Product content2 = getTestProduct(user, pearl);
-
-    product.setProductsContent(List.of(content1, content2));
-    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-
-    productService.deleteProduct(product.getId());
-
-    verify(productRepository, times(1)).deleteById(product.getId());
-    verify(productRepository, times(1)).save(content1);
-    verify(productRepository, times(1)).save(content2);
-  }
-
-  @Test
-  void testDeleteProductShouldThrowExceptionWhenProductIsPartOfProduct() {
-    product.setContentOf(new Product());
-    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-    UUID productId = product.getId();
-    assertThrows(ProductIsContentException.class, () -> productService.deleteProduct(productId));
-  }
-
-  @Test
-  void testDeleteProductShouldThrowExceptionWhenProductIsSold() {
-    product.setPartOfSale(new ProductPriceDiscount());
-    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-    UUID productId = product.getId();
-    assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
-  }
-
-  @Test
-  void testDeleteProductGetProductShouldThrowExceptionWhenProductNotExist() {
-    UUID fakeId = UUID.randomUUID();
-    assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(fakeId));
-  }
-
-  @Test
-  void deleteProductShouldThrowExceptionWhenProductIsPartOfProduct() {
-
-    product.setContentOf(new Product());
-
-    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-    UUID productId = product.getId();
-    assertThrows(ProductIsContentException.class, () -> productService.deleteProduct(productId));
-  }
-
-  @Test
-  void deleteProductShouldThrowExceptionWhenProductIsSold() {
-    product.setPartOfSale(new ProductPriceDiscount());
-    when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-    UUID productId = product.getId();
-    assertThrows(ProductIsSoldException.class, () -> productService.deleteProduct(productId));
-  }
-
-  @Test
-  void deleteProductShouldThrowExceptionWhenProductIdDoesNotExist() {
-    UUID fakeId = UUID.fromString("58bda8d1-3b3d-4319-922b-f5bb66623d71");
-    assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(fakeId));
   }
 
   @Test
