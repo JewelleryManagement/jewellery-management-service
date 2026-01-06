@@ -75,28 +75,6 @@ public class SaleTestHelper {
     return productRequest;
   }
 
-  public static SaleResponseDto getSaleResponseDto(
-      Sale sale, BigDecimal salePrice, BigDecimal discount) {
-    SaleResponseDto dto = new SaleResponseDto();
-    UserResponseDto userResponseDtoSeller = createUserResponseDto(sale.getSeller());
-    UserResponseDto userResponseDtoBuyer = createUserResponseDto(sale.getBuyer());
-
-    dto.setSeller(userResponseDtoSeller);
-    dto.setBuyer(userResponseDtoBuyer);
-    ProductResponseDto productResponseDto = new ProductResponseDto();
-    dto.setTotalDiscountedPrice(sale.getProducts().get(0).getSalePrice());
-    dto.setTotalDiscount(BigDecimal.ZERO);
-    dto.setProducts(List.of(productResponseDto));
-
-    calculateProductsDiscounts(sale, dto, salePrice, discount);
-    calculateResourcesDiscounts(sale, dto, salePrice, discount);
-
-    dto.setProducts(createProductsResponse(sale, dto));
-    dto.setResources(createResourcesResponse(sale));
-
-    return dto;
-  }
-
   public static OrganizationSaleResponseDto getOrganizationSaleResponseDto(
       Sale sale, BigDecimal salePrice, BigDecimal discount) {
     OrganizationSaleResponseDto dto = new OrganizationSaleResponseDto();
@@ -122,13 +100,6 @@ public class SaleTestHelper {
   }
 
   @NotNull
-  private static List<ProductResponseDto> createProductsResponse(Sale sale, SaleResponseDto dto) {
-    return sale.getProducts().stream()
-        .map(product -> createProductResponseDto(dto.getBuyer()))
-        .collect(Collectors.toList());
-  }
-
-  @NotNull
   private static List<ProductResponseDto> createOrganizationProductsResponse(
       Sale sale, OrganizationSaleResponseDto dto) {
     return sale.getProducts().stream()
@@ -145,22 +116,6 @@ public class SaleTestHelper {
     return null;
   }
 
-  private static void calculateResourcesDiscounts(
-      Sale sale, SaleResponseDto dto, BigDecimal price, BigDecimal discount) {
-    sale.getResources()
-        .forEach(
-            resource -> {
-              BigDecimal salePrice = Optional.ofNullable(resource.getSalePrice()).orElse(price);
-              BigDecimal saleDiscount =
-                  Optional.ofNullable(resource.getDiscount()).orElse(discount);
-              dto.setTotalDiscountedPrice(dto.getTotalDiscountedPrice().add(salePrice));
-              dto.setTotalDiscount(
-                  (dto.getTotalDiscount().add(saleDiscount))
-                      .divide(salePrice, MathContext.DECIMAL128)
-                      .multiply(getBigDecimal("100")));
-            });
-  }
-
   private static void calculateOrganizationResourcesDiscounts(
       Sale sale, OrganizationSaleResponseDto dto, BigDecimal price, BigDecimal discount) {
     sale.getResources()
@@ -169,21 +124,6 @@ public class SaleTestHelper {
               BigDecimal salePrice = Optional.ofNullable(resource.getSalePrice()).orElse(price);
               BigDecimal saleDiscount =
                   Optional.ofNullable(resource.getDiscount()).orElse(discount);
-              dto.setTotalDiscountedPrice(dto.getTotalDiscountedPrice().add(salePrice));
-              dto.setTotalDiscount(
-                  (dto.getTotalDiscount().add(saleDiscount))
-                      .divide(salePrice, MathContext.DECIMAL128)
-                      .multiply(getBigDecimal("100")));
-            });
-  }
-
-  private static void calculateProductsDiscounts(
-      Sale sale, SaleResponseDto dto, BigDecimal price, BigDecimal discount) {
-    sale.getProducts()
-        .forEach(
-            product -> {
-              BigDecimal salePrice = Optional.ofNullable(product.getSalePrice()).orElse(price);
-              BigDecimal saleDiscount = Optional.ofNullable(product.getDiscount()).orElse(discount);
               dto.setTotalDiscountedPrice(dto.getTotalDiscountedPrice().add(salePrice));
               dto.setTotalDiscount(
                   (dto.getTotalDiscount().add(saleDiscount))
@@ -260,16 +200,6 @@ public class SaleTestHelper {
         .build();
   }
 
-  public static ResourceInUser createResourceInUser(BigDecimal price) {
-    ResourceInUser resourceInUser = new ResourceInUser();
-    resourceInUser.setResource(ResourceTestHelper.getPearl(price));
-    resourceInUser.setQuantity(BigDecimal.TEN);
-    resourceInUser.setOwner(UserTestHelper.createTestUserWithId());
-    resourceInUser.setId(UUID.randomUUID());
-    resourceInUser.setDealPrice(getBigDecimal("500"));
-    return resourceInUser;
-  }
-
   public static ProductPriceDiscount createTestProductPriceDiscount(Product product, Sale sale) {
     ProductPriceDiscount productPriceDiscount = new ProductPriceDiscount();
     productPriceDiscount.setDiscount(BigDecimal.ZERO);
@@ -300,7 +230,6 @@ public class SaleTestHelper {
       ProductsInOrganizationResponseDto productsInOrganizationResponseDto,
       ResourcesInOrganizationResponseDto resourcesInOrganizationResponseDto,
       BigDecimal saleDiscount) {
-    System.out.println(buyer.getId());
     SaleRequestDto saleRequestDto = new SaleRequestDto();
     saleRequestDto.setBuyerId(buyer.getId());
     saleRequestDto.setSellerId(seller.getId());
@@ -327,6 +256,33 @@ public class SaleTestHelper {
     List<ProductDiscountRequestDto> list = new ArrayList<>();
     list.add(productDiscountRequestDto);
     saleRequestDto.setProducts(list);
+    return saleRequestDto;
+  }
+
+  public static SaleRequestDto getSimpleSaleInOrganizationRequestDto(
+      UUID sellerId,
+      UUID buyerId,
+      ResourcesInOrganizationResponseDto resourcesInOrganizationResponseDto,
+      BigDecimal saleDiscount) {
+    SaleRequestDto saleRequestDto = new SaleRequestDto();
+    saleRequestDto.setSellerId(sellerId);
+    saleRequestDto.setBuyerId(buyerId);
+    List<PurchasedResourceQuantityRequestDto> resources =
+        resourcesInOrganizationResponseDto.getResourcesAndQuantities().stream()
+            .map(
+                rq -> {
+                  ResourceQuantityRequestDto resourceQuantityRequestDto =
+                      new ResourceQuantityRequestDto();
+                  resourceQuantityRequestDto.setResourceId(rq.getResource().getId());
+                  resourceQuantityRequestDto.setQuantity(rq.getQuantity());
+
+                  return new PurchasedResourceQuantityRequestDto(
+                      resourceQuantityRequestDto, saleDiscount);
+                })
+            .collect(Collectors.toList());
+    saleRequestDto.setResources(resources);
+    saleRequestDto.setProducts(new ArrayList<>());
+    saleRequestDto.setDate(LocalDate.now());
     return saleRequestDto;
   }
 }

@@ -25,6 +25,7 @@ import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceInUserRepository;
 import jewellery.inventory.repository.ResourceRepository;
+import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -92,6 +93,7 @@ public class ResourceService implements EntityFetcher {
         .toList();
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   public List<ResourceResponseDto> importResources(MultipartFile file) {
     verifyIsCsv(file);
 

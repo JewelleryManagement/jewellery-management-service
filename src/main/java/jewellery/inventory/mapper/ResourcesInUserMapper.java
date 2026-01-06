@@ -1,11 +1,11 @@
 package jewellery.inventory.mapper;
 
 import java.util.List;
-import jewellery.inventory.dto.response.UserQuantityResponseDto;
 import jewellery.inventory.dto.response.ResourceOwnedByUsersResponseDto;
 import jewellery.inventory.dto.response.ResourcePurchaseResponseDto;
-import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
 import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.ResourcesInUserResponseDto;
+import jewellery.inventory.dto.response.UserQuantityResponseDto;
 import jewellery.inventory.model.ResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
@@ -28,10 +28,10 @@ public class ResourcesInUserMapper {
   }
 
   public ResourcesInUserResponseDto toResourcesInUserResponseDto(ResourceInUser resourceInUser) {
-      ResourcesInUserResponseDto responseDto = new ResourcesInUserResponseDto();
-      responseDto.setOwner(userMapper.toUserResponse(resourceInUser.getOwner()));
-      responseDto.setResourcesAndQuantities(getSingleResourceQuantityResponse(resourceInUser));
-      return responseDto;
+    ResourcesInUserResponseDto responseDto = new ResourcesInUserResponseDto();
+    responseDto.setOwner(userMapper.toUserResponse(resourceInUser.getOwner()));
+    responseDto.setResourcesAndQuantities(getSingleResourceQuantityResponse(resourceInUser));
+    return responseDto;
   }
 
   public ResourcesInUserResponseDto toResourcesInUserResponseDto(User user) {
@@ -58,9 +58,9 @@ public class ResourcesInUserMapper {
             .map(
                 resourceInUser ->
                     UserQuantityResponseDto.builder()
-                                           .owner(userMapper.toUserResponse(resourceInUser.getOwner()))
-                                           .quantity(resourceInUser.getQuantity())
-                                           .build())
+                        .owner(userMapper.toUserResponse(resourceInUser.getOwner()))
+                        .quantity(resourceInUser.getQuantity())
+                        .build())
             .toList();
     return ResourceOwnedByUsersResponseDto.builder()
         .usersAndQuantities(userQuantityDtos)

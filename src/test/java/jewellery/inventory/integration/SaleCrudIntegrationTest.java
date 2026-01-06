@@ -25,7 +25,6 @@ import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Diamond;
-import jewellery.inventory.model.resource.Pearl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,11 +44,11 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private User seller;
   private User buyer;
   private Diamond diamond;
-  private ResponseEntity<Pearl> pearl;
   private ResourceInOrganizationRequestDto resourceInOrganizationRequestDto;
   private ResourcesInOrganizationResponseDto resourcesInOrganizationResponseDto;
   private ProductRequestDto productRequestDto;
   private ProductRequestDto productRequestDto2;
+  private ProductsInOrganizationResponseDto productResponse;
 
   private String buildUrl(String... paths) {
     return "/" + String.join("/", paths);
@@ -128,12 +127,11 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
                 .getResource()
                 .getId(),
             getBigDecimal("20"));
+    productResponse = createProductInOrganization(productRequestDto);
   }
 
   @Test
   void removeOrganizationSaleAfterReturnAllResourcesAndProductsFromSaleInOrganization() {
-    ProductsInOrganizationResponseDto productResponse =
-        createProductInOrganization(productRequestDto);
     SaleRequestDto saleRequestDto =
         getSaleInOrganizationRequestDto(
             organizationSeller,
@@ -167,8 +165,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void returnProductFromSaleInOrganizationSuccessfully() throws JsonProcessingException {
-    ProductsInOrganizationResponseDto productResponse =
-        createProductInOrganization(productRequestDto);
     SaleRequestDto saleRequestDto =
         getSaleInOrganizationRequestDto(
             organizationSeller,
@@ -202,8 +198,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void returnResourceFromSaleInOrganizationSuccessfully() throws JsonProcessingException {
-    ProductsInOrganizationResponseDto productResponse =
-        createProductInOrganization(productRequestDto);
     SaleRequestDto saleRequestDto =
         getSaleInOrganizationRequestDto(
             organizationSeller,
@@ -234,8 +228,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void createSaleInOrganizationSuccessfully() throws JsonProcessingException {
-    ProductsInOrganizationResponseDto productResponse =
-        createProductInOrganization(productRequestDto);
     SaleRequestDto saleRequestDto =
         getSaleInOrganizationRequestDto(
             organizationSeller,
@@ -290,8 +282,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void returnResourceSuccessfully() throws JsonProcessingException {
-    ProductsInOrganizationResponseDto productResponse =
-        createProductInOrganization(productRequestDto);
     SaleRequestDto saleRequestDto =
         getSaleInOrganizationRequestDto(
             organizationSeller,
@@ -319,8 +309,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void returnProductSuccessfully() throws JsonProcessingException {
-    ProductsInOrganizationResponseDto productResponse =
-        createProductInOrganization(productRequestDto);
     SaleRequestDto saleRequestDto =
         getSaleInOrganizationRequestDto(
             organizationSeller,
@@ -357,9 +345,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void returnProductWillThrowsProductNotSoldException() {
-    ProductsInOrganizationResponseDto productResponse =
-        createProductInOrganization(productRequestDto);
-
     ResponseEntity<ProductReturnResponseDto> response =
         returnProductFromSale(productResponse.getProducts().getFirst().getId());
 
@@ -369,9 +354,26 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
+  void getAllSalesSuccessfully() {
+    SaleRequestDto saleRequestDto =
+        getSaleInOrganizationRequestDto(
+            organizationSeller,
+            buyer,
+            productResponse,
+            resourcesInOrganizationResponseDto,
+            SALE_DISCOUNT);
+
+    ResponseEntity<OrganizationSaleResponseDto> saleResponse =
+        createSaleInOrganization(saleRequestDto);
+
+    assertEquals(HttpStatus.CREATED, saleResponse.getStatusCode());
+    assertNotNull(saleResponse.getBody());
+    assertEquals(saleResponse.getBody().getBuyer().getId(), saleRequestDto.getBuyerId());
+    assertNotEquals(saleResponse.getBody().getBuyer().getId(), saleRequestDto.getSellerId());
+  }
+
+  @Test
   void createSaleShouldThrowWhenResourceNotOwned() {
-    ProductsInOrganizationResponseDto productResponse =
-        createProductInOrganization(productRequestDto);
     organizationSeller.setId(UUID.randomUUID());
     SaleRequestDto saleRequestDto =
         getSaleInOrganizationRequestDto(
@@ -389,9 +391,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void createSaleWithResourceAndProductSuccessfully() throws JsonProcessingException {
-    ProductsInOrganizationResponseDto productResponse =
-        createProductInOrganization(productRequestDto);
-
     productRequestDto2.setProductsContent(
         List.of(productResponse.getProducts().getFirst().getId()));
     ProductsInOrganizationResponseDto productResponse2 =
@@ -438,12 +437,11 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void createSaleWithResourcesOnlySuccessfully() throws JsonProcessingException {
-
     SaleRequestDto saleRequestDto =
         getSaleInOrganizationRequestDto(
             organizationSeller,
             buyer,
-            createProductInOrganization(productRequestDto),
+            productResponse,
             resourcesInOrganizationResponseDto,
             SALE_DISCOUNT);
     saleRequestDto.setProducts(new ArrayList<>());
@@ -486,9 +484,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void createSaleWithProductsOnlySuccessfully() throws JsonProcessingException {
-    ProductsInOrganizationResponseDto productResponse =
-        createProductInOrganization(productRequestDto);
-
     productRequestDto2.setProductsContent(
         List.of(productResponse.getProducts().getFirst().getId()));
     ProductsInOrganizationResponseDto productResponse2 =
@@ -542,7 +537,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         getSaleInOrganizationRequestDto(
             organizationSeller,
             buyer,
-            createProductInOrganization(productRequestDto),
+            productResponse,
             resourcesInOrganizationResponseDto,
             SALE_DISCOUNT);
     saleRequestDto.setProducts(new ArrayList<>());

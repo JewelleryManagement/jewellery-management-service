@@ -13,6 +13,7 @@ import jewellery.inventory.dto.response.OrganizationSingleMemberResponseDto;
 import jewellery.inventory.model.OrganizationPermission;
 import jewellery.inventory.service.OrganizationService;
 import jewellery.inventory.service.UserInOrganizationService;
+import jewellery.inventory.utils.NotUsedYet;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,7 @@ public class OrganizationController {
     return organizationService.getAllOrganizationsResponsesForCurrentUser();
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Get organization by id")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")
@@ -73,6 +75,7 @@ public class OrganizationController {
     userInOrganizationService.deleteUserInOrganization(userId, organizationId);
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Delete an organization")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{organizationId}")

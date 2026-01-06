@@ -22,9 +22,11 @@ import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductNotSoldException;
 import jewellery.inventory.exception.sale.EmptySaleException;
 import jewellery.inventory.helper.*;
+import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
+import jewellery.inventory.repository.PurchasedResourceInUserRepository;
 import jewellery.inventory.repository.SaleRepository;
 import jewellery.inventory.service.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,13 +39,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class OrganizationSaleServiceTest {
   @InjectMocks private OrganizationSaleService organizationSaleService;
-  @Mock private SaleService saleService;
   @Mock private SaleMapper saleMapper;
   @Mock private OrganizationService organizationService;
   @Mock private UserService userService;
   @Mock private ResourceInOrganizationService resourceInOrganizationService;
   @Mock private SaleRepository saleRepository;
   @Mock private ProductService productService;
+  @Mock private PurchasedResourceInUserRepository purchasedResourceInUserRepository;
+  @Mock private ResourceService resourceService;
+  @Mock private ProductMapper productMapper;
+  @Mock private ProductInOrganizationService productInOrganizationService;
 
   private User user;
   private SaleRequestDto saleRequestDto;
@@ -109,7 +114,7 @@ class OrganizationSaleServiceTest {
     saleRequestDto.setResources(null);
     when(productService.getProduct(product.getId())).thenReturn(product);
     when(saleMapper.mapSaleFromOrganization(
-            saleRequestDto, seller, buyer, new ArrayList<>(), new ArrayList<>()))
+            eq(saleRequestDto), eq(seller), eq(buyer), anyList(), anyList()))
         .thenReturn(sale);
     when(saleRepository.save(sale)).thenReturn(sale);
     OrganizationSaleResponseDto organizationSaleResponseDto =
@@ -121,8 +126,7 @@ class OrganizationSaleServiceTest {
     assertNotNull(actualSale);
     assertEquals(1, actualSale.getProducts().size());
     verify(saleMapper, times(1))
-        .mapSaleFromOrganization(
-            saleRequestDto, seller, buyer, new ArrayList<>(), new ArrayList<>());
+        .mapSaleFromOrganization(eq(saleRequestDto), eq(seller), eq(buyer), anyList(), anyList());
     verify(saleMapper, times(1)).mapToOrganizationSaleResponseDto(sale);
     verify(saleRepository, times(1)).save(sale);
   }
@@ -131,13 +135,14 @@ class OrganizationSaleServiceTest {
   void testCreateSaleOfResourceSuccessfully() {
     when(organizationService.getOrganization(seller.getId())).thenReturn(seller);
     when(userService.getUser(buyer.getId())).thenReturn(buyer);
+    when(resourceService.getResourceById(resource.getId())).thenReturn(resource);
     when(resourceInOrganizationService.getResourceInOrganization(
             sale.getOrganizationSeller(), sale.getResources().get(0).getResource()))
         .thenReturn(resourceInOrganization);
 
     saleRequestDto.setProducts(null);
     when(saleMapper.mapSaleFromOrganization(
-            saleRequestDto, seller, buyer, new ArrayList<>(), new ArrayList<>()))
+            eq(saleRequestDto), eq(seller), eq(buyer), anyList(), anyList()))
         .thenReturn(sale);
     when(saleRepository.save(sale)).thenReturn(sale);
     OrganizationSaleResponseDto organizationSaleResponseDto =
@@ -148,8 +153,7 @@ class OrganizationSaleServiceTest {
 
     assertNotNull(actualSale);
     verify(saleMapper, times(1))
-        .mapSaleFromOrganization(
-            saleRequestDto, seller, buyer, new ArrayList<>(), new ArrayList<>());
+        .mapSaleFromOrganization(eq(saleRequestDto), eq(seller), eq(buyer), anyList(), anyList());
     verify(saleMapper, times(1)).mapToOrganizationSaleResponseDto(sale);
     verify(saleRepository, times(1)).save(sale);
   }
@@ -160,11 +164,12 @@ class OrganizationSaleServiceTest {
     when(userService.getUser(buyer.getId())).thenReturn(buyer);
     product.setOrganization(seller);
     when(productService.getProduct(product.getId())).thenReturn(product);
+    when(resourceService.getResourceById(resource.getId())).thenReturn(resource);
     when(resourceInOrganizationService.getResourceInOrganization(
             sale.getOrganizationSeller(), sale.getResources().get(0).getResource()))
         .thenReturn(resourceInOrganization);
     when(saleMapper.mapSaleFromOrganization(
-            saleRequestDto, seller, buyer, new ArrayList<>(), new ArrayList<>()))
+            eq(saleRequestDto), eq(seller), eq(buyer), anyList(), anyList()))
         .thenReturn(sale);
     when(saleRepository.save(sale)).thenReturn(sale);
     OrganizationSaleResponseDto organizationSaleResponseDto =
@@ -175,8 +180,7 @@ class OrganizationSaleServiceTest {
 
     assertNotNull(actualSale);
     verify(saleMapper, times(1))
-        .mapSaleFromOrganization(
-            saleRequestDto, seller, buyer, new ArrayList<>(), new ArrayList<>());
+        .mapSaleFromOrganization(eq(saleRequestDto), eq(seller), eq(buyer), anyList(), anyList());
     verify(saleMapper, times(1)).mapToOrganizationSaleResponseDto(sale);
     verify(saleRepository, times(1)).save(sale);
   }
@@ -184,12 +188,13 @@ class OrganizationSaleServiceTest {
   @Test
   void testCreateSaleShouldThrowWhenProductIsSold() {
     product.setPartOfSale(new ProductPriceDiscount());
-    when(saleMapper.mapSaleFromOrganization(
-            saleRequestDto, seller, buyer, new ArrayList<>(), new ArrayList<>()))
-        .thenReturn(sale);
     when(organizationService.getOrganization(seller.getId())).thenReturn(seller);
     when(userService.getUser(buyer.getId())).thenReturn(buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
+    when(resourceService.getResourceById(resource.getId())).thenReturn(resource);
+    when(saleMapper.mapSaleFromOrganization(
+            eq(saleRequestDto), eq(seller), eq(buyer), anyList(), anyList()))
+        .thenReturn(sale);
 
     assertThrows(
         ProductIsSoldException.class, () -> organizationSaleService.createSale(saleRequestDto));
@@ -198,12 +203,13 @@ class OrganizationSaleServiceTest {
   @Test
   void testCreateSaleShouldThrowWhenProductIsPartOfProduct() {
     product.setContentOf(new Product());
-    when(saleMapper.mapSaleFromOrganization(
-            saleRequestDto, seller, buyer, new ArrayList<>(), new ArrayList<>()))
-        .thenReturn(sale);
     when(organizationService.getOrganization(seller.getId())).thenReturn(seller);
     when(userService.getUser(buyer.getId())).thenReturn(buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
+    when(resourceService.getResourceById(resource.getId())).thenReturn(resource);
+    when(saleMapper.mapSaleFromOrganization(
+            eq(saleRequestDto), eq(seller), eq(buyer), anyList(), anyList()))
+        .thenReturn(sale);
 
     assertThrows(
         ProductIsContentException.class, () -> organizationSaleService.createSale(saleRequestDto));
@@ -212,12 +218,13 @@ class OrganizationSaleServiceTest {
   @Test
   void testCreateSaleShouldThrowWhenSellerNotOwner() {
     product.setOrganization(OrganizationTestHelper.getTestOrganization());
-    when(saleMapper.mapSaleFromOrganization(
-            saleRequestDto, seller, buyer, new ArrayList<>(), new ArrayList<>()))
-        .thenReturn(sale);
     when(organizationService.getOrganization(seller.getId())).thenReturn(seller);
     when(userService.getUser(buyer.getId())).thenReturn(buyer);
     when(productService.getProduct(any(UUID.class))).thenReturn(product);
+    when(resourceService.getResourceById(resource.getId())).thenReturn(resource);
+    when(saleMapper.mapSaleFromOrganization(
+            eq(saleRequestDto), eq(seller), eq(buyer), anyList(), anyList()))
+        .thenReturn(sale);
 
     assertThrows(
         OrganizationNotOwnerException.class,
@@ -233,8 +240,9 @@ class OrganizationSaleServiceTest {
             new ResourceInOrganizationNotFoundException(
                 purchasedResourceQuantityRequestDto.getResourceAndQuantity().getResourceId(),
                 seller.getId()));
+    when(resourceService.getResourceById(resource.getId())).thenReturn(resource);
     when(saleMapper.mapSaleFromOrganization(
-            saleRequestDto, seller, buyer, new ArrayList<>(), new ArrayList<>()))
+            eq(saleRequestDto), eq(seller), eq(buyer), anyList(), anyList()))
         .thenReturn(sale);
     when(organizationService.getOrganization(seller.getId())).thenReturn(seller);
     when(userService.getUser(buyer.getId())).thenReturn(buyer);
@@ -287,7 +295,8 @@ class OrganizationSaleServiceTest {
     sale.setResources(new ArrayList<>());
     when(productService.getProduct(product.getId())).thenReturn(product);
     when(saleRepository.findById(sale.getId())).thenReturn(Optional.of(sale));
-    when(saleService.validateSaleAfterReturnProduct(sale, product)).thenReturn(productReturnResponseDto);
+    when(productMapper.mapToProductReturnResponseDto(any(), any()))
+        .thenReturn(productReturnResponseDto);
 
     ProductReturnResponseDto actual = organizationSaleService.returnProduct(product.getId());
 
@@ -307,7 +316,7 @@ class OrganizationSaleServiceTest {
   @Test
   void testReturnResourceShouldThrowWhenResourceNotFoundInSale() {
     when(saleRepository.findById(sale.getId())).thenReturn(Optional.of(sale));
-    when(saleService.getPurchasedResource(
+    when(purchasedResourceInUserRepository.findByResourceIdAndPartOfSaleId(
             purchasedResourceInUser.getResource().getId(), sale.getId()))
         .thenThrow(ResourceNotFoundInSaleException.class);
 
@@ -319,9 +328,9 @@ class OrganizationSaleServiceTest {
   @Test
   void testReturnResourceSuccessfully() {
     when(saleRepository.findById(sale.getId())).thenReturn(Optional.of(sale));
-    when(saleService.getPurchasedResource(
+    when(purchasedResourceInUserRepository.findByResourceIdAndPartOfSaleId(
             purchasedResourceInUser.getResource().getId(), sale.getId()))
-        .thenReturn(purchasedResourceInUser);
+        .thenReturn(Optional.ofNullable(purchasedResourceInUser));
     when(resourceInOrganizationService.getResourceInOrganization(
             sale.getOrganizationSeller(), resourceInOrganization.getResource()))
         .thenReturn(resourceInOrganization);

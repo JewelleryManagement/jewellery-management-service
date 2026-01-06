@@ -3,6 +3,7 @@ package jewellery.inventory.integration;
 import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizationRequest;
 import static jewellery.inventory.helper.OrganizationTestHelper.getTestUserInOrganizationRequest;
 import static jewellery.inventory.helper.ProductTestHelper.*;
+import static jewellery.inventory.helper.ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto;
 import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.model.EventType.*;
@@ -10,6 +11,7 @@ import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.request.*;
@@ -35,6 +37,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private static final String IMAGE_FILE = "/static/img/pearl.jpg";
   private static final String TEXT_FILE = "/static/img/test.txt";
   private static final String BIG_IMAGE_FILE = "/static/img/Sample-jpg-image-10mb.jpg";
+  private static final BigDecimal QUANTITY = getBigDecimal("20");
+  private static final BigDecimal DEAL_PRICE = getBigDecimal("10");
 
   @Value(value = "${image.folder.path}")
   private String PATH_TO_IMAGES;
@@ -100,7 +104,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     addUserInOrganization(organizationResponseDto.getId(), userInOrganizationRequestDto);
     diamond = createDiamondInDatabase();
     resourceInOrganizationRequestDto =
-        getResourceInOrganizationRequestDto(organizationResponseDto.getId(), diamond.getId());
+        createResourceInOrganizationRequestDto(
+            organizationResponseDto.getId(), diamond.getId(), QUANTITY, DEAL_PRICE);
     resourcesInOrganizationResponseDto =
         getResourcesInOrganizationResponseDto(resourceInOrganizationRequestDto);
     productRequestDto =
@@ -222,16 +227,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     assertNotNull(imageResponseDto);
     assertEquals(imageResponseDto.getProductId(), productResponse.getId());
-  }
-
-  private static ResourceInOrganizationRequestDto getResourceInOrganizationRequestDto(
-      UUID organizationId, UUID resourceId) {
-    return ResourceInOrganizationRequestDto.builder()
-        .organizationId(organizationId)
-        .resourceId(resourceId)
-        .quantity(getBigDecimal("20"))
-        .dealPrice(getBigDecimal("10"))
-        .build();
   }
 
   @Nullable

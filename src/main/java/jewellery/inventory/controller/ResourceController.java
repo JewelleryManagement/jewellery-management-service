@@ -8,6 +8,7 @@ import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.service.ResourceService;
+import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -63,6 +64,7 @@ public class ResourceController {
     return resourceService.getAllResourceQuantities();
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Import resources from CSV")
   @ResponseStatus(HttpStatus.OK)
   @PostMapping("/import")

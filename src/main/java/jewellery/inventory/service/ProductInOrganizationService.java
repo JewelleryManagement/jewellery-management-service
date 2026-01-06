@@ -10,18 +10,25 @@ import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
+import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
+import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
 import jewellery.inventory.exception.organization.ProductIsNotPartOfOrganizationException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
+import jewellery.inventory.exception.product.ProductIsContentException;
+import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
+import jewellery.inventory.exception.product.ProductPartOfItselfException;
 import jewellery.inventory.mapper.ProductInOrganizationMapper;
+import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInProduct;
 import jewellery.inventory.repository.ProductRepository;
 import jewellery.inventory.repository.ResourceInProductRepository;
+import jewellery.inventory.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,13 +45,15 @@ public class ProductInOrganizationService implements EntityFetcher {
   private final ResourceInOrganizationService resourceInOrganizationService;
   private final ResourceInProductRepository resourceInProductRepository;
   private final ProductRepository productRepository;
+  private final ProductMapper productMapper;
+  private final UserRepository userRepository;
 
   public ProductsInOrganizationResponseDto getProductsInOrganization(UUID organizationId) {
     Organization organization = organizationService.getOrganization(organizationId);
     organizationService.validateUserInOrganization(organization);
 
     return mapper.mapToProductsInOrganizationResponseDto(
-        organization, productService.getProductsResponse(organization.getProductsOwned()));
+        organization, getProductsResponse(organization.getProductsOwned()));
   }
 
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_PRODUCT_TRANSFER)
@@ -52,8 +61,8 @@ public class ProductInOrganizationService implements EntityFetcher {
     Product product = productService.getProduct(productId);
     throwExceptionIfProductIsNotPartOfOrganization(product);
     throwExceptionIfProductOrganizationEqualsRecipient(recipientId, product);
-    productService.throwExceptionIfProductIsSold(product);
-    productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
+    throwExceptionIfProductIsSold(product);
+    throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
 
     Organization recipient = organizationService.getOrganization(recipientId);
 
@@ -66,7 +75,7 @@ public class ProductInOrganizationService implements EntityFetcher {
     productRepository.save(product);
 
     return mapper.mapToProductsInOrganizationResponseDto(
-        recipient, productService.getProductsResponse(List.of(product)));
+        recipient, getProductsResponse(List.of(product)));
   }
 
   @Transactional
@@ -78,13 +87,13 @@ public class ProductInOrganizationService implements EntityFetcher {
 
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.EDIT_PRODUCT);
-    validateUsersAreMembersOfOrganization(organization, productService.getAuthors(productRequestDto));
+    validateUsersAreMembersOfOrganization(organization, getAuthors(productRequestDto));
 
     Product product = productService.getProduct(productId);
     throwExceptionIfOrganizationNotOwner(organization.getId(), product);
-    productService.throwExceptionIfProductIsSold(product);
+    throwExceptionIfProductIsSold(product);
     moveQuantityFromResourcesInProductToResourcesInOrganization(product);
-    productService.disassembleProductContent(product);
+    disassembleProductContent(product);
 
     setProductFields(productRequestDto, organization, product);
     productRepository.save(product);
@@ -100,7 +109,7 @@ public class ProductInOrganizationService implements EntityFetcher {
 
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.CREATE_PRODUCT);
-    validateUsersAreMembersOfOrganization(organization, productService.getAuthors(productRequestDto));
+    validateUsersAreMembersOfOrganization(organization, getAuthors(productRequestDto));
 
     Product product = persistProductWithoutResourcesAndProducts(productRequestDto, organization);
 
@@ -117,13 +126,27 @@ public class ProductInOrganizationService implements EntityFetcher {
     organizationService.validateCurrentUserPermission(
         organization, OrganizationPermission.DISASSEMBLE_PRODUCT);
 
-    productService.throwExceptionIfProductIsSold(product);
-    productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
+    throwExceptionIfProductIsSold(product);
+    throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
 
     moveQuantityFromResourcesInProductToResourcesInOrganization(product);
 
-    productService.disassembleProductContent(product);
-    productService.deleteProductById(productId);
+    disassembleProductContent(product);
+    deleteProductById(productId);
+  }
+
+  public Product saveProduct(Product product) {
+    return productRepository.save(product);
+  }
+
+  public void deleteProductById(UUID productId) {
+    productRepository.deleteById(productId);
+  }
+
+  public void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
+    if (product.getContentOf() != null) {
+      throw new ProductIsContentException(id);
+    }
   }
 
   private static void throwExceptionIfProductIsNotPartOfOrganization(Product product) {
@@ -136,15 +159,14 @@ public class ProductInOrganizationService implements EntityFetcher {
       Organization organization, ProductRequestDto productRequestDto, Product product) {
     addProductsContentToProduct(productRequestDto, product);
     addResourcesToProduct(productRequestDto, organization, product);
-
     return mapper.mapToProductsInOrganizationResponseDto(
-        organization, productService.getProductsResponse(List.of(product)));
+        organization, getProductsResponse(List.of(product)));
   }
 
   private Product persistProductWithoutResourcesAndProducts(
       ProductRequestDto productRequestDto, Organization organization) {
     Product product = getProductWithoutResourcesAndProduct(productRequestDto, organization);
-    productService.saveProduct(product);
+    saveProduct(product);
     return product;
   }
 
@@ -160,7 +182,7 @@ public class ProductInOrganizationService implements EntityFetcher {
       ProductRequestDto productRequestDto, Organization organization, Product product) {
     product.setOwner(null);
     product.setOrganization(organization);
-    product.setAuthors(productService.getAuthors(productRequestDto));
+    product.setAuthors(getAuthors(productRequestDto));
     product.setPartOfSale(null);
     product.setDescription(productRequestDto.getDescription());
     product.setProductionNumber(productRequestDto.getProductionNumber());
@@ -171,7 +193,8 @@ public class ProductInOrganizationService implements EntityFetcher {
     logger.debug("Product fields have been set successfully for product: {}", product);
   }
 
-  private void validateUsersAreMembersOfOrganization(Organization organization, List<User> authors) {
+  private void validateUsersAreMembersOfOrganization(
+      Organization organization, List<User> authors) {
     for (User author : authors) {
       boolean isUserInOrganization = false;
       for (UserInOrganization userInOrganization : organization.getUsersInOrganization()) {
@@ -191,7 +214,7 @@ public class ProductInOrganizationService implements EntityFetcher {
       product.setProductsContent(
           getProductsInProduct(productRequestDto.getProductsContent(), product));
       logger.debug("Products content added successfully to product: {}", product);
-      productService.saveProduct(product);
+      saveProduct(product);
     }
   }
 
@@ -202,9 +225,9 @@ public class ProductInOrganizationService implements EntityFetcher {
       productsIdInRequest.forEach(
           productId -> {
             Product product = productService.getProduct(productId);
-            productService.throwExceptionIfProductIsPartOfItself(product, parentProduct.getId());
-            productService.throwExceptionIfProductIsSold(product);
-            productService.throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
+            throwExceptionIfProductIsPartOfItself(product, parentProduct.getId());
+            throwExceptionIfProductIsSold(product);
+            throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
             if ((product.getOrganization() != null)
                 && parentProduct
                     .getOrganization()
@@ -361,6 +384,54 @@ public class ProductInOrganizationService implements EntityFetcher {
     }
   }
 
+  private List<ProductResponseDto> getProductsResponse(List<Product> products) {
+    return products.stream().map(productMapper::mapToProductResponseDto).toList();
+  }
+
+  private void throwExceptionIfProductIsSold(Product product) {
+    if (product.getPartOfSale() != null) {
+      throw new ProductIsSoldException(product.getId());
+    }
+  }
+
+  private void disassembleProductContent(Product product) {
+    if (product.getProductsContent() != null) {
+      logger.debug("Disassembling product content for product with ID: {}", product.getId());
+
+      product
+          .getProductsContent()
+          .forEach(
+              content -> {
+                content.setContentOf(null);
+                productRepository.save(content);
+              });
+
+      product.setProductsContent(new ArrayList<>());
+      productRepository.save(product);
+    }
+  }
+
+  private void throwExceptionIfProductIsPartOfItself(Product product, UUID parentId) {
+    if (product.getId().equals(parentId)) {
+      throw new ProductPartOfItselfException();
+    }
+  }
+
+  private List<User> getAuthors(ProductRequestDto productRequestDto) {
+    logger.debug("Getting authors for product.");
+    List<UUID> authorsIds = productRequestDto.getAuthors();
+    List<User> authors = new ArrayList<>();
+    authorsIds.forEach(
+        id -> {
+          logger.debug("Processing author with ID: {}", id);
+          User author =
+              userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+          authors.add(author);
+          logger.debug("Author with ID {} added to the list.", id);
+        });
+    return authors;
+  }
+
   @Override
   public Object fetchEntity(Object... ids) {
     Product product = productRepository.findById((UUID) ids[0]).orElse(null);
@@ -368,6 +439,6 @@ public class ProductInOrganizationService implements EntityFetcher {
       return null;
     }
     return mapper.mapToProductsInOrganizationResponseDto(
-        product.getOrganization(), productService.getProductsResponse(List.of(product)));
+        product.getOrganization(), getProductsResponse(List.of(product)));
   }
 }

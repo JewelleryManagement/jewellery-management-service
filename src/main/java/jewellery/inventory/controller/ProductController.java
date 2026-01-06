@@ -9,6 +9,7 @@ import jewellery.inventory.dto.response.ImageResponseDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.service.ImageService;
 import jewellery.inventory.service.ProductService;
+import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +30,7 @@ public class ProductController {
     return productService.getByOwner(ownerId);
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Get a single product")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")
@@ -53,6 +55,7 @@ public class ProductController {
     return imageService.downloadImage(productId);
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Delete image from file system and detach from product")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{productId}/picture")
