@@ -68,7 +68,6 @@ public class OrganizationSaleService {
     organizationService.validateCurrentUserPermission(
         organizationService.getOrganization(saleRequestDto.getSellerId()),
         OrganizationPermission.CREATE_SALE);
-    System.out.println("test");
     throwExceptionIfProductIsSold(saleRequestDto);
     throwExceptionIfProductIsPartOfAnotherProduct(saleRequestDto);
     throwExceptionIfSellerNotProductOwner(saleRequestDto);

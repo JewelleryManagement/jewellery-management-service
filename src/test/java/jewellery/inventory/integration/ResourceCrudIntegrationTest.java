@@ -95,11 +95,10 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
               getBigDecimal("0"),
               resourceQuantityDto.getQuantity().setScale(2, RoundingMode.HALF_UP));
         });
-    assertEquals(
-        createdResources,
-        resourceQuantityResponseDtos.stream()
-            .map(ResourceQuantityResponseDto::getResource)
-            .toList());
+
+    assertThat(resourceQuantityResponseDtos)
+        .extracting(ResourceQuantityResponseDto::getResource)
+        .containsExactlyInAnyOrderElementsOf(createdResources);
   }
 
   @Test

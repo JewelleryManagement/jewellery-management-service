@@ -23,7 +23,7 @@ import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.resource.Resource;
-import jewellery.inventory.repository.ResourceInUserRepository;
+import jewellery.inventory.repository.ResourceInOrganizationRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ResourceService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(ResourceService.class);
   private final ResourceRepository resourceRepository;
-  private final ResourceInUserRepository resourceInUserRepository;
+  private final ResourceInOrganizationRepository resourceInOrganizationRepository;
   private final ResourceMapper resourceMapper;
 
   public List<ResourceResponseDto> getAllResources() {
@@ -88,7 +88,8 @@ public class ResourceService implements EntityFetcher {
             resource ->
                 ResourceQuantityResponseDto.builder()
                     .resource(resourceMapper.toResourceResponse(resource))
-                    .quantity(resourceInUserRepository.sumQuantityByResource(resource.getId()))
+                    .quantity(
+                        resourceInOrganizationRepository.sumQuantityByResource(resource.getId()))
                     .build())
         .toList();
   }
