@@ -15,6 +15,7 @@ import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.security.AuthService;
+import jewellery.inventory.utils.NotUsedYet;
 import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,6 +35,7 @@ public class OrganizationService implements EntityFetcher {
     return getOrganizationsUserIsPartOf().stream().map(organizationMapper::toResponse).toList();
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   public OrganizationResponseDto getOrganizationResponse(UUID id) {
     logger.debug("Get organizationResponse by ID: {}", id);
     return organizationMapper.toResponse(getOrganization(id));
@@ -52,6 +54,7 @@ public class OrganizationService implements EntityFetcher {
     return organizationMapper.toResponse(organization);
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_DELETE)
   public void delete(UUID organizationId) {
     Organization organizationForDelete = getOrganization(organizationId);
@@ -110,10 +113,11 @@ public class OrganizationService implements EntityFetcher {
   private List<Organization> getOrganizationsUserIsPartOf() {
     User currentUser = userService.getUser(authService.getCurrentUser().getId());
     return getAll().stream()
-            .filter(org ->
-                    org.getUsersInOrganization().stream()
-                            .anyMatch(userOrg -> userOrg.getUser().equals(currentUser)))
-            .toList();
+        .filter(
+            org ->
+                org.getUsersInOrganization().stream()
+                    .anyMatch(userOrg -> userOrg.getUser().equals(currentUser)))
+        .toList();
   }
 
   private boolean doesUserHavePermissionForOrganization(

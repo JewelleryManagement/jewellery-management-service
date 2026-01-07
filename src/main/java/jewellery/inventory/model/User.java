@@ -1,14 +1,11 @@
 package jewellery.inventory.model;
 
 import jakarta.persistence.*;
-
-import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -52,9 +49,6 @@ public class User implements UserDetails {
 
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
   private List<Product> productsOwned = new ArrayList<>();
-
-  @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<ResourceInUser> resourcesOwned = new ArrayList<>();
 
   @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<PurchasedResourceInUser> purchasedResources = new ArrayList<>();

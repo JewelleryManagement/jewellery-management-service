@@ -45,7 +45,6 @@ abstract class AuthenticatedIntegrationTestBase {
   @Autowired private SaleRepository saleRepository;
   @Autowired private ProductRepository productRepository;
   @Autowired private ResourceRepository resourceRepository;
-  @Autowired private ResourceInUserRepository resourceInUserRepository;
   @Autowired private ResourceInProductRepository resourceInProductRepository;
   @Autowired private PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   @Autowired private ResourceInOrganizationRepository resourceInOrganizationRepository;
@@ -65,7 +64,6 @@ abstract class AuthenticatedIntegrationTestBase {
     purchasedResourceInUserRepository.deleteAll();
     userRepository.deleteAll();
     resourceRepository.deleteAll();
-    resourceInUserRepository.deleteAll();
     resourceInProductRepository.deleteAll();
     systemEventRepository.deleteAll();
     loggedInAdminUser = createTestAdminUser();

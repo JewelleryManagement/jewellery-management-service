@@ -2,7 +2,6 @@ package jewellery.inventory.helper;
 
 import java.math.BigDecimal;
 import java.util.*;
-
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.*;
@@ -23,7 +22,8 @@ public class OrganizationTestHelper {
     return organization;
   }
 
-  public static Organization setProductAndResourcesToOrganization(Organization organization, Product product, ResourceInOrganization resourceInOrganization) {
+  public static Organization setProductAndResourcesToOrganization(
+      Organization organization, Product product, ResourceInOrganization resourceInOrganization) {
     product.setOrganization(organization);
     organization.setProductsOwned(new ArrayList<>());
     organization.getProductsOwned().add(product);
@@ -50,7 +50,7 @@ public class OrganizationTestHelper {
     return organization;
   }
 
-  private static UserInOrganization createUserInOrganizationAllPermissions(
+  public static UserInOrganization createUserInOrganizationAllPermissions(
       User user, Organization organization) {
     UserInOrganization userInOrganization = new UserInOrganization();
     userInOrganization.setId(UUID.randomUUID());
@@ -115,7 +115,8 @@ public class OrganizationTestHelper {
     return dto;
   }
 
-  public static ResourceInOrganization createTestResourceInOrganization(Resource resource, Organization organization) {
+  public static ResourceInOrganization createTestResourceInOrganization(
+      Resource resource, Organization organization) {
     ResourceInOrganization resourceInOrganization = new ResourceInOrganization();
     resourceInOrganization.setResource(resource);
     resourceInOrganization.setId(UUID.randomUUID());

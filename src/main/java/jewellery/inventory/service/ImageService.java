@@ -17,6 +17,7 @@ import jewellery.inventory.mapper.ImageDataMapper;
 import jewellery.inventory.model.Image;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.repository.ImageRepository;
+import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -74,6 +75,7 @@ public class ImageService {
     return Files.readAllBytes(new File(product.getImage().getFilePath()).toPath());
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   @Transactional
   public void deleteImage(UUID productId) throws IOException {
     removeImage(getProduct(productId));
