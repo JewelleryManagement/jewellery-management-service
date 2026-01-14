@@ -43,8 +43,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     return buildUrl("organizations", "resources-availability");
   }
 
-  private String getBaseOrganizationSaleUrl() {
-    return buildUrl("organizations", "sales");
+  private String getBaseSaleUrl() {
+    return "/sales";
   }
 
   private String getBaseResourceAvailabilityUrl() {
@@ -147,7 +147,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
             SALE_DISCOUNT);
 
     this.testRestTemplate.postForEntity(
-        getBaseOrganizationSaleUrl(), saleRequestDto, OrganizationSaleResponseDto.class);
+        getBaseSaleUrl(), saleRequestDto, OrganizationSaleResponseDto.class);
   }
 
   private ResponseEntity<List<PurchasedResourceQuantityResponseDto>> getPurchasedResources(

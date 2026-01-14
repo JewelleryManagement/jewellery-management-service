@@ -64,10 +64,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return buildUrl("organizations", "resources-availability");
   }
 
-  private String getBaseProductInOrganizationUrl() {
-    return buildUrl("organizations", "products");
-  }
-
   private String getOrganizationUsersUrl(UUID organizationId) {
     return "/organizations/" + organizationId + "/users";
   }
@@ -234,9 +230,7 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
       ProductRequestDto productRequestDto) {
     ResponseEntity<ProductsInOrganizationResponseDto> response =
         this.testRestTemplate.postForEntity(
-            getBaseProductInOrganizationUrl(),
-            productRequestDto,
-            ProductsInOrganizationResponseDto.class);
+            getBaseProductUrl(), productRequestDto, ProductsInOrganizationResponseDto.class);
 
     return response.getBody();
   }

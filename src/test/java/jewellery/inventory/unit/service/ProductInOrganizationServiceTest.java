@@ -22,17 +22,15 @@ import jewellery.inventory.exception.product.ProductIsContentException;
 import jewellery.inventory.exception.product.ProductIsSoldException;
 import jewellery.inventory.exception.product.ProductOwnerEqualsRecipientException;
 import jewellery.inventory.helper.*;
-import jewellery.inventory.mapper.ProductInOrganizationMapper;
 import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ProductRepository;
 import jewellery.inventory.repository.ResourceInProductRepository;
-import jewellery.inventory.repository.UserRepository;
 import jewellery.inventory.service.OrganizationService;
-import jewellery.inventory.service.ProductInOrganizationService;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.ResourceInOrganizationService;
+import jewellery.inventory.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,17 +41,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class ProductInOrganizationServiceTest {
-  @InjectMocks private ProductInOrganizationService productInOrganizationService;
+  @InjectMocks private ProductService productService;
   @Mock private OrganizationService organizationService;
-  @Mock private ProductService productService;
   @Mock private ProductRepository productRepository;
-  @Mock private ProductInOrganizationMapper mapper;
   @Mock private ResourceInOrganizationService resourceInOrganizationService;
   @Mock private ResourceInProductRepository resourceInProductRepository;
   @Mock private ProductMapper productMapper;
-  @Mock private UserRepository userRepository;
+  @Mock private UserService userService;
   private static final BigDecimal QUANTITY = BigDecimal.valueOf(30);
-
   private Organization organization;
   private Organization organizationWithProduct;
   private ResourceInOrganization resourceInOrganization;
@@ -93,82 +88,78 @@ class ProductInOrganizationServiceTest {
 
   @Test
   void transferProductShouldThrowWhenProductIsNotPartOfOrganization() {
-    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
     product.setOrganization(null);
 
     assertThrows(
         ProductIsNotPartOfOrganizationException.class,
-        () -> productInOrganizationService.transferProduct(product.getId(), organization.getId()));
+        () -> productService.transferProduct(product.getId(), organization.getId()));
   }
 
   @Test
   void transferProductShouldThrowWhenOwnerOrganizationEqualsRecipient() {
-    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
 
     assertThrows(
         ProductOwnerEqualsRecipientException.class,
-        () ->
-            productInOrganizationService.transferProduct(
-                product.getId(), product.getOrganization().getId()));
+        () -> productService.transferProduct(product.getId(), product.getOrganization().getId()));
   }
 
   @Test
   void transferProductShouldThrowWhenProductNotFound() {
-    when(productService.getProduct(any())).thenThrow(ProductNotFoundException.class);
+    when(productRepository.findById(any())).thenThrow(ProductNotFoundException.class);
 
     assertThrows(
         ProductNotFoundException.class,
-        () ->
-            productInOrganizationService.transferProduct(
-                product.getId(), organizationWithProduct.getId()));
+        () -> productService.transferProduct(product.getId(), organizationWithProduct.getId()));
   }
 
   @Test
   void transferProductShouldThrowWhenOrganizationNotFound() {
-    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
     when(organizationService.getOrganization(organization.getId()))
         .thenThrow(OrganizationNotFoundException.class);
 
     assertThrows(
         OrganizationNotFoundException.class,
-        () -> productInOrganizationService.transferProduct(product.getId(), organization.getId()));
+        () -> productService.transferProduct(product.getId(), organization.getId()));
   }
 
   @Test
   void transferProductShouldThrowWhenProductIsSold() {
     product.setPartOfSale(new ProductPriceDiscount());
-    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
     product.setOrganization(organizationWithProduct);
 
     assertThrows(
         ProductIsSoldException.class,
-        () -> productInOrganizationService.transferProduct(product.getId(), organization.getId()));
+        () -> productService.transferProduct(product.getId(), organization.getId()));
   }
 
   @Test
   void transferProductShouldThrowWhenProductIsPartOfOtherProduct() {
-    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-    when(productInOrganizationService.transferProduct(product.getId(), organization.getId()))
+    when(productService.transferProduct(product.getId(), organization.getId()))
         .thenThrow(ProductIsContentException.class);
     product.setOrganization(organizationWithProduct);
 
     assertThrows(
         ProductIsContentException.class,
-        () -> productInOrganizationService.transferProduct(product.getId(), organization.getId()));
+        () -> productService.transferProduct(product.getId(), organization.getId()));
   }
 
   @Test
   void transferProductShouldThrowWhenNoPermission() {
-    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-    when(productInOrganizationService.transferProduct(product.getId(), organization.getId()))
+    when(productService.transferProduct(product.getId(), organization.getId()))
         .thenThrow(MissingOrganizationPermissionException.class);
     product.setOrganization(organizationWithProduct);
 
     assertThrows(
         MissingOrganizationPermissionException.class,
-        () -> productInOrganizationService.transferProduct(product.getId(), organization.getId()));
+        () -> productService.transferProduct(product.getId(), organization.getId()));
   }
 
   @Test
@@ -177,15 +168,14 @@ class ProductInOrganizationServiceTest {
         .thenReturn(organizationWithProduct);
     ProductResponseDto productResponseDto = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(product)).thenReturn(productResponseDto);
-    when(mapper.mapToProductsInOrganizationResponseDto(
+    when(productMapper.mapToProductsInOrganizationResponseDto(
             organizationWithProduct, List.of(productResponseDto)))
         .thenReturn(productsInOrganizationResponseDto);
-
     ProductsInOrganizationResponseDto products =
-        productInOrganizationService.getProductsInOrganization(organizationWithProduct.getId());
+        productService.getProductsInOrganization(organizationWithProduct.getId());
 
     verify(organizationService, times(1)).getOrganization(organizationWithProduct.getId());
-    verify(mapper, times(1))
+    verify(productMapper, times(1))
         .mapToProductsInOrganizationResponseDto(
             organizationWithProduct, List.of(productResponseDto));
     assertNotNull(products);
@@ -198,20 +188,21 @@ class ProductInOrganizationServiceTest {
     when(resourceInOrganizationService.findResourceInOrganizationOrThrow(
             organization, productRequestDto.getResourcesContent().get(0).getResourceId()))
         .thenReturn(resourceInOrganization);
-    when(userRepository.findById(user.getId())).thenReturn(Optional.ofNullable(user));
+    when(userService.getUser(user.getId())).thenReturn(user);
     ProductResponseDto productResponseDto = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(productResponseDto);
-    when(mapper.mapToProductsInOrganizationResponseDto(organization, List.of(productResponseDto)))
+    when(productMapper.mapToProductsInOrganizationResponseDto(
+            organization, List.of(productResponseDto)))
         .thenReturn(productsInOrganizationResponseDto);
 
     ProductsInOrganizationResponseDto productsInOrganizationResponse =
-        productInOrganizationService.createProductInOrganization(productRequestDto);
+        productService.createProductInOrganization(productRequestDto);
 
     verify(organizationService, times(1)).getOrganization(organization.getId());
     verify(resourceInOrganizationService, times(1))
         .findResourceInOrganizationOrThrow(
             organization, productRequestDto.getResourcesContent().get(0).getResourceId());
-    verify(mapper, times(1))
+    verify(productMapper, times(1))
         .mapToProductsInOrganizationResponseDto(organization, List.of(productResponseDto));
     assertNotNull(productsInOrganizationResponse);
     assertEquals(1, productsInOrganizationResponse.getProducts().size());
@@ -221,27 +212,28 @@ class ProductInOrganizationServiceTest {
   void createProductWithProductInOrganizationSuccessfully() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
     product.setOrganization(organization);
-    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
     when(resourceInOrganizationService.findResourceInOrganizationOrThrow(
             organization,
             productWithProductRequestDto.getResourcesContent().get(0).getResourceId()))
         .thenReturn(resourceInOrganization);
-    when(userRepository.findById(user.getId())).thenReturn(Optional.ofNullable(user));
+    when(userService.getUser(user.getId())).thenReturn(user);
     ProductResponseDto productResponseDto = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(productResponseDto);
-    when(mapper.mapToProductsInOrganizationResponseDto(organization, List.of(productResponseDto)))
+    when(productMapper.mapToProductsInOrganizationResponseDto(
+            organization, List.of(productResponseDto)))
         .thenReturn(productsInOrganizationResponseDto);
 
     ProductsInOrganizationResponseDto productsInOrganizationResponse =
-        productInOrganizationService.createProductInOrganization(productWithProductRequestDto);
+        productService.createProductInOrganization(productWithProductRequestDto);
 
     verify(organizationService, times(1)).getOrganization(organization.getId());
     verify(resourceInOrganizationService, times(1))
         .findResourceInOrganizationOrThrow(
             organization, productRequestDto.getResourcesContent().get(0).getResourceId());
-    verify(mapper, times(1))
+    verify(productMapper, times(1))
         .mapToProductsInOrganizationResponseDto(organization, List.of(productResponseDto));
-    verify(productService, times(1)).getProduct(product.getId());
+    verify(productRepository, times(1)).findById(product.getId());
     assertNotNull(productsInOrganizationResponse);
     assertEquals(1, productsInOrganizationResponse.getProducts().size());
   }
@@ -250,23 +242,24 @@ class ProductInOrganizationServiceTest {
   void updateProductInOrganizationSuccessfully() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
     product.setOrganization(organization);
-    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
     when(resourceInOrganizationService.findResourceInOrganizationOrThrow(
             organization, productRequestDto.getResourcesContent().get(0).getResourceId()))
         .thenReturn(resourceInOrganization);
-    when(userRepository.findById(user.getId())).thenReturn(Optional.ofNullable(user));
-    when(mapper.mapToProductsInOrganizationResponseDto(eq(organization), anyList()))
+    when(userService.getUser(user.getId())).thenReturn(user);
+    when(productMapper.mapToProductsInOrganizationResponseDto(eq(organization), anyList()))
         .thenReturn(productsInOrganizationResponseDto);
 
     ProductsInOrganizationResponseDto productsInOrganizationResponse =
-        productInOrganizationService.updateProduct(product.getId(), productRequestDto);
+        productService.updateProduct(product.getId(), productRequestDto);
 
     verify(organizationService, times(1)).getOrganization(organization.getId());
-    verify(productService, times(1)).getProduct(product.getId());
+    verify(productRepository, times(1)).findById(product.getId());
     verify(resourceInOrganizationService, times(1))
         .findResourceInOrganizationOrThrow(
             organization, productRequestDto.getResourcesContent().get(0).getResourceId());
-    verify(mapper, times(1)).mapToProductsInOrganizationResponseDto(eq(organization), anyList());
+    verify(productMapper, times(1))
+        .mapToProductsInOrganizationResponseDto(eq(organization), anyList());
     assertNotNull(productsInOrganizationResponse);
     assertEquals(1, productsInOrganizationResponse.getProducts().size());
   }
@@ -281,18 +274,18 @@ class ProductInOrganizationServiceTest {
 
     assertThrows(
         MissingOrganizationPermissionException.class,
-        () -> productInOrganizationService.updateProduct(product.getId(), productRequestDto));
+        () -> productService.updateProduct(product.getId(), productRequestDto));
   }
 
   @Test
   void updateProductInOrganizationThrowOrganizationNotOwnerException() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-    when(productService.getProduct(product.getId())).thenReturn(product);
-    when(userRepository.findById(user.getId())).thenReturn(Optional.ofNullable(user));
+    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
+    when(userService.getUser(user.getId())).thenReturn(user);
 
     assertThrows(
         OrganizationNotOwnerException.class,
-        () -> productInOrganizationService.updateProduct(product.getId(), productRequestDto));
+        () -> productService.updateProduct(product.getId(), productRequestDto));
   }
 
   @Test
@@ -306,22 +299,22 @@ class ProductInOrganizationServiceTest {
 
     assertThrows(
         ProductIsSoldException.class,
-        () -> productInOrganizationService.updateProduct(product.getId(), productRequestDto));
+        () -> productService.updateProduct(product.getId(), productRequestDto));
   }
 
   @Test
   void deleteProductInOrganizationSuccessfully() {
-    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
 
-    productInOrganizationService.deleteProductInOrganization(product.getId());
+    productService.deleteProductInOrganization(product.getId());
 
-    verify(productService, times(1)).getProduct(product.getId());
+    verify(productRepository, times(1)).findById(product.getId());
     verify(productRepository, times(1)).deleteById(product.getId());
   }
 
   @Test
   void deleteProductInOrganizationThrowMissingOrganizationPermissionException() {
-    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
 
     doThrow(MissingOrganizationPermissionException.class)
         .when(organizationService)
@@ -330,27 +323,27 @@ class ProductInOrganizationServiceTest {
 
     Assertions.assertThrows(
         MissingOrganizationPermissionException.class,
-        () -> productInOrganizationService.deleteProductInOrganization(product.getId()));
+        () -> productService.deleteProductInOrganization(product.getId()));
   }
 
   @Test
   void deleteProductInOrganizationThrowProductIsNotPartOfOrganizationException() {
-    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
     product.setOrganization(null);
 
     assertThrows(
         ProductIsNotPartOfOrganizationException.class,
-        () -> productInOrganizationService.deleteProductInOrganization(product.getId()));
+        () -> productService.deleteProductInOrganization(product.getId()));
   }
 
   @Test
   void deleteProductInOrganizationThrowProductIsContentException() {
     product.setContentOf(product2);
-    when(productService.getProduct(product.getId())).thenReturn(product);
+    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
 
     assertThrows(
         ProductIsContentException.class,
-        () -> productInOrganizationService.deleteProductInOrganization(product.getId()));
+        () -> productService.deleteProductInOrganization(product.getId()));
   }
 
   private ProductResponseDto productToResponse(Product product) {

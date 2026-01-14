@@ -5,8 +5,10 @@ import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ImageResponseDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.service.ImageService;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.utils.NotUsedYet;
@@ -61,5 +63,45 @@ public class ProductController {
   @DeleteMapping("/{productId}/picture")
   public void deleteImage(@PathVariable("productId") @Valid UUID productId) throws IOException {
     imageService.deleteImage(productId);
+  }
+
+  @Operation(summary = "Get all products in organization")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/organizations/{organizationId}")
+  public ProductsInOrganizationResponseDto getAllProductsInOrganization(
+      @PathVariable UUID organizationId) {
+    return productService.getProductsInOrganization(organizationId);
+  }
+
+  @Operation(summary = "Create a new product")
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping
+  public ProductsInOrganizationResponseDto createProduct(
+      @RequestBody @Valid ProductRequestDto productRequestDto) {
+    return productService.createProductInOrganization(productRequestDto);
+  }
+
+  @Operation(summary = "Delete a new product in organization")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @DeleteMapping("/{productId}")
+  public void deleteProduct(@PathVariable("productId") UUID productId) {
+    productService.deleteProductInOrganization(productId);
+  }
+
+  @Operation(summary = "Update a product in organization")
+  @ResponseStatus(HttpStatus.OK)
+  @PutMapping("/{productId}")
+  public ProductsInOrganizationResponseDto updateProduct(
+      @PathVariable("productId") UUID productId,
+      @Valid @RequestBody ProductRequestDto productRequestDto) {
+    return productService.updateProduct(productId, productRequestDto);
+  }
+
+  @Operation(summary = "Transfer a product to other organization")
+  @ResponseStatus(HttpStatus.OK)
+  @PutMapping("/{productId}/transfer/{recipientId}")
+  public ProductsInOrganizationResponseDto transferProduct(
+      @PathVariable("productId") UUID productId, @PathVariable("recipientId") UUID recipientId) {
+    return productService.transferProduct(productId, recipientId);
   }
 }

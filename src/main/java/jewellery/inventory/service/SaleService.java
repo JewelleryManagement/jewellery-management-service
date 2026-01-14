@@ -13,7 +13,6 @@ import jewellery.inventory.dto.response.OrganizationSaleResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.ResourceReturnResponseDto;
 import jewellery.inventory.dto.response.SaleResponseDto;
-import jewellery.inventory.exception.not_found.ResourceNotFoundInSaleException;
 import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
 import jewellery.inventory.exception.product.ProductIsContentException;
@@ -24,7 +23,6 @@ import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
-import jewellery.inventory.repository.PurchasedResourceInUserRepository;
 import jewellery.inventory.repository.SaleRepository;
 import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
@@ -34,9 +32,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class OrganizationSaleService {
+public class SaleService {
 
-  private static final Logger logger = LogManager.getLogger(OrganizationSaleService.class);
+  private static final Logger logger = LogManager.getLogger(SaleService.class);
 
   private final SaleMapper saleMapper;
   private final OrganizationService organizationService;
@@ -44,10 +42,9 @@ public class OrganizationSaleService {
   private final ResourceInOrganizationService resourceInOrganizationService;
   private final SaleRepository saleRepository;
   private final ProductService productService;
-  private final PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   private final ResourceService resourceService;
   private final ProductMapper productMapper;
-  private final ProductInOrganizationService productInOrganizationService;
+  private final ResourceInUserService resourceInUserService;
 
   @LogCreateEvent(eventType = EventType.ORGANIZATION_CREATE_SALE)
   @Transactional
@@ -108,7 +105,8 @@ public class OrganizationSaleService {
   @Transactional
   public ResourceReturnResponseDto returnResource(UUID saleId, UUID resourceId) {
     Sale sale = getSaleById(saleId);
-    PurchasedResourceInUser resourceToReturn = getPurchasedResource(resourceId, saleId);
+    PurchasedResourceInUser resourceToReturn =
+        resourceInUserService.getPurchasedResource(resourceId, saleId);
 
     organizationService.validateUserInOrganization(
         organizationService.getOrganization(sale.getOrganizationSeller().getId()));
@@ -140,12 +138,6 @@ public class OrganizationSaleService {
 
   public Sale getSaleById(UUID saleId) {
     return saleRepository.findById(saleId).orElseThrow(() -> new SaleNotFoundException(saleId));
-  }
-
-  public PurchasedResourceInUser getPurchasedResource(UUID resourceId, UUID saleId) {
-    return purchasedResourceInUserRepository
-        .findByResourceIdAndPartOfSaleId(resourceId, saleId)
-        .orElseThrow(() -> new ResourceNotFoundInSaleException(resourceId, saleId));
   }
 
   public ProductReturnResponseDto validateSaleAfterReturnProduct(
@@ -195,7 +187,7 @@ public class OrganizationSaleService {
         product.getId(),
         product.getOrganization().getId(),
         product.getPartOfSale() != null ? product.getPartOfSale().getId() : null);
-    productInOrganizationService.saveProduct(product);
+    productService.saveProduct(product);
   }
 
   private void updateProductsOrganizationOwnerRecursively(
@@ -353,7 +345,7 @@ public class OrganizationSaleService {
             resource.setSalePrice(
                 resource.getQuantity().multiply(resource.getResource().getPricePerQuantity()));
           });
-      purchasedResourceInUserRepository.saveAll(resources);
+      resourceInUserService.saveAllResources(resources);
     }
   }
 
@@ -432,7 +424,7 @@ public class OrganizationSaleService {
         product.getId(),
         product.getOwner().getId(),
         product.getPartOfSale() != null ? product.getPartOfSale().getId() : null);
-    productInOrganizationService.saveProduct(product);
+    productService.saveProduct(product);
   }
 
   private void updateProductOwnerRecursively(Product product, User newOwner) {

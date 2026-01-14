@@ -66,12 +66,12 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return "/users";
   }
 
-  private String getBaseOrganizationSaleUrl() {
-    return "/organizations/sales";
+  private String getBaseSaleUrl() {
+    return "/sales";
   }
 
-  private String getBaseProductsInOrganizationUrl() {
-    return buildUrl("organizations", "products");
+  private String getBaseProductsUrl() {
+    return "/products";
   }
 
   private String getPurchasedResourcesInUserUrl(UUID userId) {
@@ -86,12 +86,12 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return "/organizations/" + organizationId + "/users";
   }
 
-  private String getOrganizationSaleReturnResourceUrl(UUID saleId, UUID resourceId) {
-    return "/organizations/sales/" + saleId + "/return-resource/" + resourceId;
+  private String getSaleReturnResourceUrl(UUID saleId, UUID resourceId) {
+    return "/sales/" + saleId + "/return-resource/" + resourceId;
   }
 
-  private String getOrganizationSaleReturnProductUrl(UUID productId) {
-    return "/organizations/sales/return-product/" + productId;
+  private String getSaleReturnProductUrl(UUID productId) {
+    return "/sales/return-product/" + productId;
   }
 
   @BeforeEach
@@ -147,7 +147,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     ResponseEntity<ProductReturnResponseDto> productReturnResponse =
         this.testRestTemplate.exchange(
-            getOrganizationSaleReturnProductUrl(productResponse.getProducts().get(0).getId()),
+            getSaleReturnProductUrl(productResponse.getProducts().get(0).getId()),
             HttpMethod.PUT,
             null,
             new ParameterizedTypeReference<>() {});
@@ -177,7 +177,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     ResponseEntity<ProductReturnResponseDto> response =
         this.testRestTemplate.exchange(
-            getOrganizationSaleReturnProductUrl(productResponse.getProducts().get(0).getId()),
+            getSaleReturnProductUrl(productResponse.getProducts().get(0).getId()),
             HttpMethod.PUT,
             null,
             new ParameterizedTypeReference<>() {});
@@ -267,10 +267,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     ResponseEntity<List<OrganizationSaleResponseDto>> response =
         this.testRestTemplate.exchange(
-            getBaseOrganizationSaleUrl(),
-            HttpMethod.GET,
-            null,
-            new ParameterizedTypeReference<>() {});
+            getBaseSaleUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
@@ -563,9 +560,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
       ProductRequestDto productRequestDto) {
     ResponseEntity<ProductsInOrganizationResponseDto> response =
         this.testRestTemplate.postForEntity(
-            getBaseProductsInOrganizationUrl(),
-            productRequestDto,
-            ProductsInOrganizationResponseDto.class);
+            getBaseProductsUrl(), productRequestDto, ProductsInOrganizationResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     return response.getBody();
@@ -574,7 +569,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Nullable
   private ResponseEntity<ProductReturnResponseDto> returnProductFromSale(UUID productId) {
     return this.testRestTemplate.exchange(
-        getOrganizationSaleReturnProductUrl(productId),
+        getSaleReturnProductUrl(productId),
         HttpMethod.PUT,
         null,
         new ParameterizedTypeReference<>() {});
@@ -639,13 +634,13 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private ResponseEntity<OrganizationSaleResponseDto> createSaleInOrganization(
       SaleRequestDto saleRequestDto) {
     return this.testRestTemplate.postForEntity(
-        getBaseOrganizationSaleUrl(), saleRequestDto, OrganizationSaleResponseDto.class);
+        getBaseSaleUrl(), saleRequestDto, OrganizationSaleResponseDto.class);
   }
 
   private ResponseEntity<ResourceReturnResponseDto> createReturnResourceResponse(
       SaleRequestDto saleRequestDto, OrganizationSaleResponseDto saleResponse) {
     return this.testRestTemplate.exchange(
-        getOrganizationSaleReturnResourceUrl(
+        getSaleReturnResourceUrl(
             saleResponse.getId(),
             saleRequestDto.getResources().get(0).getResourceAndQuantity().getResourceId()),
         HttpMethod.PUT,

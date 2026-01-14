@@ -3,7 +3,9 @@ package jewellery.inventory.service;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.response.*;
+import jewellery.inventory.exception.not_found.ResourceNotFoundInSaleException;
 import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
+import jewellery.inventory.model.PurchasedResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.PurchasedResourceInUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,5 +23,15 @@ public class ResourceInUserService {
     return purchasedResourceInUserRepository.findAllByOwnerId(user.getId()).stream()
         .map(purchasedResourceInUserMapper::toPurchasedResourceQuantityResponseDto)
         .toList();
+  }
+
+  public PurchasedResourceInUser getPurchasedResource(UUID resourceId, UUID saleId) {
+    return purchasedResourceInUserRepository
+        .findByResourceIdAndPartOfSaleId(resourceId, saleId)
+        .orElseThrow(() -> new ResourceNotFoundInSaleException(resourceId, saleId));
+  }
+
+  public void saveAllResources(List<PurchasedResourceInUser> resources) {
+    purchasedResourceInUserRepository.saveAll(resources);
   }
 }

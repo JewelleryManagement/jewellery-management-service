@@ -55,7 +55,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   }
 
   private String getOrganizationProductsUrl(String organizationId) {
-    return buildUrl("organizations", organizationId, "products");
+    return buildUrl("products", "organizations", organizationId);
   }
 
   private String getOrganizationUsersUrl(UUID organizationId) {
@@ -236,10 +236,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
     ResponseEntity<String> response =
         this.testRestTemplate.exchange(
-            getBaseOrganizationUrl() + getProductUrl(productId),
-            HttpMethod.DELETE,
-            null,
-            String.class);
+            getProductUrl(productId), HttpMethod.DELETE, null, String.class);
 
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
     Map<String, Object> expectedEventPayload =
@@ -266,7 +263,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
     ResponseEntity<ProductsInOrganizationResponseDto> transferResponse =
         this.testRestTemplate.exchange(
-            "/organizations/products/" + productId + "/transfer/" + organizationId,
+            "/products/" + productId + "/transfer/" + organizationId,
             HttpMethod.PUT,
             null,
             ProductsInOrganizationResponseDto.class);
@@ -343,9 +340,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   private ResponseEntity<ProductsInOrganizationResponseDto> createProduct(
       ProductRequestDto productRequestDto) {
     return this.testRestTemplate.postForEntity(
-        getBaseOrganizationUrl() + "/products",
-        productRequestDto,
-        ProductsInOrganizationResponseDto.class);
+        "/products", productRequestDto, ProductsInOrganizationResponseDto.class);
   }
 
   @Nullable
@@ -355,7 +350,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     HttpEntity<ProductRequestDto> requestEntity = new HttpEntity<>(productRequestDto, headers);
 
     return this.testRestTemplate.exchange(
-        getBaseOrganizationUrl() + "/products/" + productId,
+        "/products/" + productId,
         HttpMethod.PUT,
         requestEntity,
         ProductsInOrganizationResponseDto.class);
