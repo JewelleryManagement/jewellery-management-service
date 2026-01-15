@@ -6,15 +6,19 @@ import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
+import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.OrphanProductsInOrganizationException;
 import jewellery.inventory.exception.organization.OrphanResourcesInOrganizationException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.mapper.OrganizationMapper;
+import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.security.AuthService;
+import jewellery.inventory.utils.NotUsedYet;
 import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,12 +32,14 @@ public class OrganizationService implements EntityFetcher {
   private final OrganizationMapper organizationMapper;
   private final AuthService authService;
   private final UserService userService;
+  private final ProductMapper productMapper;
 
   public List<OrganizationResponseDto> getAllOrganizationsResponsesForCurrentUser() {
     logger.debug("Fetching all organizationsResponses for current user ");
     return getOrganizationsUserIsPartOf().stream().map(organizationMapper::toResponse).toList();
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   public OrganizationResponseDto getOrganizationResponse(UUID id) {
     logger.debug("Get organizationResponse by ID: {}", id);
     return organizationMapper.toResponse(getOrganization(id));
@@ -52,6 +58,7 @@ public class OrganizationService implements EntityFetcher {
     return organizationMapper.toResponse(organization);
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_DELETE)
   public void delete(UUID organizationId) {
     Organization organizationForDelete = getOrganization(organizationId);
@@ -107,13 +114,26 @@ public class OrganizationService implements EntityFetcher {
         organization.getId());
   }
 
+  public ProductsInOrganizationResponseDto getProductsInOrganization(UUID organizationId) {
+    Organization organization = getOrganization(organizationId);
+    validateUserInOrganization(organization);
+
+    return productMapper.mapToProductsInOrganizationResponseDto(
+        organization, getProductsResponse(organization.getProductsOwned()));
+  }
+
+  private List<ProductResponseDto> getProductsResponse(List<Product> products) {
+    return products.stream().map(productMapper::mapToProductResponseDto).toList();
+  }
+
   private List<Organization> getOrganizationsUserIsPartOf() {
     User currentUser = userService.getUser(authService.getCurrentUser().getId());
     return getAll().stream()
-            .filter(org ->
-                    org.getUsersInOrganization().stream()
-                            .anyMatch(userOrg -> userOrg.getUser().equals(currentUser)))
-            .toList();
+        .filter(
+            org ->
+                org.getUsersInOrganization().stream()
+                    .anyMatch(userOrg -> userOrg.getUser().equals(currentUser)))
+        .toList();
   }
 
   private boolean doesUserHavePermissionForOrganization(

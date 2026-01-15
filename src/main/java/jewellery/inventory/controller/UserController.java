@@ -10,6 +10,7 @@ import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.UserUpdateRequestDto;
 import jewellery.inventory.dto.response.DetailedUserResponseDto;
 import jewellery.inventory.service.UserService;
+import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,6 +36,7 @@ public class UserController {
     return userService.getAllUsers();
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Get user by id")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")
@@ -43,10 +45,11 @@ public class UserController {
   }
 
   @Operation(summary = "Create new user")
-  @ApiResponses(value = {
-      @ApiResponse(responseCode = "201", description = "User created successfully"),
-      @ApiResponse(responseCode = "400", description = "Validation failed")
-  })
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "201", description = "User created successfully"),
+        @ApiResponse(responseCode = "400", description = "Validation failed")
+      })
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
   public DetailedUserResponseDto createUser(@Valid @RequestBody UserRequestDto newUser) {
@@ -61,6 +64,7 @@ public class UserController {
     return userService.updateUser(userRequest, id);
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Delete user by id")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{id}")

@@ -23,8 +23,9 @@ import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.resource.Resource;
-import jewellery.inventory.repository.ResourceInUserRepository;
+import jewellery.inventory.repository.ResourceInOrganizationRepository;
 import jewellery.inventory.repository.ResourceRepository;
+import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,7 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ResourceService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(ResourceService.class);
   private final ResourceRepository resourceRepository;
-  private final ResourceInUserRepository resourceInUserRepository;
+  private final ResourceInOrganizationRepository resourceInOrganizationRepository;
   private final ResourceMapper resourceMapper;
 
   public List<ResourceResponseDto> getAllResources() {
@@ -48,7 +49,8 @@ public class ResourceService implements EntityFetcher {
   @LogCreateEvent(eventType = EventType.RESOURCE_CREATE)
   public ResourceResponseDto createResource(ResourceRequestDto resourceRequestDto) {
     if (resourceRepository.existsBySku(resourceRequestDto.getSku())) {
-      throw new DuplicateException("Stock Keeping Unit: " + resourceRequestDto.getSku() + " already exists!");
+      throw new DuplicateException(
+          "Stock Keeping Unit: " + resourceRequestDto.getSku() + " already exists!");
     }
     Resource savedResource =
         resourceRepository.save(resourceMapper.toResourceEntity(resourceRequestDto));
@@ -79,18 +81,6 @@ public class ResourceService implements EntityFetcher {
     return resourceMapper.toResourceResponse(updatedResource);
   }
 
-  public ResourceQuantityResponseDto getResourceQuantity(UUID id) {
-    logger.debug("Fetching resource quantity by ID: {}", id);
-    return ResourceQuantityResponseDto.builder()
-        .quantity(resourceInUserRepository.sumQuantityByResource(id))
-        .resource(
-            resourceMapper.toResourceResponse(
-                resourceRepository
-                    .findById(id)
-                    .orElseThrow(() -> new ResourceNotFoundException(id))))
-        .build();
-  }
-
   public List<ResourceQuantityResponseDto> getAllResourceQuantities() {
     logger.debug("Fetching all resource quantities.");
     return resourceRepository.findAll().stream()
@@ -98,11 +88,13 @@ public class ResourceService implements EntityFetcher {
             resource ->
                 ResourceQuantityResponseDto.builder()
                     .resource(resourceMapper.toResourceResponse(resource))
-                    .quantity(resourceInUserRepository.sumQuantityByResource(resource.getId()))
+                    .quantity(
+                        resourceInOrganizationRepository.sumQuantityByResource(resource.getId()))
                     .build())
         .toList();
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   public List<ResourceResponseDto> importResources(MultipartFile file) {
     verifyIsCsv(file);
 

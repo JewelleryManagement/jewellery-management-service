@@ -1,15 +1,12 @@
 package jewellery.inventory.helper;
 
-import java.math.BigDecimal;
 import java.util.UUID;
-import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.UserUpdateRequestDto;
 import jewellery.inventory.dto.response.DetailedUserResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.Role;
 import jewellery.inventory.model.User;
-import org.jetbrains.annotations.NotNull;
 
 public class UserTestHelper {
   public static final String FIRST_NAME = "john";
@@ -130,25 +127,5 @@ public class UserTestHelper {
     invalidUserRequest.setFirstName("__");
     invalidUserRequest.setEmail(USER_EMAIL);
     return invalidUserRequest;
-  }
-
-  public static @NotNull ResourcePurchaseRequestDto createResourcePurchaseRequestDto(
-      UUID userId, UUID resourceId, BigDecimal quantity, BigDecimal price) {
-    ResourcePurchaseRequestDto requestDto = new ResourcePurchaseRequestDto();
-    requestDto.setUserId(userId);
-    requestDto.setResourceId(resourceId);
-    requestDto.setQuantity(quantity);
-    requestDto.setDealPrice(price);
-    return requestDto;
-  }
-
-  public static ResourcePurchaseRequestDto createResourcePurchaseRequest(
-      UUID userId, UUID resourceId, BigDecimal quantity, BigDecimal price) {
-    return ResourcePurchaseRequestDto.builder()
-        .userId(userId)
-        .resourceId(resourceId)
-        .quantity(quantity)
-        .dealPrice(price)
-        .build();
   }
 }

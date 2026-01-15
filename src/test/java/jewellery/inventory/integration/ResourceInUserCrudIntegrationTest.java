@@ -1,55 +1,54 @@
 package jewellery.inventory.integration;
 
-import static jewellery.inventory.helper.ResourceTestHelper.getDiamondMeleeRequestDto;
-import static jewellery.inventory.helper.ResourceTestHelper.getDiamondRequestDto;
-import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
-import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
+import static jewellery.inventory.helper.ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto;
+import static jewellery.inventory.helper.SaleTestHelper.getSimpleSaleInOrganizationRequestDto;
 import static jewellery.inventory.helper.UserTestHelper.*;
-import static jewellery.inventory.model.EventType.RESOURCE_ADD_QUANTITY;
-import static jewellery.inventory.model.EventType.RESOURCE_REMOVE_QUANTITY;
-import static jewellery.inventory.model.EventType.RESOURCE_TRANSFER;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
-import jewellery.inventory.dto.request.ResourceInUserRequestDto;
-import jewellery.inventory.dto.request.ResourcePurchaseRequestDto;
-import jewellery.inventory.dto.request.TransferResourceRequestDto;
-import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
-import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
-import jewellery.inventory.dto.response.resource.DiamondMeleeResponseDto;
 import jewellery.inventory.dto.response.resource.DiamondResponseDto;
-import jewellery.inventory.dto.response.resource.ResourceResponseDto;
-import org.jetbrains.annotations.NotNull;
+import jewellery.inventory.helper.OrganizationTestHelper;
+import jewellery.inventory.helper.ResourceTestHelper;
+import jewellery.inventory.model.Organization;
+import jewellery.inventory.model.User;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 
 class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private static final BigDecimal RESOURCE_QUANTITY = getBigDecimal("5");
-  private static final BigDecimal RESOURCE_QUANTITY_TO_REMOVE = getBigDecimal("1");
   private static final BigDecimal RESOURCE_PRICE = getBigDecimal("105.5");
+  private static final BigDecimal SALE_DISCOUNT = getBigDecimal("10");
+
+  private User buyer;
+  private DiamondResponseDto diamond;
 
   private String buildUrl(String... paths) {
     return "/" + String.join("/", paths);
   }
 
-  private String getBaseResourceAvailabilityUrl() {
-    return buildUrl("resources", "availability");
+  private String getBaseOrganizationsUrl() {
+    return buildUrl("organizations");
   }
 
-  private String getBaseResourceAvailabilityTransferUrl() {
-    return buildUrl("resources", "availability", "transfer");
+  private String getBaseResourceInOrganizationAvailabilityUrl() {
+    return buildUrl("organizations", "resources-availability");
+  }
+
+  private String getBaseSaleUrl() {
+    return "/sales";
+  }
+
+  private String getBaseResourceAvailabilityUrl() {
+    return buildUrl("resources", "availability", "purchased");
   }
 
   private String getBaseUserUrl() {
@@ -60,426 +59,104 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     return buildUrl("resources");
   }
 
-  @Test
-  void addResourceToUserSuccessfully() throws JsonProcessingException {
-    UserResponseDto createdUser = sendCreateUserRequest();
-    DiamondResponseDto createdResource = sendCreateDiamondRequest();
+  @BeforeEach
+  void setUp() {
+    buyer = createUserInDatabase(createDifferentUserRequest());
+    diamond = createDiamondInDatabase();
+  }
 
-    ResponseEntity<ResourcePurchaseResponseDto> response =
-        sendPurchaseResourceRequest(
-            createResourcePurchaseRequest(
-                createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
+  @Test
+  void getAllPurchasedResourcesFromUserSuccessfully() {
+    createSaleInOrganization();
+
+    ResponseEntity<List<PurchasedResourceQuantityResponseDto>> response =
+        getPurchasedResources(buyer.getId());
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(1, response.getBody().size());
+    assertEquals(
+        diamond.getId(),
+        response.getBody().getFirst().getResourceAndQuantity().getResource().getId());
+  }
+
+  @Test
+  void getAllPurchasedResourcesFromUserReturnsEmptyWhenUserHasNoResources() {
+    ResponseEntity<List<PurchasedResourceQuantityResponseDto>> response =
+        getPurchasedResources(buyer.getId());
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertTrue(response.getBody().isEmpty());
+  }
+
+  private Organization createOrganizationInDatabase(
+      OrganizationRequestDto testOrganizationRequest) {
+    ResponseEntity<Organization> response =
+        this.testRestTemplate.postForEntity(
+            getBaseOrganizationsUrl(), testOrganizationRequest, Organization.class);
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
-    assertNotNull(response.getBody());
-    assertEquals(1, response.getBody().getResourcesAndQuantities().size());
-    assertEquals(createdUser, response.getBody().getOwner());
-    ResourcePurchaseResponseDto result = response.getBody();
-
-    Map<String, Object> expectedEventPayload = getUpdateEventPayload(null, result, objectMapper);
-
-    systemEventTestHelper.assertEventWasLogged(RESOURCE_ADD_QUANTITY, expectedEventPayload);
+    return response.getBody();
   }
 
-  @Test
-  void addResourceToUserFailsWhenUserNotFound() {
-    DiamondResponseDto createdResource = sendCreateDiamondRequest();
-    UUID nonExistentUserId = UUID.randomUUID();
+  private User createUserInDatabase(UserRequestDto userRequest) {
+    ResponseEntity<User> createUser =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, User.class);
 
-    ResponseEntity<ResourcesInUserResponseDto> response =
-        sendAddResourceInUserRequest(
-            createResourcePurchaseRequestDto(
-                nonExistentUserId, createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    return createUser.getBody();
   }
 
-  @Test
-  void addResourceToUserFailsWhenResourceNotFound() {
-    UserResponseDto createdUser = sendCreateUserRequest();
-    UUID nonExistentResourceId = UUID.randomUUID();
-
-    ResponseEntity<ResourcesInUserResponseDto> response =
-        sendAddResourceInUserRequest(
-            createResourcePurchaseRequestDto(
-                createdUser.getId(), nonExistentResourceId, RESOURCE_QUANTITY, RESOURCE_PRICE));
-
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-  }
-
-  @Test
-  void addResourceToUserFailsWhenQuantityInvalid() {
-    UserResponseDto createdUser = sendCreateUserRequest();
-    DiamondResponseDto createdResource = sendCreateDiamondRequest();
-
-    ResponseEntity<ResourcesInUserResponseDto> response =
-        sendAddResourceInUserRequest(
-            createResourcePurchaseRequestDto(
-                createdUser.getId(),
-                createdResource.getId(),
-                getBigDecimal(RESOURCE_QUANTITY.negate().toString()),
-                getBigDecimal(RESOURCE_PRICE.negate().toString())));
-
-    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-  }
-
-  @Test
-  void updateResourceInUserSuccessfullyWhenAddedMultipleTimes() {
-    UserResponseDto createdUser = sendCreateUserRequest();
-    DiamondResponseDto createdResource = sendCreateDiamondRequest();
-    ResourceInUserRequestDto resourceInUserRequestDto =
-        createResourcePurchaseRequestDto(
-            createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
-
-    sendAddResourceInUserRequest(resourceInUserRequestDto);
-    sendAddResourceInUserRequest(resourceInUserRequestDto);
-
-    ResponseEntity<ResourcesInUserResponseDto> response =
-        sendGetResourcesInUserRequest(createdUser.getId());
-    assertNotNull(response.getBody());
-    List<ResourceQuantityResponseDto> resourceQuantities =
-        response.getBody().getResourcesAndQuantities();
-    assertNotNull(resourceQuantities);
-    assertEquals(1, resourceQuantities.size());
-    assertEquals(
-        RESOURCE_QUANTITY.multiply(getBigDecimal("2")).setScale(2, RoundingMode.HALF_UP),
-        resourceQuantities.get(0).getQuantity().setScale(2, RoundingMode.HALF_UP));
-  }
-
-  @Test
-  void getAllResourcesFromUserSuccessfully() {
-    UserResponseDto createdUser = sendCreateUserRequest();
-    DiamondResponseDto firstCreatedResource = sendCreateDiamondRequest();
-    DiamondMeleeResponseDto secondCreatedResource = sendCreateDiamondMeleeRequest();
-    sendAddResourceInUserRequest(
-        createResourcePurchaseRequestDto(
-            createdUser.getId(), firstCreatedResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-    sendAddResourceInUserRequest(
-        createResourcePurchaseRequestDto(
-            createdUser.getId(), secondCreatedResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-
-    ResponseEntity<ResourcesInUserResponseDto> response =
-        sendGetResourcesInUserRequest(createdUser.getId());
-
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertNotNull(response.getBody());
-    assertEquals(2, response.getBody().getResourcesAndQuantities().size());
-    assertCreatedResourceIsInResourcesInUser(firstCreatedResource, response);
-    assertCreatedResourceIsInResourcesInUser(secondCreatedResource, response);
-  }
-
-  @Test
-  void getAllUsersOwningResourceSuccessfully() {
-    UserResponseDto firstCreatedUser = sendCreateUserRequest(createTestUserRequest());
-    UserResponseDto secondCreatedUser = sendCreateUserRequest(createDifferentUserRequest());
-    DiamondResponseDto createdResource = sendCreateDiamondRequest();
-    sendAddResourceInUserRequest(
-        createResourcePurchaseRequestDto(
-            firstCreatedUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-    sendAddResourceInUserRequest(
-        createResourcePurchaseRequestDto(
-            secondCreatedUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-
-    ResponseEntity<ResourceOwnedByUsersResponseDto> response =
-        sendGetUsersAndQuantitiesForResourceRequest(createdResource.getId());
-
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertNotNull(response.getBody());
-    assertEquals(2, response.getBody().getUsersAndQuantities().size());
-  }
-
-  @Test
-  void getAllResourcesFromUserReturnsEmptyWhenUserHasNoResources() {
-    UserResponseDto createdUser = sendCreateUserRequest();
-
-    ResponseEntity<ResourcesInUserResponseDto> response =
-        sendGetResourcesInUserRequest(createdUser.getId());
-
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertNotNull(response.getBody());
-    assertTrue(response.getBody().getResourcesAndQuantities().isEmpty());
-  }
-
-  @Test
-  void removeResourceFromUserSuccessfully() throws JsonProcessingException {
-    UserResponseDto createdUser = sendCreateUserRequest();
-    DiamondResponseDto createdResource = sendCreateDiamondRequest();
-
-    ResponseEntity<ResourcesInUserResponseDto> entity =
-        sendAddResourceInUserRequest(
-            createResourcePurchaseRequestDto(
-                createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-
-    sendDeleteResourceInUserRequest(createdUser.getId(), createdResource.getId());
-
-    ResponseEntity<ResourcesInUserResponseDto> response =
-        sendGetResourcesInUserRequest(createdUser.getId());
-    assertNotNull(response.getBody());
-    assertTrue(response.getBody().getResourcesAndQuantities().isEmpty());
-
-    Map<String, Object> expectedEventPayload =
-        getUpdateEventPayload(entity.getBody(), null, objectMapper);
-
-    systemEventTestHelper.assertEventWasLogged(RESOURCE_REMOVE_QUANTITY, expectedEventPayload);
-  }
-
-  @Test
-  void removeResourceFromUserFailsWhenResourceNotFound() {
-    UserResponseDto createdUser = sendCreateUserRequest();
-    UUID nonExistentResourceId = UUID.randomUUID();
-
-    ResponseEntity<String> response =
-        sendDeleteResourceInUserRequest(createdUser.getId(), nonExistentResourceId);
-
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-  }
-
-  @Test
-  void removeResourceFromUserFailsWhenUserNotFound() {
-    UUID nonExistentUserId = UUID.randomUUID();
-    DiamondResponseDto createdResource = sendCreateDiamondRequest();
-
-    ResponseEntity<String> response =
-        sendDeleteResourceInUserRequest(nonExistentUserId, createdResource.getId());
-
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-  }
-
-  @Test
-  void removeResourceQuantityFromUserSuccessfully() throws JsonProcessingException {
-    UserResponseDto createdUser = sendCreateUserRequest();
-    DiamondResponseDto createdResource = sendCreateDiamondRequest();
-    ResponseEntity<ResourcesInUserResponseDto> response =
-        sendAddResourceInUserRequest(
-            createResourcePurchaseRequestDto(
-                createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-
-    ResponseEntity<ResourcesInUserResponseDto> deleteQuantityResponse =
-        sendDeleteQuantityFromResourceInUserRequest(
-            createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY_TO_REMOVE);
-
-    ResponseEntity<ResourcesInUserResponseDto> resourcesInUserResponse =
-        sendGetResourcesInUserRequest(createdUser.getId());
-    ResourceQuantityResponseDto resourceQuantity =
-        findResourceQuantityIn(createdResource.getId(), resourcesInUserResponse);
-    assertEquals(
-        RESOURCE_QUANTITY.subtract(RESOURCE_QUANTITY_TO_REMOVE), resourceQuantity.getQuantity());
-
-    Map<String, Object> expectedEventPayload =
-        getUpdateEventPayload(response.getBody(), deleteQuantityResponse.getBody(), objectMapper);
-
-    systemEventTestHelper.assertEventWasLogged(RESOURCE_REMOVE_QUANTITY, expectedEventPayload);
-  }
-
-  @Test
-  void removeResourceQuantityFromUserFailsWhenResourceNotFound() {
-    UserResponseDto createdUser = sendCreateUserRequest();
-    UUID nonExistentResourceId = UUID.randomUUID();
-
-    ResponseEntity<ResourcesInUserResponseDto> response =
-        sendDeleteQuantityFromResourceInUserRequest(
-            createdUser.getId(), nonExistentResourceId, RESOURCE_QUANTITY_TO_REMOVE);
-
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-  }
-
-  @Test
-  void removeResourceQuantityFromUserFailsWhenUserNotFound() {
-    UUID nonExistentUserId = UUID.randomUUID();
-    DiamondResponseDto createdResource = sendCreateDiamondRequest();
-
-    ResponseEntity<ResourcesInUserResponseDto> response =
-        sendDeleteQuantityFromResourceInUserRequest(
-            nonExistentUserId, createdResource.getId(), RESOURCE_QUANTITY_TO_REMOVE);
-
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-  }
-
-  @Test
-  void removeResourceQuantityFromUserFailsWhenInsufficientQuantity() {
-    UserResponseDto createdUser = sendCreateUserRequest();
-    DiamondResponseDto createdResource = sendCreateDiamondRequest();
-    sendAddResourceInUserRequest(
-        createResourcePurchaseRequestDto(
-            createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-
-    ResponseEntity<ResourcesInUserResponseDto> response =
-        sendDeleteQuantityFromResourceInUserRequest(
-            createdUser.getId(),
-            createdResource.getId(),
-            RESOURCE_QUANTITY.add(getBigDecimal("1")));
-
-    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-  }
-
-  @Test
-  void removeResourceQuantityFromUserFailsWhenQuantityNegative() {
-    UserResponseDto createdUser = sendCreateUserRequest();
-    DiamondResponseDto createdResource = sendCreateDiamondRequest();
-    sendAddResourceInUserRequest(
-        createResourcePurchaseRequestDto(
-            createdUser.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-
-    ResponseEntity<ResourcesInUserResponseDto> response =
-        sendDeleteQuantityFromResourceInUserRequest(
-            createdUser.getId(), createdResource.getId(), getBigDecimal("-1.0"));
-
-    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-  }
-
-  @Test
-  void transferResourceFromUserToAnotherUserSuccessfully() throws JsonProcessingException {
-    UserResponseDto sender = sendCreateUserRequest();
-    DiamondResponseDto createdResource = sendCreateDiamondRequest();
-    sendAddResourceInUserRequest(
-        createResourcePurchaseRequestDto(
-            sender.getId(), createdResource.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-
-    UserResponseDto receiver = sendCreateUserRequest(createDifferentUserRequest());
-
-    TransferResourceRequestDto requestDto =
-        getTransferResourceRequestDto(sender, createdResource, receiver);
-
-    ResponseEntity<TransferResourceResponseDto> transferResourceResponseDtoResponseEntity =
-        this.testRestTemplate.postForEntity(
-            getBaseResourceAvailabilityTransferUrl(),
-            requestDto,
-            TransferResourceResponseDto.class);
-    TransferResourceResponseDto response = transferResourceResponseDtoResponseEntity.getBody();
-
-    assertEquals(HttpStatus.OK, transferResourceResponseDtoResponseEntity.getStatusCode());
-
-    assertEquals(
-        Objects.requireNonNull(response).getPreviousOwner().getId(),
-        requestDto.getPreviousOwnerId());
-    assertEquals(
-        Objects.requireNonNull(response).getNewOwner().getId(), requestDto.getNewOwnerId());
-    assertEquals(
-        response.getTransferredResource().getResource().getId(),
-        requestDto.getTransferredResourceId());
-    assertEquals(getBigDecimal("1"), response.getTransferredResource().getQuantity());
-
-    Map<String, Object> expectedEventPayload =
-        getCreateOrDeleteEventPayload(response, objectMapper);
-
-    systemEventTestHelper.assertEventWasLogged(RESOURCE_TRANSFER, expectedEventPayload);
-  }
-
-  @NotNull
-  private static TransferResourceRequestDto getTransferResourceRequestDto(
-      UserResponseDto sender, DiamondResponseDto createdResource, UserResponseDto receiver) {
-    TransferResourceRequestDto requestDto = new TransferResourceRequestDto();
-    requestDto.setPreviousOwnerId(sender.getId());
-    requestDto.setNewOwnerId(receiver.getId());
-    requestDto.setTransferredResourceId(createdResource.getId());
-    requestDto.setQuantity(getBigDecimal("1"));
-    return requestDto;
-  }
-
-  private DiamondResponseDto sendCreateDiamondRequest() {
-    ResourceRequestDto resourceRequest = getDiamondRequestDto();
-    ResponseEntity<DiamondResponseDto> resourceResponseEntity =
+  private DiamondResponseDto createDiamondInDatabase() {
+    ResourceRequestDto resourceRequest = ResourceTestHelper.getDiamondRequestDto();
+    ResponseEntity<DiamondResponseDto> createResource =
         this.testRestTemplate.postForEntity(
             getBaseResourceUrl(), resourceRequest, DiamondResponseDto.class);
 
-    assertEquals(HttpStatus.CREATED, resourceResponseEntity.getStatusCode());
-
-    DiamondResponseDto createdResource = resourceResponseEntity.getBody();
-    assertNotNull(createdResource);
-    assertNotNull(createdResource.getId());
-    return createdResource;
+    return createResource.getBody();
   }
 
-  private DiamondMeleeResponseDto sendCreateDiamondMeleeRequest() {
-    ResourceRequestDto resourceRequest = getDiamondMeleeRequestDto();
-    ResponseEntity<DiamondMeleeResponseDto> resourceResponseEntity =
+  private ResourcesInOrganizationResponseDto createResourceInOrganization(
+      ResourceInOrganizationRequestDto request) {
+    ResponseEntity<ResourcesInOrganizationResponseDto> response =
         this.testRestTemplate.postForEntity(
-            getBaseResourceUrl(), resourceRequest, DiamondMeleeResponseDto.class);
+            getBaseResourceInOrganizationAvailabilityUrl(),
+            request,
+            ResourcesInOrganizationResponseDto.class);
 
-    assertEquals(HttpStatus.CREATED, resourceResponseEntity.getStatusCode());
-
-    DiamondMeleeResponseDto createdResource = resourceResponseEntity.getBody();
-    assertNotNull(createdResource);
-    assertNotNull(createdResource.getId());
-    return createdResource;
+    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    return response.getBody();
   }
 
-  private UserResponseDto sendCreateUserRequest(UserRequestDto userRequest) {
-    ResponseEntity<UserResponseDto> userResponseEntity =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
-    UserResponseDto createdUser = userResponseEntity.getBody();
-    assertNotNull(createdUser);
-    return createdUser;
+  private void createSaleInOrganization() {
+    Organization organizationSeller =
+        createOrganizationInDatabase(OrganizationTestHelper.getTestOrganizationRequest());
+
+    ResourceInOrganizationRequestDto resourceInOrganizationRequestDto =
+        createResourceInOrganizationRequestDto(
+            organizationSeller.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
+
+    ResourcesInOrganizationResponseDto resourcesInOrganizationResponseDto =
+        createResourceInOrganization(resourceInOrganizationRequestDto);
+
+    SaleRequestDto saleRequestDto =
+        getSimpleSaleInOrganizationRequestDto(
+            organizationSeller.getId(),
+            buyer.getId(),
+            resourcesInOrganizationResponseDto,
+            SALE_DISCOUNT);
+
+    this.testRestTemplate.postForEntity(
+        getBaseSaleUrl(), saleRequestDto, OrganizationSaleResponseDto.class);
   }
 
-  private UserResponseDto sendCreateUserRequest() {
-    UserRequestDto userRequest = createTestUserRequest();
-    ResponseEntity<UserResponseDto> userResponseEntity =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, UserResponseDto.class);
-    UserResponseDto createdUser = userResponseEntity.getBody();
-    assertNotNull(createdUser);
-    return createdUser;
-  }
+  private ResponseEntity<List<PurchasedResourceQuantityResponseDto>> getPurchasedResources(
+      UUID buyerId) {
 
-  private ResponseEntity<String> sendDeleteResourceInUserRequest(UUID userId, UUID resourceId) {
-    String removeResourceUrl = getBaseResourceAvailabilityUrl() + "/" + userId + "/" + resourceId;
     return testRestTemplate.exchange(
-        removeResourceUrl, HttpMethod.DELETE, HttpEntity.EMPTY, String.class);
-  }
-
-  private ResponseEntity<ResourcesInUserResponseDto> sendDeleteQuantityFromResourceInUserRequest(
-      UUID userId, UUID resourceId, BigDecimal quantity) {
-    String removeResourceUrl =
-        getBaseResourceAvailabilityUrl() + "/" + userId + "/" + resourceId + "/" + quantity;
-    return testRestTemplate.exchange(
-        removeResourceUrl, HttpMethod.DELETE, HttpEntity.EMPTY, ResourcesInUserResponseDto.class);
-  }
-
-  private ResponseEntity<ResourcesInUserResponseDto> sendAddResourceInUserRequest(
-      ResourceInUserRequestDto resourceInUserRequestDto) {
-    return testRestTemplate.postForEntity(
-        getBaseResourceAvailabilityUrl(),
-        resourceInUserRequestDto,
-        ResourcesInUserResponseDto.class);
-  }
-
-  private ResponseEntity<ResourcePurchaseResponseDto> sendPurchaseResourceRequest(
-      ResourcePurchaseRequestDto resourcePurchaseRequestDto) {
-    return testRestTemplate.postForEntity(
-        getBaseResourceAvailabilityUrl(),
-        resourcePurchaseRequestDto,
-        ResourcePurchaseResponseDto.class);
-  }
-
-  private ResponseEntity<ResourcesInUserResponseDto> sendGetResourcesInUserRequest(UUID userId) {
-    return testRestTemplate.getForEntity(
-        getBaseResourceAvailabilityUrl() + "/" + userId, ResourcesInUserResponseDto.class);
-  }
-
-  private ResponseEntity<ResourceOwnedByUsersResponseDto>
-      sendGetUsersAndQuantitiesForResourceRequest(UUID resourceId) {
-    return testRestTemplate.getForEntity(
-        getBaseResourceAvailabilityUrl() + "/by-resource/" + resourceId,
-        ResourceOwnedByUsersResponseDto.class);
-  }
-
-  private static void assertCreatedResourceIsInResourcesInUser(
-      ResourceResponseDto firstCreatedResource,
-      ResponseEntity<ResourcesInUserResponseDto> response) {
-    assertNotNull(response.getBody());
-    assertTrue(
-        response.getBody().getResourcesAndQuantities().stream()
-            .anyMatch(
-                resourceQuantityDto ->
-                    resourceQuantityDto.getResource().equals(firstCreatedResource)));
-  }
-
-  private static ResourceQuantityResponseDto findResourceQuantityIn(
-      UUID idToFind, ResponseEntity<ResourcesInUserResponseDto> resourcesInUserResponse) {
-    assertNotNull(resourcesInUserResponse.getBody());
-    return resourcesInUserResponse.getBody().getResourcesAndQuantities().stream()
-        .filter(rq -> rq.getResource().getId().equals(idToFind))
-        .findFirst()
-        .orElseThrow(() -> new AssertionError("Expected resource not found"));
+        getBaseResourceAvailabilityUrl() + "/" + buyerId,
+        HttpMethod.GET,
+        null,
+        new ParameterizedTypeReference<List<PurchasedResourceQuantityResponseDto>>() {});
   }
 }

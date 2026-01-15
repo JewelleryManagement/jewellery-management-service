@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.model.ResourceInOrganization;
-import jewellery.inventory.model.ResourceInUser;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -23,12 +22,9 @@ public class Resource {
   private String quantityType;
   private BigDecimal pricePerQuantity;
   private String note;
+
   @Column(unique = true, nullable = false)
   private String sku;
-
-  @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL)
-  @ToString.Exclude
-  private List<ResourceInUser> userAffiliations;
 
   @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL)
   @ToString.Exclude

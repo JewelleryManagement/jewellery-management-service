@@ -3,12 +3,9 @@ package jewellery.inventory.mapper;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.dto.response.ProductReturnResponseDto;
-import jewellery.inventory.dto.response.SaleResponseDto;
-import jewellery.inventory.dto.response.UserResponseDto;
-import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
+import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.Product;
 import jewellery.inventory.model.resource.ResourceInProduct;
 import jewellery.inventory.utils.BigDecimalUtil;
@@ -21,6 +18,7 @@ public class ProductMapper {
 
   private final UserMapper userMapper;
   private final ResourceMapper resourceMapper;
+  private final OrganizationMapper organizationMapper;
 
   public ProductResponseDto mapToProductResponseDto(Product product) {
 
@@ -37,12 +35,23 @@ public class ProductMapper {
     productResponseDto.setOwner(userMapper.toUserResponse(product.getOwner()));
     productResponseDto.setProductionNumber(product.getProductionNumber());
     productResponseDto.setCatalogNumber(product.getCatalogNumber());
-    productResponseDto.setAdditionalPrice(BigDecimalUtil.getBigDecimal(product.getAdditionalPrice()));
+    productResponseDto.setAdditionalPrice(
+        BigDecimalUtil.getBigDecimal(product.getAdditionalPrice()));
     setContentProductToResponse(product, productResponseDto);
     setResourcesToResponse(product, productResponseDto);
     setProductsToResponse(product, productResponseDto);
 
     return productResponseDto;
+  }
+
+  public ProductsInOrganizationResponseDto mapToProductsInOrganizationResponseDto(
+      Organization organization, List<ProductResponseDto> products) {
+    ProductsInOrganizationResponseDto productsInOrganizationResponseDto =
+        new ProductsInOrganizationResponseDto();
+
+    productsInOrganizationResponseDto.setOrganization(organizationMapper.toResponse(organization));
+    productsInOrganizationResponseDto.setProducts(products);
+    return productsInOrganizationResponseDto;
   }
 
   private BigDecimal getPriceFromSale(Product product) {
