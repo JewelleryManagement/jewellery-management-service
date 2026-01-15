@@ -58,14 +58,6 @@ public class ProductService implements EntityFetcher {
     return productMapper.mapToProductResponseDto(getProduct(id));
   }
 
-  public ProductsInOrganizationResponseDto getProductsInOrganization(UUID organizationId) {
-    Organization organization = organizationService.getOrganization(organizationId);
-    organizationService.validateUserInOrganization(organization);
-
-    return productMapper.mapToProductsInOrganizationResponseDto(
-        organization, getProductsResponse(organization.getProductsOwned()));
-  }
-
   public Product saveProduct(Product product) {
     return productRepository.save(product);
   }

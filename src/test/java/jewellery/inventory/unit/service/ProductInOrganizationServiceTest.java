@@ -25,6 +25,7 @@ import jewellery.inventory.helper.*;
 import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
+import jewellery.inventory.repository.OrganizationRepository;
 import jewellery.inventory.repository.ProductRepository;
 import jewellery.inventory.repository.ResourceInProductRepository;
 import jewellery.inventory.service.OrganizationService;
@@ -48,6 +49,7 @@ class ProductInOrganizationServiceTest {
   @Mock private ResourceInProductRepository resourceInProductRepository;
   @Mock private ProductMapper productMapper;
   @Mock private UserService userService;
+  @Mock private OrganizationRepository organizationRepository;
   private static final BigDecimal QUANTITY = BigDecimal.valueOf(30);
   private Organization organization;
   private Organization organizationWithProduct;
@@ -160,26 +162,6 @@ class ProductInOrganizationServiceTest {
     assertThrows(
         MissingOrganizationPermissionException.class,
         () -> productService.transferProduct(product.getId(), organization.getId()));
-  }
-
-  @Test
-  void getAllProductsInOrganizationSuccessfully() {
-    when(organizationService.getOrganization(organizationWithProduct.getId()))
-        .thenReturn(organizationWithProduct);
-    ProductResponseDto productResponseDto = new ProductResponseDto();
-    when(productMapper.mapToProductResponseDto(product)).thenReturn(productResponseDto);
-    when(productMapper.mapToProductsInOrganizationResponseDto(
-            organizationWithProduct, List.of(productResponseDto)))
-        .thenReturn(productsInOrganizationResponseDto);
-    ProductsInOrganizationResponseDto products =
-        productService.getProductsInOrganization(organizationWithProduct.getId());
-
-    verify(organizationService, times(1)).getOrganization(organizationWithProduct.getId());
-    verify(productMapper, times(1))
-        .mapToProductsInOrganizationResponseDto(
-            organizationWithProduct, List.of(productResponseDto));
-    assertNotNull(products);
-    assertEquals(1, products.getProducts().size());
   }
 
   @Test

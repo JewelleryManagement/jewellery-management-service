@@ -44,7 +44,7 @@ class SaleServiceTest {
   @Mock private ResourceInOrganizationService resourceInOrganizationService;
   @Mock private SaleRepository saleRepository;
   @Mock private ProductService productService;
-  @Mock private ResourceInUserService resourceInUserService;
+  @Mock private PurchasedResourceInUserService purchasedResourceInUserService;
   @Mock private ResourceService resourceService;
   @Mock private ProductMapper productMapper;
 
@@ -302,7 +302,7 @@ class SaleServiceTest {
   @Test
   void testReturnResourceShouldThrowWhenResourceNotFoundInSale() {
     when(saleRepository.findById(sale.getId())).thenReturn(Optional.of(sale));
-    when(resourceInUserService.getPurchasedResource(
+    when(purchasedResourceInUserService.getPurchasedResource(
             purchasedResourceInUser.getResource().getId(), sale.getId()))
         .thenThrow(ResourceNotFoundInSaleException.class);
 
@@ -314,7 +314,7 @@ class SaleServiceTest {
   @Test
   void testReturnResourceSuccessfully() {
     when(saleRepository.findById(sale.getId())).thenReturn(Optional.of(sale));
-    when(resourceInUserService.getPurchasedResource(
+    when(purchasedResourceInUserService.getPurchasedResource(
             purchasedResourceInUser.getResource().getId(), sale.getId()))
         .thenReturn(purchasedResourceInUser);
     when(resourceInOrganizationService.getResourceInOrganization(

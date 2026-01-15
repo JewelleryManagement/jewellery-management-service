@@ -65,14 +65,6 @@ public class ProductController {
     imageService.deleteImage(productId);
   }
 
-  @Operation(summary = "Get all products in organization")
-  @ResponseStatus(HttpStatus.OK)
-  @GetMapping("/organizations/{organizationId}")
-  public ProductsInOrganizationResponseDto getAllProductsInOrganization(
-      @PathVariable UUID organizationId) {
-    return productService.getProductsInOrganization(organizationId);
-  }
-
   @Operation(summary = "Create a new product")
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping

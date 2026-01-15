@@ -55,7 +55,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   }
 
   private String getOrganizationProductsUrl(String organizationId) {
-    return buildUrl("products", "organizations", organizationId);
+    return buildUrl("organizations", organizationId, "products");
   }
 
   private String getOrganizationUsersUrl(UUID organizationId) {

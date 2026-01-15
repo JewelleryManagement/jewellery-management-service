@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
-import jewellery.inventory.service.ResourceInUserService;
+import jewellery.inventory.service.PurchasedResourceInUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Validated
 public class ResourceInUserController {
-  private final ResourceInUserService resourceAvailabilityService;
+  private final PurchasedResourceInUserService resourceAvailabilityService;
 
   @Operation(summary = "Get all purchased resources")
   @ResponseStatus(HttpStatus.OK)

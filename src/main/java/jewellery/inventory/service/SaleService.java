@@ -44,7 +44,7 @@ public class SaleService {
   private final ProductService productService;
   private final ResourceService resourceService;
   private final ProductMapper productMapper;
-  private final ResourceInUserService resourceInUserService;
+  private final PurchasedResourceInUserService purchasedResourceInUserService;
 
   @LogCreateEvent(eventType = EventType.ORGANIZATION_CREATE_SALE)
   @Transactional
@@ -106,7 +106,7 @@ public class SaleService {
   public ResourceReturnResponseDto returnResource(UUID saleId, UUID resourceId) {
     Sale sale = getSaleById(saleId);
     PurchasedResourceInUser resourceToReturn =
-        resourceInUserService.getPurchasedResource(resourceId, saleId);
+        purchasedResourceInUserService.getPurchasedResource(resourceId, saleId);
 
     organizationService.validateUserInOrganization(
         organizationService.getOrganization(sale.getOrganizationSeller().getId()));
@@ -345,7 +345,7 @@ public class SaleService {
             resource.setSalePrice(
                 resource.getQuantity().multiply(resource.getResource().getPricePerQuantity()));
           });
-      resourceInUserService.saveAllResources(resources);
+      purchasedResourceInUserService.saveAllPurchasedResources(resources);
     }
   }
 

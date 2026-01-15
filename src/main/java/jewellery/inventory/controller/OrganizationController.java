@@ -10,6 +10,7 @@ import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationMembersResponseDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.OrganizationSingleMemberResponseDto;
+import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.model.OrganizationPermission;
 import jewellery.inventory.service.OrganizationService;
 import jewellery.inventory.service.UserInOrganizationService;
@@ -100,5 +101,13 @@ public class OrganizationController {
   public OrganizationMembersResponseDto getAllUsersInOrganization(
       @PathVariable UUID organizationId) {
     return userInOrganizationService.getAllUsersInOrganization(organizationId);
+  }
+
+  @Operation(summary = "Get all products in organization")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/{organizationId}/products")
+  public ProductsInOrganizationResponseDto getAllProductsInOrganization(
+      @PathVariable UUID organizationId) {
+    return organizationService.getProductsInOrganization(organizationId);
   }
 }

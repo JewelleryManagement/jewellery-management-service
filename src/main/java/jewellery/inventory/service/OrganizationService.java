@@ -6,12 +6,15 @@ import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
+import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.OrphanProductsInOrganizationException;
 import jewellery.inventory.exception.organization.OrphanResourcesInOrganizationException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.mapper.OrganizationMapper;
+import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.security.AuthService;
@@ -29,6 +32,7 @@ public class OrganizationService implements EntityFetcher {
   private final OrganizationMapper organizationMapper;
   private final AuthService authService;
   private final UserService userService;
+  private final ProductMapper productMapper;
 
   public List<OrganizationResponseDto> getAllOrganizationsResponsesForCurrentUser() {
     logger.debug("Fetching all organizationsResponses for current user ");
@@ -108,6 +112,18 @@ public class OrganizationService implements EntityFetcher {
         "User permission validation successful. User ID: {}, Organization ID: {}",
         currentUser.getId(),
         organization.getId());
+  }
+
+  public ProductsInOrganizationResponseDto getProductsInOrganization(UUID organizationId) {
+    Organization organization = getOrganization(organizationId);
+    validateUserInOrganization(organization);
+
+    return productMapper.mapToProductsInOrganizationResponseDto(
+        organization, getProductsResponse(organization.getProductsOwned()));
+  }
+
+  private List<ProductResponseDto> getProductsResponse(List<Product> products) {
+    return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
   private List<Organization> getOrganizationsUserIsPartOf() {

@@ -19,7 +19,7 @@ import jewellery.inventory.model.PurchasedResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.PurchasedResourceInUserRepository;
-import jewellery.inventory.service.ResourceInUserService;
+import jewellery.inventory.service.PurchasedResourceInUserService;
 import jewellery.inventory.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,9 +29,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class ResourceInUserServiceTest {
+class PurchasedResourceInUserServiceTest {
   @Mock private UserService userService;
-  @InjectMocks private ResourceInUserService resourceInUserService;
+  @InjectMocks private PurchasedResourceInUserService purchasedResourceInUserService;
   @Mock private PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   @Mock private PurchasedResourceInUserMapper purchasedResourceInUserMapper;
   private User user;
@@ -75,7 +75,7 @@ class ResourceInUserServiceTest {
         .thenReturn(purchasedResourceQuantityResponseDto2);
 
     List<PurchasedResourceQuantityResponseDto> allPurchasedResources =
-        resourceInUserService.getAllPurchasedResources(userId);
+        purchasedResourceInUserService.getAllPurchasedResources(userId);
 
     assertNotNull(allPurchasedResources);
     assertEquals(2, allPurchasedResources.size());
@@ -95,7 +95,8 @@ class ResourceInUserServiceTest {
     when(userService.getUser(userId)).thenThrow(UserNotFoundException.class);
 
     assertThrows(
-        UserNotFoundException.class, () -> resourceInUserService.getAllPurchasedResources(userId));
+        UserNotFoundException.class,
+        () -> purchasedResourceInUserService.getAllPurchasedResources(userId));
   }
 
   @Test
@@ -104,7 +105,7 @@ class ResourceInUserServiceTest {
     when(purchasedResourceInUserRepository.findAllByOwnerId(user.getId())).thenReturn(List.of());
 
     List<PurchasedResourceQuantityResponseDto> allPurchasedResources =
-        resourceInUserService.getAllPurchasedResources(userId);
+        purchasedResourceInUserService.getAllPurchasedResources(userId);
 
     assertNotNull(allPurchasedResources);
     assertTrue(allPurchasedResources.isEmpty());

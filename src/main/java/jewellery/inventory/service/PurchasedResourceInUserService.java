@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class ResourceInUserService {
+public class PurchasedResourceInUserService {
   private final PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   private final PurchasedResourceInUserMapper purchasedResourceInUserMapper;
   private final UserService userService;
@@ -31,7 +31,7 @@ public class ResourceInUserService {
         .orElseThrow(() -> new ResourceNotFoundInSaleException(resourceId, saleId));
   }
 
-  public void saveAllResources(List<PurchasedResourceInUser> resources) {
+  public void saveAllPurchasedResources(List<PurchasedResourceInUser> resources) {
     purchasedResourceInUserRepository.saveAll(resources);
   }
 }
