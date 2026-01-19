@@ -8,6 +8,7 @@ import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.service.ResourceService;
+import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -56,13 +57,6 @@ public class ResourceController {
     resourceService.deleteResourceById(id);
   }
 
-  @Operation(summary = "Get resource quantity by resource id")
-  @ResponseStatus(HttpStatus.OK)
-  @GetMapping("/quantity/{id}")
-  public ResourceQuantityResponseDto getResourceQuantityById(@PathVariable("id") UUID id) {
-    return resourceService.getResourceQuantity(id);
-  }
-
   @Operation(summary = "Get all resource quantities")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/quantity")
@@ -70,6 +64,7 @@ public class ResourceController {
     return resourceService.getAllResourceQuantities();
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Import resources from CSV")
   @ResponseStatus(HttpStatus.OK)
   @PostMapping("/import")

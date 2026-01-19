@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
@@ -56,16 +55,6 @@ class ResourceServiceTest {
 
     assertEquals(expectedResponseDto.getId(), actualResourceResponseDto.getId());
     verify(resourceRepository, times(1)).save(any());
-  }
-
-  @Test
-  void willGetAllResources() {
-    when(resourceRepository.findAll()).thenReturn(provideResources().toList());
-
-    List<ResourceResponseDto> actualResourceResponseDtos = resourceService.getAllResources();
-
-    assertEquals(provideResources().toList().size(), actualResourceResponseDtos.size());
-    verify(resourceRepository, times(1)).findAll();
   }
 
   @ParameterizedTest

@@ -49,11 +49,11 @@ public class Product {
 
   @ManyToOne private Organization organization;
 
-  public ProductPriceDiscount getPartOfSale(){
+  public ProductPriceDiscount getPartOfSale() {
     Product parentProduct = this.contentOf;
 
-    while(parentProduct != null){
-      if(parentProduct.getPartOfSale() != null){
+    while (parentProduct != null) {
+      if (parentProduct.getPartOfSale() != null) {
         return parentProduct.getPartOfSale();
       }
       parentProduct = parentProduct.getContentOf();

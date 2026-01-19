@@ -2,6 +2,7 @@ package jewellery.inventory.unit.service;
 
 import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizationRequest;
+import static jewellery.inventory.helper.ProductTestHelper.getTestProduct;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -13,12 +14,14 @@ import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.OrphanProductsInOrganizationException;
 import jewellery.inventory.exception.organization.OrphanResourcesInOrganizationException;
+import jewellery.inventory.helper.OrganizationTestHelper;
+import jewellery.inventory.helper.ResourceInOrganizationTestHelper;
+import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.mapper.OrganizationMapper;
-import jewellery.inventory.model.Organization;
-import jewellery.inventory.model.Product;
-import jewellery.inventory.model.ResourceInOrganization;
-import jewellery.inventory.model.User;
+import jewellery.inventory.mapper.ProductMapper;
+import jewellery.inventory.model.*;
+import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.OrganizationRepository;
 import jewellery.inventory.repository.UserInOrganizationRepository;
 import jewellery.inventory.service.OrganizationService;
@@ -36,7 +39,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class OrganizationServiceTest {
   @InjectMocks private OrganizationService organizationService;
   @Mock private UserInOrganizationService userInOrganizationService;
-
+  @Mock private ProductMapper productMapper;
   @Mock private OrganizationRepository organizationRepository;
   @Mock private OrganizationMapper organizationMapper;
   @Mock private AuthService authService;
@@ -49,27 +52,46 @@ class OrganizationServiceTest {
   private OrganizationRequestDto organizationRequestDto;
   private OrganizationResponseDto organizationResponseDto;
   private UserResponseDto userResponseDto;
+  private Product product;
+  private ProductsInOrganizationResponseDto productsInOrganizationResponseDto;
+  private ResourceInOrganization resourceInOrganization;
+  private Organization organizationWithProduct;
+  private UserInOrganization userInOrganization;
 
   @BeforeEach
   void setUp() {
     organization = getTestOrganization();
     organizationRequestDto = getTestOrganizationRequest();
     user = UserTestHelper.createSecondTestUser();
-    organizationWithNoUserPermissions = getOrganizationWithUserWithNoPermissions(organization, user);
+    userInOrganization = createUserInOrganizationAllPermissions(user, organization);
+    organization.setUsersInOrganization(List.of(userInOrganization));
+    organizationWithNoUserPermissions =
+        getOrganizationWithUserWithNoPermissions(organization, user);
     organizationWithUserAllPermission = getTestOrganizationWithUserWithAllPermissions(user);
     userResponseDto = getTestExecutor(user);
     organizationResponseDto = getTestOrganizationResponseDto(organization);
+    Resource resource = ResourceTestHelper.getPearl();
+    resourceInOrganization =
+        ResourceInOrganizationTestHelper.createResourceInOrganization(organization, resource);
+    product = getTestProduct(user, resource);
+    productsInOrganizationResponseDto =
+        new ProductsInOrganizationResponseDto(
+            getTestOrganizationResponseDto(OrganizationTestHelper.getTestOrganization()),
+            List.of(productToResponse(product)));
+    organizationWithProduct =
+        setProductAndResourcesToOrganization(
+            OrganizationTestHelper.getTestOrganization(), product, resourceInOrganization);
   }
 
   @Test
   void testGetAllOrganizations() {
-    List<Organization> organizations =
-        List.of(organizationWithUserAllPermission);
+    List<Organization> organizations = List.of(organizationWithUserAllPermission);
     when(organizationRepository.findAll()).thenReturn(organizations);
     when(authService.getCurrentUser()).thenReturn(userResponseDto);
     when(userService.getUser(user.getId())).thenReturn(user);
 
-    List<OrganizationResponseDto> responses = organizationService.getAllOrganizationsResponsesForCurrentUser();
+    List<OrganizationResponseDto> responses =
+        organizationService.getAllOrganizationsResponsesForCurrentUser();
 
     assertEquals(organizations.size(), responses.size());
   }
@@ -176,5 +198,34 @@ class OrganizationServiceTest {
     assertThrows(
         OrganizationNotFoundException.class,
         () -> organizationService.getOrganizationResponse(fakeId));
+  }
+
+  @Test
+  void getAllProductsInOrganizationSuccessfully() {
+    when(organizationRepository.findById(organizationWithProduct.getId()))
+        .thenReturn(Optional.ofNullable(organizationWithProduct));
+    organizationWithProduct.setUsersInOrganization(List.of(userInOrganization));
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
+    when(userService.getUser(user.getId())).thenReturn(user);
+    ProductResponseDto productResponseDto = new ProductResponseDto();
+    when(productMapper.mapToProductResponseDto(product)).thenReturn(productResponseDto);
+    when(productMapper.mapToProductsInOrganizationResponseDto(
+            organizationWithProduct, List.of(productResponseDto)))
+        .thenReturn(productsInOrganizationResponseDto);
+    ProductsInOrganizationResponseDto products =
+        organizationService.getProductsInOrganization(organizationWithProduct.getId());
+
+    verify(organizationRepository, times(1)).findById(organizationWithProduct.getId());
+    verify(productMapper, times(1))
+        .mapToProductsInOrganizationResponseDto(
+            organizationWithProduct, List.of(productResponseDto));
+    assertNotNull(products);
+    assertEquals(1, products.getProducts().size());
+  }
+
+  private ProductResponseDto productToResponse(Product product) {
+    ProductResponseDto productResponseDto = new ProductResponseDto();
+    productResponseDto.setId(product.getId());
+    return productResponseDto;
   }
 }

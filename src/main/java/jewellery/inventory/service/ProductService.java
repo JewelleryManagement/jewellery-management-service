@@ -1,6 +1,5 @@
 package jewellery.inventory.service;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,22 +9,21 @@ import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.ProductRequestDto;
-import jewellery.inventory.dto.request.ResourceInUserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.dto.response.ProductReturnResponseDto;
-import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
+import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.not_found.*;
+import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
+import jewellery.inventory.exception.organization.ProductIsNotPartOfOrganizationException;
+import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.exception.product.*;
 import jewellery.inventory.mapper.ProductMapper;
-import jewellery.inventory.model.EventType;
-import jewellery.inventory.model.Product;
-import jewellery.inventory.model.ResourceInUser;
-import jewellery.inventory.model.Sale;
-import jewellery.inventory.model.User;
+import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInProduct;
 import jewellery.inventory.repository.*;
+import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,58 +35,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(ProductService.class);
   private final ProductRepository productRepository;
-  private final UserRepository userRepository;
-  private final ResourceInUserRepository resourceInUserRepository;
-  private final ResourceInProductRepository resourceInProductRepository;
-  private final ImageService imageService;
-  private final ResourceInUserService resourceInUserService;
   private final ProductMapper productMapper;
-
-  @Transactional
-  @LogUpdateEvent(eventType = EventType.PRODUCT_UPDATE)
-  public ProductResponseDto updateProduct(UUID id, ProductRequestDto productUpdateRequestDto) {
-    Product product = getProduct(id);
-    throwExceptionIfProductIsSold(product);
-    moveQuantityFromResourcesInProductToResourcesInUser(product);
-    disassembleProductContent(product);
-
-    setProductFields(productUpdateRequestDto, product.getOwner(), product);
-    productRepository.save(product);
-    addProductsContentToProduct(productUpdateRequestDto, product);
-    addResourcesToProduct(productUpdateRequestDto, product.getOwner(), product);
-    logger.info("Product with ID: {} updated", product.getId());
-    return productMapper.mapToProductResponseDto(product);
-  }
-
-  @Transactional
-  @LogCreateEvent(eventType = EventType.PRODUCT_CREATE)
-  public ProductResponseDto createProduct(ProductRequestDto productRequestDto) {
-    User owner = getUser(productRequestDto.getOwnerId());
-    Product product = persistProductWithoutResourcesAndProducts(productRequestDto, owner);
-    addProductsContentToProduct(productRequestDto, product);
-    addResourcesToProduct(productRequestDto, owner, product);
-    logger.info("Product created with ID: {}", product.getId());
-    return productMapper.mapToProductResponseDto(product);
-  }
-
-  public ProductReturnResponseDto getProductReturnResponseDto(
-      SaleResponseDto sale, Product product) {
-    return productMapper.mapToProductReturnResponseDto(sale, product);
-  }
-
-  public BigDecimal getProductSalePrice(Product product) {
-    return ProductMapper.calculateTotalPrice(product);
-  }
-
-  public List<ProductResponseDto> getAllProducts() {
-    List<Product> products = productRepository.findAll();
-    logger.debug("Fetching all products");
-    return products.stream().map(productMapper::mapToProductResponseDto).toList();
-  }
-
-  public List<ProductResponseDto> getProductsResponse(List<Product> products) {
-    return products.stream().map(productMapper::mapToProductResponseDto).toList();
-  }
+  private final OrganizationService organizationService;
+  private final UserService userService;
+  private final ResourceInOrganizationService resourceInOrganizationService;
+  private final ResourceInProductRepository resourceInProductRepository;
 
   public List<ProductResponseDto> getByOwner(UUID ownerId) {
     List<Product> products = productRepository.findAllByOwnerId(ownerId);
@@ -101,6 +52,7 @@ public class ProductService implements EntityFetcher {
     return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   public ProductResponseDto getProductResponse(UUID id) {
     logger.info("Get productResponse by ID: {}", id);
     return productMapper.mapToProductResponseDto(getProduct(id));
@@ -110,75 +62,83 @@ public class ProductService implements EntityFetcher {
     return productRepository.save(product);
   }
 
-  public void updateProductOwnerAndSale(Product product, User newOwner, Sale sale) {
-    updateProductOwnerRecursively(product, newOwner);
-    if (sale == null) {
-      product.setPartOfSale(null);
-    } else {
-      sale.getProducts()
-          .forEach(
-              productPriceDiscount -> {
-                if (productPriceDiscount.getProduct().equals(product)) {
-                  product.setPartOfSale(productPriceDiscount);
-                }
-              });
-    }
-    logger.debug(
-        "Updated product owner and sale for product with ID: {}. New owner with ID: {}, Sale with ID: {}",
-        product.getId(),
-        product.getOwner().getId(),
-        product.getPartOfSale() != null ? product.getPartOfSale().getId() : null);
-    productRepository.save(product);
-  }
+  @Transactional
+  @LogCreateEvent(eventType = EventType.ORGANIZATION_PRODUCT_CREATE)
+  public ProductsInOrganizationResponseDto createProductInOrganization(
+      ProductRequestDto productRequestDto) {
+    Organization organization = organizationService.getOrganization(productRequestDto.getOwnerId());
 
-  private void updateProductOwnerRecursively(Product product, User newOwner) {
-    product.setOwner(newOwner);
-    logger.debug(
-        "Updated owner for product with ID: {}. New owner with ID: {}",
-        product.getId(),
-        newOwner.getId());
-    if (product.getProductsContent() != null) {
-      List<Product> subProducts = product.getProductsContent();
-      for (Product subProduct : subProducts) {
-        updateProductOwnerRecursively(subProduct, newOwner);
-      }
-    }
+    organizationService.validateCurrentUserPermission(
+        organization, OrganizationPermission.CREATE_PRODUCT);
+    validateUsersAreMembersOfOrganization(organization, getAuthors(productRequestDto));
+
+    Product product = persistProductWithoutResourcesAndProducts(productRequestDto, organization);
+
+    return addProductContents(organization, productRequestDto, product);
   }
 
   @Transactional
-  @LogDeleteEvent(eventType = EventType.PRODUCT_DISASSEMBLY)
-  public void deleteProduct(UUID id) throws IOException {
+  @LogDeleteEvent(eventType = EventType.ORGANIZATION_PRODUCT_DISASSEMBLY)
+  public void deleteProductInOrganization(UUID productId) {
+    Product product = getProduct(productId);
+    throwExceptionIfProductIsNotPartOfOrganization(product);
+    Organization organization = product.getOrganization();
 
-    Product product = getProduct(id);
+    organizationService.validateCurrentUserPermission(
+        organization, OrganizationPermission.DISASSEMBLE_PRODUCT);
 
     throwExceptionIfProductIsSold(product);
-    throwExceptionIfProductIsPartOfAnotherProduct(id, product);
+    throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
 
-    moveQuantityFromResourcesInProductToResourcesInUser(product);
+    moveQuantityFromResourcesInProductToResourcesInOrganization(product);
+
     disassembleProductContent(product);
-    deleteImageWhenAttached(id, product);
-
-    productRepository.deleteById(id);
-    logger.info("Deleted product by ID: {}", id);
-  }
-  public void deleteProductById(UUID productId){
-    productRepository.deleteById(productId);
+    deleteProductById(productId);
   }
 
-  @LogUpdateEvent(eventType = EventType.PRODUCT_TRANSFER)
-  public ProductResponseDto transferProduct(UUID productId, UUID recipientId) {
-    Product productForChangeOwner = getProductForTransfer(recipientId, productId);
-    updateProductOwnerRecursively(productForChangeOwner, getUser(recipientId));
-    logger.info("Transferred product with ID {} to new owner with ID {}", productId, recipientId);
-    productRepository.save(productForChangeOwner);
-    return productMapper.mapToProductResponseDto(productForChangeOwner);
+  @Transactional
+  @LogUpdateEvent(eventType = EventType.ORGANIZATION_PRODUCT_UPDATE)
+  public ProductsInOrganizationResponseDto updateProduct(
+      UUID productId, ProductRequestDto productRequestDto) {
+
+    Organization organization = organizationService.getOrganization(productRequestDto.getOwnerId());
+
+    organizationService.validateCurrentUserPermission(
+        organization, OrganizationPermission.EDIT_PRODUCT);
+    validateUsersAreMembersOfOrganization(organization, getAuthors(productRequestDto));
+
+    Product product = getProduct(productId);
+    throwExceptionIfOrganizationNotOwner(organization.getId(), product);
+    throwExceptionIfProductIsSold(product);
+    moveQuantityFromResourcesInProductToResourcesInOrganization(product);
+    disassembleProductContent(product);
+
+    setProductFields(productRequestDto, organization, product);
+    saveProduct(product);
+
+    return addProductContents(organization, productRequestDto, product);
   }
 
-  private void deleteImageWhenAttached(UUID id, Product product) throws IOException {
-    if (product.getImage() != null) {
-      imageService.deleteImage(id);
-      logger.debug("Deleted image for product with ID: {}", product.getId());
-    }
+  @LogUpdateEvent(eventType = EventType.ORGANIZATION_PRODUCT_TRANSFER)
+  public ProductsInOrganizationResponseDto transferProduct(UUID productId, UUID recipientId) {
+    Product product = getProduct(productId);
+    throwExceptionIfProductIsNotPartOfOrganization(product);
+    throwExceptionIfProductOrganizationEqualsRecipient(recipientId, product);
+    throwExceptionIfProductIsSold(product);
+    throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
+
+    Organization recipient = organizationService.getOrganization(recipientId);
+
+    organizationService.validateCurrentUserPermission(
+        product.getOrganization(), OrganizationPermission.TRANSFER_PRODUCT);
+
+    updateProductOrganizationRecursively(product, recipient);
+    logger.info(
+        "Transferred product with ID {} to new organization with ID {}", productId, recipientId);
+    saveProduct(product);
+
+    return productMapper.mapToProductsInOrganizationResponseDto(
+        recipient, getProductsResponse(List.of(product)));
   }
 
   public void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
@@ -187,141 +147,91 @@ public class ProductService implements EntityFetcher {
     }
   }
 
-  private void throwExceptionIfProductOwnerEqualsRecipient(Product product, UUID recipientId) {
-    if (product.getOwner().getId().equals(recipientId)) {
-      throw new ProductOwnerEqualsRecipientException(recipientId);
+  public void deleteProductById(UUID productId) {
+    productRepository.deleteById(productId);
+  }
+
+  private List<ProductResponseDto> getProductsResponse(List<Product> products) {
+    return products.stream().map(productMapper::mapToProductResponseDto).toList();
+  }
+
+  private void validateUsersAreMembersOfOrganization(
+      Organization organization, List<User> authors) {
+    for (User author : authors) {
+      boolean isUserInOrganization = false;
+      for (UserInOrganization userInOrganization : organization.getUsersInOrganization()) {
+        if (userInOrganization.getUser().getId().equals(author.getId())) {
+          isUserInOrganization = true;
+          break;
+        }
+      }
+      if (!isUserInOrganization) {
+        throw new UserIsNotPartOfOrganizationException(author.getId(), organization.getId());
+      }
     }
   }
 
-  public void throwExceptionIfProductIsSold(Product product) {
-    if (product.getPartOfSale() != null) {
-      throw new ProductIsSoldException(product.getId());
-    }
-  }
-
-  public void disassembleProductContent(Product product) {
-    if (product.getProductsContent() != null) {
-      logger.debug("Disassembling product content for product with ID: {}", product.getId());
-
-      product
-          .getProductsContent()
-          .forEach(
-              content -> {
-                content.setContentOf(null);
-                productRepository.save(content);
-              });
-
-      product.setProductsContent(new ArrayList<>());
-      productRepository.save(product);
-    }
-  }
-
-  private void moveQuantityFromResourcesInProductToResourcesInUser(Product product) {
-    List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
-    resourcesInProduct.forEach(
-        resourceInProduct -> {
-          resourceInUserService.addResourceToUserNoLog(
-              getResourceInUserRequest(product.getOwner(), resourceInProduct));
-          resourceInProductRepository.delete(resourceInProduct);
+  private List<User> getAuthors(ProductRequestDto productRequestDto) {
+    logger.debug("Getting authors for product.");
+    List<UUID> authorsIds = productRequestDto.getAuthors();
+    List<User> authors = new ArrayList<>();
+    authorsIds.forEach(
+        id -> {
+          logger.debug("Processing author with ID: {}", id);
+          User author = userService.getUser(id);
+          authors.add(author);
+          logger.debug("Author with ID {} added to the list.", id);
         });
-    product.setResourcesContent(null);
-  }
-
-  private ResourceInUserRequestDto getResourceInUserRequest(
-      User owner, ResourceInProduct resourceInProduct) {
-    logger.debug("Getting resourceInUserRequest for user with Id: {}", owner.getId());
-    return ResourceInUserRequestDto.builder()
-        .userId(owner.getId())
-        .resourceId(resourceInProduct.getResource().getId())
-        .quantity(resourceInProduct.getQuantity())
-        .build();
-  }
-
-  private ResourceInUser getResourceInUser(User owner, UUID resourceId) {
-    return resourceInUserRepository
-        .findByResourceIdAndOwnerId(resourceId, owner.getId())
-        .orElseThrow(() -> new ResourceInUserNotFoundException(resourceId, owner.getId()));
-  }
-
-  private Product getProductForTransfer(UUID recipientId, UUID productId) {
-    logger.debug(
-        "Getting product for transfer with ID: {}, recipient ID: {}", productId, recipientId);
-    Product product =
-        productRepository
-            .findById(productId)
-            .orElseThrow(() -> new ProductNotFoundException(productId));
-    validateProductForChangeOwner(recipientId, product);
-    logger.debug("Product for transfer retrieved successfully.");
-    return product;
-  }
-
-  private void validateProductForChangeOwner(UUID recipientId, Product productForChangeOwner) {
-    logger.debug(
-        "Validating product for change owner. Product ID: {}, Recipient ID: {}",
-        productForChangeOwner.getId(),
-        recipientId);
-    throwExceptionIfProductIsPartOfAnotherProduct(
-        productForChangeOwner.getId(), productForChangeOwner);
-    throwExceptionIfProductIsSold(productForChangeOwner);
-    throwExceptionIfProductOwnerEqualsRecipient(productForChangeOwner, recipientId);
-    logger.debug("Product validation for change owner successful.");
-  }
-
-  private List<Product> getProductsInProduct(
-      List<UUID> productsIdInRequest, Product parentProduct) {
-    logger.debug("Getting products in product. Parent Product ID: {}", parentProduct.getId());
-    List<Product> products = new ArrayList<>();
-    if (productsIdInRequest != null) {
-      productsIdInRequest.forEach(
-          productId -> {
-            logger.debug("Processing product with ID: {}", productId);
-            Product product = getProduct(productId);
-            throwExceptionIfProductIsPartOfItself(product, parentProduct.getId());
-            throwExceptionIfProductIsSold(product);
-            if (product.getOwner().getId().equals(parentProduct.getOwner().getId())) {
-              product.setContentOf(parentProduct);
-              products.add(product);
-              logger.debug("Added product with ID {} to the list.", productId);
-            } else {
-              throw new UserNotOwnerException(parentProduct.getOwner().getId(), product.getId());
-            }
-          });
-    }
-
-    return products;
-  }
-
-  public void throwExceptionIfProductIsPartOfItself(Product product, UUID parentId) {
-    if (product.getId().equals(parentId)) {
-      throw new ProductPartOfItselfException();
-    }
-  }
-
-  private User getUser(UUID userId) {
-    logger.debug("Getting user with ID: {}", userId);
-    return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+    return authors;
   }
 
   private Product persistProductWithoutResourcesAndProducts(
-      ProductRequestDto productRequestDto, User user) {
-    logger.debug(
-        "Persisting product without resources and products for user with ID: {}", user.getId());
-    Product product = getProductWithoutResourcesAndProduct(productRequestDto, user);
-    productRepository.save(product);
-    logger.debug("Product persisted successfully. Product ID: {}", product.getId());
-
+      ProductRequestDto productRequestDto, Organization organization) {
+    Product product = getProductWithoutResourcesAndProduct(productRequestDto, organization);
+    saveProduct(product);
     return product;
+  }
+
+  private ProductsInOrganizationResponseDto addProductContents(
+      Organization organization, ProductRequestDto productRequestDto, Product product) {
+    addProductsContentToProduct(productRequestDto, product);
+    addResourcesToProduct(productRequestDto, organization, product);
+    return productMapper.mapToProductsInOrganizationResponseDto(
+        organization, getProductsResponse(List.of(product)));
   }
 
   private Product getProductWithoutResourcesAndProduct(
-      ProductRequestDto productRequestDto, User user) {
+      ProductRequestDto productRequestDto, Organization organization) {
+    logger.debug("Creating product without resources and products");
     Product product = new Product();
-    setProductFields(productRequestDto, user, product);
+    setProductFields(productRequestDto, organization, product);
     return product;
   }
 
-  private void setProductFields(ProductRequestDto productRequestDto, User user, Product product) {
-    product.setOwner(user);
+  private void addProductsContentToProduct(ProductRequestDto productRequestDto, Product product) {
+    if (productRequestDto.getProductsContent() != null) {
+      product.setProductsContent(
+          getProductsInProduct(productRequestDto.getProductsContent(), product));
+      logger.debug("Products content added successfully to product: {}", product);
+      saveProduct(product);
+    }
+  }
+
+  private void addResourcesToProduct(
+      ProductRequestDto productRequestDto, Organization organization, Product product) {
+
+    List<ResourceInProduct> resourcesInProducts =
+        transferResourcesQuantitiesFromOrganizationToProduct(
+            organization, productRequestDto.getResourcesContent(), product);
+    logger.debug("Resources added successfully to product: {}", product);
+
+    product.setResourcesContent(resourcesInProducts);
+  }
+
+  private void setProductFields(
+      ProductRequestDto productRequestDto, Organization organization, Product product) {
+    product.setOwner(null);
+    product.setOrganization(organization);
     product.setAuthors(getAuthors(productRequestDto));
     product.setPartOfSale(null);
     product.setDescription(productRequestDto.getDescription());
@@ -330,112 +240,206 @@ public class ProductService implements EntityFetcher {
     product.setAdditionalPrice(productRequestDto.getAdditionalPrice());
     product.setProductsContent(new ArrayList<>());
     product.setResourcesContent(new ArrayList<>());
+    logger.debug("Product fields have been set successfully for product: {}", product);
   }
 
-  public List<User> getAuthors(ProductRequestDto productRequestDto) {
-    logger.debug("Getting authors for product.");
-    List<UUID> authorsIds = productRequestDto.getAuthors();
-    List<User> authors = new ArrayList<>();
-    authorsIds.forEach(
-        id -> {
-          logger.debug("Processing author with ID: {}", id);
-          User author =
-              userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
-          authors.add(author);
-          logger.debug("Author with ID {} added to the list.", id);
-        });
-    return authors;
+  private List<Product> getProductsInProduct(
+      List<UUID> productsIdInRequest, Product parentProduct) {
+    List<Product> products = new ArrayList<>();
+    if (productsIdInRequest != null) {
+      productsIdInRequest.forEach(
+          productId -> {
+            Product product = getProduct(productId);
+            throwExceptionIfProductIsPartOfItself(product, parentProduct.getId());
+            throwExceptionIfProductIsSold(product);
+            throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
+            if ((product.getOrganization() != null)
+                && parentProduct
+                    .getOrganization()
+                    .getId()
+                    .equals(product.getOrganization().getId())) {
+              product.setContentOf(parentProduct);
+              products.add(product);
+              logger.debug("Added product '{}' to the list.", product);
+            } else {
+              logger.error(
+                  "Organization with ID '{}' is not the owner of product with ID '{}'.",
+                  parentProduct.getOrganization().getId(),
+                  product.getId());
+              throw new OrganizationNotOwnerException(
+                  parentProduct.getOrganization().getId(), product.getId());
+            }
+          });
+    }
+    logger.debug("Products in product retrieved successfully.");
+    return products;
   }
 
-  private void addProductsContentToProduct(ProductRequestDto productRequestDto, Product product) {
-    logger.debug("Adding products content to product. Product ID: {}", product.getId());
+  private List<ResourceInProduct> transferResourcesQuantitiesFromOrganizationToProduct(
+      Organization organization,
+      List<ResourceQuantityRequestDto> incomingResourceInProductList,
+      Product product) {
+    List<ResourceInProduct> resourcesForAdd = new ArrayList<>();
 
-    if (productRequestDto.getProductsContent() != null) {
-      product.setProductsContent(
-          getProductsInProduct(productRequestDto.getProductsContent(), product));
-      productRepository.save(product);
-      logger.debug(
-          "Products content added successfully to product. Count: {}",
-          productRequestDto.getProductsContent().size());
+    for (ResourceQuantityRequestDto resourceQuantity : incomingResourceInProductList) {
+      resourcesForAdd.add(
+          transferSingleResourceQuantityFromOrganizationToProduct(
+              organization, resourceQuantity, product));
+    }
+    logger.debug("Resources quantities transferred successfully from organization to product.");
+    return resourcesForAdd;
+  }
+
+  private void throwExceptionIfProductIsPartOfItself(Product product, UUID parentId) {
+    if (product.getId().equals(parentId)) {
+      throw new ProductPartOfItselfException();
     }
   }
 
-  private void addResourcesToProduct(
-      ProductRequestDto productRequestDto, User user, Product product) {
-    logger.debug("Adding resources to product. Product ID: {}", product.getId());
-
-    List<ResourceInProduct> resourcesInProducts =
-        transferResourcesQuantitiesFromUserToProduct(
-            user, productRequestDto.getResourcesContent(), product);
-    product.setResourcesContent(resourcesInProducts);
-    logger.debug("Resources added successfully to product. Count: {}", resourcesInProducts.size());
+  private void throwExceptionIfProductIsSold(Product product) {
+    if (product.getPartOfSale() != null) {
+      throw new ProductIsSoldException(product.getId());
+    }
   }
 
-  private List<ResourceInProduct> transferResourcesQuantitiesFromUserToProduct(
-      User owner, List<ResourceQuantityRequestDto> incomingResourceInProductList, Product product) {
-    logger.debug("incomingResourceInProduct List: {}", incomingResourceInProductList);
+  private ResourceInProduct transferSingleResourceQuantityFromOrganizationToProduct(
+      Organization organization,
+      ResourceQuantityRequestDto incomingResourceInProduct,
+      Product product) {
     logger.debug(
-        "Transferring resources quantities from user to product. User ID: {}, Product ID: {}",
-        owner.getId(),
-        product.getId());
+        "Transferring single resource quantity from organization to product for product: {}",
+        product);
 
-    return incomingResourceInProductList.stream()
-        .map(
-            incomingResourceInProduct ->
-                transferSingleResourceQuantityFromUserToProduct(
-                    owner, incomingResourceInProduct, product))
-        .toList();
-  }
+    ResourceInOrganization resourceInOrganization =
+        resourceInOrganizationService.findResourceInOrganizationOrThrow(
+            organization, incomingResourceInProduct.getResourceId());
 
-  private ResourceInProduct transferSingleResourceQuantityFromUserToProduct(
-      User owner, ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
-    logger.debug(
-        "Transferring single resource quantity from user to product. User ID: {}, Product ID: {}",
-        owner.getId(),
-        product.getId());
+    checkResourceAvailability(resourceInOrganization, incomingResourceInProduct);
 
-    ResourceInUser resourceInUser =
-        getResourceInUser(owner, incomingResourceInProduct.getResourceId());
-    resourceInUserService.removeQuantityFromResourceNoLog(
-        owner.getId(),
-        resourceInUser.getResource().getId(),
+    resourceInOrganizationService.removeQuantityFromResourceNoLog(
+        organization.getId(),
+        incomingResourceInProduct.getResourceId(),
         incomingResourceInProduct.getQuantity());
-    ResourceInProduct resourceInProduct = getResourceInProduct(incomingResourceInProduct, product);
-    if (resourceInProduct != null) {
-      resourceInProduct.setQuantity(incomingResourceInProduct.getQuantity());
-      return resourceInProduct;
-    }
+
+    logger.debug(
+        "Quantity '{}' of resource '{}' removed from organization '{}'.",
+        incomingResourceInProduct.getQuantity(),
+        resourceInOrganization.getResource(),
+        organization.getName());
+
     return createResourceInProduct(
-        incomingResourceInProduct, resourceInUser.getResource(), product);
+        incomingResourceInProduct.getQuantity(), resourceInOrganization.getResource(), product);
   }
 
-  private ResourceInProduct getResourceInProduct(
-      ResourceQuantityRequestDto incomingResourceInProduct, Product product) {
-    return resourceInProductRepository
-        .findByResourceIdAndProductId(incomingResourceInProduct.getResourceId(), product.getId())
-        .orElse(null);
+  private void checkResourceAvailability(
+      ResourceInOrganization resourceInOrganization,
+      ResourceQuantityRequestDto incomingResourceInProduct) {
+    if (resourceInOrganization.getQuantity().compareTo(incomingResourceInProduct.getQuantity())
+        < 0) {
+      logger.error(
+          "Insufficient quantity of resource '{}' in organization. Requested: {}, Available: {}",
+          resourceInOrganization.getResource(),
+          incomingResourceInProduct.getQuantity(),
+          resourceInOrganization.getQuantity());
+
+      throw new InsufficientResourceQuantityException(
+          incomingResourceInProduct.getQuantity(), resourceInOrganization.getQuantity());
+    }
   }
 
   private ResourceInProduct createResourceInProduct(
-      ResourceQuantityRequestDto incomingResourceInProduct, Resource resource, Product product) {
+      BigDecimal quantity, Resource resource, Product product) {
     ResourceInProduct resourceInProduct = new ResourceInProduct();
     resourceInProduct.setResource(resource);
-    resourceInProduct.setQuantity(incomingResourceInProduct.getQuantity());
+    resourceInProduct.setQuantity(quantity);
     resourceInProduct.setProduct(product);
-    logger.debug(
-        "Resource in product created successfully. Resource ID: {}, Product ID: {}",
-        resourceInProduct.getResource().getId(),
-        resourceInProduct.getProduct().getId());
-
+    logger.debug("ResourceInProduct created successfully for product: {}", product);
     return resourceInProduct;
+  }
+
+  private static void throwExceptionIfProductIsNotPartOfOrganization(Product product) {
+    if (product.getOrganization() == null) {
+      throw new ProductIsNotPartOfOrganizationException(product.getId());
+    }
+  }
+
+  private void moveQuantityFromResourcesInProductToResourcesInOrganization(Product product) {
+    List<ResourceInProduct> resourcesInProduct = product.getResourcesContent();
+    resourcesInProduct.forEach(
+        resourceInProduct -> {
+          logger.info(
+              "Adding resource: {} to organization: {} with quantity {}",
+              resourceInProduct.getResource(),
+              product.getOrganization(),
+              resourceInProduct.getQuantity());
+          resourceInOrganizationService.addResourceToOrganization(
+              product.getOrganization(),
+              resourceInProduct.getResource(),
+              resourceInProduct.getQuantity(),
+              BigDecimal.ZERO);
+
+          resourceInProduct.setProduct(null);
+          resourceInProductRepository.delete(resourceInProduct);
+          logger.info("Resource deleted from product: {}", product);
+        });
+    product.setResourcesContent(null);
+  }
+
+  private void disassembleProductContent(Product product) {
+    if (product.getProductsContent() != null) {
+      logger.debug("Disassembling product content for product with ID: {}", product.getId());
+
+      product
+          .getProductsContent()
+          .forEach(
+              content -> {
+                content.setContentOf(null);
+                saveProduct(content);
+              });
+
+      product.setProductsContent(new ArrayList<>());
+      saveProduct(product);
+    }
+  }
+
+  private void throwExceptionIfOrganizationNotOwner(UUID organizationId, Product product) {
+    if (!organizationId.equals(product.getOrganization().getId())) {
+      logger.error(
+          "Organization with ID '{}' is not the owner of product with ID '{}'.",
+          organizationId,
+          product.getId());
+      throw new OrganizationNotOwnerException(organizationId, product.getId());
+    }
+  }
+
+  private static void throwExceptionIfProductOrganizationEqualsRecipient(
+      UUID recipientId, Product product) {
+    if (product.getOrganization().getId().equals(recipientId)) {
+      throw new ProductOwnerEqualsRecipientException(product.getOrganization().getId());
+    }
+  }
+
+  private void updateProductOrganizationRecursively(Product product, Organization newOrganization) {
+    product.setOrganization(newOrganization);
+    logger.debug(
+        "Updated organization for product with ID: {}. New organization with ID: {}",
+        product.getId(),
+        newOrganization.getId());
+    if (product.getProductsContent() != null) {
+      List<Product> subProducts = product.getProductsContent();
+      for (Product subProduct : subProducts) {
+        updateProductOrganizationRecursively(subProduct, newOrganization);
+      }
+    }
   }
 
   @Override
   public Object fetchEntity(Object... ids) {
     Product product = productRepository.findById((UUID) ids[0]).orElse(null);
-    if (product == null) {
+    if (product == null || product.getOrganization() == null) {
       return null;
     }
-    return productMapper.mapToProductResponseDto(product);
+    return productMapper.mapToProductsInOrganizationResponseDto(
+        product.getOrganization(), getProductsResponse(List.of(product)));
   }
 }

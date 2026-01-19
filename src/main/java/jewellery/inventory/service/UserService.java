@@ -17,6 +17,7 @@ import jewellery.inventory.mapper.UserMapper;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.UserRepository;
+import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,6 +38,7 @@ public class UserService implements EntityFetcher {
     return userMapper.toDetailedUserResponseList(userRepository.findAll());
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   public DetailedUserResponseDto getUserResponse(UUID id) {
     return userMapper.toDetailedUserResponse(getUser(id));
   }
@@ -72,6 +74,7 @@ public class UserService implements EntityFetcher {
     return userMapper.toDetailedUserResponse(saveUser(userToUpdate));
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   @LogDeleteEvent(eventType = EventType.USER_DELETE)
   public void deleteUser(UUID id) {
     if (!userRepository.existsById(id)) {

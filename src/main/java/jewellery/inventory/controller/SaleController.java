@@ -5,10 +5,11 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.SaleRequestDto;
+import jewellery.inventory.dto.response.OrganizationSaleResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
-import jewellery.inventory.dto.response.SaleResponseDto;
 import jewellery.inventory.dto.response.ResourceReturnResponseDto;
 import jewellery.inventory.service.SaleService;
+import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -17,35 +18,43 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/sales")
 @RequiredArgsConstructor
 public class SaleController {
+
   private final SaleService saleService;
 
-  @Operation(summary = "Get all sales")
-  @ResponseStatus(HttpStatus.OK)
-  @GetMapping
-  public List<SaleResponseDto> getAllSales() {
-    return saleService.getAllSales();
-  }
-
-  @Operation(summary = "Create a sale")
+  @Operation(summary = "Create sale from organization to user")
   @ResponseStatus(HttpStatus.CREATED)
   @PostMapping
-  public SaleResponseDto createSale(@Valid @RequestBody SaleRequestDto saleRequestDto) {
+  public OrganizationSaleResponseDto createSale(@Valid @RequestBody SaleRequestDto saleRequestDto) {
     return saleService.createSale(saleRequestDto);
   }
 
-  @Operation(summary = "Return of a sold product")
+  @Operation(summary = "Return of a sold product from user to organization")
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/return-product/{productId}")
   public ProductReturnResponseDto returnProduct(@PathVariable("productId") UUID productId) {
     return saleService.returnProduct(productId);
   }
 
-  @Operation(summary = "Return of a sold resource")
+  @Operation(summary = "Return of a sold resource from user to organization")
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{saleId}/return-resource/{resourceId}")
   public ResourceReturnResponseDto returnResource(
-          @PathVariable("saleId") UUID saleId,
-          @PathVariable("resourceId") UUID resourceId) {
+      @PathVariable("saleId") UUID saleId, @PathVariable("resourceId") UUID resourceId) {
     return saleService.returnResource(saleId, resourceId);
+  }
+
+  @Operation(summary = "Get all sales from organization to user")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping
+  public List<OrganizationSaleResponseDto> getAllSales() {
+    return saleService.getAllSales();
+  }
+
+  @NotUsedYet(reason = "Pending frontend implementation")
+  @Operation(summary = "Get sale from organization to user")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/{saleId}")
+  public OrganizationSaleResponseDto getSale(@PathVariable("saleId") UUID saleId) {
+    return saleService.getSale(saleId);
   }
 }

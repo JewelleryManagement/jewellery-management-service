@@ -8,8 +8,10 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ImageResponseDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
+import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.service.ImageService;
 import jewellery.inventory.service.ProductService;
+import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -23,20 +25,6 @@ public class ProductController {
   private final ProductService productService;
   private final ImageService imageService;
 
-  @Operation(summary = "Create a new product")
-  @ResponseStatus(HttpStatus.CREATED)
-  @PostMapping
-  public ProductResponseDto createProduct(@RequestBody @Valid ProductRequestDto productRequestDto) {
-    return productService.createProduct(productRequestDto);
-  }
-
-  @Operation(summary = "Get all products")
-  @ResponseStatus(HttpStatus.OK)
-  @GetMapping
-  public List<ProductResponseDto> getAllProducts() {
-    return productService.getAllProducts();
-  }
-
   @Operation(summary = "Get products owned by user")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/by-owner/{ownerId}")
@@ -44,26 +32,12 @@ public class ProductController {
     return productService.getByOwner(ownerId);
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Get a single product")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")
   public ProductResponseDto getProduct(@PathVariable("id") UUID id) {
     return productService.getProductResponse(id);
-  }
-
-  @Operation(summary = "Transfer a product")
-  @ResponseStatus(HttpStatus.OK)
-  @PutMapping("/{productId}/transfer/{recipientId}")
-  public ProductResponseDto transferProduct(
-      @PathVariable("productId") UUID productId, @PathVariable("recipientId") UUID recipientId) {
-    return productService.transferProduct(productId, recipientId);
-  }
-
-  @Operation(summary = "Delete a product by Id")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  @DeleteMapping("/{id}")
-  public void deleteProduct(@PathVariable("id") UUID id) throws IOException {
-    productService.deleteProduct(id);
   }
 
   @Operation(summary = "Upload new image in file system and attach to product")
@@ -83,6 +57,7 @@ public class ProductController {
     return imageService.downloadImage(productId);
   }
 
+  @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Delete image from file system and detach from product")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @DeleteMapping("/{productId}/picture")
@@ -90,12 +65,35 @@ public class ProductController {
     imageService.deleteImage(productId);
   }
 
-  @Operation(summary = "Edit product")
+  @Operation(summary = "Create a new product")
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping
+  public ProductsInOrganizationResponseDto createProduct(
+      @RequestBody @Valid ProductRequestDto productRequestDto) {
+    return productService.createProductInOrganization(productRequestDto);
+  }
+
+  @Operation(summary = "Delete a new product in organization")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @DeleteMapping("/{productId}")
+  public void deleteProduct(@PathVariable("productId") UUID productId) {
+    productService.deleteProductInOrganization(productId);
+  }
+
+  @Operation(summary = "Update a product in organization")
   @ResponseStatus(HttpStatus.OK)
   @PutMapping("/{productId}")
-  public ProductResponseDto updateProduct(
+  public ProductsInOrganizationResponseDto updateProduct(
       @PathVariable("productId") UUID productId,
-      @Valid @RequestBody ProductRequestDto request) {
-    return productService.updateProduct(productId, request);
+      @Valid @RequestBody ProductRequestDto productRequestDto) {
+    return productService.updateProduct(productId, productRequestDto);
+  }
+
+  @Operation(summary = "Transfer a product to other organization")
+  @ResponseStatus(HttpStatus.OK)
+  @PutMapping("/{productId}/transfer/{recipientId}")
+  public ProductsInOrganizationResponseDto transferProduct(
+      @PathVariable("productId") UUID productId, @PathVariable("recipientId") UUID recipientId) {
+    return productService.transferProduct(productId, recipientId);
   }
 }
