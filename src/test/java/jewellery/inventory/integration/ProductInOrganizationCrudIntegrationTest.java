@@ -286,46 +286,10 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   }
 
   @Test
-  void getAllProductsByResourceReturnsEmptyArrayWhenResourceIsNotPartOfProduct(){
-    ResponseEntity<List<ProductResponseDto>> response =
-            testRestTemplate.exchange(
-                    getProductsUrlByResource(diamond.getId().toString()),
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<ProductResponseDto>>() {});
-
-    List<ProductResponseDto> products = response.getBody();
-
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertNotNull(response.getBody());
-    assertEquals(0,products.size());
-  }
-
-  @Test
-  void getAllProductsByResourceSuccessfully() {
-    OrganizationResponseDto organizationResponseDto = createOrganization();
-    addUserInOrganization(organizationResponseDto.getId(), userInOrganizationRequestDto);
-    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
-    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
-            ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-                    organizationResponseDto.getId(),
-                    resourceResponse.getId(),
-                    RESOURCE_QUANTITY,
-                    RESOURCE_PRICE);
-    ResponseEntity<ResourcesInOrganizationResponseDto> resource =
-            sendResourceToOrganization(resourceInOrganizationRequest);
-
-    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-            createProduct(
-                    setOwnerAndResourceToProductRequest(
-                            productRequestDto,
-                            organizationResponseDto.getId(),
-                            resourceResponse.getId(),
-                            RESOURCE_QUANTITY));
-
+  void getAllProductsByResourceReturnsEmptyArrayWhenResourceIsNotPartOfProduct() {
     ResponseEntity<List<ProductResponseDto>> response =
         testRestTemplate.exchange(
-            getProductsUrlByResource(resource.getBody().getResourcesAndQuantities().get(0).getResource().getId().toString()),
+            getProductsUrlByResource(diamond.getId().toString()),
             HttpMethod.GET,
             null,
             new ParameterizedTypeReference<List<ProductResponseDto>>() {});
@@ -334,8 +298,53 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
-    assertEquals(1,products.size());
-    assertEquals(productInOrganizationResponse.getBody().getProducts().get(0).getId(), products.get(0).getId());
+    assertEquals(0, products.size());
+  }
+
+  @Test
+  void getAllProductsByResourceSuccessfully() {
+    OrganizationResponseDto organizationResponseDto = createOrganization();
+    addUserInOrganization(organizationResponseDto.getId(), userInOrganizationRequestDto);
+    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
+    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organizationResponseDto.getId(),
+            resourceResponse.getId(),
+            RESOURCE_QUANTITY,
+            RESOURCE_PRICE);
+    ResponseEntity<ResourcesInOrganizationResponseDto> resource =
+        sendResourceToOrganization(resourceInOrganizationRequest);
+
+    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto,
+                organizationResponseDto.getId(),
+                resourceResponse.getId(),
+                RESOURCE_QUANTITY));
+
+    ResponseEntity<List<ProductResponseDto>> response =
+        testRestTemplate.exchange(
+            getProductsUrlByResource(
+                resource
+                    .getBody()
+                    .getResourcesAndQuantities()
+                    .get(0)
+                    .getResource()
+                    .getId()
+                    .toString()),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<ProductResponseDto>>() {});
+
+    List<ProductResponseDto> products = response.getBody();
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(1, products.size());
+    assertEquals(
+        productInOrganizationResponse.getBody().getProducts().get(0).getId(),
+        products.get(0).getId());
   }
 
   private void assertProductsInOrganizationSize(String organizationId, int assertSize) {
