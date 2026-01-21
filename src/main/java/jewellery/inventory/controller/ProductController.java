@@ -96,4 +96,12 @@ public class ProductController {
       @PathVariable("productId") UUID productId, @PathVariable("recipientId") UUID recipientId) {
     return productService.transferProduct(productId, recipientId);
   }
+
+  @Operation(summary = "Get all products for resource")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/resource/{resourceId}")
+  public List<ProductResponseDto> getAllProductsByResource(
+      @PathVariable("resourceId") UUID resourceId) {
+    return productService.getAllProductsByResource(resourceId);
+  }
 }
