@@ -10,6 +10,7 @@ import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.OrganizationSaleResponseDto;
+import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.ResourceReturnResponseDto;
 import jewellery.inventory.exception.not_found.ProductNotFoundException;
@@ -348,5 +349,20 @@ class SaleServiceTest {
     saleService.getSale(sale.getId());
 
     verify(saleRepository, times(1)).findById(sale.getId());
+  }
+
+  @Test
+  void getAllSalesByResourceReturnsEmptyArrayWhenResourceIsNotPartOfSale(){
+    List<OrganizationSaleResponseDto> products= saleService.getAllSalesByResource(resourceInOrganization.getId());
+    assertEquals(0,products.size());
+  }
+
+  @Test
+  void getAllProductsByResourceSuccessfully(){
+    when(saleRepository.findAllByResourceId(resourceInOrganization.getId())).thenReturn(List.of(sale));
+
+    List<OrganizationSaleResponseDto> products= saleService.getAllSalesByResource(resourceInOrganization.getId());
+    assertEquals(1,products.size());
+    verify(saleRepository, times(1)).findAllByResourceId(resourceInOrganization.getId());
   }
 }
