@@ -57,4 +57,12 @@ public class SaleController {
   public OrganizationSaleResponseDto getSale(@PathVariable("saleId") UUID saleId) {
     return saleService.getSale(saleId);
   }
+
+  @Operation(summary = "Get all sales for resource")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/resource/{resourceId}")
+  public List<OrganizationSaleResponseDto> getAllSalesByResource(
+      @PathVariable("resourceId") UUID resourceId) {
+    return saleService.getAllSalesByResource(resourceId);
+  }
 }

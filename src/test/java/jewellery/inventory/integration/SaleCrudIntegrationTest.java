@@ -8,6 +8,7 @@ import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.model.EventType.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -92,6 +93,10 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private String getSaleReturnProductUrl(UUID productId) {
     return "/sales/return-product/" + productId;
+  }
+
+  private String getSaleByResourceUrl(UUID resourceId) {
+    return "/sales" + "/resource/" + resourceId;
   }
 
   @BeforeEach
@@ -554,6 +559,55 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     for (PurchasedResourceQuantityResponseDto resource : resources) {
       assertEquals(resource.getResourceAndQuantity().getResource().getId(), diamond.getId());
     }
+  }
+
+  @Test
+  void getAllSalesByResourceReturnsEmptyArrayWhenResourceIsNotPartOfSale() {
+    ResponseEntity<List<OrganizationSaleResponseDto>> response =
+        testRestTemplate.exchange(
+            getSaleByResourceUrl(
+                resourcesInOrganizationResponseDto
+                    .getResourcesAndQuantities()
+                    .getFirst()
+                    .getResource()
+                    .getId()),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<OrganizationSaleResponseDto>>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(0, response.getBody().size());
+  }
+
+  @Test
+  void getAllProductsByResourceSuccessfully() {
+    SaleRequestDto saleRequestDto =
+        getSaleInOrganizationRequestDto(
+            organizationSeller,
+            buyer,
+            productResponse,
+            resourcesInOrganizationResponseDto,
+            SALE_DISCOUNT);
+    ResponseEntity<OrganizationSaleResponseDto> saleResponse =
+        createSaleInOrganization(saleRequestDto);
+
+    ResponseEntity<List<OrganizationSaleResponseDto>> response =
+        testRestTemplate.exchange(
+            getSaleByResourceUrl(
+                resourcesInOrganizationResponseDto
+                    .getResourcesAndQuantities()
+                    .getFirst()
+                    .getResource()
+                    .getId()),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<OrganizationSaleResponseDto>>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(1, response.getBody().size());
+    assertEquals(response.getBody().get(0).getId(), saleResponse.getBody().getId());
   }
 
   private ProductsInOrganizationResponseDto createProductInOrganization(

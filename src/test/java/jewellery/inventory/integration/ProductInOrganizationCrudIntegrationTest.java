@@ -7,6 +7,7 @@ import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPay
 import static jewellery.inventory.model.EventType.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
@@ -25,6 +26,7 @@ import jewellery.inventory.model.resource.Diamond;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -56,6 +58,10 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   private String getOrganizationProductsUrl(String organizationId) {
     return buildUrl("organizations", organizationId, "products");
+  }
+
+  private String getProductsUrlByResource(String resourceId) {
+    return buildUrl("products", "resource", resourceId);
   }
 
   private String getOrganizationUsersUrl(UUID organizationId) {
@@ -277,6 +283,68 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             Objects.requireNonNull(transferResponse.getBody()),
             objectMapper);
     systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_TRANSFER, expectedEventPayload);
+  }
+
+  @Test
+  void getAllProductsByResourceReturnsEmptyArrayWhenResourceIsNotPartOfProduct() {
+    ResponseEntity<List<ProductResponseDto>> response =
+        testRestTemplate.exchange(
+            getProductsUrlByResource(diamond.getId().toString()),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<ProductResponseDto>>() {});
+
+    List<ProductResponseDto> products = response.getBody();
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(0, products.size());
+  }
+
+  @Test
+  void getAllProductsByResourceSuccessfully() {
+    OrganizationResponseDto organizationResponseDto = createOrganization();
+    addUserInOrganization(organizationResponseDto.getId(), userInOrganizationRequestDto);
+    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
+    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organizationResponseDto.getId(),
+            resourceResponse.getId(),
+            RESOURCE_QUANTITY,
+            RESOURCE_PRICE);
+    ResponseEntity<ResourcesInOrganizationResponseDto> resource =
+        sendResourceToOrganization(resourceInOrganizationRequest);
+
+    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto,
+                organizationResponseDto.getId(),
+                resourceResponse.getId(),
+                RESOURCE_QUANTITY));
+
+    ResponseEntity<List<ProductResponseDto>> response =
+        testRestTemplate.exchange(
+            getProductsUrlByResource(
+                resource
+                    .getBody()
+                    .getResourcesAndQuantities()
+                    .get(0)
+                    .getResource()
+                    .getId()
+                    .toString()),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<ProductResponseDto>>() {});
+
+    List<ProductResponseDto> products = response.getBody();
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(1, products.size());
+    assertEquals(
+        productInOrganizationResponse.getBody().getProducts().get(0).getId(),
+        products.get(0).getId());
   }
 
   private void assertProductsInOrganizationSize(String organizationId, int assertSize) {

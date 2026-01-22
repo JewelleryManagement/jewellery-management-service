@@ -9,10 +9,7 @@ import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.dto.request.ProductDiscountRequestDto;
 import jewellery.inventory.dto.request.PurchasedResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.SaleRequestDto;
-import jewellery.inventory.dto.response.OrganizationSaleResponseDto;
-import jewellery.inventory.dto.response.ProductReturnResponseDto;
-import jewellery.inventory.dto.response.ResourceReturnResponseDto;
-import jewellery.inventory.dto.response.SaleResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.exception.not_found.SaleNotFoundException;
 import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
 import jewellery.inventory.exception.product.ProductIsContentException;
@@ -156,6 +153,13 @@ public class SaleService {
                     .getResource()
                     .getId()
                     .equals(resourceToReturn.getResource().getId()));
+  }
+
+  public List<OrganizationSaleResponseDto> getAllSalesByResource(UUID resourceId) {
+    return saleRepository.findAllByResourceId(resourceId).stream()
+        .filter(sale -> sale.getOrganizationSeller() != null)
+        .map(saleMapper::mapToOrganizationSaleResponseDto)
+        .toList();
   }
 
   private void returnResourceFromSaleToOrganization(

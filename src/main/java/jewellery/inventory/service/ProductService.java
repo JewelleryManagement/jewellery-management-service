@@ -141,6 +141,12 @@ public class ProductService implements EntityFetcher {
         recipient, getProductsResponse(List.of(product)));
   }
 
+  public List<ProductResponseDto> getAllProductsByResource(UUID resourceId) {
+    return productRepository.findAllByResourceId(resourceId).stream()
+        .map(productMapper::mapToProductResponseDto)
+        .toList();
+  }
+
   public void throwExceptionIfProductIsPartOfAnotherProduct(UUID id, Product product) {
     if (product.getContentOf() != null) {
       throw new ProductIsContentException(id);

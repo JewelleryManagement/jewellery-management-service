@@ -328,6 +328,21 @@ class ProductInOrganizationServiceTest {
         () -> productService.deleteProductInOrganization(product.getId()));
   }
 
+  @Test
+  void getAllProductsByResourceReturnsEmptyArrayWhenResourceIsNotPartOfProduct(){
+    List<ProductResponseDto> products= productService.getAllProductsByResource(resourceInOrganization.getId());
+    assertEquals(0,products.size());
+  }
+
+  @Test
+  void getAllProductsByResourceSuccessfully(){
+    when(productRepository.findAllByResourceId(resourceInOrganization.getId())).thenReturn(List.of(product));
+
+    List<ProductResponseDto> products= productService.getAllProductsByResource(resourceInOrganization.getId());
+    assertEquals(1,products.size());
+    verify(productRepository, times(1)).findAllByResourceId(resourceInOrganization.getId());
+  }
+
   private ProductResponseDto productToResponse(Product product) {
     ProductResponseDto productResponseDto = new ProductResponseDto();
     productResponseDto.setId(product.getId());

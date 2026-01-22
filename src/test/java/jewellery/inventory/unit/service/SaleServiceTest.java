@@ -349,4 +349,22 @@ class SaleServiceTest {
 
     verify(saleRepository, times(1)).findById(sale.getId());
   }
+
+  @Test
+  void getAllSalesByResourceReturnsEmptyArrayWhenResourceIsNotPartOfSale() {
+    List<OrganizationSaleResponseDto> products =
+        saleService.getAllSalesByResource(resourceInOrganization.getId());
+    assertEquals(0, products.size());
+  }
+
+  @Test
+  void getAllProductsByResourceSuccessfully() {
+    when(saleRepository.findAllByResourceId(resourceInOrganization.getId()))
+        .thenReturn(List.of(sale));
+
+    List<OrganizationSaleResponseDto> products =
+        saleService.getAllSalesByResource(resourceInOrganization.getId());
+    assertEquals(1, products.size());
+    verify(saleRepository, times(1)).findAllByResourceId(resourceInOrganization.getId());
+  }
 }
