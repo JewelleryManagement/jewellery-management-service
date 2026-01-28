@@ -63,12 +63,14 @@ public class SystemEventService {
 
   private void logEvent(EventType type, Map<String, Object> payload) {
     SystemEvent event = new SystemEvent();
-    event.setExecutor(getCurrentUser());
+    Map<String, Object> executor = getCurrentUser();
+    event.setExecutor(executor);
     event.setType(type);
     event.setTimestamp(Instant.now());
     event.setPayload(payload);
 
     Set<UUID> ids = extractRelatedIds(payload);
+    addExecutorId(ids, executor);
     event.setRelatedIds(ids);
 
     systemEventRepository.save(event);
@@ -117,6 +119,15 @@ public class SystemEventService {
       for (JsonNode element : currentNode) {
         collectRelatedIds(element, collectedIds);
       }
+    }
+  }
+
+  private void addExecutorId(Set<UUID> ids, Map<String, Object> executor) {
+    if (executor == null || executor.isEmpty()) return;
+
+    Object id = executor.get("id");
+    if (id != null) {
+      ids.add(UUID.fromString(id.toString()));
     }
   }
 }

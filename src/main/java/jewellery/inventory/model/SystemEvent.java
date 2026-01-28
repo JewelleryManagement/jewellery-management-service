@@ -6,7 +6,6 @@ import java.time.Instant;
 import java.util.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Type;
 
 @Entity
@@ -30,7 +29,6 @@ public class SystemEvent {
   private Map<String, Object> payload = new HashMap<>();
 
   @ElementCollection(fetch = FetchType.LAZY)
-  @BatchSize(size = 50)
   @CollectionTable(name = "system_event_related", joinColumns = @JoinColumn(name = "event_id"))
   @Column(name = "related_id", nullable = false)
   private Set<UUID> relatedIds = new HashSet<>();
