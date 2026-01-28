@@ -82,7 +82,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(result.getBody(), objectMapper);
     systemEventTestHelper.assertEventWasLogged(
-        ORGANIZATION_RESOURCE_TRANSFER, expectedEventPayload);
+        ORGANIZATION_RESOURCE_TRANSFER, expectedEventPayload, resourceResponse.getId());
   }
 
   @Test
@@ -139,7 +139,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
     assertEquals(resourceInOrganizationRequest.getDealPrice(), result.getDealPrice());
     Map<String, Object> expectedEventPayload = getUpdateEventPayload(null, result, objectMapper);
     systemEventTestHelper.assertEventWasLogged(
-        ORGANIZATION_ADD_RESOURCE_QUANTITY, expectedEventPayload);
+        ORGANIZATION_ADD_RESOURCE_QUANTITY, expectedEventPayload, resourceResponse.getId());
   }
 
   @Test
@@ -232,7 +232,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(response.getBody(), deletedQuantityResponse.getBody(), objectMapper);
     systemEventTestHelper.assertEventWasLogged(
-        ORGANIZATION_REMOVE_RESOURCE_QUANTITY, expectedEventPayload);
+        ORGANIZATION_REMOVE_RESOURCE_QUANTITY, expectedEventPayload, resourceResponse.getId());
   }
 
   @Test

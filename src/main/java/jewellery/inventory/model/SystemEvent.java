@@ -1,18 +1,12 @@
 package jewellery.inventory.model;
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Type;
 
 @Entity
@@ -34,4 +28,10 @@ public class SystemEvent {
   @Column(columnDefinition = "jsonb")
   @Type(JsonBinaryType.class)
   private Map<String, Object> payload = new HashMap<>();
+
+  @ElementCollection(fetch = FetchType.LAZY)
+  @BatchSize(size = 50)
+  @CollectionTable(name = "system_event_related", joinColumns = @JoinColumn(name = "event_id"))
+  @Column(name = "related_id", nullable = false)
+  private Set<UUID> relatedIds = new HashSet<>();
 }

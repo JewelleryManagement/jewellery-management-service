@@ -32,7 +32,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
-abstract class AuthenticatedIntegrationTestBase {
+public abstract class AuthenticatedIntegrationTestBase {
 
   @Autowired protected ObjectMapper objectMapper;
 
@@ -65,12 +65,12 @@ abstract class AuthenticatedIntegrationTestBase {
     userRepository.deleteAll();
     resourceRepository.deleteAll();
     resourceInProductRepository.deleteAll();
-    systemEventRepository.deleteAll();
     loggedInAdminUser = createTestAdminUser();
     setupMockSecurityContext(loggedInAdminUser);
     setupTestRestTemplateWithAuthHeaders();
     loggedInAdminUser.setId(
         createUserInDatabase(UserTestHelper.getTestUserRequest(loggedInAdminUser)).getId());
+    systemEventRepository.deleteAll();
   }
 
   private void deleteAllImages() {
