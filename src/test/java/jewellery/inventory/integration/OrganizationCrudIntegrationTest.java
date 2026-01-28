@@ -59,17 +59,15 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     OrganizationResponseDto responseDto = createOrganizationsWithRequest(organizationRequestDto);
 
     ResponseEntity<HttpStatus> response =
-            this.testRestTemplate.exchange(
-                    getOrganizationByIdUrl(responseDto.getId()),
-                    HttpMethod.DELETE,
-                    null,
-                    HttpStatus.class);
+        this.testRestTemplate.exchange(
+            getOrganizationByIdUrl(responseDto.getId()), HttpMethod.DELETE, null, HttpStatus.class);
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
 
     Map<String, Object> expectedEventPayload =
-            getCreateOrDeleteEventPayload(responseDto, objectMapper);
+        getCreateOrDeleteEventPayload(responseDto, objectMapper);
 
-    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_DELETE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_DELETE, expectedEventPayload, responseDto.getId());
   }
 
   @Test
@@ -138,7 +136,8 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(singleMemberResponseDto, objectMapper);
 
-    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_USER_DELETE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_USER_DELETE, expectedEventPayload, user.getId());
   }
 
   @Test
@@ -155,7 +154,8 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertNotNull(response.getBody());
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(singleMemberResponseDto, response.getBody(), objectMapper);
-    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_USER_UPDATE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_USER_UPDATE, expectedEventPayload, user.getId());
   }
 
   @Test
@@ -188,7 +188,8 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
 
-    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_USER_CREATE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_USER_CREATE, expectedEventPayload, userInOrganizationRequestDto.getUserId());
   }
 
   @Test
@@ -196,16 +197,16 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     UUID organizationId = createOrganizationsWithRequest(organizationRequestDto).getId();
 
     ResponseEntity<OrganizationSingleMemberResponseDto> response =
-            this.testRestTemplate.postForEntity(
-                    getOrganizationUsersUrl(organizationId),
-                    userInOrganizationRequestDto,
-                    OrganizationSingleMemberResponseDto.class);
+        this.testRestTemplate.postForEntity(
+            getOrganizationUsersUrl(organizationId),
+            userInOrganizationRequestDto,
+            OrganizationSingleMemberResponseDto.class);
 
     ResponseEntity<OrganizationSingleMemberResponseDto> responseSameUser =
-            this.testRestTemplate.postForEntity(
-                    getOrganizationUsersUrl(organizationId),
-                    userInOrganizationRequestDto,
-                    OrganizationSingleMemberResponseDto.class);
+        this.testRestTemplate.postForEntity(
+            getOrganizationUsersUrl(organizationId),
+            userInOrganizationRequestDto,
+            OrganizationSingleMemberResponseDto.class);
 
     assertEquals(HttpStatus.CONFLICT, responseSameUser.getStatusCode());
   }
@@ -220,7 +221,8 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertNotNull(response.getBody());
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
-    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_CREATE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_CREATE, expectedEventPayload, response.getBody().getId());
   }
 
   @Test
@@ -236,7 +238,9 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     ResponseEntity<List<OrganizationResponseDto>> organizations =
         this.testRestTemplate.exchange(
-            getBaseOrganizationsUrl() + "/by-permission/" + OrganizationPermission.CREATE_PRODUCT.name(),
+            getBaseOrganizationsUrl()
+                + "/by-permission/"
+                + OrganizationPermission.CREATE_PRODUCT.name(),
             HttpMethod.GET,
             null,
             new ParameterizedTypeReference<>() {});

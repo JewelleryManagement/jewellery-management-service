@@ -66,7 +66,8 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(createdResources.get(0), objectMapper);
 
-    systemEventTestHelper.assertEventWasLogged(RESOURCE_CREATE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        RESOURCE_CREATE, expectedEventPayload, createdResources.getFirst().getId());
   }
 
   @Test
@@ -117,7 +118,8 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             getMatchingUpdatedDto(createdDtos.get(0).getId(), updatedDtos),
             objectMapper);
 
-    systemEventTestHelper.assertEventWasLogged(RESOURCE_UPDATE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        RESOURCE_UPDATE, expectedEventPayload, updatedDtos.getFirst().getId());
   }
 
   @Test
@@ -133,7 +135,8 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(createdDtos.get(0), objectMapper);
 
-    systemEventTestHelper.assertEventWasLogged(RESOURCE_DELETE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        RESOURCE_DELETE, expectedEventPayload, createdDtos.getFirst().getId());
   }
 
   @Test

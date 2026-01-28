@@ -126,7 +126,10 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     assertEquals(HttpStatus.CREATED, productInOrganizationResponse.getStatusCode());
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(productInOrganizationResponse.getBody(), objectMapper);
-    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_CREATE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_PRODUCT_CREATE,
+        expectedEventPayload,
+        productInOrganizationResponse.getBody().getProducts().getFirst().getId());
     assertProductsInOrganizationSize(organizationResponseDto.getId().toString(), 1);
   }
 
@@ -189,7 +192,10 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             productInOrganizationResponse.getBody(),
             Objects.requireNonNull(updatedProductInOrganizationResponse.getBody()),
             objectMapper);
-    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_UPDATE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_PRODUCT_UPDATE,
+        expectedEventPayload,
+        updatedProductInOrganizationResponse.getBody().getProducts().getFirst().getId());
     assertProductsInOrganizationSize(organizationResponseDto.getId().toString(), 1);
     assertResourcesInOrganizationSize(organizationResponseDto.getId().toString(), 0);
   }
@@ -247,8 +253,9 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(productInOrganizationResponse.getBody(), objectMapper);
+
     systemEventTestHelper.assertEventWasLogged(
-        ORGANIZATION_PRODUCT_DISASSEMBLY, expectedEventPayload);
+        ORGANIZATION_PRODUCT_DISASSEMBLY, expectedEventPayload, productId);
     assertProductsInOrganizationSize(
         productInOrganizationResponse.getBody().getOrganization().getId().toString(), 0);
   }
@@ -282,7 +289,10 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             productInOrganizationResponse.getBody(),
             Objects.requireNonNull(transferResponse.getBody()),
             objectMapper);
-    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_PRODUCT_TRANSFER, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_PRODUCT_TRANSFER,
+        expectedEventPayload,
+        transferResponse.getBody().getProducts().getFirst().getId());
   }
 
   @Test

@@ -198,7 +198,9 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(
-        ORGANIZATION_SALE_RETURN_PRODUCT, expectedEventPayload);
+        ORGANIZATION_SALE_RETURN_PRODUCT,
+        expectedEventPayload,
+        productResponse.getProducts().getFirst().getId());
   }
 
   @Test
@@ -228,7 +230,13 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(
-        ORGANIZATION_SALE_RETURN_RESOURCE, expectedEventPayload);
+        ORGANIZATION_SALE_RETURN_RESOURCE,
+        expectedEventPayload,
+        resourcesInOrganizationResponseDto
+            .getResourcesAndQuantities()
+            .getFirst()
+            .getResource()
+            .getId());
   }
 
   @Test
@@ -262,7 +270,8 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
 
-    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_CREATE_SALE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_CREATE_SALE, expectedEventPayload, saleResponse.getBody().getId());
   }
 
   @Test
@@ -306,7 +315,13 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(
-        ORGANIZATION_SALE_RETURN_RESOURCE, expectedEventPayload);
+        ORGANIZATION_SALE_RETURN_RESOURCE,
+        expectedEventPayload,
+        resourcesInOrganizationResponseDto
+            .getResourcesAndQuantities()
+            .getFirst()
+            .getResource()
+            .getId());
   }
 
   @Test
@@ -342,7 +357,9 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         getCreateOrDeleteEventPayload(response.getBody(), objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(
-        ORGANIZATION_SALE_RETURN_PRODUCT, expectedEventPayload);
+        ORGANIZATION_SALE_RETURN_PRODUCT,
+        expectedEventPayload,
+        productResponse.getProducts().getFirst().getId());
   }
 
   @Test
@@ -434,7 +451,8 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
 
-    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_CREATE_SALE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_CREATE_SALE, expectedEventPayload, saleResponse.getBody().getId());
   }
 
   @Test
@@ -481,7 +499,8 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
 
-    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_CREATE_SALE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_CREATE_SALE, expectedEventPayload, saleResponse.getBody().getId());
   }
 
   @Test
@@ -522,7 +541,8 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
 
-    systemEventTestHelper.assertEventWasLogged(ORGANIZATION_CREATE_SALE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        ORGANIZATION_CREATE_SALE, expectedEventPayload, saleResponse.getBody().getId());
   }
 
   @Test
