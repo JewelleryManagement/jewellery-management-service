@@ -22,7 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class SystemEventTest {
+public class SystemEventServiceTest {
   @InjectMocks private SystemEventService systemEventService;
 
   @Mock private SystemEventRepository systemEventRepository;

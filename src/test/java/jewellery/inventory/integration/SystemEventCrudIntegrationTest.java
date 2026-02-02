@@ -64,7 +64,7 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     DetailedUserResponseDto user = createAndSaveUser();
 
     ResponseEntity<List<SystemEventLiteResponseDto>> eventWithRelatedId =
-        getRelatedEventsQuery(user.getId());
+        getRelatedEventsResponse(user.getId());
 
     ResponseEntity<SystemEventResponseDto> response =
         testRestTemplate.getForEntity(
@@ -87,7 +87,7 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     UUID randomId = UUID.randomUUID();
 
     ResponseEntity<List<SystemEventLiteResponseDto>> eventWithRelatedId =
-        getRelatedEventsQuery(randomId);
+        getRelatedEventsResponse(randomId);
 
     assertEquals(HttpStatus.OK, eventWithRelatedId.getStatusCode());
     assertNotNull(eventWithRelatedId);
@@ -99,7 +99,7 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     DetailedUserResponseDto user = createAndSaveUser();
 
     ResponseEntity<List<SystemEventLiteResponseDto>> eventWithRelatedId =
-        getRelatedEventsQuery(user.getId());
+        getRelatedEventsResponse(user.getId());
 
     assertEquals(HttpStatus.OK, eventWithRelatedId.getStatusCode());
     assertNotNull(eventWithRelatedId);
@@ -127,7 +127,7 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         .getBody();
   }
 
-  private ResponseEntity<List<SystemEventLiteResponseDto>> getRelatedEventsQuery(UUID id) {
+  private ResponseEntity<List<SystemEventLiteResponseDto>> getRelatedEventsResponse(UUID id) {
     return testRestTemplate.exchange(
         getSystemEventRelatedToUrl(id),
         HttpMethod.GET,

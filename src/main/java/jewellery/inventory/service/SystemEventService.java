@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import jewellery.inventory.dto.response.SystemEventLiteResponseDto;
 import jewellery.inventory.dto.response.SystemEventResponseDto;
 import jewellery.inventory.exception.not_found.NotFoundException;
@@ -20,6 +22,9 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class SystemEventService {
+  private static final Pattern UUID_PATTERN =
+      Pattern.compile(
+          "\\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\b");
 
   private final SystemEventRepository systemEventRepository;
   private final AuthService authService;
@@ -92,32 +97,23 @@ public class SystemEventService {
     return relatedIds;
   }
 
-  private void collectRelatedIds(JsonNode currentNode, Set<UUID> collectedIds) {
-    if (currentNode == null || currentNode.isNull()) return;
+  private static void collectRelatedIds(JsonNode node, Set<UUID> relatedIds) {
+    if (node == null || node.isNull()) return;
 
-    if (currentNode.isObject()) {
-      var fieldIterator = currentNode.fields();
-
-      while (fieldIterator.hasNext()) {
-        var field = fieldIterator.next();
-        String fieldName = field.getKey();
-        JsonNode fieldValue = field.getValue();
-
-        if (("id".equals(fieldName) || "contentOf".equals(fieldName))
-            && fieldValue != null
-            && !fieldValue.isNull()) {
-
-          collectedIds.add(UUID.fromString(fieldValue.asText()));
-        }
-
-        collectRelatedIds(fieldValue, collectedIds);
-      }
+    if (node.isObject()) {
+      node.fields().forEachRemaining(e -> collectRelatedIds(e.getValue(), relatedIds));
       return;
     }
 
-    if (currentNode.isArray()) {
-      for (JsonNode element : currentNode) {
-        collectRelatedIds(element, collectedIds);
+    if (node.isArray()) {
+      node.forEach(child -> collectRelatedIds(child, relatedIds));
+      return;
+    }
+
+    if (node.isTextual()) {
+      Matcher m = UUID_PATTERN.matcher(node.asText());
+      while (m.find()) {
+        relatedIds.add(UUID.fromString(m.group()));
       }
     }
   }

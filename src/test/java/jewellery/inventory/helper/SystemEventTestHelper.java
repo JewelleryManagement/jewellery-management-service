@@ -3,7 +3,6 @@ package jewellery.inventory.helper;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,25 +31,20 @@ public class SystemEventTestHelper {
   private final ObjectMapper objectMapper;
 
   public void assertEventWasLogged(
-      EventType eventType, Map<String, Object> toCompare, UUID relatedId)
-      throws JsonProcessingException {
+      EventType eventType, Map<String, Object> toCompare, UUID relatedId) {
 
     Optional<SystemEventLiteResponseDto> eventOptional =
-        findEventByTypeAndEntity(testRestTemplate, objectMapper, eventType, toCompare, relatedId);
+            findEventByType(testRestTemplate, eventType, relatedId);
 
-    SystemEventLiteResponseDto event = null;
-
-    if (eventOptional.isPresent()) {
-      event = eventOptional.get();
-    }
+    assertTrue(
+        eventOptional.isPresent(),
+        "Event of type " + eventType + " for entity " + toCompare + " not logged");
+    SystemEventLiteResponseDto event = eventOptional.get();
 
     ResponseEntity<SystemEventResponseDto> eventWithPayload =
         testRestTemplate.getForEntity(
             "/system-events/" + event.getId(), SystemEventResponseDto.class);
 
-    assertTrue(
-        eventOptional.isPresent(),
-        "Event of type " + eventType + " for entity " + toCompare + " not logged");
     assertNotNull(event);
     assertEquals(Objects.requireNonNull(eventWithPayload.getBody()).getPayload(), toCompare);
   }
@@ -70,23 +64,16 @@ public class SystemEventTestHelper {
     return Map.of("entity", objectMapper.convertValue(entity, new TypeReference<>() {}));
   }
 
-  private static Optional<SystemEventLiteResponseDto> findEventByTypeAndEntity(
-      TestRestTemplate testRestTemplate,
-      ObjectMapper objectMapper,
-      EventType eventType,
-      Map<String, Object> toCompare,
-      UUID relatedId)
-      throws JsonProcessingException {
+  private static Optional<SystemEventLiteResponseDto> findEventByType(
+      TestRestTemplate testRestTemplate, EventType eventType, UUID relatedId) {
 
-    List<SystemEventLiteResponseDto> events =
-        fetchAllSystemEvents(testRestTemplate, objectMapper, relatedId);
+    List<SystemEventLiteResponseDto> events = fetchAllRelatedToEvents(testRestTemplate, relatedId);
 
     return events.stream().filter(event -> event.getType().equals(eventType)).findFirst();
   }
 
-  private static List<SystemEventLiteResponseDto> fetchAllSystemEvents(
-      TestRestTemplate testRestTemplate, ObjectMapper objectMapper, UUID relatedId)
-      throws JsonProcessingException {
+  private static List<SystemEventLiteResponseDto> fetchAllRelatedToEvents(
+      TestRestTemplate testRestTemplate, UUID relatedId) {
 
     ResponseEntity<List<SystemEventLiteResponseDto>> response =
         testRestTemplate.exchange(
