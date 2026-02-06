@@ -1,9 +1,8 @@
 package jewellery.inventory.helper;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,15 +12,14 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import jewellery.inventory.dto.response.SystemEventLiteResponseDto;
+import jewellery.inventory.dto.response.SystemEventResponseDto;
 import jewellery.inventory.model.EventType;
-import jewellery.inventory.model.SystemEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -32,15 +30,23 @@ public class SystemEventTestHelper {
   private final TestRestTemplate testRestTemplate;
   private final ObjectMapper objectMapper;
 
-  public void assertEventWasLogged(EventType eventType, Map<String, Object> toCompare)
-      throws JsonProcessingException {
+  public void assertEventWasLogged(
+      EventType eventType, Map<String, Object> toCompare, UUID relatedId) {
 
-    Optional<SystemEvent> event =
-        findEventByTypeAndEntity(testRestTemplate, objectMapper, eventType, toCompare);
+    Optional<SystemEventLiteResponseDto> eventOptional =
+            findEventByType(testRestTemplate, eventType, relatedId);
 
     assertTrue(
-        event.isPresent(),
+        eventOptional.isPresent(),
         "Event of type " + eventType + " for entity " + toCompare + " not logged");
+    SystemEventLiteResponseDto event = eventOptional.get();
+
+    ResponseEntity<SystemEventResponseDto> eventWithPayload =
+        testRestTemplate.getForEntity(
+            "/system-events/" + event.getId(), SystemEventResponseDto.class);
+
+    assertNotNull(event);
+    assertEquals(Objects.requireNonNull(eventWithPayload.getBody()).getPayload(), toCompare);
   }
 
   public static Map<String, Object> getUpdateEventPayload(
@@ -58,26 +64,24 @@ public class SystemEventTestHelper {
     return Map.of("entity", objectMapper.convertValue(entity, new TypeReference<>() {}));
   }
 
-  private static Optional<SystemEvent> findEventByTypeAndEntity(
-      TestRestTemplate testRestTemplate,
-      ObjectMapper objectMapper,
-      EventType eventType,
-      Map<String, Object> toCompare)
-      throws JsonProcessingException {
+  private static Optional<SystemEventLiteResponseDto> findEventByType(
+      TestRestTemplate testRestTemplate, EventType eventType, UUID relatedId) {
 
-    List<SystemEvent> events = fetchAllSystemEvents(testRestTemplate, objectMapper);
-    return events.stream()
-        .filter(
-            event ->
-                event.getType().equals(eventType) && Objects.equals(toCompare, event.getPayload()))
-        .findFirst();
+    List<SystemEventLiteResponseDto> events = fetchAllRelatedToEvents(testRestTemplate, relatedId);
+
+    return events.stream().filter(event -> event.getType().equals(eventType)).findFirst();
   }
 
-  private static List<SystemEvent> fetchAllSystemEvents(
-      TestRestTemplate testRestTemplate, ObjectMapper objectMapper) throws JsonProcessingException {
+  private static List<SystemEventLiteResponseDto> fetchAllRelatedToEvents(
+      TestRestTemplate testRestTemplate, UUID relatedId) {
 
-    ResponseEntity<String> response = testRestTemplate.getForEntity("/system-events", String.class);
-    return objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+    ResponseEntity<List<SystemEventLiteResponseDto>> response =
+        testRestTemplate.exchange(
+            "/system-events/related-to/" + relatedId,
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<SystemEventLiteResponseDto>>() {});
+    return response.getBody();
   }
 
   @PostConstruct

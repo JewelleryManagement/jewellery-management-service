@@ -38,7 +38,8 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     UserRequestDto userRequest = createTestUserRequest();
 
     ResponseEntity<DetailedUserResponseDto> response =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
+        this.testRestTemplate.postForEntity(
+            getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
@@ -51,14 +52,16 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(userResponse, objectMapper);
 
-    systemEventTestHelper.assertEventWasLogged(USER_CREATE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        USER_CREATE, expectedEventPayload, response.getBody().getId());
   }
 
   @Test
   void createUserFailsWhenNameInvalid() {
     assertTrue(
         this.testRestTemplate
-            .postForEntity(getBaseUserUrl(), createInvalidUserRequest(), DetailedUserResponseDto.class)
+            .postForEntity(
+                getBaseUserUrl(), createInvalidUserRequest(), DetailedUserResponseDto.class)
             .getStatusCode()
             .is4xxClientError());
   }
@@ -67,10 +70,12 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void createUserFailsWhenEmailDuplicate() {
     UserRequestDto userRequest = createTestUserRequest();
 
-    this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
+    this.testRestTemplate.postForEntity(
+        getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
 
     ResponseEntity<DetailedUserResponseDto> response =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
+        this.testRestTemplate.postForEntity(
+            getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
@@ -79,7 +84,8 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void createUserFailsWhenNameDuplicate() {
     UserRequestDto userRequest = createTestUserRequest();
 
-    this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
+    this.testRestTemplate.postForEntity(
+        getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
 
     UserRequestDto duplicateNameUserRequest = new UserRequestDto();
     duplicateNameUserRequest.setFirstName(userRequest.getFirstName());
@@ -97,7 +103,8 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     UserRequestDto userRequest = createTestUserRequest();
 
     ResponseEntity<DetailedUserResponseDto> userResponseEntity =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
+        this.testRestTemplate.postForEntity(
+            getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
     assertNotNull(userResponseEntity.getBody());
 
     ResponseEntity<List<DetailedUserResponseDto>> response =
@@ -117,7 +124,8 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void getSpecificUserSuccessfully() {
     UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<DetailedUserResponseDto> userResponseEntity =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
+        this.testRestTemplate.postForEntity(
+            getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
     DetailedUserResponseDto createdUser = userResponseEntity.getBody();
 
     ResponseEntity<DetailedUserResponseDto> response =
@@ -145,7 +153,8 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void updateUserSuccessfully() throws JsonProcessingException {
     UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<DetailedUserResponseDto> userResponseEntity =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
+        this.testRestTemplate.postForEntity(
+            getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
     DetailedUserResponseDto createdUser = userResponseEntity.getBody();
 
     UserRequestDto updatedUserRequest = createDifferentUserRequest();
@@ -169,7 +178,8 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(createdUser, updatedUser, objectMapper);
 
-    systemEventTestHelper.assertEventWasLogged(USER_UPDATE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        USER_UPDATE, expectedEventPayload, response.getBody().getId());
   }
 
   @Test
@@ -202,7 +212,10 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     ResponseEntity<DetailedUserResponseDto> response =
         this.testRestTemplate.exchange(
-            getBaseUserUrl() + "/" + fakeId, HttpMethod.PUT, requestUpdate, DetailedUserResponseDto.class);
+            getBaseUserUrl() + "/" + fakeId,
+            HttpMethod.PUT,
+            requestUpdate,
+            DetailedUserResponseDto.class);
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
@@ -211,7 +224,8 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void deleteUserSuccessfully() throws JsonProcessingException {
     UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<DetailedUserResponseDto> userResponseEntity =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
+        this.testRestTemplate.postForEntity(
+            getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
     DetailedUserResponseDto createdUser = userResponseEntity.getBody();
 
     ResponseEntity<HttpStatus> response =
@@ -231,7 +245,8 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(createdUser, objectMapper);
 
-    systemEventTestHelper.assertEventWasLogged(USER_DELETE, expectedEventPayload);
+    systemEventTestHelper.assertEventWasLogged(
+        USER_DELETE, expectedEventPayload, createdUser.getId());
   }
 
   @Test
@@ -247,7 +262,8 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private DetailedUserResponseDto sendUserCreateRequest(UserRequestDto userRequest) {
     ResponseEntity<DetailedUserResponseDto> userResponseEntity =
-        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
+        this.testRestTemplate.postForEntity(
+            getBaseUserUrl(), userRequest, DetailedUserResponseDto.class);
     DetailedUserResponseDto createdUser = userResponseEntity.getBody();
     assertNotNull(createdUser);
     return createdUser;

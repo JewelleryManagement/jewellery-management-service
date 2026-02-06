@@ -2,11 +2,15 @@ package jewellery.inventory.service;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import jewellery.inventory.dto.response.SystemEventLiteResponseDto;
+import jewellery.inventory.dto.response.SystemEventResponseDto;
+import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.SystemEvent;
 import jewellery.inventory.repository.SystemEventRepository;
@@ -18,13 +22,26 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class SystemEventService {
+  private static final Pattern UUID_PATTERN =
+      Pattern.compile(
+          "\\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\b");
 
   private final SystemEventRepository systemEventRepository;
   private final AuthService authService;
   private final ObjectMapper objectMapper;
 
-  public List<SystemEvent> getAllEvents() {
-    return systemEventRepository.findAll();
+  public List<SystemEventLiteResponseDto> getAllEvents() {
+    return systemEventRepository.findAllWithoutRelatedIds();
+  }
+
+  public SystemEventResponseDto getSystemEvent(UUID id) {
+    return systemEventRepository
+        .findByIdWithoutRelatedIds(id)
+        .orElseThrow(() -> new NotFoundException("Event with id: " + id + " is not found!"));
+  }
+
+  public List<SystemEventLiteResponseDto> getEventsRelatedTo(UUID id) {
+    return systemEventRepository.findByRelatedId(id);
   }
 
   public <T, U> void logEvent(EventType type, T newEntity, @Nullable U oldEntity) {
@@ -51,10 +68,15 @@ public class SystemEventService {
 
   private void logEvent(EventType type, Map<String, Object> payload) {
     SystemEvent event = new SystemEvent();
-    event.setExecutor(getCurrentUser());
+    Map<String, Object> executor = getCurrentUser();
+    event.setExecutor(executor);
     event.setType(type);
     event.setTimestamp(Instant.now());
     event.setPayload(payload);
+
+    Set<UUID> ids = extractRelatedIds(payload);
+    addExecutorId(ids, executor);
+    event.setRelatedIds(ids);
 
     systemEventRepository.save(event);
   }
@@ -64,5 +86,44 @@ public class SystemEventService {
     return executor != null
         ? objectMapper.convertValue(executor, new TypeReference<>() {})
         : Map.of();
+  }
+
+  private Set<UUID> extractRelatedIds(Map<String, Object> payload) {
+    Set<UUID> relatedIds = new HashSet<>();
+    if (payload == null || payload.isEmpty()) return relatedIds;
+
+    JsonNode root = objectMapper.valueToTree(payload);
+    collectRelatedIds(root, relatedIds);
+    return relatedIds;
+  }
+
+  private static void collectRelatedIds(JsonNode node, Set<UUID> relatedIds) {
+    if (node == null || node.isNull()) return;
+
+    if (node.isObject()) {
+      node.fields().forEachRemaining(e -> collectRelatedIds(e.getValue(), relatedIds));
+      return;
+    }
+
+    if (node.isArray()) {
+      node.forEach(child -> collectRelatedIds(child, relatedIds));
+      return;
+    }
+
+    if (node.isTextual()) {
+      Matcher m = UUID_PATTERN.matcher(node.asText());
+      while (m.find()) {
+        relatedIds.add(UUID.fromString(m.group()));
+      }
+    }
+  }
+
+  private void addExecutorId(Set<UUID> ids, Map<String, Object> executor) {
+    if (executor == null || executor.isEmpty()) return;
+
+    Object id = executor.get("id");
+    if (id != null) {
+      ids.add(UUID.fromString(id.toString()));
+    }
   }
 }
