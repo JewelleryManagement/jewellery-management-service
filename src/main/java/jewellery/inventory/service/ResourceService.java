@@ -20,10 +20,12 @@ import jewellery.inventory.exception.duplicate.DuplicateException;
 import jewellery.inventory.exception.image.MultipartFileContentTypeException;
 import jewellery.inventory.exception.image.MultipartFileNotSelectedException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
+import jewellery.inventory.exception.resource.ResourceInUseException;
 import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.model.EventType;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceInOrganizationRepository;
+import jewellery.inventory.repository.ResourceInProductRepository;
 import jewellery.inventory.repository.ResourceRepository;
 import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,7 @@ public class ResourceService implements EntityFetcher {
   private final ResourceRepository resourceRepository;
   private final ResourceInOrganizationRepository resourceInOrganizationRepository;
   private final ResourceMapper resourceMapper;
+  private final ResourceInProductRepository resourceInProductRepository;
 
   public List<ResourceResponseDto> getAllResources() {
     logger.debug("Fetching all Resources");
@@ -67,6 +70,19 @@ public class ResourceService implements EntityFetcher {
   @LogDeleteEvent(eventType = EventType.RESOURCE_DELETE)
   public void deleteResourceById(UUID id) {
     Resource resource = getResourceById(id);
+    boolean partOfOrganization = resourceInOrganizationRepository.existsByResourceId(id);
+    boolean partOfProduct = resourceInProductRepository.existsByResourceId(id);
+
+    if (partOfOrganization || partOfProduct)
+      throw new ResourceInUseException(
+          "Resource with id: "
+              + id
+              + " is part of "
+              + (partOfOrganization && partOfProduct
+                  ? "organization and product"
+                  : partOfOrganization ? "organization" : "product")
+              + "!");
+
     resourceRepository.delete(resource);
     logger.info("Resource deleted successfully. Resource ID: {}", id);
   }

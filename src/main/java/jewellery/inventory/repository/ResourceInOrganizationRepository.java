@@ -12,4 +12,6 @@ public interface ResourceInOrganizationRepository
   @Query(
       "SELECT COALESCE(SUM(rio.quantity), 0.0) FROM ResourceInOrganization rio WHERE rio.resource.id = :resourceId")
   BigDecimal sumQuantityByResource(@Param("resourceId") UUID resourceId);
+
+  boolean existsByResourceId(UUID id);
 }

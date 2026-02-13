@@ -26,11 +26,11 @@ public class Resource {
   @Column(unique = true, nullable = false)
   private String sku;
 
-  @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "resource")
   @ToString.Exclude
   private List<ResourceInOrganization> organizationAffiliations;
 
-  @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "resource")
   @ToString.Exclude
   private List<ResourceInProduct> productAffiliations;
 }
