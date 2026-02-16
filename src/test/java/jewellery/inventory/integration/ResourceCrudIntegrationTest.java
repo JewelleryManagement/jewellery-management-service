@@ -1,5 +1,8 @@
 package jewellery.inventory.integration;
 
+import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizationRequest;
+import static jewellery.inventory.helper.ProductTestHelper.getProductRequestDtoForOrganization;
+import static jewellery.inventory.helper.ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto;
 import static jewellery.inventory.helper.ResourceTestHelper.*;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
@@ -12,20 +15,27 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.micrometer.common.lang.Nullable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import jewellery.inventory.dto.request.OrganizationRequestDto;
+import jewellery.inventory.dto.request.ProductRequestDto;
+import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
+import jewellery.inventory.dto.response.OrganizationResponseDto;
+import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ResourceMapper;
+import jewellery.inventory.model.resource.Diamond;
+import jewellery.inventory.model.resource.Resource;
 import org.hibernate.AssertionFailure;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -37,6 +47,10 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
+  private static final BigDecimal FIRST_QUANTITY = getBigDecimal("20");
+  private static final BigDecimal SECOND_QUANTITY = getBigDecimal("10");
+  private static final BigDecimal DEAL_PRICE = getBigDecimal("10");
+
   @Autowired private ResourceMapper resourceMapper;
 
   @NotNull
@@ -44,15 +58,38 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return dtos.stream().map(ResourceResponseDto::getId).toList();
   }
 
+  private String buildUrl(String... paths) {
+    return "/" + String.join("/", paths);
+  }
+
   private String getBaseResourceUrl() {
     return "/resources";
+  }
+
+  private String getBaseOrganizationsUrl() {
+    return "/organizations";
+  }
+
+  private String getBaseResourceInOrganizationAvailabilityUrl() {
+    return buildUrl("organizations", "resources-availability");
+  }
+
+  private String getBaseProductUrl() {
+    return "/products";
+  }
+
+  private OrganizationResponseDto organizationResponseDto;
+
+  @BeforeEach
+  void setUp() {
+    OrganizationRequestDto organizationRequestDto = getTestOrganizationRequest();
+    organizationResponseDto = createOrganizationsWithRequest(organizationRequestDto);
   }
 
   @AfterEach
   void deleteResources() throws JsonProcessingException {
     List<ResourceResponseDto> resourceDtosFromDb = getResourcesWithRequest();
-    resourceDtosFromDb.forEach(
-        resourceDTO -> testRestTemplate.delete(getBaseResourceUrl() + "/" + resourceDTO.getId()));
+    resourceDtosFromDb.forEach(resourceDTO -> deleteResourceById(resourceDTO.getId()));
   }
 
   @Test
@@ -123,11 +160,53 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
+  void willThrowWhenDeleteResourcePartOfOrganization() {
+    Resource diamond = createDiamondInDatabase();
+    createResourceInOrganization(diamond.getId());
+
+    ResponseEntity<String> response = deleteResourceById(diamond.getId());
+
+    assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("Resource with id: " + diamond.getId() + " is part of organization!"));
+  }
+
+  @Test
+  void willThrowWhenDeleteResourcePartOfProduct() {
+    Resource diamond = createDiamondInDatabase();
+    createResourceInOrganization(diamond.getId());
+    createProductInOrganization(diamond.getId(), FIRST_QUANTITY);
+
+    ResponseEntity<String> response = deleteResourceById(diamond.getId());
+
+    assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("Resource with id: " + diamond.getId() + " is part of product!"));
+  }
+
+  @Test
+  void willThrowWhenDeleteResourcePartOfOrganizationAndProduct() {
+    Resource diamond = createDiamondInDatabase();
+    createResourceInOrganization(diamond.getId());
+    createProductInOrganization(diamond.getId(), SECOND_QUANTITY);
+
+    ResponseEntity<String> response = deleteResourceById(diamond.getId());
+
+    assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains(
+                "Resource with id: " + diamond.getId() + " is part of organization and product!"));
+  }
+
+  @Test
   void willDeleteAResourceFromDatabase() throws JsonProcessingException {
     sendCreateRequestsFor(List.of(ResourceTestHelper.getDiamondRequestDto()));
     List<ResourceResponseDto> createdDtos = getResourcesWithRequest();
 
-    testRestTemplate.delete(getBaseResourceUrl() + "/" + createdDtos.get(0).getId());
+    deleteResourceById(createdDtos.get(0).getId());
 
     List<ResourceResponseDto> afterDeleteDtos = getResourcesWithRequest();
     assertEquals(0, afterDeleteDtos.size());
@@ -160,12 +239,8 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void willFailToDeleteResourceFromDatabaseWithWrongId() {
-    ResponseEntity<String> response =
-        testRestTemplate.exchange(
-            getBaseResourceUrl() + "/" + UUID.randomUUID(),
-            HttpMethod.DELETE,
-            HttpEntity.EMPTY,
-            String.class);
+    ResponseEntity<String> response = deleteResourceById(UUID.randomUUID());
+
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
 
@@ -309,5 +384,48 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         .filter(resourceResponseDto -> resourceResponseDto.getId().equals(id))
         .findFirst()
         .orElseThrow(() -> new AssertionFailure("Can't find id: " + id + " in responses"));
+  }
+
+  @Nullable
+  private OrganizationResponseDto createOrganizationsWithRequest(OrganizationRequestDto dto) {
+    ResponseEntity<OrganizationResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseOrganizationsUrl(), dto, OrganizationResponseDto.class);
+
+    return response.getBody();
+  }
+
+  @Nullable
+  private Diamond createDiamondInDatabase() {
+    ResourceRequestDto resourceRequest = ResourceTestHelper.getDiamondRequestDto();
+    ResponseEntity<Diamond> createResource =
+        this.testRestTemplate.postForEntity(getBaseResourceUrl(), resourceRequest, Diamond.class);
+
+    return createResource.getBody();
+  }
+
+  private ResponseEntity<String> deleteResourceById(UUID id) {
+    return testRestTemplate.exchange(
+        getBaseResourceUrl() + "/" + id, HttpMethod.DELETE, null, String.class);
+  }
+
+  void createResourceInOrganization(UUID resourceId) {
+    ResourceInOrganizationRequestDto resourceInOrganizationRequestDto =
+        createResourceInOrganizationRequestDto(
+            organizationResponseDto.getId(), resourceId, FIRST_QUANTITY, DEAL_PRICE);
+
+    testRestTemplate.postForEntity(
+        getBaseResourceInOrganizationAvailabilityUrl(),
+        resourceInOrganizationRequestDto,
+        ResourcesInOrganizationResponseDto.class);
+  }
+
+  void createProductInOrganization(UUID resourceId, BigDecimal quantity) {
+    ProductRequestDto productRequestDto =
+        getProductRequestDtoForOrganization(
+            loggedInAdminUser, organizationResponseDto.getId(), resourceId, quantity);
+
+    testRestTemplate.postForEntity(
+        getBaseProductUrl(), productRequestDto, ProductsInOrganizationResponseDto.class);
   }
 }
