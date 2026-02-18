@@ -6,6 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -31,8 +32,15 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
+      - name: Ensure Docker is available for Testcontainers
+        run: |
+          sudo systemctl start docker
+          docker version
+          docker info
+
       - name: Build, test and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          DOCKER_HOST: unix:///var/run/docker.sock
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.projectKey=JewelleryManagement_jewellery-management-service -Dsonar.organization=jewellerymanagement
