@@ -1,0 +1,20 @@
+name: Add Allowed Values to Backend
+description: Adds support for storing and retrieving allowed values for resource fields.
+input: true
+steps:
+  - role: user
+    content: >
+      Add support for predefined allowed values for a resource type called "{{input}}".
+
+      1. Edit the entity `AllowedValue` to use all of the fields from the `AllowedValue` class as Id.
+
+      2. Create a Spring Data repository `AllowedValueRepository`.
+
+      3. Create a REST controller `AllowedValueController` with:
+         - GET endpoint: `/allowed-values?type=...&field=...` to return all allowed values
+         - POST endpoint: `/allowed-values` to add a new value
+         - DELETE endpoint: `/allowed-values?type=...&field=` to add a new value
+
+      4. Optionally include basic validation logic to ensure uniqueness per (type, field, value).
+  - role: assistant
+    function_call: cursor.edit
