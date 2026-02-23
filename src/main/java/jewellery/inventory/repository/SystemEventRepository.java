@@ -20,6 +20,7 @@ public interface SystemEventRepository extends JpaRepository<SystemEvent, UUID> 
       e.executor
   )
   from SystemEvent e
+  order by e.timestamp desc
 """)
   List<SystemEventLiteResponseDto> findAllWithoutRelatedIds();
 
