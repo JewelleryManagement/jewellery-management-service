@@ -32,7 +32,6 @@ public class ProductController {
     return productService.getByOwner(ownerId);
   }
 
-  @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Get a single product")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")

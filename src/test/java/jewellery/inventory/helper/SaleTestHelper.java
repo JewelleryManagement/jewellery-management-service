@@ -5,6 +5,7 @@ import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ import jewellery.inventory.model.User;
 import org.jetbrains.annotations.NotNull;
 
 public class SaleTestHelper {
+  private static final LocalDateTime NOW = LocalDateTime.now().withSecond(0).withNano(0);
 
   public static Sale createSaleWithTodayDate(
       User seller,
@@ -36,7 +38,7 @@ public class SaleTestHelper {
     sale.setBuyer(buyer);
     sale.setProducts(new ArrayList<>(products));
     sale.setResources(new ArrayList<>(resources));
-    sale.setDate(LocalDate.now());
+    sale.setDate(NOW);
     return sale;
   }
 
@@ -63,7 +65,7 @@ public class SaleTestHelper {
     saleRequest.setBuyerId(buyerId);
     saleRequest.setProducts(products);
     saleRequest.setResources(resources);
-    saleRequest.setDate(LocalDate.now());
+    saleRequest.setDate(NOW);
     return saleRequest;
   }
 
@@ -220,7 +222,7 @@ public class SaleTestHelper {
     sale.setBuyer(buyer);
     sale.setProducts(new ArrayList<>(products));
     sale.setResources(new ArrayList<>(resources));
-    sale.setDate(LocalDate.now());
+    sale.setDate(NOW);
     return sale;
   }
 
@@ -233,7 +235,7 @@ public class SaleTestHelper {
     SaleRequestDto saleRequestDto = new SaleRequestDto();
     saleRequestDto.setBuyerId(buyer.getId());
     saleRequestDto.setSellerId(seller.getId());
-    saleRequestDto.setDate(LocalDate.now());
+    saleRequestDto.setDate(NOW);
     PurchasedResourceQuantityRequestDto purchasedResourceQuantityRequestDto =
         new PurchasedResourceQuantityRequestDto();
     ResourceQuantityRequestDto resourceQuantityRequestDto = new ResourceQuantityRequestDto();
@@ -282,7 +284,7 @@ public class SaleTestHelper {
             .collect(Collectors.toList());
     saleRequestDto.setResources(resources);
     saleRequestDto.setProducts(new ArrayList<>());
-    saleRequestDto.setDate(LocalDate.now());
+    saleRequestDto.setDate(LocalDateTime.now());
     return saleRequestDto;
   }
 }

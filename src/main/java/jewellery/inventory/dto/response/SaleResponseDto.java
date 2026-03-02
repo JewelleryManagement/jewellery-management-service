@@ -2,7 +2,7 @@ package jewellery.inventory.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -21,8 +21,8 @@ public class SaleResponseDto {
   private List<ProductResponseDto> products;
   private List<PurchasedResourceQuantityResponseDto> resources;
 
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
-  private LocalDate date;
+  @JsonFormat(pattern = "dd-MM-yyyy HH:mm")
+  private LocalDateTime date;
 
   private BigDecimal totalPrice;
   private BigDecimal totalDiscountedPrice;

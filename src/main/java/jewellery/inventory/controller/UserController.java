@@ -36,7 +36,6 @@ public class UserController {
     return userService.getAllUsers();
   }
 
-  @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Get user by id")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")

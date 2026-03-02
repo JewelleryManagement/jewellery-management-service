@@ -38,7 +38,6 @@ public class UserService implements EntityFetcher {
     return userMapper.toDetailedUserResponseList(userRepository.findAll());
   }
 
-  @NotUsedYet(reason = "Pending frontend implementation")
   public DetailedUserResponseDto getUserResponse(UUID id) {
     return userMapper.toDetailedUserResponse(getUser(id));
   }

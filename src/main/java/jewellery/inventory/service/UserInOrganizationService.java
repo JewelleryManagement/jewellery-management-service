@@ -9,7 +9,8 @@ import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationMembersResponseDto;
 import jewellery.inventory.dto.response.OrganizationSingleMemberResponseDto;
-import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
+import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
+import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.exception.organization.UserIsPartOfOrganizationException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
@@ -87,7 +88,7 @@ public class UserInOrganizationService implements EntityFetcher {
             .removeIf(userInOrg -> userInOrg.getUser().getId().equals(userId));
 
     if (!isFoundAndDeleted) {
-      throw new UserIsNotPartOfOrganizationException(userId, organizationId);
+      throw new UserNotFoundException(userId);
     }
 
     organizationService.saveOrganization(organization);
@@ -95,6 +96,13 @@ public class UserInOrganizationService implements EntityFetcher {
         "Successfully deleted user in the organization. Organization ID: {}, User ID: {}",
         organizationId,
         userId);
+  }
+
+  public UserInOrganizationResponseDto getUserInOrganization(UUID organizationId, UUID userId) {
+    UserInOrganization userInOrganization =
+        getUserInOrganizationByUserIdAndOrganizationId(userId, organizationId);
+
+    return organizationMapper.toUserInOrganizationResponseDto(userInOrganization);
   }
 
   private void validateUserIsNotPartOfOrganization(Organization organization, User userForAdd) {
@@ -148,7 +156,7 @@ public class UserInOrganizationService implements EntityFetcher {
       UUID userId, UUID organizationId) {
     return userInOrganizationRepository
         .findByUserIdAndOrganizationId(userId, organizationId)
-        .orElseThrow(() -> new UserIsNotPartOfOrganizationException(userId, organizationId));
+        .orElseThrow(() -> new UserNotFoundException(userId));
   }
 
   @Override

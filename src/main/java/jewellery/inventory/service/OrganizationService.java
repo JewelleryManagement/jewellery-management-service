@@ -39,7 +39,6 @@ public class OrganizationService implements EntityFetcher {
     return getOrganizationsUserIsPartOf().stream().map(organizationMapper::toResponse).toList();
   }
 
-  @NotUsedYet(reason = "Pending frontend implementation")
   public OrganizationResponseDto getOrganizationResponse(UUID id) {
     logger.debug("Get organizationResponse by ID: {}", id);
     return organizationMapper.toResponse(getOrganization(id));

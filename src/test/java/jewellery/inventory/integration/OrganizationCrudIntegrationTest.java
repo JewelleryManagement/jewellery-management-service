@@ -4,8 +4,7 @@ import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.model.EventType.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.micrometer.common.lang.Nullable;
@@ -114,6 +113,40 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
+  }
+
+  @Test
+  void getUserInOrganizationSuccessfully() {
+    OrganizationResponseDto organizationResponseDto =
+        createOrganizationsWithRequest(organizationRequestDto);
+    OrganizationSingleMemberResponseDto userInOrganization =
+        addUserInOrganization(organizationResponseDto.getId());
+
+    ResponseEntity<UserInOrganizationResponseDto> response =
+        this.testRestTemplate.getForEntity(
+            getOrganizationUsersUrl(
+                organizationResponseDto.getId(), userInOrganization.getMember().getUser().getId()),
+            UserInOrganizationResponseDto.class);
+    assertNotNull(response);
+    assertEquals(
+        userInOrganization.getMember().getUser().getId(),
+        Objects.requireNonNull(response.getBody()).getUser().getId());
+  }
+
+  @Test
+  void getUserInOrganizationShouldThrowUserNotFoundException() {
+    OrganizationResponseDto organizationResponseDto =
+        createOrganizationsWithRequest(organizationRequestDto);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.getForEntity(
+            getOrganizationUsersUrl(organizationResponseDto.getId(), user.getId()), String.class);
+    assertNotNull(response);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("User with id " + user.getId() + " was not found"));
   }
 
   @Test

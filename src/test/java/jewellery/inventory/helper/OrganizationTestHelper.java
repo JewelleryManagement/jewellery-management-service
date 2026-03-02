@@ -1,5 +1,8 @@
 package jewellery.inventory.helper;
 
+import static jewellery.inventory.helper.UserTestHelper.createTestUserResponseDto;
+import static jewellery.inventory.model.OrganizationPermission.EDIT_PRODUCT;
+
 import java.math.BigDecimal;
 import java.util.*;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
@@ -124,5 +127,13 @@ public class OrganizationTestHelper {
     resourceInOrganization.setDealPrice(BigDecimal.TEN);
     resourceInOrganization.setOrganization(organization);
     return resourceInOrganization;
+  }
+
+  public static UserInOrganizationResponseDto getUserInOrganizationResponseDto(User user) {
+    UserInOrganizationResponseDto userInOrganizationResponseDto =
+        new UserInOrganizationResponseDto();
+    userInOrganizationResponseDto.setUser(createTestUserResponseDto(user));
+    userInOrganizationResponseDto.setOrganizationPermissions(List.of(EDIT_PRODUCT));
+    return userInOrganizationResponseDto;
   }
 }

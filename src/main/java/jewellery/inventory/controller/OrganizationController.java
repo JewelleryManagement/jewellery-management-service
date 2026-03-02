@@ -7,10 +7,7 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.UpdateUserInOrganizationRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
-import jewellery.inventory.dto.response.OrganizationMembersResponseDto;
-import jewellery.inventory.dto.response.OrganizationResponseDto;
-import jewellery.inventory.dto.response.OrganizationSingleMemberResponseDto;
-import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.model.OrganizationPermission;
 import jewellery.inventory.service.OrganizationService;
 import jewellery.inventory.service.UserInOrganizationService;
@@ -34,7 +31,6 @@ public class OrganizationController {
     return organizationService.getAllOrganizationsResponsesForCurrentUser();
   }
 
-  @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Get organization by id")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{id}")
@@ -101,6 +97,14 @@ public class OrganizationController {
   public OrganizationMembersResponseDto getAllUsersInOrganization(
       @PathVariable UUID organizationId) {
     return userInOrganizationService.getAllUsersInOrganization(organizationId);
+  }
+
+  @Operation(summary = "Get user in organization")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("{organizationId}/users/{userId}")
+  public UserInOrganizationResponseDto getUserInOrganization(
+      @PathVariable UUID organizationId, @PathVariable UUID userId) {
+    return userInOrganizationService.getUserInOrganization(organizationId, userId);
   }
 
   @Operation(summary = "Get all products in organization")

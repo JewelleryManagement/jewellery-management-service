@@ -21,7 +21,6 @@ import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.SaleRepository;
-import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -127,7 +126,6 @@ public class SaleService {
         .toList();
   }
 
-  @NotUsedYet(reason = "Pending frontend implementation")
   public OrganizationSaleResponseDto getSale(UUID saleId) {
     logger.debug("Fetching a Sale from organization");
     return saleMapper.mapToOrganizationSaleResponseDto(getSaleById(saleId));

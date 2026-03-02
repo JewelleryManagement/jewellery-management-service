@@ -23,7 +23,6 @@ import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInProduct;
 import jewellery.inventory.repository.*;
-import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,7 +51,6 @@ public class ProductService implements EntityFetcher {
     return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
   }
 
-  @NotUsedYet(reason = "Pending frontend implementation")
   public ProductResponseDto getProductResponse(UUID id) {
     logger.info("Get productResponse by ID: {}", id);
     return productMapper.mapToProductResponseDto(getProduct(id));
