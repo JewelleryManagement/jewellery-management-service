@@ -160,6 +160,40 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
+  void willThrowWhenCreateResourceWithExistingSku() {
+    ResourceRequestDto diamondRequestDto = ResourceTestHelper.getDiamondRequestDto();
+    ResourceRequestDto pearlRequestDto = ResourceTestHelper.getPearlRequestDto();
+    pearlRequestDto.setSku(diamondRequestDto.getSku());
+
+    createResource(diamondRequestDto);
+    ResponseEntity<String> response =
+        this.testRestTemplate.postForEntity(getBaseResourceUrl(), pearlRequestDto, String.class);
+
+    assetDuplicateSku(response, pearlRequestDto);
+  }
+
+  @Test
+  void willThrowWhenUpdateResourceWithExistingSku() {
+    ResourceRequestDto diamondRequestDto = ResourceTestHelper.getDiamondRequestDto();
+    ResourceRequestDto pearlRequestDto = ResourceTestHelper.getPearlRequestDto();
+
+    ResponseEntity<ResourceResponseDto> responseEntity1 = createResource(diamondRequestDto);
+    createResource(pearlRequestDto);
+
+    UUID resourceId = responseEntity1.getBody().getId();
+    diamondRequestDto.setSku(pearlRequestDto.getSku());
+
+    ResponseEntity<String> response =
+        testRestTemplate.exchange(
+            getBaseResourceUrl() + "/" + resourceId,
+            HttpMethod.PUT,
+            new HttpEntity<>(diamondRequestDto),
+            String.class);
+
+    assetDuplicateSku(response, diamondRequestDto);
+  }
+
+  @Test
   void willThrowWhenDeleteResourcePartOfOrganization() {
     Resource diamond = createDiamondInDatabase();
     createResourceInOrganization(diamond.getId());
@@ -335,9 +369,7 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     List<ResourceResponseDto> responses = new ArrayList<>();
     inputDtos.forEach(
         resourceDTO -> {
-          ResponseEntity<ResourceResponseDto> responseEntity =
-              this.testRestTemplate.postForEntity(
-                  getBaseResourceUrl(), resourceDTO, ResourceResponseDto.class);
+          ResponseEntity<ResourceResponseDto> responseEntity = createResource(resourceDTO);
           assertTrue(responseEntity.getStatusCode().is2xxSuccessful());
           responses.add(responseEntity.getBody());
         });
@@ -427,5 +459,17 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     testRestTemplate.postForEntity(
         getBaseProductUrl(), productRequestDto, ProductsInOrganizationResponseDto.class);
+  }
+
+  ResponseEntity<ResourceResponseDto> createResource(ResourceRequestDto resourceRequestDto) {
+    return this.testRestTemplate.postForEntity(
+        getBaseResourceUrl(), resourceRequestDto, ResourceResponseDto.class);
+  }
+
+  void assetDuplicateSku(ResponseEntity<String> response, ResourceRequestDto resourceRequestDto) {
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("Stock Keeping Unit: " + resourceRequestDto.getSku() + " already exists!"));
   }
 }

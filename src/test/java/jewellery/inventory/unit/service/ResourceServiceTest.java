@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
+import jewellery.inventory.exception.duplicate.DuplicateException;
 import jewellery.inventory.exception.image.MultipartFileContentTypeException;
 import jewellery.inventory.exception.image.MultipartFileNotSelectedException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
@@ -227,5 +228,38 @@ class ResourceServiceTest {
     verify(resourceMapper, times(1)).toResourceEntity(any(ResourceRequestDto.class));
     verify(resourceRepository, times(1)).save(element);
     verify(resourceMapper, times(1)).toResourceResponse(element);
+  }
+
+  @ParameterizedTest
+  @MethodSource("jewellery.inventory.helper.ResourceTestHelper#provideResourcesAndRequestDtos")
+  void willThrowWhenCreateResourceWithExistingSku(
+      Resource resourceFromDatabase, ResourceRequestDto resourceRequestDto) {
+    when(resourceRepository.existsBySku(resourceRequestDto.getSku())).thenReturn(true);
+
+    DuplicateException exception =
+        assertThrows(
+            DuplicateException.class, () -> resourceService.createResource(resourceRequestDto));
+
+    assertEquals(
+        "Stock Keeping Unit: " + resourceRequestDto.getSku() + " already exists!",
+        exception.getMessage());
+  }
+
+  @ParameterizedTest
+  @MethodSource("jewellery.inventory.helper.ResourceTestHelper#provideResourcesAndRequestDtos")
+  void willThrowWhenUpdateResourceWithExistingSku(
+      Resource resourceFromDatabase, ResourceRequestDto resourceRequestDto) {
+    Resource resource = new Resource();
+    UUID id = UUID.randomUUID();
+    when(resourceRepository.findById(id)).thenReturn(Optional.of(resource));
+    when(resourceRepository.existsBySkuAndIdNot(resourceRequestDto.getSku(), id)).thenReturn(true);
+
+    DuplicateException exception =
+        assertThrows(
+            DuplicateException.class, () -> resourceService.updateResource(resourceRequestDto, id));
+
+    assertEquals(
+        "Stock Keeping Unit: " + resourceRequestDto.getSku() + " already exists!",
+        exception.getMessage());
   }
 }

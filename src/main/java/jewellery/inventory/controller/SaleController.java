@@ -9,7 +9,6 @@ import jewellery.inventory.dto.response.OrganizationSaleResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.ResourceReturnResponseDto;
 import jewellery.inventory.service.SaleService;
-import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -50,7 +49,6 @@ public class SaleController {
     return saleService.getAllSales();
   }
 
-  @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Get sale from organization to user")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{saleId}")

@@ -69,7 +69,7 @@ public class OrganizationMapper {
     return userResponseDtoList;
   }
 
-  private UserInOrganizationResponseDto toUserInOrganizationResponseDto(
+  public UserInOrganizationResponseDto toUserInOrganizationResponseDto(
       UserInOrganization userInOrganization) {
     UserInOrganizationResponseDto userResponseDto = new UserInOrganizationResponseDto();
 

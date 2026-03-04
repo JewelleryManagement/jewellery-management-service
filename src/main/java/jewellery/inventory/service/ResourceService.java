@@ -90,6 +90,10 @@ public class ResourceService implements EntityFetcher {
   @LogUpdateEvent(eventType = EventType.RESOURCE_UPDATE)
   public ResourceResponseDto updateResource(ResourceRequestDto resourceRequestDto, UUID id) {
     resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
+    if (resourceRepository.existsBySkuAndIdNot(resourceRequestDto.getSku(), id)) {
+      throw new DuplicateException(
+          "Stock Keeping Unit: " + resourceRequestDto.getSku() + " already exists!");
+    }
     Resource toUpdate = resourceMapper.toResourceEntity(resourceRequestDto);
     toUpdate.setId(id);
     Resource updatedResource = resourceRepository.save(toUpdate);

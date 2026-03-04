@@ -7,8 +7,10 @@ import static org.mockito.Mockito.*;
 
 import java.util.*;
 import jewellery.inventory.dto.response.*;
+import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
+import jewellery.inventory.helper.OrganizationTestHelper;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.Organization;
@@ -38,12 +40,14 @@ class UserInOrganizationServiceTest {
   private Organization organizationWithUserAllPermission;
   private User user;
   private UserInOrganization userInOrganization;
+  private UserInOrganizationResponseDto userInOrganizationResponseDto;
 
   @BeforeEach
   void setUp() {
     user = UserTestHelper.createSecondTestUser();
     organizationWithUserAllPermission = getTestOrganizationWithUserWithAllPermissions(user);
     userInOrganization = getTestUserInOrganization(organizationWithUserAllPermission);
+    userInOrganizationResponseDto = OrganizationTestHelper.getUserInOrganizationResponseDto(user);
   }
 
   @Test
@@ -110,5 +114,40 @@ class UserInOrganizationServiceTest {
         () ->
             userInOrganizationService.getAllUsersInOrganization(
                 organizationWithUserAllPermission.getId()));
+  }
+
+  @Test
+  void getUserInOrganizationSuccessfully() {
+    when(userInOrganizationRepository.findByUserIdAndOrganizationId(
+            userInOrganization.getId(), organizationWithUserAllPermission.getId()))
+        .thenReturn(Optional.ofNullable(userInOrganization));
+    when(organizationMapper.toUserInOrganizationResponseDto(userInOrganization))
+        .thenReturn(userInOrganizationResponseDto);
+
+    UserInOrganizationResponseDto response =
+        userInOrganizationService.getUserInOrganization(
+            organizationWithUserAllPermission.getId(), userInOrganization.getId());
+
+    assertNotNull(response);
+    assertEquals(response, userInOrganizationResponseDto);
+    verify(userInOrganizationRepository, times(1))
+        .findByUserIdAndOrganizationId(
+            userInOrganization.getId(), organizationWithUserAllPermission.getId());
+  }
+
+  @Test
+  void getUserInOrganizationThrowsExceptionWhenUserIsNotPartOfOrganization() {
+    when(userInOrganizationRepository.findByUserIdAndOrganizationId(
+            userInOrganization.getId(), organizationWithUserAllPermission.getId()))
+        .thenThrow(UserNotFoundException.class);
+
+    assertThrows(
+        UserNotFoundException.class,
+        () ->
+            userInOrganizationService.getUserInOrganization(
+                organizationWithUserAllPermission.getId(), userInOrganization.getId()));
+    verify(userInOrganizationRepository, times(1))
+        .findByUserIdAndOrganizationId(
+            userInOrganization.getId(), organizationWithUserAllPermission.getId());
   }
 }

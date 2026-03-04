@@ -4,10 +4,9 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +24,6 @@ public class SaleRequestDto {
 
   @NotNull
   @PastOrPresent(message = "Date must be in the past or present")
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
-  private LocalDate date;
+  @JsonFormat(pattern = "dd-MM-yyyy HH:mm")
+  private LocalDateTime date;
 }
