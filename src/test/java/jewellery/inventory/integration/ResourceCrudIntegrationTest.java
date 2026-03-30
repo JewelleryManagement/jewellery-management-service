@@ -30,6 +30,7 @@ import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ResourceMapper;
+import jewellery.inventory.model.OrganizationRole;
 import jewellery.inventory.model.resource.Diamond;
 import jewellery.inventory.model.resource.Resource;
 import org.hibernate.AssertionFailure;
@@ -84,6 +85,9 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void setUp() {
     OrganizationRequestDto organizationRequestDto = getTestOrganizationRequest();
     organizationResponseDto = createOrganizationsWithRequest(organizationRequestDto);
+    OrganizationRole roleWithAllPermissions = createRoleWithAllPermissions();
+    createOrganizationMembership(
+        loggedInAdminUser.getId(), organizationResponseDto.getId(), roleWithAllPermissions.getId());
   }
 
   @AfterEach

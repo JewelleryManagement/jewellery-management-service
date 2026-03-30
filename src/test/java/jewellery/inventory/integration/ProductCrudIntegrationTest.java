@@ -18,6 +18,7 @@ import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.helper.ResourceTestHelper;
+import jewellery.inventory.model.OrganizationRole;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Diamond;
 import jewellery.inventory.repository.*;
@@ -95,6 +96,9 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @BeforeEach
   void setUp() {
     organizationResponseDto = createOrganizationInDatabase(getTestOrganizationRequest());
+    OrganizationRole roleWithAllPermissions = createRoleWithAllPermissions();
+    createOrganizationMembership(
+        loggedInAdminUser.getId(), organizationResponseDto.getId(), roleWithAllPermissions.getId());
     user = createUserInDatabase(createTestUserRequest());
     userInOrganizationRequestDto = getTestUserInOrganizationRequest(user.getId());
     addUserInOrganization(organizationResponseDto.getId(), userInOrganizationRequestDto);
@@ -210,6 +214,58 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(
         productRequestDto.getResourcesContent().size(), responseBody.getResourcesContent().size());
     assertEquals(productRequestDto.getCatalogNumber(), responseBody.getCatalogNumber());
+  }
+
+  @Test
+  void uploadImageShouldThrowWhenUserHasNoProductCreatePermission() {
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.postForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()),
+            createMultipartRequest(IMAGE_FILE),
+            String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
+  void getImageShouldThrowWhenUserHasNoProductReadPermission() {
+    uploadImageAndAssertSuccessfulResponse(productResponseDto);
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.getForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()), String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
+  void deleteImageShouldThrowWhenUserHasNoProductUpdatePermission() {
+    uploadImageAndAssertSuccessfulResponse(productResponseDto);
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.exchange(
+            getBaseProductImageUrl(productResponseDto.getId()),
+            HttpMethod.DELETE,
+            null,
+            String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
   }
 
   private void uploadImageAndAssertSuccessfulResponse(ProductResponseDto productResponse) {

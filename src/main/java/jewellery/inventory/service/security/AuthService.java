@@ -39,6 +39,16 @@ public class AuthService {
     throw new NoAuthenticatedUserException();
   }
 
+  public User getCurrentUserEntity() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+    if (auth != null && auth.getPrincipal() instanceof User user) {
+      return user;
+    }
+
+    throw new NoAuthenticatedUserException();
+  }
+
   private void authenticate(AuthenticationRequestDto authRequest) {
     try {
       authenticationManager.authenticate(

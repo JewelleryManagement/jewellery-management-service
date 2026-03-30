@@ -2,6 +2,7 @@ package jewellery.inventory.security;
 
 import static jewellery.inventory.model.Role.ADMIN;
 
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -24,12 +26,19 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@EnableMethodSecurity
 public class SecurityConfig {
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
   private final ApplicationContext applicationContext;
 
   private static final String AUTH_ENDPOINT = "/login";
   private static final String ERROR_ENDPOINT = "/error/**";
+  private static final String ACCESS_DENIED_MESSAGE =
+      """
+    {
+      "message": "You do not have permission to perform this action"
+    }
+    """;
 
   @Value("${cors.allowedOrigins}")
   private String[] allowedOrigins;
@@ -57,7 +66,14 @@ public class SecurityConfig {
         .cors(Customizer.withDefaults())
         .exceptionHandling(
             exceptionHandling ->
-                exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+                exceptionHandling
+                    .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                    .accessDeniedHandler(
+                        (request, response, accessDeniedException) -> {
+                          response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                          response.setContentType("application/json");
+                          response.getWriter().write(ACCESS_DENIED_MESSAGE);
+                        }))
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     http.authorizeHttpRequests(

@@ -23,6 +23,7 @@ import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInProduct;
 import jewellery.inventory.repository.*;
+import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,6 +40,7 @@ public class ProductService implements EntityFetcher {
   private final UserService userService;
   private final ResourceInOrganizationService resourceInOrganizationService;
   private final ResourceInProductRepository resourceInProductRepository;
+  private final AuthService authService;
 
   public List<ProductResponseDto> getByOwner(UUID ownerId) {
     List<Product> products = productRepository.findAllByOwnerId(ownerId);
@@ -140,7 +142,12 @@ public class ProductService implements EntityFetcher {
   }
 
   public List<ProductResponseDto> getAllProductsByResource(UUID resourceId) {
-    return productRepository.findAllByResourceId(resourceId).stream()
+    UUID currentUserId = authService.getCurrentUser().getId();
+
+    return productRepository
+        .findAllByResourceIdAndUserIdAndPermission(
+            resourceId, currentUserId, Permission.ORGANIZATION_PRODUCT_READ)
+        .stream()
         .map(productMapper::mapToProductResponseDto)
         .toList();
   }

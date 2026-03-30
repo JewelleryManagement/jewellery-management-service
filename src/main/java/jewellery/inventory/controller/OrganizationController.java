@@ -14,6 +14,7 @@ import jewellery.inventory.service.UserInOrganizationService;
 import jewellery.inventory.utils.NotUsedYet;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -33,6 +34,7 @@ public class OrganizationController {
 
   @Operation(summary = "Get organization by id")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@orgAuth.hasPermission(#id, 'ORGANIZATION_READ')")
   @GetMapping("/{id}")
   public OrganizationResponseDto getOrganizationById(@PathVariable UUID id) {
     return organizationService.getOrganizationResponse(id);
@@ -56,6 +58,7 @@ public class OrganizationController {
 
   @Operation(summary = "Add a user in organization")
   @ResponseStatus(HttpStatus.CREATED)
+  @PreAuthorize("@orgAuth.hasPermission(#organizationId, 'ORGANIZATION_USER_ADD')")
   @PostMapping("/{organizationId}/users")
   public OrganizationSingleMemberResponseDto addUserInOrganization(
       @PathVariable UUID organizationId,
@@ -66,6 +69,7 @@ public class OrganizationController {
 
   @Operation(summary = "Delete a user in organization")
   @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PreAuthorize("@orgAuth.hasPermission(#organizationId, 'ORGANIZATION_USER_DELETE')")
   @DeleteMapping("{organizationId}/users/{userId}")
   public void deleteUserInOrganization(
       @PathVariable UUID organizationId, @PathVariable UUID userId) {
@@ -75,6 +79,7 @@ public class OrganizationController {
   @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Delete an organization")
   @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PreAuthorize("@orgAuth.hasPermission(#organizationId, 'ORGANIZATION_DELETE')")
   @DeleteMapping("/{organizationId}")
   public void deleteOrganization(@PathVariable UUID organizationId) {
     organizationService.delete(organizationId);
@@ -82,6 +87,7 @@ public class OrganizationController {
 
   @Operation(summary = "Update a user permissions in organization")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@orgAuth.hasPermission(#organizationId, 'ORGANIZATION_PERMISSION_UPDATE')")
   @PutMapping("{organizationId}/users/{userId}")
   public OrganizationSingleMemberResponseDto updateUserPermissionsInOrganization(
       @PathVariable UUID organizationId,
@@ -93,6 +99,7 @@ public class OrganizationController {
 
   @Operation(summary = "Get all users in organization")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@orgAuth.hasPermission(#organizationId, 'ORGANIZATION_USER_READ')")
   @GetMapping("{organizationId}/users")
   public OrganizationMembersResponseDto getAllUsersInOrganization(
       @PathVariable UUID organizationId) {
@@ -101,6 +108,7 @@ public class OrganizationController {
 
   @Operation(summary = "Get user in organization")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@orgAuth.hasPermission(#organizationId, 'ORGANIZATION_USER_READ')")
   @GetMapping("{organizationId}/users/{userId}")
   public UserInOrganizationResponseDto getUserInOrganization(
       @PathVariable UUID organizationId, @PathVariable UUID userId) {
@@ -109,9 +117,16 @@ public class OrganizationController {
 
   @Operation(summary = "Get all products in organization")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@orgAuth.hasPermission(#organizationId, 'ORGANIZATION_PRODUCT_READ')")
   @GetMapping("/{organizationId}/products")
   public ProductsInOrganizationResponseDto getAllProductsInOrganization(
       @PathVariable UUID organizationId) {
     return organizationService.getProductsInOrganization(organizationId);
   }
+  //
+  //  @GetMapping("/organizations/{orgId}/resources")
+  //  @PreAuthorize("@orgAuth.hasPermission(#orgId, 'ORGANIZATION_USER_ADD')")
+  //  public ResponseEntity<String> getResources(@PathVariable UUID orgId) {
+  //    return ResponseEntity.ok("resources");
+  //  }
 }

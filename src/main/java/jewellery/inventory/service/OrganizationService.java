@@ -8,6 +8,7 @@ import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.OrphanProductsInOrganizationException;
@@ -35,8 +36,15 @@ public class OrganizationService implements EntityFetcher {
   private final ProductMapper productMapper;
 
   public List<OrganizationResponseDto> getAllOrganizationsResponsesForCurrentUser() {
-    logger.debug("Fetching all organizationsResponses for current user ");
-    return getOrganizationsUserIsPartOf().stream().map(organizationMapper::toResponse).toList();
+    logger.debug("Fetching all organization responses for current user");
+
+    UserResponseDto currentUser = authService.getCurrentUser();
+
+    return organizationRepository
+        .findOrganizationsByUserIdAndPermission(currentUser.getId(), Permission.ORGANIZATION_READ)
+        .stream()
+        .map(organizationMapper::toResponse)
+        .toList();
   }
 
   public OrganizationResponseDto getOrganizationResponse(UUID id) {
@@ -123,16 +131,6 @@ public class OrganizationService implements EntityFetcher {
 
   private List<ProductResponseDto> getProductsResponse(List<Product> products) {
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
-  }
-
-  private List<Organization> getOrganizationsUserIsPartOf() {
-    User currentUser = userService.getUser(authService.getCurrentUser().getId());
-    return getAll().stream()
-        .filter(
-            org ->
-                org.getUsersInOrganization().stream()
-                    .anyMatch(userOrg -> userOrg.getUser().equals(currentUser)))
-        .toList();
   }
 
   private boolean doesUserHavePermissionForOrganization(

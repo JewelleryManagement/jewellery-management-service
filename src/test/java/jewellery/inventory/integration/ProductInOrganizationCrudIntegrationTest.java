@@ -4,6 +4,7 @@ import static jewellery.inventory.helper.OrganizationTestHelper.getTestUserInOrg
 import static jewellery.inventory.helper.ResourceTestHelper.getPearlRequestDto;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
+import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
 import static jewellery.inventory.model.EventType.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,16 +12,15 @@ import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.request.resource.ResourceQuantityRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.*;
+import jewellery.inventory.model.OrganizationRole;
+import jewellery.inventory.model.Permission;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Diamond;
 import org.jetbrains.annotations.Nullable;
@@ -72,11 +72,15 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   private ProductRequestDto productRequestDto;
   private OrganizationResponseDto organization;
   private UserInOrganizationRequestDto userInOrganizationRequestDto;
+  private OrganizationRole roleWithAllPermissions;
 
   @BeforeEach
   void setUp() {
     User user = createUserInDatabase(UserTestHelper.createTestUserRequest());
     organization = createOrganization();
+    roleWithAllPermissions = createRoleWithAllPermissions();
+    createOrganizationMembership(
+        loggedInAdminUser.getId(), organization.getId(), roleWithAllPermissions.getId());
     userInOrganizationRequestDto = getTestUserInOrganizationRequest(user.getId());
     diamond = createDiamondInDatabase();
     productRequestDto =
@@ -86,11 +90,9 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void getAllProductsFromOrganizationSuccessfully() {
-    OrganizationResponseDto organizationResponseDto = createOrganization();
-
     ResponseEntity<ProductsInOrganizationResponseDto> response =
         this.testRestTemplate.exchange(
-            getOrganizationProductsUrl(organizationResponseDto.getId().toString()),
+            getOrganizationProductsUrl(organization.getId().toString()),
             HttpMethod.GET,
             null,
             ProductsInOrganizationResponseDto.class);
@@ -100,24 +102,19 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void createProductInOrganizationSuccessfully() throws JsonProcessingException {
-    OrganizationResponseDto organizationResponseDto = createOrganization();
-    addUserInOrganization(organizationResponseDto.getId(), userInOrganizationRequestDto);
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
     ResourceResponseDto resourceResponse = sendCreateResourceRequest();
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organizationResponseDto.getId(),
-            resourceResponse.getId(),
-            RESOURCE_QUANTITY,
-            RESOURCE_PRICE);
-    ResponseEntity<ResourcesInOrganizationResponseDto> resource =
-        sendResourceToOrganization(resourceInOrganizationRequest);
-    assertProductsInOrganizationSize(organizationResponseDto.getId().toString(), 0);
+            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
+    sendResourceToOrganization(resourceInOrganizationRequest);
+    assertProductsInOrganizationSize(organization.getId().toString(), 0);
 
     ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
         createProduct(
             setOwnerAndResourceToProductRequest(
                 productRequestDto,
-                organizationResponseDto.getId(),
+                organization.getId(),
                 resourceResponse.getId(),
                 RESOURCE_QUANTITY));
 
@@ -130,28 +127,24 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
         ORGANIZATION_PRODUCT_CREATE,
         expectedEventPayload,
         productInOrganizationResponse.getBody().getProducts().getFirst().getId());
-    assertProductsInOrganizationSize(organizationResponseDto.getId().toString(), 1);
+    assertProductsInOrganizationSize(organization.getId().toString(), 1);
   }
 
   @Test
   void createProductInOrganizationThrowUserNotPartOfOrganization() {
-    OrganizationResponseDto organizationResponseDto = createOrganization();
     ResourceResponseDto resourceResponse = sendCreateResourceRequest();
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organizationResponseDto.getId(),
-            resourceResponse.getId(),
-            RESOURCE_QUANTITY,
-            RESOURCE_PRICE);
+            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
     ResponseEntity<ResourcesInOrganizationResponseDto> resource =
         sendResourceToOrganization(resourceInOrganizationRequest);
-    assertProductsInOrganizationSize(organizationResponseDto.getId().toString(), 0);
+    assertProductsInOrganizationSize(organization.getId().toString(), 0);
 
     ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
         createProduct(
             setOwnerAndResourceToProductRequest(
                 productRequestDto,
-                organizationResponseDto.getId(),
+                organization.getId(),
                 resourceResponse.getId(),
                 RESOURCE_QUANTITY));
 
@@ -160,26 +153,21 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void updateProductInOrganizationSuccessfully() throws JsonProcessingException {
-    OrganizationResponseDto organizationResponseDto = createOrganization();
-    addUserInOrganization(organizationResponseDto.getId(), userInOrganizationRequestDto);
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
     ResourceResponseDto resourceResponse = sendCreateResourceRequest();
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organizationResponseDto.getId(),
-            resourceResponse.getId(),
-            RESOURCE_QUANTITY,
-            RESOURCE_PRICE);
-    ResponseEntity<ResourcesInOrganizationResponseDto> resource =
-        sendResourceToOrganization(resourceInOrganizationRequest);
-    assertResourcesInOrganizationSize(organizationResponseDto.getId().toString(), 1);
+            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
+    sendResourceToOrganization(resourceInOrganizationRequest);
+    assertResourcesInOrganizationSize(organization.getId().toString(), 1);
     ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
         createProduct(
             setOwnerAndResourceToProductRequest(
                 productRequestDto,
-                organizationResponseDto.getId(),
+                organization.getId(),
                 resourceResponse.getId(),
                 RESOURCE_QUANTITY));
-    assertResourcesInOrganizationSize(organizationResponseDto.getId().toString(), 0);
+    assertResourcesInOrganizationSize(organization.getId().toString(), 0);
 
     ResponseEntity<ProductsInOrganizationResponseDto> updatedProductInOrganizationResponse =
         updateProduct(
@@ -196,21 +184,17 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
         ORGANIZATION_PRODUCT_UPDATE,
         expectedEventPayload,
         updatedProductInOrganizationResponse.getBody().getProducts().getFirst().getId());
-    assertProductsInOrganizationSize(organizationResponseDto.getId().toString(), 1);
-    assertResourcesInOrganizationSize(organizationResponseDto.getId().toString(), 0);
+    assertProductsInOrganizationSize(organization.getId().toString(), 1);
+    assertResourcesInOrganizationSize(organization.getId().toString(), 0);
   }
 
   @Test
   void updateProductInOrganizationThrowUserIsNotPartOfOrganization() {
-    OrganizationResponseDto organizationResponseDto = createOrganization();
-    addUserInOrganization(organizationResponseDto.getId(), userInOrganizationRequestDto);
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
     ResourceResponseDto resourceResponse = sendCreateResourceRequest();
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organizationResponseDto.getId(),
-            resourceResponse.getId(),
-            RESOURCE_QUANTITY,
-            RESOURCE_PRICE);
+            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
     ResponseEntity<ResourcesInOrganizationResponseDto> resource =
         sendResourceToOrganization(resourceInOrganizationRequest);
     ResponseEntity<ResourcesInOrganizationResponseDto> resource2 =
@@ -219,7 +203,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
         createProduct(
             setOwnerAndResourceToProductRequest(
                 productRequestDto,
-                organizationResponseDto.getId(),
+                organization.getId(),
                 resourceResponse.getId(),
                 RESOURCE_QUANTITY));
     productRequestDto.setAuthors(List.of());
@@ -272,6 +256,10 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
                 productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
     UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
     OrganizationResponseDto createSecondOrganization = createOrganization();
+    createOrganizationMembership(
+        loggedInAdminUser.getId(),
+        createSecondOrganization.getId(),
+        roleWithAllPermissions.getId());
     UUID organizationId = createSecondOrganization.getId();
 
     ResponseEntity<ProductsInOrganizationResponseDto> transferResponse =
@@ -313,15 +301,11 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void getAllProductsByResourceSuccessfully() {
-    OrganizationResponseDto organizationResponseDto = createOrganization();
-    addUserInOrganization(organizationResponseDto.getId(), userInOrganizationRequestDto);
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
     ResourceResponseDto resourceResponse = sendCreateResourceRequest();
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organizationResponseDto.getId(),
-            resourceResponse.getId(),
-            RESOURCE_QUANTITY,
-            RESOURCE_PRICE);
+            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
     ResponseEntity<ResourcesInOrganizationResponseDto> resource =
         sendResourceToOrganization(resourceInOrganizationRequest);
 
@@ -329,7 +313,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
         createProduct(
             setOwnerAndResourceToProductRequest(
                 productRequestDto,
-                organizationResponseDto.getId(),
+                organization.getId(),
                 resourceResponse.getId(),
                 RESOURCE_QUANTITY));
 
@@ -355,6 +339,296 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     assertEquals(
         productInOrganizationResponse.getBody().getProducts().get(0).getId(),
         products.get(0).getId());
+  }
+
+  @Test
+  void getAllProductsInOrganizationShouldThrowWhenUserHasNoProductReadPermission() {
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.getForEntity(
+            getOrganizationProductsUrl(String.valueOf(organization.getId())), String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
+  void getProductShouldThrowWhenUserHasNoProductReadPermission() {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
+    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
+    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
+    sendResourceToOrganization(resourceInOrganizationRequest);
+    assertProductsInOrganizationSize(organization.getId().toString(), 0);
+
+    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto,
+                organization.getId(),
+                resourceResponse.getId(),
+                RESOURCE_QUANTITY));
+
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.getForEntity(
+            getProductUrl(productInOrganizationResponse.getBody().getProducts().getFirst().getId()),
+            String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
+  void createProductShouldThrowWhenUserHasNoProductCreatePermission() {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
+    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
+    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
+    sendResourceToOrganization(resourceInOrganizationRequest);
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.postForEntity("/products", productRequestDto, String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
+  void deleteProductShouldThrowWhenUserHasNoProductDeletePermission() {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
+    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
+    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
+    sendResourceToOrganization(resourceInOrganizationRequest);
+    ResponseEntity<ProductsInOrganizationResponseDto> product =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto,
+                organization.getId(),
+                resourceResponse.getId(),
+                RESOURCE_QUANTITY));
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.exchange(
+            getProductUrl(product.getBody().getProducts().getFirst().getId()),
+            HttpMethod.DELETE,
+            null,
+            String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
+  void updateProductShouldThrowWhenUserHasNoProductUpdatePermissions() {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
+    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
+    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
+    sendResourceToOrganization(resourceInOrganizationRequest);
+    assertResourcesInOrganizationSize(organization.getId().toString(), 1);
+    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto,
+                organization.getId(),
+                resourceResponse.getId(),
+                RESOURCE_QUANTITY));
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    HttpEntity<ProductRequestDto> request = new HttpEntity<>(productRequestDto);
+    ResponseEntity<String> response =
+        this.testRestTemplate.exchange(
+            "/products/" + productInOrganizationResponse.getBody().getProducts().getFirst().getId(),
+            HttpMethod.PUT,
+            request,
+            String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
+  void transferProductShouldThrowWhenUserHasNoProductTransferPermissionForBothOrganizations() {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
+    sendResourceToOrganization(
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
+    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
+    UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
+    OrganizationResponseDto createSecondOrganization = createOrganization();
+    createOrganizationMembership(
+        loggedInAdminUser.getId(),
+        createSecondOrganization.getId(),
+        roleWithAllPermissions.getId());
+    UUID organizationId = createSecondOrganization.getId();
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.exchange(
+            "/products/" + productId + "/transfer/" + organizationId,
+            HttpMethod.PUT,
+            null,
+            String.class);
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
+  void transferProductShouldThrowWhenUserHasNoProductTransferPermissionForCurrentOrganization() {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
+    sendResourceToOrganization(
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
+    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
+    UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
+    OrganizationResponseDto createSecondOrganization = createOrganization();
+    createOrganizationMembership(
+        loggedInAdminUser.getId(),
+        createSecondOrganization.getId(),
+        roleWithAllPermissions.getId());
+    UUID organizationId = createSecondOrganization.getId();
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+    Set<Permission> permissions = Set.of(Permission.ORGANIZATION_PRODUCT_TRANSFER);
+    OrganizationRole newRole = createRole("Test", permissions);
+    createOrganizationMembership(
+        deniedUser.getId(), createSecondOrganization.getId(), newRole.getId());
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.exchange(
+            "/products/" + productId + "/transfer/" + organizationId,
+            HttpMethod.PUT,
+            null,
+            String.class);
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
+  void transferProductShouldThrowWhenUserHasNoProductTransferPermissionForNewOrganization() {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
+    sendResourceToOrganization(
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
+    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
+    UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
+    OrganizationResponseDto createSecondOrganization = createOrganization();
+    createOrganizationMembership(
+        loggedInAdminUser.getId(),
+        createSecondOrganization.getId(),
+        roleWithAllPermissions.getId());
+    UUID organizationId = createSecondOrganization.getId();
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+    Set<Permission> permissions = Set.of(Permission.ORGANIZATION_PRODUCT_TRANSFER);
+    OrganizationRole newRole = createRole("Test", permissions);
+    createOrganizationMembership(deniedUser.getId(), organization.getId(), newRole.getId());
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.exchange(
+            "/products/" + productId + "/transfer/" + organizationId,
+            HttpMethod.PUT,
+            null,
+            String.class);
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
+  void getAllProductsByResourceWillReturnEmptyArrayWhenUserHasNoProductReadPermission() {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
+    sendResourceToOrganization(
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
+    createProduct(
+        setOwnerAndResourceToProductRequest(
+            productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<List<ProductResponseDto>> response =
+        testRestTemplate.exchange(
+            getProductsUrlByResource(diamond.getId().toString()),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<ProductResponseDto>>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(0, response.getBody().size());
+  }
+
+  @Test
+  void getAllProductsByResourceWillReturnOnlyProductsUserHasProductReadPermissionFor() {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
+    sendResourceToOrganization(
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
+    createProduct(
+        setOwnerAndResourceToProductRequest(
+            productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
+    OrganizationResponseDto organization2 = createOrganization();
+    sendResourceToOrganization(
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organization2.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
+    createProduct(
+        setOwnerAndResourceToProductRequest(
+            productRequestDto, organization2.getId(), diamond.getId(), RESOURCE_QUANTITY));
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    Set<Permission> permissions = Set.of(Permission.ORGANIZATION_PRODUCT_READ);
+    OrganizationRole newRole = createRole("Test", permissions);
+    createOrganizationMembership(deniedUser.getId(), organization.getId(), newRole.getId());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<List<ProductResponseDto>> response =
+        testRestTemplate.exchange(
+            getProductsUrlByResource(diamond.getId().toString()),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<ProductResponseDto>>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(1, response.getBody().size());
   }
 
   private void assertProductsInOrganizationSize(String organizationId, int assertSize) {

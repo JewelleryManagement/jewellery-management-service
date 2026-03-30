@@ -86,9 +86,10 @@ class OrganizationServiceTest {
   @Test
   void testGetAllOrganizations() {
     List<Organization> organizations = List.of(organizationWithUserAllPermission);
-    when(organizationRepository.findAll()).thenReturn(organizations);
     when(authService.getCurrentUser()).thenReturn(userResponseDto);
-    when(userService.getUser(user.getId())).thenReturn(user);
+    when(organizationRepository.findOrganizationsByUserIdAndPermission(
+            userResponseDto.getId(), Permission.ORGANIZATION_READ))
+        .thenReturn(organizations);
 
     List<OrganizationResponseDto> responses =
         organizationService.getAllOrganizationsResponsesForCurrentUser();

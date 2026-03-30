@@ -2,6 +2,7 @@ package jewellery.inventory.repository;
 
 import java.util.List;
 import java.util.UUID;
+import jewellery.inventory.model.Permission;
 import jewellery.inventory.model.Sale;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -18,4 +19,33 @@ public interface SaleRepository extends JpaRepository<Sale, UUID> {
     WHERE pri.resource.id = :resourceId
 """)
   List<Sale> findAllByResourceId(@Param("resourceId") UUID resourceId);
+
+  @Query(
+"""
+    select distinct s
+    from Sale s
+    join OrganizationMembership m on m.organization.id = s.organizationSeller.id
+    join m.roles r
+    join r.permissions p
+    where s.organizationSeller is not null
+      and m.user.id = :userId
+      and p = :permission
+""")
+  List<Sale> findAllByUserIdAndPermission(UUID userId, Permission permission);
+
+  @Query(
+"""
+    select distinct s
+    from Sale s
+    join s.resources pru
+    join OrganizationMembership m on m.organization.id = s.organizationSeller.id
+    join m.roles r
+    join r.permissions p
+    where pru.resource.id = :resourceId
+      and s.organizationSeller is not null
+      and m.user.id = :userId
+      and p = :permission
+""")
+  List<Sale> findAllByResourceIdAndUserIdAndPermission(
+      UUID resourceId, UUID userId, Permission permission);
 }
