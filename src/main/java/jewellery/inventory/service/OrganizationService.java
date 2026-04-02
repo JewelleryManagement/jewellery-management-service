@@ -1,21 +1,22 @@
 package jewellery.inventory.service;
 
+import jakarta.transaction.Transactional;
 import java.util.*;
 import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
-import jewellery.inventory.dto.response.OrganizationResponseDto;
-import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
-import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
+import jewellery.inventory.exception.not_found.RoleNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.OrphanProductsInOrganizationException;
 import jewellery.inventory.exception.organization.OrphanResourcesInOrganizationException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
+import jewellery.inventory.exception.role.RoleAlreadyAssignedException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.mapper.ProductMapper;
+import jewellery.inventory.mapper.RoleMembershipMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.security.AuthService;
@@ -23,6 +24,7 @@ import jewellery.inventory.utils.NotUsedYet;
 import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -34,6 +36,11 @@ public class OrganizationService implements EntityFetcher {
   private final AuthService authService;
   private final UserService userService;
   private final ProductMapper productMapper;
+  private final RoleService roleService;
+  private final RoleRepository roleRepository;
+  private final OrganizationMembershipRepository organizationMembershipRepository;
+  private final RoleMembershipMapper roleMembershipMapper;
+  private final OrganizationAuthorizationService organizationAuthorizationService;
 
   public List<OrganizationResponseDto> getAllOrganizationsResponsesForCurrentUser() {
     logger.debug("Fetching all organization responses for current user");
@@ -48,8 +55,18 @@ public class OrganizationService implements EntityFetcher {
   }
 
   public OrganizationResponseDto getOrganizationResponse(UUID id) {
+    Organization organization = getOrganization(id);
+
+    boolean hasPermission =
+        organizationAuthorizationService.hasOrganizationPermission(
+            id, Permission.ORGANIZATION_READ.name());
+
+    if (!hasPermission) {
+      throw new AccessDeniedException("You do not have permission to read this organization");
+    }
+
     logger.debug("Get organizationResponse by ID: {}", id);
-    return organizationMapper.toResponse(getOrganization(id));
+    return organizationMapper.toResponse(organization);
   }
 
   public Organization saveOrganization(Organization organization) {
@@ -61,6 +78,9 @@ public class OrganizationService implements EntityFetcher {
     Organization organization = organizationMapper.toEntity(organizationRequestDto);
     makeCurrentUserOwner(organization);
     organization = saveOrganization(organization);
+    UserResponseDto currentUser = authService.getCurrentUser();
+    OrganizationRole adminRole = roleService.getRoleByName("ORGANIZATION_ADMIN");
+    assignRoleToUserInOrganization(currentUser.getId(), organization.getId(), adminRole.getId());
     logger.info("Organization created with ID: {}", organization.getId());
     return organizationMapper.toResponse(organization);
   }
@@ -127,6 +147,27 @@ public class OrganizationService implements EntityFetcher {
 
     return productMapper.mapToProductsInOrganizationResponseDto(
         organization, getProductsResponse(organization.getProductsOwned()));
+  }
+
+  @Transactional
+  public RoleMembershipResponseDto assignRoleToUserInOrganization(
+      UUID userId, UUID organizationId, UUID roleId) {
+    User user = userService.getUser(userId);
+    Organization organization = getOrganization(organizationId);
+    OrganizationRole role =
+        roleRepository.findById(roleId).orElseThrow(() -> new RoleNotFoundException(roleId));
+
+    if (organizationMembershipRepository.existsByUserIdAndOrganizationIdAndRoleId(
+        userId, organizationId, roleId)) {
+      throw new RoleAlreadyAssignedException(roleId, userId, organizationId);
+    }
+
+    RoleMembership membership = new RoleMembership();
+    membership.setUser(user);
+    membership.setOrganization(organization);
+    membership.setRole(role);
+
+    return roleMembershipMapper.toResponse(organizationMembershipRepository.save(membership));
   }
 
   private List<ProductResponseDto> getProductsResponse(List<Product> products) {

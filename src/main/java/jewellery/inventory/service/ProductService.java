@@ -3,6 +3,7 @@ package jewellery.inventory.service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
@@ -27,6 +28,7 @@ import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,10 +43,19 @@ public class ProductService implements EntityFetcher {
   private final ResourceInOrganizationService resourceInOrganizationService;
   private final ResourceInProductRepository resourceInProductRepository;
   private final AuthService authService;
+  private final OrganizationAuthorizationService organizationAuthorizationService;
 
   public List<ProductResponseDto> getByOwner(UUID ownerId) {
-    List<Product> products = productRepository.findAllByOwnerId(ownerId);
-    logger.info("Get product by owner with ID: {}", ownerId);
+    UUID currentUserId = authService.getCurrentUser().getId();
+
+    Set<Permission> requiredPermissions =
+        Set.of(Permission.ORGANIZATION_PRODUCT_READ, Permission.ORGANIZATION_SALE_READ);
+
+    List<Product> products =
+        productRepository.findAllReadableByOwnerId(
+            ownerId, currentUserId, requiredPermissions, requiredPermissions.size());
+
+    logger.info("Get products by owner with ID: {}", ownerId);
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
@@ -54,8 +65,18 @@ public class ProductService implements EntityFetcher {
   }
 
   public ProductResponseDto getProductResponse(UUID id) {
+    Product product = getProduct(id);
+
+    boolean hasPermission =
+        organizationAuthorizationService.hasPermissionForProduct(
+            id, Permission.ORGANIZATION_PRODUCT_READ.name());
+
+    if (!hasPermission) {
+      throw new AccessDeniedException("You do not have permission to read this product");
+    }
+
     logger.info("Get productResponse by ID: {}", id);
-    return productMapper.mapToProductResponseDto(getProduct(id));
+    return productMapper.mapToProductResponseDto(product);
   }
 
   public Product saveProduct(Product product) {

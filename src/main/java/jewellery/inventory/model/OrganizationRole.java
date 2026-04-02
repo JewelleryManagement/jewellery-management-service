@@ -18,7 +18,7 @@ public class OrganizationRole {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @Column(nullable = false)
+  @Column(nullable = false, unique = true)
   private String name;
 
   @ElementCollection(targetClass = Permission.class, fetch = FetchType.LAZY)

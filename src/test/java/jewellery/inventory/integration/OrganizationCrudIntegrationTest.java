@@ -17,7 +17,6 @@ import jewellery.inventory.dto.request.UpdateUserInOrganizationRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.*;
-import jewellery.inventory.model.OrganizationRole;
 import jewellery.inventory.model.Permission;
 import jewellery.inventory.model.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +41,10 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return "/organizations/" + organizationId + "/users";
   }
 
+  private String getAssignRoleUrl(UUID organizationId, UUID userId, UUID roleId) {
+    return "/organizations/" + organizationId + "/users/" + userId + "/roles/" + roleId;
+  }
+
   private OrganizationRequestDto organizationRequestDto;
   private User user;
   private UserInOrganizationRequestDto userInOrganizationRequestDto;
@@ -51,9 +54,6 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void setUp() {
     organizationRequestDto = getTestOrganizationRequest();
     organizationResponseDto = createOrganizationsWithRequest(organizationRequestDto);
-    OrganizationRole roleWithAllPermissions = createRoleWithAllPermissions();
-    createOrganizationMembership(
-        loggedInAdminUser.getId(), organizationResponseDto.getId(), roleWithAllPermissions.getId());
     user = createUserInDatabase(createTestUserRequest());
     userInOrganizationRequestDto = getTestUserInOrganizationRequest(user.getId());
   }
@@ -85,15 +85,14 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertNotNull(response.getBody());
   }
 
-  //  @Test
-  //  void getOrganizationByIdNotFound() {
-  //    ResponseEntity<OrganizationResponseDto> response =
-  //        this.testRestTemplate.getForEntity(
-  //            getOrganizationByIdUrl(UUID.randomUUID()),
-  //            OrganizationResponseDto.class);
-  //
-  //    assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(404));
-  //  }
+  @Test
+  void getOrganizationByIdNotFound() {
+    ResponseEntity<OrganizationResponseDto> response =
+        this.testRestTemplate.getForEntity(
+            getOrganizationByIdUrl(UUID.randomUUID()), OrganizationResponseDto.class);
+
+    assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(404));
+  }
 
   @Test
   void getOrganizationByIdSuccessfully() {
@@ -231,7 +230,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void createOrganizationSuccessfully() throws JsonProcessingException {
+  void createOrganizationSuccessfully() {
     ResponseEntity<OrganizationResponseDto> response =
         testRestTemplate.postForEntity(
             getBaseOrganizationsUrl(), organizationRequestDto, OrganizationResponseDto.class);
@@ -266,8 +265,8 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     authenticateAs(deniedUser);
 
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_READ);
-    OrganizationRole newRole = createRole("Test", permissions);
-    createOrganizationMembership(deniedUser.getId(), secondOrganization.getId(), newRole.getId());
+    RoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(deniedUser.getId(), secondOrganization.getId(), newRole.getId());
 
     ResponseEntity<List<OrganizationResponseDto>> response =
         this.testRestTemplate.exchange(
@@ -384,29 +383,121 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             .contains("You do not have permission to perform this action"));
   }
 
-  //  @Test
-  //  void getOrganizationsByPermissionSuccessfully() {
-  //    ResponseEntity<OrganizationResponseDto> firstOrganization =
-  //        testRestTemplate.postForEntity(
-  //            getBaseOrganizationsUrl(), organizationRequestDto, OrganizationResponseDto.class);
-  //    organizationRequestDto.setName("secondOrg");
-  //    ResponseEntity<OrganizationResponseDto> secondOrganization =
-  //        testRestTemplate.postForEntity(
-  //            getBaseOrganizationsUrl(), organizationRequestDto, OrganizationResponseDto.class);
-  //    removePermissionsForUser(secondOrganization.getBody(), loggedInAdminUser);
-  //
-  //    ResponseEntity<List<OrganizationResponseDto>> organizations =
-  //        this.testRestTemplate.exchange(
-  //            getBaseOrganizationsUrl()
-  //                + "/by-permission/"
-  //                + OrganizationPermission.CREATE_PRODUCT.name(),
-  //            HttpMethod.GET,
-  //            null,
-  //            new ParameterizedTypeReference<>() {});
-  //
-  //    assertEquals(1, organizations.getBody().size());
-  //    assertEquals(organizations.getBody().get(0).getId(), firstOrganization.getBody().getId());
-  //  }
+  @Test
+  void assignRoleToUserInOrganizationShouldThrowWhenUserNotFound() {
+    UUID differentUserId = UUID.randomUUID();
+    RoleResponseDto role = createRole("VIEWER", Set.of(Permission.ORGANIZATION_READ));
+
+    ResponseEntity<String> response =
+        testRestTemplate.postForEntity(
+            getAssignRoleUrl(organizationResponseDto.getId(), differentUserId, role.getId()),
+            null,
+            String.class);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("User with id " + differentUserId + " was not found"));
+  }
+
+  @Test
+  void assignRoleToUserInOrganizationShouldThrowWhenRoleNotFound() {
+    UUID differentRoleId = UUID.randomUUID();
+    OrganizationSingleMemberResponseDto userInOrganization =
+        addUserInOrganization(organizationResponseDto.getId());
+
+    ResponseEntity<String> response =
+        testRestTemplate.postForEntity(
+            getAssignRoleUrl(
+                organizationResponseDto.getId(),
+                userInOrganization.getMember().getUser().getId(),
+                differentRoleId),
+            null,
+            String.class);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("Role with id: " + differentRoleId + " does not exists!"));
+  }
+
+  @Test
+  void assignRoleToUserInOrganizationShouldThrowWhenRoleAlreadyAssignedToThisUser() {
+    OrganizationSingleMemberResponseDto userInOrganization =
+        addUserInOrganization(organizationResponseDto.getId());
+    RoleResponseDto role = createRole("VIEWER", Set.of(Permission.ORGANIZATION_READ));
+    createRoleMembership(
+        userInOrganization.getMember().getUser().getId(),
+        organizationResponseDto.getId(),
+        role.getId());
+
+    ResponseEntity<String> response =
+        testRestTemplate.postForEntity(
+            getAssignRoleUrl(
+                organizationResponseDto.getId(),
+                userInOrganization.getMember().getUser().getId(),
+                role.getId()),
+            null,
+            String.class);
+
+    assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains(
+                "Role with id:"
+                    + role.getId()
+                    + " is already assigned to user with id:"
+                    + userInOrganization.getMember().getUser().getId()
+                    + " for organization with id:"
+                    + organizationResponseDto.getId()));
+  }
+
+  @Test
+  void assignRoleToUserInOrganizationSuccessfully() {
+    OrganizationSingleMemberResponseDto userInOrganization =
+        addUserInOrganization(organizationResponseDto.getId());
+    RoleResponseDto role = createRole("VIEWER", Set.of(Permission.ORGANIZATION_READ));
+    ResponseEntity<RoleMembershipResponseDto> response =
+        testRestTemplate.postForEntity(
+            getAssignRoleUrl(
+                organizationResponseDto.getId(),
+                userInOrganization.getMember().getUser().getId(),
+                role.getId()),
+            null,
+            RoleMembershipResponseDto.class);
+
+    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    assertNotNull(response);
+    assertEquals(
+        response.getBody().getOrganizationResponseDto().getId(), organizationResponseDto.getId());
+    assertEquals(
+        response.getBody().getUserResponseDto().getId(),
+        userInOrganization.getMember().getUser().getId());
+    assertEquals(response.getBody().getRoleResponseDto().getId(), role.getId());
+  }
+
+  @Test
+  void assignRoleToUserInOrganizationShouldThrowWhenUserHasNoRoleAssignPermission() {
+    OrganizationSingleMemberResponseDto userInOrganization =
+        addUserInOrganization(organizationResponseDto.getId());
+    RoleResponseDto role = createRole("VIEWER", Set.of(Permission.ORGANIZATION_READ));
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        testRestTemplate.postForEntity(
+            getAssignRoleUrl(
+                organizationResponseDto.getId(),
+                userInOrganization.getMember().getUser().getId(),
+                role.getId()),
+            null,
+            String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
 
   private ResponseEntity<OrganizationSingleMemberResponseDto> removePermissionsForUser(
       OrganizationResponseDto secondOrganization, User user) {

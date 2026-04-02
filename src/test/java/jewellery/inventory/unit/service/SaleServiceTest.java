@@ -50,6 +50,7 @@ class SaleServiceTest {
   @Mock private ResourceService resourceService;
   @Mock private ProductMapper productMapper;
   @Mock private AuthService authService;
+  @Mock private OrganizationAuthorizationService organizationAuthorizationService;
 
   private User user;
   private SaleRequestDto saleRequestDto;
@@ -349,6 +350,9 @@ class SaleServiceTest {
   @Test
   void testGetSaleSuccessfully() {
     when(saleRepository.findById(sale.getId())).thenReturn(Optional.of(sale));
+    when(organizationAuthorizationService.hasPermissionForSale(
+            sale.getId(), Permission.ORGANIZATION_SALE_READ.name()))
+        .thenReturn(true);
 
     saleService.getSale(sale.getId());
 

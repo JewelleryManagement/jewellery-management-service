@@ -8,7 +8,6 @@ import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.model.EventType.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -23,8 +22,6 @@ import jewellery.inventory.dto.response.ResourceReturnResponseDto;
 import jewellery.inventory.helper.OrganizationTestHelper;
 import jewellery.inventory.helper.ResourceInOrganizationTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
-import jewellery.inventory.model.Organization;
-import jewellery.inventory.model.OrganizationRole;
 import jewellery.inventory.model.Permission;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Diamond;
@@ -43,7 +40,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private static final BigDecimal RESOURCE_PRICE = getBigDecimal("105");
   private static final BigDecimal SALE_DISCOUNT = getBigDecimal("10");
   private static final BigDecimal SALE_RESOURCE_DISCOUNTED_PRICE = getBigDecimal("45.45");
-  private Organization organizationSeller;
+  private OrganizationResponseDto organizationSeller;
   private User seller;
   private User buyer;
   private Diamond diamond;
@@ -105,9 +102,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void setUp() {
     organizationSeller =
         createOrganizationInDatabase(OrganizationTestHelper.getTestOrganizationRequest());
-    OrganizationRole roleWithAllPermissions = createRoleWithAllPermissions();
-    createOrganizationMembership(
-        loggedInAdminUser.getId(), organizationSeller.getId(), roleWithAllPermissions.getId());
     seller = createUserInDatabase(createTestUserRequest());
     buyer = createUserInDatabase(createDifferentUserRequest());
     createUserInOrganization(organizationSeller, getTestUserInOrganizationRequest(seller.getId()));
@@ -396,22 +390,22 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertNotEquals(saleResponse.getBody().getBuyer().getId(), saleRequestDto.getSellerId());
   }
 
-  //  @Test
-  //  void createSaleShouldThrowWhenResourceNotOwned() {
-  //    organizationSeller.setId(UUID.randomUUID());
-  //    SaleRequestDto saleRequestDto =
-  //        getSaleInOrganizationRequestDto(
-  //            organizationSeller,
-  //            buyer,
-  //            productResponse,
-  //            resourcesInOrganizationResponseDto,
-  //            SALE_DISCOUNT);
-  //
-  //    ResponseEntity<OrganizationSaleResponseDto> saleResponse =
-  //        createSaleInOrganization(saleRequestDto);
-  //
-  //    assertEquals(HttpStatus.NOT_FOUND, saleResponse.getStatusCode());
-  //  }
+    @Test
+    void createSaleShouldThrowWhenResourceNotOwned() {
+      organizationSeller.setId(UUID.randomUUID());
+      SaleRequestDto saleRequestDto =
+          getSaleInOrganizationRequestDto(
+              organizationSeller,
+              buyer,
+              productResponse,
+              resourcesInOrganizationResponseDto,
+              SALE_DISCOUNT);
+
+      ResponseEntity<OrganizationSaleResponseDto> saleResponse =
+          createSaleInOrganization(saleRequestDto);
+
+      assertEquals(HttpStatus.FORBIDDEN, saleResponse.getStatusCode());
+    }
 
   @Test
   void createSaleWithResourceAndProductSuccessfully() throws JsonProcessingException {
@@ -740,7 +734,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             resourcesInOrganizationResponseDto,
             SALE_DISCOUNT);
     createSaleInOrganization(saleRequestDto);
-    Organization organizationSeller2 =
+    OrganizationResponseDto organizationSeller2 =
         createOrganizationInDatabase(OrganizationTestHelper.getTestOrganizationRequest());
     ProductsInOrganizationResponseDto productResponse2 =
         createProductInOrganization(productRequestDto2);
@@ -753,8 +747,8 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             SALE_DISCOUNT);
     createSaleInOrganization(saleRequestDto2);
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_SALE_READ);
-    OrganizationRole newRole = createRole("Test", permissions);
-    createOrganizationMembership(buyer.getId(), organizationSeller.getId(), newRole.getId());
+    RoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(buyer.getId(), organizationSeller.getId(), newRole.getId());
     authenticateAs(buyer);
 
     ResponseEntity<List<OrganizationSaleResponseDto>> response =
@@ -864,18 +858,19 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         .multiply(saleRequestDto.getResources().get(0).getResourceAndQuantity().getQuantity());
   }
 
-  private Organization createOrganizationInDatabase(
+  private OrganizationResponseDto createOrganizationInDatabase(
       OrganizationRequestDto testOrganizationRequest) {
-    ResponseEntity<Organization> response =
+    ResponseEntity<OrganizationResponseDto> response =
         this.testRestTemplate.postForEntity(
-            getBaseOrganizationsUrl(), testOrganizationRequest, Organization.class);
+            getBaseOrganizationsUrl(), testOrganizationRequest, OrganizationResponseDto.class);
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     return response.getBody();
   }
 
   private OrganizationSingleMemberResponseDto createUserInOrganization(
-      Organization organizationSeller, UserInOrganizationRequestDto userInOrganizationRequestDto) {
+      OrganizationResponseDto organizationSeller,
+      UserInOrganizationRequestDto userInOrganizationRequestDto) {
     return this.testRestTemplate
         .postForEntity(
             getOrganizationUsersUrl(organizationSeller.getId()),

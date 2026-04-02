@@ -28,7 +28,8 @@ public class ResourceInOrganizationController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("@orgAuth.hasPermission(#request.organizationId, 'ORGANIZATION_RESOURCE_ADD')")
+  @PreAuthorize(
+      "@orgAuth.hasOrganizationPermission(#request.organizationId, 'ORGANIZATION_RESOURCE_ADD')")
   @Operation(summary = "Add resource to organization")
   public ResourcesInOrganizationResponseDto addResourceToOrganization(
       @RequestBody @Valid ResourceInOrganizationRequestDto request) {
@@ -39,7 +40,8 @@ public class ResourceInOrganizationController {
       summary =
           "Delete specific amount of resource from organization by organizationId, resourceId and quantity")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("@orgAuth.hasPermission(#organizationId, 'ORGANIZATION_RESOURCE_DELETE')")
+  @PreAuthorize(
+      "@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_RESOURCE_DELETE')")
   @DeleteMapping("/{organizationId}/{resourceId}/{quantity}")
   public ResourcesInOrganizationResponseDto removeQuantityFromOrganizationResource(
       @PathVariable UUID organizationId,
@@ -52,7 +54,7 @@ public class ResourceInOrganizationController {
 
   @Operation(summary = "Get resources by organizationId")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("@orgAuth.hasPermission(#organizationId, 'ORGANIZATION_RESOURCE_READ')")
+  @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_RESOURCE_READ')")
   @GetMapping("/{organizationId}")
   public ResourcesInOrganizationResponseDto getAllResourcesFromOrganization(
       @PathVariable UUID organizationId) {
@@ -62,8 +64,8 @@ public class ResourceInOrganizationController {
   @Operation(summary = "Transfer resource from organization to another organization")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize(
-      "@orgAuth.hasPermission(#transferResourceRequestDto.previousOwnerId, 'ORGANIZATION_RESOURCE_TRANSFER') && "
-          + "@orgAuth.hasPermission(#transferResourceRequestDto.newOwnerId, 'ORGANIZATION_RESOURCE_TRANSFER')")
+      "@orgAuth.hasOrganizationPermission(#transferResourceRequestDto.previousOwnerId, 'ORGANIZATION_RESOURCE_TRANSFER') && "
+          + "@orgAuth.hasOrganizationPermission(#transferResourceRequestDto.newOwnerId, 'ORGANIZATION_RESOURCE_TRANSFER')")
   @PostMapping("/transfer")
   public OrganizationTransferResourceResponseDto transferResources(
       @RequestBody @Valid TransferResourceRequestDto transferResourceRequestDto) {

@@ -35,7 +35,6 @@ public class ProductController {
 
   @Operation(summary = "Get a single product")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("@orgAuth.hasPermissionForProduct(#id, 'ORGANIZATION_PRODUCT_READ')")
   @GetMapping("/{id}")
   public ProductResponseDto getProduct(@PathVariable("id") UUID id) {
     return productService.getProductResponse(id);
@@ -71,7 +70,7 @@ public class ProductController {
 
   @Operation(summary = "Create a new product")
   @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("@orgAuth.hasPermission(#productRequestDto.ownerId, 'ORGANIZATION_PRODUCT_CREATE')")
+  @PreAuthorize("@orgAuth.hasOrganizationPermission(#productRequestDto.ownerId, 'ORGANIZATION_PRODUCT_CREATE')")
   @PostMapping
   public ProductsInOrganizationResponseDto createProduct(
       @RequestBody @Valid ProductRequestDto productRequestDto) {
@@ -100,7 +99,7 @@ public class ProductController {
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize(
       "@orgAuth.hasPermissionForProduct(#productId, 'ORGANIZATION_PRODUCT_TRANSFER')&& "
-          + "@orgAuth.hasPermission(#recipientId, 'ORGANIZATION_PRODUCT_TRANSFER')")
+          + "@orgAuth.hasOrganizationPermission(#recipientId, 'ORGANIZATION_PRODUCT_TRANSFER')")
   @PutMapping("/{productId}/transfer/{recipientId}")
   public ProductsInOrganizationResponseDto transferProduct(
       @PathVariable("productId") UUID productId, @PathVariable("recipientId") UUID recipientId) {

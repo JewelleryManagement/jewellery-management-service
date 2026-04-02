@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class OrganizationRoleRequest {
+public class RoleRequestDto {
   private String name;
   private Set<Permission> permissions;
 }

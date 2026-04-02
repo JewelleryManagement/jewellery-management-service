@@ -17,7 +17,6 @@ import jewellery.inventory.dto.response.resource.DiamondResponseDto;
 import jewellery.inventory.helper.OrganizationTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.model.Organization;
-import jewellery.inventory.model.OrganizationRole;
 import jewellery.inventory.model.Permission;
 import jewellery.inventory.model.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,9 +66,6 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   void setUp() {
     organizationSeller =
         createOrganizationInDatabase(OrganizationTestHelper.getTestOrganizationRequest());
-    OrganizationRole roleWithAllPermissions = createRoleWithAllPermissions();
-    createOrganizationMembership(
-        loggedInAdminUser.getId(), organizationSeller.getId(), roleWithAllPermissions.getId());
     buyer = createUserInDatabase(createDifferentUserRequest());
     diamond = createDiamondInDatabase();
   }
@@ -120,8 +116,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   void getAllPurchasedResourcesShouldReturnEmptyArrayWhenUserHasNoResourceReadPermissions() {
     createSaleInOrganization();
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_SALE_READ);
-    OrganizationRole newRole = createRole("Test", permissions);
-    createOrganizationMembership(buyer.getId(), organizationSeller.getId(), newRole.getId());
+    RoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(buyer.getId(), organizationSeller.getId(), newRole.getId());
     authenticateAs(buyer);
 
     ResponseEntity<List<PurchasedResourceQuantityResponseDto>> response =
@@ -139,8 +135,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   void getAllPurchasedResourcesShouldReturnEmptyArrayWhenUserHasNoSaleReadPermissions() {
     createSaleInOrganization();
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_RESOURCE_READ);
-    OrganizationRole newRole = createRole("Test", permissions);
-    createOrganizationMembership(buyer.getId(), organizationSeller.getId(), newRole.getId());
+    RoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(buyer.getId(), organizationSeller.getId(), newRole.getId());
     authenticateAs(buyer);
 
     ResponseEntity<List<PurchasedResourceQuantityResponseDto>> response =

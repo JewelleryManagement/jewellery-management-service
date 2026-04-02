@@ -14,6 +14,7 @@ import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.*;
+import jewellery.inventory.service.OrganizationAuthorizationService;
 import jewellery.inventory.service.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,7 @@ class ProductServiceTest {
   @Mock private ProductRepository productRepository;
   @Mock private ProductMapper productMapper;
   @Mock private UserRepository userRepository;
+  @Mock private OrganizationAuthorizationService organizationAuthorizationService;
 
   private User user;
   private Product product;
@@ -49,9 +51,10 @@ class ProductServiceTest {
 
   @Test
   void testGetProductWhenProductFound() {
-
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-
+    when(organizationAuthorizationService.hasPermissionForProduct(
+            product.getId(), Permission.ORGANIZATION_PRODUCT_READ.name()))
+        .thenReturn(true);
     ProductResponseDto response = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
 

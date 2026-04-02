@@ -21,8 +21,8 @@ public interface ResourceInOrganizationRepository
 """
     select rio
     from ResourceInOrganization rio
-    join OrganizationMembership m on m.organization.id = rio.organization.id
-    join m.roles r
+    join RoleMembership m on m.organization = rio.organization
+    join m.role r
     join r.permissions p
     where rio.resource.id = :resourceId
       and m.user.id = :userId

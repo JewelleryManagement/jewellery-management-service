@@ -12,17 +12,18 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.UUID;
-import jewellery.inventory.dto.request.OrganizationRoleRequest;
+import jewellery.inventory.dto.request.RoleRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.response.RoleResponseDto;
 import jewellery.inventory.helper.SystemEventTestHelper;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.Image;
-import jewellery.inventory.model.OrganizationRole;
 import jewellery.inventory.model.Permission;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.ImageService;
-import jewellery.inventory.service.OrganizationRoleService;
+import jewellery.inventory.service.OrganizationService;
+import jewellery.inventory.service.RoleService;
 import jewellery.inventory.service.security.JwtTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,6 +41,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 public abstract class AuthenticatedIntegrationTestBase {
+  private static final String ADMIN_ROLE_NAME = "ORGANIZATION_ADMIN";
 
   @Autowired protected ObjectMapper objectMapper;
 
@@ -55,9 +57,10 @@ public abstract class AuthenticatedIntegrationTestBase {
   @Autowired private ResourceInProductRepository resourceInProductRepository;
   @Autowired private PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   @Autowired private ResourceInOrganizationRepository resourceInOrganizationRepository;
-  @Autowired private OrganizationRoleRepository organizationRoleRepository;
+  @Autowired private RoleRepository roleRepository;
   @Autowired private OrganizationMembershipRepository organizationMembershipRepository;
-  @Autowired private OrganizationRoleService organizationRoleService;
+  @Autowired private RoleService roleService;
+  @Autowired private OrganizationService organizationService;
 
   @Autowired private ImageService imageService;
   @Autowired private ImageRepository imageRepository;
@@ -75,13 +78,14 @@ public abstract class AuthenticatedIntegrationTestBase {
     userRepository.deleteAll();
     resourceRepository.deleteAll();
     resourceInProductRepository.deleteAll();
-    organizationRoleRepository.deleteAll();
+    roleRepository.deleteAll();
     organizationMembershipRepository.deleteAll();
     loggedInAdminUser = createTestAdminUser();
     authenticateAs(loggedInAdminUser);
     setupTestRestTemplateWithAuthHeaders();
     loggedInAdminUser.setId(
         createUserInDatabase(UserTestHelper.getTestUserRequest(loggedInAdminUser)).getId());
+    createRoleWithAllPermissions();
     systemEventRepository.deleteAll();
   }
 
@@ -93,21 +97,19 @@ public abstract class AuthenticatedIntegrationTestBase {
     }
   }
 
-  protected OrganizationRole createRoleWithAllPermissions() {
+  private void createRoleWithAllPermissions() {
     Set<Permission> permissions = EnumSet.allOf(Permission.class);
-    OrganizationRoleRequest organizationRoleRequest =
-        new OrganizationRoleRequest("Admin", permissions);
-    return organizationRoleService.createRole(organizationRoleRequest);
+    RoleRequestDto roleRequestDto = new RoleRequestDto(ADMIN_ROLE_NAME, permissions);
+    roleService.createRole(roleRequestDto);
   }
 
-  protected OrganizationRole createRole(String roleName, Set<Permission> permissions) {
-    OrganizationRoleRequest organizationRoleRequest =
-        new OrganizationRoleRequest(roleName, permissions);
-    return organizationRoleService.createRole(organizationRoleRequest);
+  protected RoleResponseDto createRole(String roleName, Set<Permission> permissions) {
+    RoleRequestDto roleRequestDto = new RoleRequestDto(roleName, permissions);
+    return roleService.createRole(roleRequestDto);
   }
 
-  protected void createOrganizationMembership(UUID userId, UUID organizationId, UUID roleId) {
-    organizationRoleService.assignRoleToUserInOrganization(userId, organizationId, roleId);
+  protected void createRoleMembership(UUID userId, UUID organizationId, UUID roleId) {
+    organizationService.assignRoleToUserInOrganization(userId, organizationId, roleId);
   }
 
   protected void authenticateAs(User user) {

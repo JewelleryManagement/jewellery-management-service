@@ -22,8 +22,8 @@ public interface PurchasedResourceInUserRepository
     select pru
     from PurchasedResourceInUser pru
     join pru.partOfSale s
-    join OrganizationMembership m on m.organization.id = s.organizationSeller.id
-    join m.roles r
+    join RoleMembership m on m.organization = s.organizationSeller
+    join m.role r
     join r.permissions p
     where pru.owner.id = :targetUserId
       and m.user.id = :currentUserId

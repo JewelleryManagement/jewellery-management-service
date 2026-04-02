@@ -4,9 +4,7 @@ import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizat
 import static jewellery.inventory.helper.OrganizationTestHelper.getTestUserInOrganizationRequest;
 import static jewellery.inventory.helper.ProductTestHelper.*;
 import static jewellery.inventory.helper.ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto;
-import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
-import static jewellery.inventory.model.EventType.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,7 +16,6 @@ import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.helper.ResourceTestHelper;
-import jewellery.inventory.model.OrganizationRole;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Diamond;
 import jewellery.inventory.repository.*;
@@ -96,9 +93,6 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @BeforeEach
   void setUp() {
     organizationResponseDto = createOrganizationInDatabase(getTestOrganizationRequest());
-    OrganizationRole roleWithAllPermissions = createRoleWithAllPermissions();
-    createOrganizationMembership(
-        loggedInAdminUser.getId(), organizationResponseDto.getId(), roleWithAllPermissions.getId());
     user = createUserInDatabase(createTestUserRequest());
     userInOrganizationRequestDto = getTestUserInOrganizationRequest(user.getId());
     addUserInOrganization(organizationResponseDto.getId(), userInOrganizationRequestDto);

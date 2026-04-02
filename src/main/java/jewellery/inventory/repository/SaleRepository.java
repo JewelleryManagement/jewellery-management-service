@@ -24,8 +24,8 @@ public interface SaleRepository extends JpaRepository<Sale, UUID> {
 """
     select distinct s
     from Sale s
-    join OrganizationMembership m on m.organization.id = s.organizationSeller.id
-    join m.roles r
+    join RoleMembership m on m.organization = s.organizationSeller
+    join m.role r
     join r.permissions p
     where s.organizationSeller is not null
       and m.user.id = :userId
@@ -38,8 +38,8 @@ public interface SaleRepository extends JpaRepository<Sale, UUID> {
     select distinct s
     from Sale s
     join s.resources pru
-    join OrganizationMembership m on m.organization.id = s.organizationSeller.id
-    join m.roles r
+    join RoleMembership m on m.organization = s.organizationSeller
+    join m.role r
     join r.permissions p
     where pru.resource.id = :resourceId
       and s.organizationSeller is not null

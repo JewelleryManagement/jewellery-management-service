@@ -18,14 +18,10 @@ import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
-import jewellery.inventory.dto.response.OrganizationResponseDto;
-import jewellery.inventory.dto.response.OrganizationTransferResourceResponseDto;
-import jewellery.inventory.dto.response.ResourceOwnedByOrganizationsResponseDto;
-import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.OrganizationTestHelper;
 import jewellery.inventory.helper.ResourceInOrganizationTestHelper;
-import jewellery.inventory.model.OrganizationRole;
 import jewellery.inventory.model.Permission;
 import jewellery.inventory.model.User;
 import org.jetbrains.annotations.NotNull;
@@ -62,23 +58,15 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   }
 
   private OrganizationResponseDto organizationResponseDto;
-  private OrganizationRole roleWithAllPermissions;
 
   @BeforeEach
   void setUp() {
     organizationResponseDto = createOrganization();
-    roleWithAllPermissions = createRoleWithAllPermissions();
-    createOrganizationMembership(
-        loggedInAdminUser.getId(), organizationResponseDto.getId(), roleWithAllPermissions.getId());
   }
 
   @Test
   void transferResourceToOrganizationSuccessfully() throws JsonProcessingException {
     OrganizationResponseDto newOwnerOrganizationResponseDto = createOrganization();
-    createOrganizationMembership(
-        loggedInAdminUser.getId(),
-        newOwnerOrganizationResponseDto.getId(),
-        roleWithAllPermissions.getId());
     ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -113,10 +101,6 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   @Test
   void transferResourceToOrganizationWillThrowInsufficientResourceQuantityException() {
     OrganizationResponseDto newOwnerOrganizationResponseDto = createOrganization();
-    createOrganizationMembership(
-        loggedInAdminUser.getId(),
-        newOwnerOrganizationResponseDto.getId(),
-        roleWithAllPermissions.getId());
     ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -169,18 +153,18 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
         ORGANIZATION_ADD_RESOURCE_QUANTITY, expectedEventPayload, resourceResponse.getId());
   }
 
-  //  @Test
-  //  void addResourceToOrganizationShouldThrowWhenOrganizationNotFound() {
-  //    ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
-  //    ResourceInOrganizationRequestDto request =
-  //        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-  //            UUID.randomUUID(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
-  //
-  //    ResponseEntity<ResourcesInOrganizationResponseDto> response =
-  //        sendResourceToOrganization(request);
-  //
-  //    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-  //  }
+    @Test
+    void addResourceToOrganizationShouldThrowWhenOrganizationNotFound() {
+      ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
+      ResourceInOrganizationRequestDto request =
+          ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+              UUID.randomUUID(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
+
+      ResponseEntity<ResourcesInOrganizationResponseDto> response =
+          sendResourceToOrganization(request);
+
+      assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
 
   @Test
   void addResourceToOrganizationShouldThrowWhenResourceNotFound() {
@@ -281,16 +265,16 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
         0, resourceResponseAfterDeletingQuantity.getBody().getResourcesAndQuantities().size());
   }
 
-  //  @Test
-  //  void removeResourceQuantityShouldThrowWhenOrganizationNotFound() {
-  //    ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
-  //    organizationResponseDto.setId(UUID.randomUUID());
-  //
-  //    ResponseEntity<ResourcesInOrganizationResponseDto> response =
-  //        sendDeleteOperation(getDeleteResourceUrl(organizationResponseDto, resourceResponse));
-  //
-  //    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-  //  }
+//    @Test
+//    void removeResourceQuantityShouldThrowWhenOrganizationNotFound() {
+//      ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
+//      organizationResponseDto.setId(UUID.randomUUID());
+//
+//      ResponseEntity<ResourcesInOrganizationResponseDto> response =
+//          sendDeleteOperation(getDeleteResourceUrl(organizationResponseDto, resourceResponse));
+//
+//      assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+//    }
 
   @Test
   void removeResourceQuantityShouldThrowWhenResourceNotFound() {
@@ -418,10 +402,6 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   @Test
   void transferResourcesShouldThrowWhenUserHasNoResourceTransferPermissionForBothOrganizations() {
     OrganizationResponseDto newOwnerOrganizationResponseDto = createOrganization();
-    createOrganizationMembership(
-        loggedInAdminUser.getId(),
-        newOwnerOrganizationResponseDto.getId(),
-        roleWithAllPermissions.getId());
     ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -454,10 +434,6 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   @Test
   void transferResourcesShouldThrowWhenUserHasNoResourceTransferPermissionForCurrentOrganization() {
     OrganizationResponseDto newOwnerOrganizationResponseDto = createOrganization();
-    createOrganizationMembership(
-        loggedInAdminUser.getId(),
-        newOwnerOrganizationResponseDto.getId(),
-        roleWithAllPermissions.getId());
     ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -476,8 +452,8 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     authenticateAs(deniedUser);
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_RESOURCE_TRANSFER);
-    OrganizationRole newRole = createRole("Test", permissions);
-    createOrganizationMembership(
+    RoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(
         deniedUser.getId(), newOwnerOrganizationResponseDto.getId(), newRole.getId());
 
     ResponseEntity<String> response =
@@ -495,10 +471,6 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   @Test
   void transferResourcesShouldThrowWhenUserHasNoResourceTransferPermissionForNewOrganization() {
     OrganizationResponseDto newOwnerOrganizationResponseDto = createOrganization();
-    createOrganizationMembership(
-        loggedInAdminUser.getId(),
-        newOwnerOrganizationResponseDto.getId(),
-        roleWithAllPermissions.getId());
     ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -517,9 +489,8 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     authenticateAs(deniedUser);
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_RESOURCE_TRANSFER);
-    OrganizationRole newRole = createRole("Test", permissions);
-    createOrganizationMembership(
-        deniedUser.getId(), organizationResponseDto.getId(), newRole.getId());
+    RoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(deniedUser.getId(), organizationResponseDto.getId(), newRole.getId());
 
     ResponseEntity<String> response =
         this.testRestTemplate.postForEntity(

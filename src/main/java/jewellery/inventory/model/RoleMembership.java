@@ -1,8 +1,6 @@
 package jewellery.inventory.model;
 
 import jakarta.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 import lombok.*;
 
@@ -14,7 +12,7 @@ import lombok.*;
 @Table(
     name = "organization_memberships",
     uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id", "organization_id"})})
-public class OrganizationMembership {
+public class RoleMembership {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -28,10 +26,7 @@ public class OrganizationMembership {
   @JoinColumn(name = "organization_id", nullable = false)
   private Organization organization;
 
-  @ManyToMany(fetch = FetchType.LAZY)
-  @JoinTable(
-      name = "organization_membership_roles",
-      joinColumns = @JoinColumn(name = "membership_id"),
-      inverseJoinColumns = @JoinColumn(name = "role_id"))
-  private Set<OrganizationRole> roles = new HashSet<>();
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "role_id", nullable = false)
+  private OrganizationRole role;
 }

@@ -2,13 +2,13 @@ package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.OrganizationTestHelper.getTestUserInOrganizationRequest;
 import static jewellery.inventory.helper.ResourceTestHelper.getPearlRequestDto;
+import static jewellery.inventory.helper.SaleTestHelper.getSaleInOrganizationRequestDto;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
 import static jewellery.inventory.model.EventType.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.math.BigDecimal;
@@ -19,7 +19,6 @@ import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.*;
-import jewellery.inventory.model.OrganizationRole;
 import jewellery.inventory.model.Permission;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Diamond;
@@ -35,6 +34,8 @@ import org.springframework.http.ResponseEntity;
 class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private static final BigDecimal RESOURCE_QUANTITY = getBigDecimal("100");
   private static final BigDecimal RESOURCE_PRICE = getBigDecimal("105");
+  private static final BigDecimal SALE_DISCOUNT = getBigDecimal("10");
+  private static final BigDecimal RESOURCE_SALE_QUANTITY = getBigDecimal("10");
 
   private String getBaseResourceAvailabilityUrl() {
     return buildUrl("organizations", "resources-availability");
@@ -68,19 +69,24 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     return "/organizations/" + organizationId + "/users";
   }
 
+  private String getBaseSaleUrl() {
+    return "/sales";
+  }
+
+  private String getProductByOwnerUrl(UUID ownerId) {
+    return buildUrl("products", "/by-owner/" + ownerId);
+  }
+
   private Diamond diamond;
   private ProductRequestDto productRequestDto;
   private OrganizationResponseDto organization;
   private UserInOrganizationRequestDto userInOrganizationRequestDto;
-  private OrganizationRole roleWithAllPermissions;
+  private RoleResponseDto roleWithAllPermissions;
 
   @BeforeEach
   void setUp() {
     User user = createUserInDatabase(UserTestHelper.createTestUserRequest());
     organization = createOrganization();
-    roleWithAllPermissions = createRoleWithAllPermissions();
-    createOrganizationMembership(
-        loggedInAdminUser.getId(), organization.getId(), roleWithAllPermissions.getId());
     userInOrganizationRequestDto = getTestUserInOrganizationRequest(user.getId());
     diamond = createDiamondInDatabase();
     productRequestDto =
@@ -256,10 +262,6 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
                 productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
     UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
     OrganizationResponseDto createSecondOrganization = createOrganization();
-    createOrganizationMembership(
-        loggedInAdminUser.getId(),
-        createSecondOrganization.getId(),
-        roleWithAllPermissions.getId());
     UUID organizationId = createSecondOrganization.getId();
 
     ResponseEntity<ProductsInOrganizationResponseDto> transferResponse =
@@ -484,10 +486,6 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
                 productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
     UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
     OrganizationResponseDto createSecondOrganization = createOrganization();
-    createOrganizationMembership(
-        loggedInAdminUser.getId(),
-        createSecondOrganization.getId(),
-        roleWithAllPermissions.getId());
     UUID organizationId = createSecondOrganization.getId();
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     authenticateAs(deniedUser);
@@ -516,17 +514,12 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
                 productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
     UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
     OrganizationResponseDto createSecondOrganization = createOrganization();
-    createOrganizationMembership(
-        loggedInAdminUser.getId(),
-        createSecondOrganization.getId(),
-        roleWithAllPermissions.getId());
     UUID organizationId = createSecondOrganization.getId();
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     authenticateAs(deniedUser);
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_PRODUCT_TRANSFER);
-    OrganizationRole newRole = createRole("Test", permissions);
-    createOrganizationMembership(
-        deniedUser.getId(), createSecondOrganization.getId(), newRole.getId());
+    RoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(deniedUser.getId(), createSecondOrganization.getId(), newRole.getId());
 
     ResponseEntity<String> response =
         this.testRestTemplate.exchange(
@@ -552,16 +545,12 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
                 productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
     UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
     OrganizationResponseDto createSecondOrganization = createOrganization();
-    createOrganizationMembership(
-        loggedInAdminUser.getId(),
-        createSecondOrganization.getId(),
-        roleWithAllPermissions.getId());
     UUID organizationId = createSecondOrganization.getId();
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     authenticateAs(deniedUser);
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_PRODUCT_TRANSFER);
-    OrganizationRole newRole = createRole("Test", permissions);
-    createOrganizationMembership(deniedUser.getId(), organization.getId(), newRole.getId());
+    RoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(deniedUser.getId(), organization.getId(), newRole.getId());
 
     ResponseEntity<String> response =
         this.testRestTemplate.exchange(
@@ -616,8 +605,8 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             productRequestDto, organization2.getId(), diamond.getId(), RESOURCE_QUANTITY));
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_PRODUCT_READ);
-    OrganizationRole newRole = createRole("Test", permissions);
-    createOrganizationMembership(deniedUser.getId(), organization.getId(), newRole.getId());
+    RoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(deniedUser.getId(), organization.getId(), newRole.getId());
     authenticateAs(deniedUser);
 
     ResponseEntity<List<ProductResponseDto>> response =
@@ -628,6 +617,214 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             new ParameterizedTypeReference<List<ProductResponseDto>>() {});
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(1, response.getBody().size());
+  }
+
+  @Test
+  void getProductsByOwnerSuccessfully() {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
+    ResponseEntity<ResourcesInOrganizationResponseDto>
+        resourcesInOrganizationResponseDtoResponseEntity =
+            sendResourceToOrganization(
+                ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+                    organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
+    ResponseEntity<ProductsInOrganizationResponseDto> product =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto, organization.getId(), diamond.getId(), RESOURCE_SALE_QUANTITY));
+    User buyer = createAndPersistUser(createDifferentUserRequest());
+    SaleRequestDto saleRequestDto =
+        getSaleInOrganizationRequestDto(
+            organization,
+            buyer,
+            product.getBody(),
+            resourcesInOrganizationResponseDtoResponseEntity.getBody(),
+            SALE_DISCOUNT);
+    createSaleInOrganization(saleRequestDto);
+
+    ResponseEntity<List<ProductResponseDto>> response =
+        this.testRestTemplate.exchange(
+            getProductByOwnerUrl(buyer.getId()),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<ProductResponseDto>>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response);
+    assertEquals(1, response.getBody().size());
+    assertEquals(
+        response.getBody().getFirst().getId(), product.getBody().getProducts().getFirst().getId());
+  }
+
+  @Test
+  void getProductsByOwnerShouldReturnEmptyArrayWhenUserHasNoProductReadAndSaleReadPermission() {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
+    ResponseEntity<ResourcesInOrganizationResponseDto>
+        resourcesInOrganizationResponseDtoResponseEntity =
+            sendResourceToOrganization(
+                ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+                    organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
+    ResponseEntity<ProductsInOrganizationResponseDto> product =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto, organization.getId(), diamond.getId(), RESOURCE_SALE_QUANTITY));
+    User buyer = createAndPersistUser(createDifferentUserRequest());
+    SaleRequestDto saleRequestDto =
+        getSaleInOrganizationRequestDto(
+            organization,
+            buyer,
+            product.getBody(),
+            resourcesInOrganizationResponseDtoResponseEntity.getBody(),
+            SALE_DISCOUNT);
+    createSaleInOrganization(saleRequestDto);
+    authenticateAs(buyer);
+
+    ResponseEntity<List<ProductResponseDto>> response =
+        this.testRestTemplate.exchange(
+            getProductByOwnerUrl(buyer.getId()),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<ProductResponseDto>>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response);
+    assertEquals(0, response.getBody().size());
+  }
+
+  @Test
+  void getProductsByOwnerShouldReturnEmptyArrayWhenUserHasNoSaleReadPermission() {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
+    ResponseEntity<ResourcesInOrganizationResponseDto>
+        resourcesInOrganizationResponseDtoResponseEntity =
+            sendResourceToOrganization(
+                ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+                    organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
+    ResponseEntity<ProductsInOrganizationResponseDto> product =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto, organization.getId(), diamond.getId(), RESOURCE_SALE_QUANTITY));
+    User buyer = createAndPersistUser(createDifferentUserRequest());
+    SaleRequestDto saleRequestDto =
+        getSaleInOrganizationRequestDto(
+            organization,
+            buyer,
+            product.getBody(),
+            resourcesInOrganizationResponseDtoResponseEntity.getBody(),
+            SALE_DISCOUNT);
+    createSaleInOrganization(saleRequestDto);
+    Set<Permission> permissions = Set.of(Permission.ORGANIZATION_PRODUCT_READ);
+    RoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(buyer.getId(), organization.getId(), newRole.getId());
+    authenticateAs(buyer);
+
+    ResponseEntity<List<ProductResponseDto>> response =
+        this.testRestTemplate.exchange(
+            getProductByOwnerUrl(buyer.getId()),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<ProductResponseDto>>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response);
+    assertEquals(0, response.getBody().size());
+  }
+
+  @Test
+  void getProductsByOwnerShouldReturnEmptyArrayWhenUserHasNoProductReadPermission() {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
+    ResponseEntity<ResourcesInOrganizationResponseDto>
+        resourcesInOrganizationResponseDtoResponseEntity =
+            sendResourceToOrganization(
+                ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+                    organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
+    ResponseEntity<ProductsInOrganizationResponseDto> product =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto, organization.getId(), diamond.getId(), RESOURCE_SALE_QUANTITY));
+    User buyer = createAndPersistUser(createDifferentUserRequest());
+    SaleRequestDto saleRequestDto =
+        getSaleInOrganizationRequestDto(
+            organization,
+            buyer,
+            product.getBody(),
+            resourcesInOrganizationResponseDtoResponseEntity.getBody(),
+            SALE_DISCOUNT);
+    createSaleInOrganization(saleRequestDto);
+    Set<Permission> permissions = Set.of(Permission.ORGANIZATION_SALE_READ);
+    RoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(buyer.getId(), organization.getId(), newRole.getId());
+    authenticateAs(buyer);
+
+    ResponseEntity<List<ProductResponseDto>> response =
+        this.testRestTemplate.exchange(
+            getProductByOwnerUrl(buyer.getId()),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<ProductResponseDto>>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response);
+    assertEquals(0, response.getBody().size());
+  }
+
+  @Test
+  void getProductsByOwnerShouldReturnOnlyProductsUserHasPermissionFor() {
+    OrganizationResponseDto newOrganization = createOrganization();
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
+    addUserInOrganization(newOrganization.getId(), userInOrganizationRequestDto);
+    ResponseEntity<ResourcesInOrganizationResponseDto>
+        resourcesInOrganizationResponseDtoResponseEntity =
+            sendResourceToOrganization(
+                ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+                    organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
+    ResponseEntity<ResourcesInOrganizationResponseDto>
+        resourcesInNewOrganizationResponseDtoResponseEntity =
+            sendResourceToOrganization(
+                ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+                    newOrganization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
+    ResponseEntity<ProductsInOrganizationResponseDto> product =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto, organization.getId(), diamond.getId(), RESOURCE_SALE_QUANTITY));
+    ResponseEntity<ProductsInOrganizationResponseDto> product2 =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto,
+                newOrganization.getId(),
+                diamond.getId(),
+                RESOURCE_SALE_QUANTITY));
+    User buyer = createAndPersistUser(createDifferentUserRequest());
+    SaleRequestDto saleRequestDto =
+        getSaleInOrganizationRequestDto(
+            organization,
+            buyer,
+            product.getBody(),
+            resourcesInOrganizationResponseDtoResponseEntity.getBody(),
+            SALE_DISCOUNT);
+    createSaleInOrganization(saleRequestDto);
+    SaleRequestDto saleRequestDto2 =
+        getSaleInOrganizationRequestDto(
+            newOrganization,
+            buyer,
+            product2.getBody(),
+            resourcesInNewOrganizationResponseDtoResponseEntity.getBody(),
+            SALE_DISCOUNT);
+    createSaleInOrganization(saleRequestDto2);
+    Set<Permission> permissions =
+        Set.of(Permission.ORGANIZATION_SALE_READ, Permission.ORGANIZATION_PRODUCT_READ);
+    RoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(buyer.getId(), newOrganization.getId(), newRole.getId());
+    authenticateAs(buyer);
+
+    ResponseEntity<List<ProductResponseDto>> response =
+        this.testRestTemplate.exchange(
+            getProductByOwnerUrl(buyer.getId()),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<ProductResponseDto>>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response);
     assertEquals(1, response.getBody().size());
   }
 
@@ -745,5 +942,11 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     resourceQuantityRequestDto.setQuantity(quantity);
     productRequestDto.setResourcesContent(List.of(resourceQuantityRequestDto));
     return productRequestDto;
+  }
+
+  private ResponseEntity<OrganizationSaleResponseDto> createSaleInOrganization(
+      SaleRequestDto saleRequestDto) {
+    return this.testRestTemplate.postForEntity(
+        getBaseSaleUrl(), saleRequestDto, OrganizationSaleResponseDto.class);
   }
 }

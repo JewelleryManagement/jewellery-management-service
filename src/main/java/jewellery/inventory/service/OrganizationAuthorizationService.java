@@ -17,47 +17,30 @@ public class OrganizationAuthorizationService {
   private final AuthService authService;
 
   @Transactional(readOnly = true)
-  public boolean hasPermission(UUID organizationId, String permission) {
+  public boolean hasOrganizationPermission(UUID organizationId, String permission) {
     UserResponseDto currentUser = authService.getCurrentUser();
 
-    Permission permissionEnum = Permission.valueOf(permission);
+    Permission permissionValue = Permission.valueOf(permission);
 
-    return membershipRepository
-        .findByUserIdAndOrganizationId(currentUser.getId(), organizationId)
-        .map(
-            membership ->
-                membership.getRoles().stream()
-                    .flatMap(role -> role.getPermissions().stream())
-                    .anyMatch(p -> p == permissionEnum))
-        .orElse(false);
+    return membershipRepository.hasPermissionInOrganization(
+        currentUser.getId(), organizationId, permissionValue);
   }
 
   @Transactional(readOnly = true)
   public boolean hasPermissionForProduct(UUID productId, String permission) {
     UUID currentUserId = authService.getCurrentUser().getId();
 
-    Permission permissionEnum;
-    try {
-      permissionEnum = Permission.valueOf(permission);
-    } catch (IllegalArgumentException e) {
-      return false;
-    }
+    Permission permissionValue = Permission.valueOf(permission);
 
-    return membershipRepository.hasAccessToProduct(productId, currentUserId, permissionEnum);
+    return membershipRepository.hasAccessToProduct(productId, currentUserId, permissionValue);
   }
 
   @Transactional(readOnly = true)
   public boolean hasPermissionForSale(UUID saleId, String permission) {
-
     UUID currentUserId = authService.getCurrentUser().getId();
 
-    Permission permissionEnum;
-    try {
-      permissionEnum = Permission.valueOf(permission);
-    } catch (IllegalArgumentException e) {
-      return false;
-    }
+    Permission permissionValue = Permission.valueOf(permission);
 
-    return membershipRepository.hasAccessToSale(saleId, currentUserId, permissionEnum);
+    return membershipRepository.hasAccessToSale(saleId, currentUserId, permissionValue);
   }
 }
