@@ -12,6 +12,7 @@ import jewellery.inventory.dto.request.SaleRequestDto;
 import jewellery.inventory.dto.response.OrganizationSaleResponseDto;
 import jewellery.inventory.dto.response.ProductReturnResponseDto;
 import jewellery.inventory.dto.response.ResourceReturnResponseDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.not_found.ProductNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInOrganizationNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundInSaleException;
@@ -28,6 +29,7 @@ import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.SaleRepository;
 import jewellery.inventory.service.*;
+import jewellery.inventory.service.security.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,6 +49,8 @@ class SaleServiceTest {
   @Mock private PurchasedResourceInUserService purchasedResourceInUserService;
   @Mock private ResourceService resourceService;
   @Mock private ProductMapper productMapper;
+  @Mock private AuthService authService;
+  @Mock private OrganizationAuthorizationService organizationAuthorizationService;
 
   private User user;
   private SaleRequestDto saleRequestDto;
@@ -61,10 +65,12 @@ class SaleServiceTest {
   private ProductReturnResponseDto productReturnResponseDto;
   private PurchasedResourceInUser purchasedResourceInUser;
   private ResourceInOrganization resourceInOrganization;
+  private UserResponseDto userResponseDto;
 
   @BeforeEach
   void SetUp() {
     user = UserTestHelper.createTestUserWithRandomId();
+    userResponseDto = UserTestHelper.createTestUserResponseDto(user);
     seller = OrganizationTestHelper.getTestOrganization();
     buyer = UserTestHelper.createTestUserWithId();
     resource = ResourceTestHelper.getPearl();
@@ -352,6 +358,7 @@ class SaleServiceTest {
 
   @Test
   void getAllSalesByResourceReturnsEmptyArrayWhenResourceIsNotPartOfSale() {
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
     List<OrganizationSaleResponseDto> products =
         saleService.getAllSalesByResource(resourceInOrganization.getId());
     assertEquals(0, products.size());
@@ -359,12 +366,20 @@ class SaleServiceTest {
 
   @Test
   void getAllProductsByResourceSuccessfully() {
-    when(saleRepository.findAllByResourceId(resourceInOrganization.getId()))
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
+    when(saleRepository.findAllByResourceIdAndUserIdAndPermission(
+            resourceInOrganization.getId(),
+            userResponseDto.getId(),
+            Permission.ORGANIZATION_SALE_READ))
         .thenReturn(List.of(sale));
 
     List<OrganizationSaleResponseDto> products =
         saleService.getAllSalesByResource(resourceInOrganization.getId());
     assertEquals(1, products.size());
-    verify(saleRepository, times(1)).findAllByResourceId(resourceInOrganization.getId());
+    verify(saleRepository, times(1))
+        .findAllByResourceIdAndUserIdAndPermission(
+            resourceInOrganization.getId(),
+            userResponseDto.getId(),
+            Permission.ORGANIZATION_SALE_READ);
   }
 }

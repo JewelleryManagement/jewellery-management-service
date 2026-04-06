@@ -1,20 +1,22 @@
 package jewellery.inventory.service;
 
+import jakarta.transaction.Transactional;
 import java.util.*;
 import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
-import jewellery.inventory.dto.response.OrganizationResponseDto;
-import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
+import jewellery.inventory.exception.not_found.RoleNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.OrphanProductsInOrganizationException;
 import jewellery.inventory.exception.organization.OrphanResourcesInOrganizationException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
+import jewellery.inventory.exception.role.RoleAlreadyAssignedException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.mapper.ProductMapper;
+import jewellery.inventory.mapper.RoleMembershipMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.security.AuthService;
@@ -28,15 +30,28 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class OrganizationService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(OrganizationService.class);
+  private static final String ORGANIZATION_ADMIN_ROLE_NAME = "ORGANIZATION_ADMIN";
   private final OrganizationRepository organizationRepository;
   private final OrganizationMapper organizationMapper;
   private final AuthService authService;
   private final UserService userService;
   private final ProductMapper productMapper;
+  private final ScopedRoleService scopedRoleService;
+  private final ScopedRoleRepository scopedRoleRepository;
+  private final OrganizationMembershipRepository organizationMembershipRepository;
+  private final RoleMembershipMapper roleMembershipMapper;
+  private final OrganizationAuthorizationService organizationAuthorizationService;
 
   public List<OrganizationResponseDto> getAllOrganizationsResponsesForCurrentUser() {
-    logger.debug("Fetching all organizationsResponses for current user ");
-    return getOrganizationsUserIsPartOf().stream().map(organizationMapper::toResponse).toList();
+    logger.debug("Fetching all organization responses for current user");
+
+    UserResponseDto currentUser = authService.getCurrentUser();
+
+    return organizationRepository
+        .findOrganizationsByUserIdAndPermission(currentUser.getId(), Permission.ORGANIZATION_READ)
+        .stream()
+        .map(organizationMapper::toResponse)
+        .toList();
   }
 
   public OrganizationResponseDto getOrganizationResponse(UUID id) {
@@ -53,6 +68,9 @@ public class OrganizationService implements EntityFetcher {
     Organization organization = organizationMapper.toEntity(organizationRequestDto);
     makeCurrentUserOwner(organization);
     organization = saveOrganization(organization);
+    UserResponseDto currentUser = authService.getCurrentUser();
+    ScopedRole adminRole = scopedRoleService.getRoleByName(ORGANIZATION_ADMIN_ROLE_NAME);
+    assignRoleToUserInOrganization(currentUser.getId(), organization.getId(), adminRole.getId());
     logger.info("Organization created with ID: {}", organization.getId());
     return organizationMapper.toResponse(organization);
   }
@@ -121,18 +139,29 @@ public class OrganizationService implements EntityFetcher {
         organization, getProductsResponse(organization.getProductsOwned()));
   }
 
-  private List<ProductResponseDto> getProductsResponse(List<Product> products) {
-    return products.stream().map(productMapper::mapToProductResponseDto).toList();
+  @Transactional
+  public RoleMembershipResponseDto assignRoleToUserInOrganization(
+      UUID userId, UUID organizationId, UUID roleId) {
+    User user = userService.getUser(userId);
+    Organization organization = getOrganization(organizationId);
+    ScopedRole role =
+        scopedRoleRepository.findById(roleId).orElseThrow(() -> new RoleNotFoundException(roleId));
+
+    if (organizationMembershipRepository.existsByUserIdAndOrganizationIdAndRoleId(
+        userId, organizationId, roleId)) {
+      throw new RoleAlreadyAssignedException(roleId, userId, organizationId);
+    }
+
+    RoleMembership membership = new RoleMembership();
+    membership.setUser(user);
+    membership.setOrganization(organization);
+    membership.setRole(role);
+
+    return roleMembershipMapper.toResponse(organizationMembershipRepository.save(membership));
   }
 
-  private List<Organization> getOrganizationsUserIsPartOf() {
-    User currentUser = userService.getUser(authService.getCurrentUser().getId());
-    return getAll().stream()
-        .filter(
-            org ->
-                org.getUsersInOrganization().stream()
-                    .anyMatch(userOrg -> userOrg.getUser().equals(currentUser)))
-        .toList();
+  private List<ProductResponseDto> getProductsResponse(List<Product> products) {
+    return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
   private boolean doesUserHavePermissionForOrganization(

@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
@@ -16,6 +17,7 @@ import jewellery.inventory.dto.response.resource.DiamondResponseDto;
 import jewellery.inventory.helper.OrganizationTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.model.Organization;
+import jewellery.inventory.model.Permission;
 import jewellery.inventory.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   private User buyer;
   private DiamondResponseDto diamond;
+  private Organization organizationSeller;
 
   private String buildUrl(String... paths) {
     return "/" + String.join("/", paths);
@@ -61,6 +64,8 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
 
   @BeforeEach
   void setUp() {
+    organizationSeller =
+        createOrganizationInDatabase(OrganizationTestHelper.getTestOrganizationRequest());
     buyer = createUserInDatabase(createDifferentUserRequest());
     diamond = createDiamondInDatabase();
   }
@@ -88,6 +93,61 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().isEmpty());
+  }
+
+  @Test
+  void
+      getAllPurchasedResourcesShouldReturnEmptyArrayWhenUserHasNoResourceReadAndSaleReadPermissions() {
+    createSaleInOrganization();
+    authenticateAs(buyer);
+
+    ResponseEntity<List<PurchasedResourceQuantityResponseDto>> response =
+        testRestTemplate.exchange(
+            getBaseResourceAvailabilityUrl() + "/" + buyer.getId(),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<PurchasedResourceQuantityResponseDto>>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(0, response.getBody().size());
+  }
+
+  @Test
+  void getAllPurchasedResourcesShouldReturnEmptyArrayWhenUserHasNoResourceReadPermissions() {
+    createSaleInOrganization();
+    Set<Permission> permissions = Set.of(Permission.ORGANIZATION_SALE_READ);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(buyer.getId(), organizationSeller.getId(), newRole.getId());
+    authenticateAs(buyer);
+
+    ResponseEntity<List<PurchasedResourceQuantityResponseDto>> response =
+        testRestTemplate.exchange(
+            getBaseResourceAvailabilityUrl() + "/" + buyer.getId(),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<PurchasedResourceQuantityResponseDto>>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(0, response.getBody().size());
+  }
+
+  @Test
+  void getAllPurchasedResourcesShouldReturnEmptyArrayWhenUserHasNoSaleReadPermissions() {
+    createSaleInOrganization();
+    Set<Permission> permissions = Set.of(Permission.ORGANIZATION_RESOURCE_READ);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(buyer.getId(), organizationSeller.getId(), newRole.getId());
+    authenticateAs(buyer);
+
+    ResponseEntity<List<PurchasedResourceQuantityResponseDto>> response =
+        testRestTemplate.exchange(
+            getBaseResourceAvailabilityUrl() + "/" + buyer.getId(),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<PurchasedResourceQuantityResponseDto>>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(0, response.getBody().size());
   }
 
   private Organization createOrganizationInDatabase(
@@ -129,9 +189,6 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   }
 
   private void createSaleInOrganization() {
-    Organization organizationSeller =
-        createOrganizationInDatabase(OrganizationTestHelper.getTestOrganizationRequest());
-
     ResourceInOrganizationRequestDto resourceInOrganizationRequestDto =
         createResourceInOrganizationRequestDto(
             organizationSeller.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);

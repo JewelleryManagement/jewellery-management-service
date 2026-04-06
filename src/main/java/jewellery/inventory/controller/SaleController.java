@@ -11,6 +11,7 @@ import jewellery.inventory.dto.response.ResourceReturnResponseDto;
 import jewellery.inventory.service.SaleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +23,8 @@ public class SaleController {
 
   @Operation(summary = "Create sale from organization to user")
   @ResponseStatus(HttpStatus.CREATED)
+  @PreAuthorize(
+      "@orgAuth.hasOrganizationPermission(#saleRequestDto.sellerId, 'ORGANIZATION_SALE_CREATE')")
   @PostMapping
   public OrganizationSaleResponseDto createSale(@Valid @RequestBody SaleRequestDto saleRequestDto) {
     return saleService.createSale(saleRequestDto);
@@ -29,6 +32,7 @@ public class SaleController {
 
   @Operation(summary = "Return of a sold product from user to organization")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@orgAuth.hasPermissionForProduct(#productId, 'ORGANIZATION_SALE_PRODUCT_RETURN')")
   @PutMapping("/return-product/{productId}")
   public ProductReturnResponseDto returnProduct(@PathVariable("productId") UUID productId) {
     return saleService.returnProduct(productId);
@@ -36,6 +40,7 @@ public class SaleController {
 
   @Operation(summary = "Return of a sold resource from user to organization")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@orgAuth.hasPermissionForSale(#saleId, 'ORGANIZATION_SALE_RESOURCE_RETURN')")
   @PutMapping("/{saleId}/return-resource/{resourceId}")
   public ResourceReturnResponseDto returnResource(
       @PathVariable("saleId") UUID saleId, @PathVariable("resourceId") UUID resourceId) {
@@ -51,6 +56,7 @@ public class SaleController {
 
   @Operation(summary = "Get sale from organization to user")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@orgAuth.hasPermissionForSale(#saleId, 'ORGANIZATION_SALE_READ')")
   @GetMapping("/{saleId}")
   public OrganizationSaleResponseDto getSale(@PathVariable("saleId") UUID saleId) {
     return saleService.getSale(saleId);

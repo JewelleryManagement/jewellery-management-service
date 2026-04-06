@@ -9,13 +9,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.common.lang.Nullable;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
+import java.util.UUID;
+import jewellery.inventory.dto.request.ScopedRoleRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.response.ScopedRoleResponseDto;
 import jewellery.inventory.helper.SystemEventTestHelper;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.Image;
+import jewellery.inventory.model.Permission;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.ImageService;
+import jewellery.inventory.service.OrganizationService;
+import jewellery.inventory.service.ScopedRoleService;
 import jewellery.inventory.service.security.JwtTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +41,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 public abstract class AuthenticatedIntegrationTestBase {
+  private static final String ADMIN_ROLE_NAME = "ORGANIZATION_ADMIN";
 
   @Autowired protected ObjectMapper objectMapper;
 
@@ -48,6 +57,10 @@ public abstract class AuthenticatedIntegrationTestBase {
   @Autowired private ResourceInProductRepository resourceInProductRepository;
   @Autowired private PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   @Autowired private ResourceInOrganizationRepository resourceInOrganizationRepository;
+  @Autowired private ScopedRoleRepository scopedRoleRepository;
+  @Autowired private OrganizationMembershipRepository organizationMembershipRepository;
+  @Autowired private ScopedRoleService scopedRoleService;
+  @Autowired private OrganizationService organizationService;
 
   @Autowired private ImageService imageService;
   @Autowired private ImageRepository imageRepository;
@@ -65,12 +78,60 @@ public abstract class AuthenticatedIntegrationTestBase {
     userRepository.deleteAll();
     resourceRepository.deleteAll();
     resourceInProductRepository.deleteAll();
+    scopedRoleRepository.deleteAll();
+    organizationMembershipRepository.deleteAll();
     loggedInAdminUser = createTestAdminUser();
-    setupMockSecurityContext(loggedInAdminUser);
+    authenticateAs(loggedInAdminUser);
     setupTestRestTemplateWithAuthHeaders();
     loggedInAdminUser.setId(
         createUserInDatabase(UserTestHelper.getTestUserRequest(loggedInAdminUser)).getId());
+    createRoleWithAllPermissions();
     systemEventRepository.deleteAll();
+  }
+
+  protected String generateTokenForUser(User user) {
+    try {
+      return jwtService.generateToken(user);
+    } catch (Exception e) {
+      throw new RuntimeException("Error generating token for mock user", e);
+    }
+  }
+
+  private void createRoleWithAllPermissions() {
+    Set<Permission> permissions = EnumSet.allOf(Permission.class);
+    ScopedRoleRequestDto scopedRoleRequestDto = new ScopedRoleRequestDto(ADMIN_ROLE_NAME, permissions);
+    scopedRoleService.createRole(scopedRoleRequestDto);
+  }
+
+  protected ScopedRoleResponseDto createRole(String roleName, Set<Permission> permissions) {
+    ScopedRoleRequestDto scopedRoleRequestDto = new ScopedRoleRequestDto(roleName, permissions);
+    return scopedRoleService.createRole(scopedRoleRequestDto);
+  }
+
+  protected void createRoleMembership(UUID userId, UUID organizationId, UUID roleId) {
+    organizationService.assignRoleToUserInOrganization(userId, organizationId, roleId);
+  }
+
+  protected void authenticateAs(User user) {
+    String mockToken = generateTokenForUser(user);
+    when(userDetailsService.loadUserByUsername(anyString())).thenReturn(user);
+    headers = new HttpHeaders();
+    headers.setBearerAuth(mockToken);
+  }
+
+  protected void setupTestRestTemplateWithAuthHeaders() {
+    testRestTemplate
+        .getRestTemplate()
+        .setInterceptors(
+            Collections.singletonList(
+                (request, body, execution) -> {
+                  request.getHeaders().addAll(headers);
+                  return execution.execute(request, body);
+                }));
+  }
+
+  protected User createAndPersistUser(UserRequestDto userRequestDto) {
+    return createUserInDatabase(userRequestDto);
   }
 
   private void deleteAllImages() {
@@ -83,32 +144,6 @@ public abstract class AuthenticatedIntegrationTestBase {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  protected String generateTokenForUser(User user) {
-    try {
-      return jwtService.generateToken(user);
-    } catch (Exception e) {
-      throw new RuntimeException("Error generating token for mock user", e);
-    }
-  }
-
-  private void setupMockSecurityContext(User user) {
-    String mockToken = generateTokenForUser(user);
-    when(userDetailsService.loadUserByUsername(anyString())).thenReturn(user);
-    headers = new HttpHeaders();
-    headers.setBearerAuth(mockToken);
-  }
-
-  private void setupTestRestTemplateWithAuthHeaders() {
-    testRestTemplate
-        .getRestTemplate()
-        .setInterceptors(
-            Collections.singletonList(
-                (request, body, execution) -> {
-                  request.getHeaders().addAll(headers);
-                  return execution.execute(request, body);
-                }));
   }
 
   @Nullable

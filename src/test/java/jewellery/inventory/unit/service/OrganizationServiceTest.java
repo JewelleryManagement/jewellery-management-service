@@ -3,30 +3,34 @@ package jewellery.inventory.unit.service;
 import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizationRequest;
 import static jewellery.inventory.helper.ProductTestHelper.getTestProduct;
+import static jewellery.inventory.helper.ScopedRoleHelper.createRole;
+import static jewellery.inventory.helper.ScopedRoleHelper.createRoleRequest;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.util.*;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
+import jewellery.inventory.dto.request.ScopedRoleRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
+import jewellery.inventory.exception.not_found.RoleNotFoundException;
+import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.OrphanProductsInOrganizationException;
 import jewellery.inventory.exception.organization.OrphanResourcesInOrganizationException;
-import jewellery.inventory.helper.OrganizationTestHelper;
-import jewellery.inventory.helper.ResourceInOrganizationTestHelper;
-import jewellery.inventory.helper.ResourceTestHelper;
-import jewellery.inventory.helper.UserTestHelper;
+import jewellery.inventory.exception.role.RoleAlreadyAssignedException;
+import jewellery.inventory.helper.*;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.mapper.ProductMapper;
+import jewellery.inventory.mapper.RoleMembershipMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
+import jewellery.inventory.repository.OrganizationMembershipRepository;
 import jewellery.inventory.repository.OrganizationRepository;
+import jewellery.inventory.repository.ScopedRoleRepository;
 import jewellery.inventory.repository.UserInOrganizationRepository;
-import jewellery.inventory.service.OrganizationService;
-import jewellery.inventory.service.UserInOrganizationService;
-import jewellery.inventory.service.UserService;
+import jewellery.inventory.service.*;
 import jewellery.inventory.service.security.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,6 +49,11 @@ class OrganizationServiceTest {
   @Mock private AuthService authService;
   @Mock private UserService userService;
   @Mock private UserInOrganizationRepository userInOrganizationRepository;
+  @Mock private ScopedRoleService scopedRoleService;
+  @Mock private ScopedRoleRepository scopedRoleRepository;
+  @Mock private OrganizationMembershipRepository organizationMembershipRepository;
+  @Mock private RoleMembershipMapper roleMembershipMapper;
+  @Mock private OrganizationAuthorizationService organizationAuthorizationService;
   private Organization organization;
   private Organization organizationWithUserAllPermission;
   private Organization organizationWithNoUserPermissions;
@@ -57,6 +66,8 @@ class OrganizationServiceTest {
   private ResourceInOrganization resourceInOrganization;
   private Organization organizationWithProduct;
   private UserInOrganization userInOrganization;
+  private ScopedRoleRequestDto scopedRoleRequestDto;
+  private ScopedRole adminRole;
 
   @BeforeEach
   void setUp() {
@@ -81,14 +92,17 @@ class OrganizationServiceTest {
     organizationWithProduct =
         setProductAndResourcesToOrganization(
             OrganizationTestHelper.getTestOrganization(), product, resourceInOrganization);
+    scopedRoleRequestDto = createRoleRequest();
+    adminRole = createRole(scopedRoleRequestDto);
   }
 
   @Test
   void testGetAllOrganizations() {
     List<Organization> organizations = List.of(organizationWithUserAllPermission);
-    when(organizationRepository.findAll()).thenReturn(organizations);
     when(authService.getCurrentUser()).thenReturn(userResponseDto);
-    when(userService.getUser(user.getId())).thenReturn(user);
+    when(organizationRepository.findOrganizationsByUserIdAndPermission(
+            userResponseDto.getId(), Permission.ORGANIZATION_READ))
+        .thenReturn(organizations);
 
     List<OrganizationResponseDto> responses =
         organizationService.getAllOrganizationsResponsesForCurrentUser();
@@ -98,10 +112,8 @@ class OrganizationServiceTest {
 
   @Test
   void testGetOrganizationWhenItsFound() {
-
     when(organizationRepository.findById(organization.getId()))
         .thenReturn(Optional.of(organization));
-
     OrganizationResponseDto response = new OrganizationResponseDto();
     when(organizationMapper.toResponse(any())).thenReturn(response);
 
@@ -121,11 +133,30 @@ class OrganizationServiceTest {
     when(authService.getCurrentUser()).thenReturn(userResponseDto);
     when(userService.getUser(user.getId())).thenReturn(user);
     when(organizationRepository.save(organization)).thenReturn(organization);
+    when(scopedRoleService.getRoleByName(scopedRoleRequestDto.getName())).thenReturn(adminRole);
+    when(organizationRepository.findById(organization.getId()))
+        .thenReturn(Optional.of(organization));
+    when(scopedRoleRepository.findById(adminRole.getId())).thenReturn(Optional.of(adminRole));
+    when(organizationMembershipRepository.existsByUserIdAndOrganizationIdAndRoleId(
+            user.getId(), organization.getId(), adminRole.getId()))
+        .thenReturn(false);
     when(organizationMapper.toResponse(organization)).thenReturn(organizationResponseDto);
 
     OrganizationResponseDto actual = organizationService.create(organizationRequestDto);
+
     assertNotNull(actual);
-    assertEquals(actual, organizationResponseDto);
+    assertEquals(organizationResponseDto, actual);
+    verify(organizationMapper, times(1)).toEntity(organizationRequestDto);
+    verify(authService, times(2)).getCurrentUser();
+    verify(userService, times(2)).getUser(user.getId());
+    verify(organizationRepository, times(1)).save(organization);
+    verify(scopedRoleService, times(1)).getRoleByName(scopedRoleRequestDto.getName());
+    verify(organizationRepository, times(1)).findById(organization.getId());
+    verify(scopedRoleRepository, times(1)).findById(adminRole.getId());
+    verify(organizationMembershipRepository, times(1))
+        .existsByUserIdAndOrganizationIdAndRoleId(
+            user.getId(), organization.getId(), adminRole.getId());
+    verify(organizationMapper, times(1)).toResponse(organization);
   }
 
   @Test
@@ -221,6 +252,92 @@ class OrganizationServiceTest {
             organizationWithProduct, List.of(productResponseDto));
     assertNotNull(products);
     assertEquals(1, products.getProducts().size());
+  }
+
+  @Test
+  void assignRoleToUserInOrganizationSuccessfully() {
+    when(userService.getUser(user.getId())).thenReturn(user);
+    when(organizationRepository.findById(organization.getId()))
+        .thenReturn(Optional.ofNullable(organization));
+    ScopedRole adminRole =
+        new ScopedRole(UUID.randomUUID(), "Admin", EnumSet.allOf(Permission.class));
+    when(scopedRoleRepository.findById(adminRole.getId())).thenReturn(Optional.of(adminRole));
+    when(organizationMembershipRepository.existsByUserIdAndOrganizationIdAndRoleId(
+            user.getId(), organization.getId(), adminRole.getId()))
+        .thenReturn(false);
+
+    organizationService.assignRoleToUserInOrganization(
+        user.getId(), organization.getId(), adminRole.getId());
+
+    verify(userService, times(1)).getUser(user.getId());
+    verify(organizationRepository, times(1)).findById(organization.getId());
+    verify(scopedRoleRepository, times(1)).findById(adminRole.getId());
+    verify(organizationMembershipRepository, times(1))
+        .existsByUserIdAndOrganizationIdAndRoleId(
+            user.getId(), organization.getId(), adminRole.getId());
+  }
+
+  @Test
+  void assignRoleToUserInOrganizationShouldThrowWhenUserDoesNotExists() {
+    when(userService.getUser(user.getId())).thenThrow(UserNotFoundException.class);
+    ScopedRole adminRole =
+        new ScopedRole(UUID.randomUUID(), "Admin", EnumSet.allOf(Permission.class));
+
+    assertThrows(
+        UserNotFoundException.class,
+        () ->
+            organizationService.assignRoleToUserInOrganization(
+                user.getId(), organization.getId(), adminRole.getId()));
+  }
+
+  @Test
+  void assignRoleToUserInOrganizationShouldThrowWhenOrganizationDoesNotExists() {
+    when(userService.getUser(user.getId())).thenReturn(user);
+    when(organizationRepository.findById(organization.getId()))
+        .thenThrow(OrganizationNotFoundException.class);
+    ScopedRole adminRole =
+        new ScopedRole(UUID.randomUUID(), "Admin", EnumSet.allOf(Permission.class));
+
+    assertThrows(
+        OrganizationNotFoundException.class,
+        () ->
+            organizationService.assignRoleToUserInOrganization(
+                user.getId(), organization.getId(), adminRole.getId()));
+  }
+
+  @Test
+  void assignRoleToUserInOrganizationShouldThrowWhenRoleDoesNotExists() {
+    when(userService.getUser(user.getId())).thenReturn(user);
+    when(organizationRepository.findById(organization.getId()))
+        .thenReturn(Optional.ofNullable(organization));
+    ScopedRole adminRole =
+        new ScopedRole(UUID.randomUUID(), "Admin", EnumSet.allOf(Permission.class));
+    when(scopedRoleRepository.findById(adminRole.getId())).thenThrow(RoleNotFoundException.class);
+
+    assertThrows(
+        RoleNotFoundException.class,
+        () ->
+            organizationService.assignRoleToUserInOrganization(
+                user.getId(), organization.getId(), adminRole.getId()));
+  }
+
+  @Test
+  void assignRoleToUserInOrganizationShouldThrowWhenMembershipAlreadyExists() {
+    when(userService.getUser(user.getId())).thenReturn(user);
+    when(organizationRepository.findById(organization.getId()))
+        .thenReturn(Optional.ofNullable(organization));
+    ScopedRole adminRole =
+        new ScopedRole(UUID.randomUUID(), "Admin", EnumSet.allOf(Permission.class));
+    when(scopedRoleRepository.findById(adminRole.getId())).thenReturn(Optional.of(adminRole));
+    when(organizationMembershipRepository.existsByUserIdAndOrganizationIdAndRoleId(
+            user.getId(), organization.getId(), adminRole.getId()))
+        .thenThrow(RoleAlreadyAssignedException.class);
+
+    assertThrows(
+        RoleAlreadyAssignedException.class,
+        () ->
+            organizationService.assignRoleToUserInOrganization(
+                user.getId(), organization.getId(), adminRole.getId()));
   }
 
   private ProductResponseDto productToResponse(Product product) {

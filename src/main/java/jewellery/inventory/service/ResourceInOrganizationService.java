@@ -3,6 +3,7 @@ package jewellery.inventory.service;
 import static jewellery.inventory.model.EventType.ORGANIZATION_REMOVE_RESOURCE_QUANTITY;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
@@ -16,12 +17,11 @@ import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.not_found.ResourceInOrganizationNotFoundException;
 import jewellery.inventory.mapper.ResourceInOrganizationMapper;
-import jewellery.inventory.model.EventType;
-import jewellery.inventory.model.Organization;
-import jewellery.inventory.model.OrganizationPermission;
-import jewellery.inventory.model.ResourceInOrganization;
+import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
+import jewellery.inventory.repository.OrganizationRepository;
 import jewellery.inventory.repository.ResourceInOrganizationRepository;
+import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,6 +36,8 @@ public class ResourceInOrganizationService implements EntityFetcher {
   private final OrganizationService organizationService;
   private final ResourceService resourceService;
   private final ResourceInOrganizationMapper resourceInOrganizationMapper;
+  private final OrganizationRepository organizationRepository;
+  private final AuthService authService;
   private static final BigDecimal EPSILON = new BigDecimal("1e-10");
 
   @Transactional
@@ -113,11 +115,18 @@ public class ResourceInOrganizationService implements EntityFetcher {
 
   public ResourceOwnedByOrganizationsResponseDto getOrganizationsAndQuantities(UUID resourceId) {
     Resource resource = resourceService.getResourceById(resourceId);
-    return resourceInOrganizationMapper.toResourcesOwnedByOrganizationsResponseDto(resource);
+    UUID currentUserId = authService.getCurrentUser().getId();
+
+    List<ResourceInOrganization> allowedAffiliations =
+        resourceInOrganizationRepository.findAllByResourceIdAndUserIdAndPermission(
+            resourceId, currentUserId, Permission.ORGANIZATION_RESOURCE_READ);
+
+    return resourceInOrganizationMapper.toResourcesOwnedByOrganizationsResponseDto(
+        resource, allowedAffiliations);
   }
 
   public ResourcesInOrganizationResponseDto removeQuantityFromResourceNoLog(
-          UUID organizationId, UUID resourceId, BigDecimal quantity) {
+      UUID organizationId, UUID resourceId, BigDecimal quantity) {
     Organization organization = organizationService.getOrganization(organizationId);
 
     organizationService.validateCurrentUserPermission(

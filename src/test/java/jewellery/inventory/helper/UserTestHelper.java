@@ -110,6 +110,7 @@ public class UserTestHelper {
     userRequest.setLastName("different_last_name");
     userRequest.setEmail("user@example.com");
     userRequest.setPassword(USER_PASSWORD);
+    userRequest.setRole(Role.ADMIN);
     return userRequest;
   }
 

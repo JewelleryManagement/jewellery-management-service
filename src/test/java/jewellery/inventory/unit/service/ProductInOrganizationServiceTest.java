@@ -3,6 +3,7 @@ package jewellery.inventory.unit.service;
 import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static jewellery.inventory.helper.ProductTestHelper.getProductRequestDtoForOrganization;
 import static jewellery.inventory.helper.ProductTestHelper.getTestProduct;
+import static jewellery.inventory.helper.UserTestHelper.createTestUserResponseDto;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -13,6 +14,7 @@ import java.util.Optional;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.not_found.ProductNotFoundException;
 import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
@@ -32,6 +34,7 @@ import jewellery.inventory.service.OrganizationService;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.ResourceInOrganizationService;
 import jewellery.inventory.service.UserService;
+import jewellery.inventory.service.security.AuthService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,6 +53,7 @@ class ProductInOrganizationServiceTest {
   @Mock private ProductMapper productMapper;
   @Mock private UserService userService;
   @Mock private OrganizationRepository organizationRepository;
+  @Mock private AuthService authService;
   private static final BigDecimal QUANTITY = BigDecimal.valueOf(30);
   private Organization organization;
   private Organization organizationWithProduct;
@@ -61,10 +65,12 @@ class ProductInOrganizationServiceTest {
   private User user;
   private UserInOrganization userInOrganization;
   private ProductsInOrganizationResponseDto productsInOrganizationResponseDto;
+  private UserResponseDto userResponseDto;
 
   @BeforeEach
   void setUp() {
     user = UserTestHelper.createSecondTestUser();
+    userResponseDto = createTestUserResponseDto(user);
     organization = OrganizationTestHelper.getTestOrganization();
     userInOrganization = createUserInOrganizationAllPermissions(user, organization);
     organization.setUsersInOrganization(List.of(userInOrganization));
@@ -329,18 +335,31 @@ class ProductInOrganizationServiceTest {
   }
 
   @Test
-  void getAllProductsByResourceReturnsEmptyArrayWhenResourceIsNotPartOfProduct(){
-    List<ProductResponseDto> products= productService.getAllProductsByResource(resourceInOrganization.getId());
-    assertEquals(0,products.size());
+  void getAllProductsByResourceReturnsEmptyArrayWhenResourceIsNotPartOfProduct() {
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
+
+    List<ProductResponseDto> products =
+        productService.getAllProductsByResource(resourceInOrganization.getId());
+    assertEquals(0, products.size());
   }
 
   @Test
-  void getAllProductsByResourceSuccessfully(){
-    when(productRepository.findAllByResourceId(resourceInOrganization.getId())).thenReturn(List.of(product));
+  void getAllProductsByResourceSuccessfully() {
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
+    when(productRepository.findAllByResourceIdAndUserIdAndPermission(
+            resourceInOrganization.getId(),
+            userResponseDto.getId(),
+            Permission.ORGANIZATION_PRODUCT_READ))
+        .thenReturn(List.of(product));
 
-    List<ProductResponseDto> products= productService.getAllProductsByResource(resourceInOrganization.getId());
-    assertEquals(1,products.size());
-    verify(productRepository, times(1)).findAllByResourceId(resourceInOrganization.getId());
+    List<ProductResponseDto> products =
+        productService.getAllProductsByResource(resourceInOrganization.getId());
+    assertEquals(1, products.size());
+    verify(productRepository, times(1))
+        .findAllByResourceIdAndUserIdAndPermission(
+            resourceInOrganization.getId(),
+            userResponseDto.getId(),
+            Permission.ORGANIZATION_PRODUCT_READ);
   }
 
   private ProductResponseDto productToResponse(Product product) {

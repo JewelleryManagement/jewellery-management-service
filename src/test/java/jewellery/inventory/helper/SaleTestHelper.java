@@ -227,7 +227,7 @@ public class SaleTestHelper {
   }
 
   public static SaleRequestDto getSaleInOrganizationRequestDto(
-      Organization seller,
+      OrganizationResponseDto seller,
       User buyer,
       ProductsInOrganizationResponseDto productsInOrganizationResponseDto,
       ResourcesInOrganizationResponseDto resourcesInOrganizationResponseDto,
