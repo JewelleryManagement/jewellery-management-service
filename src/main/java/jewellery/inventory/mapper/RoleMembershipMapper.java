@@ -7,11 +7,11 @@ import org.mapstruct.Mapping;
 
 @Mapper(
     componentModel = "spring",
-    uses = {UserMapper.class, OrganizationMapper.class, RoleMapper.class})
+    uses = {UserMapper.class, OrganizationMapper.class, ScopedRoleMapper.class})
 public interface RoleMembershipMapper {
 
   @Mapping(target = "userResponseDto", source = "user")
   @Mapping(target = "organizationResponseDto", source = "organization")
-  @Mapping(target = "roleResponseDto", source = "role")
+  @Mapping(target = "scopedRoleResponseDto", source = "role")
   RoleMembershipResponseDto toResponse(RoleMembership entity);
 }

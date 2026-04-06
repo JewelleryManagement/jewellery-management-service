@@ -452,7 +452,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     authenticateAs(deniedUser);
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_RESOURCE_TRANSFER);
-    RoleResponseDto newRole = createRole("Test", permissions);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
     createRoleMembership(
         deniedUser.getId(), newOwnerOrganizationResponseDto.getId(), newRole.getId());
 
@@ -489,7 +489,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     authenticateAs(deniedUser);
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_RESOURCE_TRANSFER);
-    RoleResponseDto newRole = createRole("Test", permissions);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
     createRoleMembership(deniedUser.getId(), organizationResponseDto.getId(), newRole.getId());
 
     ResponseEntity<String> response =

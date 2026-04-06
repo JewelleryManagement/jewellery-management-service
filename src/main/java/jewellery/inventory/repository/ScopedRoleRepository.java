@@ -3,15 +3,16 @@ package jewellery.inventory.repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import jewellery.inventory.model.OrganizationRole;
+
 import jewellery.inventory.model.Permission;
+import jewellery.inventory.model.ScopedRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-public interface RoleRepository extends JpaRepository<OrganizationRole, UUID> {
+public interface ScopedRoleRepository extends JpaRepository<ScopedRole, UUID> {
   boolean existsByName(String name);
 
-  Optional<OrganizationRole> findByName(String name);
+  Optional<ScopedRole> findByName(String name);
 
   @Query(
 """
@@ -25,7 +26,7 @@ public interface RoleRepository extends JpaRepository<OrganizationRole, UUID> {
       AND currentMembership.user.id = :currentUserId
       AND permission = :permission
 """)
-  List<OrganizationRole> findVisibleRolesForUser(
+  List<ScopedRole> findVisibleRolesForUser(
       UUID targetUserId, UUID currentUserId, Permission permission);
 
   @Query(
@@ -41,6 +42,6 @@ public interface RoleRepository extends JpaRepository<OrganizationRole, UUID> {
       AND currentMembership.user.id = :currentUserId
       AND permission = :permission
 """)
-  List<OrganizationRole> findVisibleRolesForUserByOrganization(
+  List<ScopedRole> findVisibleRolesForUserByOrganization(
       UUID targetUserId, UUID currentUserId, UUID organizationId, Permission permission);
 }

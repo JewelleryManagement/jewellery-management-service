@@ -9,5 +9,5 @@ public class RoleMembershipResponseDto {
   private UUID id;
   private UserResponseDto userResponseDto;
   private OrganizationResponseDto organizationResponseDto;
-  private RoleResponseDto roleResponseDto;
+  private ScopedRoleResponseDto scopedRoleResponseDto;
 }

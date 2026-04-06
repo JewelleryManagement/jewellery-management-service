@@ -91,7 +91,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         this.testRestTemplate.getForEntity(
             getOrganizationByIdUrl(UUID.randomUUID()), OrganizationResponseDto.class);
 
-    assertEquals(response.getStatusCode(), HttpStatusCode.valueOf(404));
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
   }
 
   @Test
@@ -265,7 +265,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     authenticateAs(deniedUser);
 
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_READ);
-    RoleResponseDto newRole = createRole("Test", permissions);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
     createRoleMembership(deniedUser.getId(), secondOrganization.getId(), newRole.getId());
 
     ResponseEntity<List<OrganizationResponseDto>> response =
@@ -386,7 +386,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
   void assignRoleToUserInOrganizationShouldThrowWhenUserNotFound() {
     UUID differentUserId = UUID.randomUUID();
-    RoleResponseDto role = createRole("VIEWER", Set.of(Permission.ORGANIZATION_READ));
+    ScopedRoleResponseDto role = createRole("VIEWER", Set.of(Permission.ORGANIZATION_READ));
 
     ResponseEntity<String> response =
         testRestTemplate.postForEntity(
@@ -425,7 +425,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void assignRoleToUserInOrganizationShouldThrowWhenRoleAlreadyAssignedToThisUser() {
     OrganizationSingleMemberResponseDto userInOrganization =
         addUserInOrganization(organizationResponseDto.getId());
-    RoleResponseDto role = createRole("VIEWER", Set.of(Permission.ORGANIZATION_READ));
+    ScopedRoleResponseDto role = createRole("VIEWER", Set.of(Permission.ORGANIZATION_READ));
     createRoleMembership(
         userInOrganization.getMember().getUser().getId(),
         organizationResponseDto.getId(),
@@ -456,7 +456,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void assignRoleToUserInOrganizationSuccessfully() {
     OrganizationSingleMemberResponseDto userInOrganization =
         addUserInOrganization(organizationResponseDto.getId());
-    RoleResponseDto role = createRole("VIEWER", Set.of(Permission.ORGANIZATION_READ));
+    ScopedRoleResponseDto role = createRole("VIEWER", Set.of(Permission.ORGANIZATION_READ));
     ResponseEntity<RoleMembershipResponseDto> response =
         testRestTemplate.postForEntity(
             getAssignRoleUrl(
@@ -473,14 +473,14 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(
         response.getBody().getUserResponseDto().getId(),
         userInOrganization.getMember().getUser().getId());
-    assertEquals(response.getBody().getRoleResponseDto().getId(), role.getId());
+    assertEquals(response.getBody().getScopedRoleResponseDto().getId(), role.getId());
   }
 
   @Test
   void assignRoleToUserInOrganizationShouldThrowWhenUserHasNoRoleAssignPermission() {
     OrganizationSingleMemberResponseDto userInOrganization =
         addUserInOrganization(organizationResponseDto.getId());
-    RoleResponseDto role = createRole("VIEWER", Set.of(Permission.ORGANIZATION_READ));
+    ScopedRoleResponseDto role = createRole("VIEWER", Set.of(Permission.ORGANIZATION_READ));
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     authenticateAs(deniedUser);
 

@@ -23,7 +23,8 @@ public class SaleController {
 
   @Operation(summary = "Create sale from organization to user")
   @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("@orgAuth.hasOrganizationPermission(#saleRequestDto.sellerId, 'ORGANIZATION_SALE_CREATE')")
+  @PreAuthorize(
+      "@orgAuth.hasOrganizationPermission(#saleRequestDto.sellerId, 'ORGANIZATION_SALE_CREATE')")
   @PostMapping
   public OrganizationSaleResponseDto createSale(@Valid @RequestBody SaleRequestDto saleRequestDto) {
     return saleService.createSale(saleRequestDto);
@@ -55,6 +56,7 @@ public class SaleController {
 
   @Operation(summary = "Get sale from organization to user")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@orgAuth.hasPermissionForSale(#saleId, 'ORGANIZATION_SALE_READ')")
   @GetMapping("/{saleId}")
   public OrganizationSaleResponseDto getSale(@PathVariable("saleId") UUID saleId) {
     return saleService.getSale(saleId);

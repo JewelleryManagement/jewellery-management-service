@@ -12,9 +12,9 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.UUID;
-import jewellery.inventory.dto.request.RoleRequestDto;
+import jewellery.inventory.dto.request.ScopedRoleRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
-import jewellery.inventory.dto.response.RoleResponseDto;
+import jewellery.inventory.dto.response.ScopedRoleResponseDto;
 import jewellery.inventory.helper.SystemEventTestHelper;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.Image;
@@ -23,7 +23,7 @@ import jewellery.inventory.model.User;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.ImageService;
 import jewellery.inventory.service.OrganizationService;
-import jewellery.inventory.service.RoleService;
+import jewellery.inventory.service.ScopedRoleService;
 import jewellery.inventory.service.security.JwtTokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,9 +57,9 @@ public abstract class AuthenticatedIntegrationTestBase {
   @Autowired private ResourceInProductRepository resourceInProductRepository;
   @Autowired private PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   @Autowired private ResourceInOrganizationRepository resourceInOrganizationRepository;
-  @Autowired private RoleRepository roleRepository;
+  @Autowired private ScopedRoleRepository scopedRoleRepository;
   @Autowired private OrganizationMembershipRepository organizationMembershipRepository;
-  @Autowired private RoleService roleService;
+  @Autowired private ScopedRoleService scopedRoleService;
   @Autowired private OrganizationService organizationService;
 
   @Autowired private ImageService imageService;
@@ -78,7 +78,7 @@ public abstract class AuthenticatedIntegrationTestBase {
     userRepository.deleteAll();
     resourceRepository.deleteAll();
     resourceInProductRepository.deleteAll();
-    roleRepository.deleteAll();
+    scopedRoleRepository.deleteAll();
     organizationMembershipRepository.deleteAll();
     loggedInAdminUser = createTestAdminUser();
     authenticateAs(loggedInAdminUser);
@@ -99,13 +99,13 @@ public abstract class AuthenticatedIntegrationTestBase {
 
   private void createRoleWithAllPermissions() {
     Set<Permission> permissions = EnumSet.allOf(Permission.class);
-    RoleRequestDto roleRequestDto = new RoleRequestDto(ADMIN_ROLE_NAME, permissions);
-    roleService.createRole(roleRequestDto);
+    ScopedRoleRequestDto scopedRoleRequestDto = new ScopedRoleRequestDto(ADMIN_ROLE_NAME, permissions);
+    scopedRoleService.createRole(scopedRoleRequestDto);
   }
 
-  protected RoleResponseDto createRole(String roleName, Set<Permission> permissions) {
-    RoleRequestDto roleRequestDto = new RoleRequestDto(roleName, permissions);
-    return roleService.createRole(roleRequestDto);
+  protected ScopedRoleResponseDto createRole(String roleName, Set<Permission> permissions) {
+    ScopedRoleRequestDto scopedRoleRequestDto = new ScopedRoleRequestDto(roleName, permissions);
+    return scopedRoleService.createRole(scopedRoleRequestDto);
   }
 
   protected void createRoleMembership(UUID userId, UUID organizationId, UUID roleId) {

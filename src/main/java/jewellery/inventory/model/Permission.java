@@ -29,9 +29,16 @@ public enum Permission {
   ORGANIZATION_SALE_READ("organization:sale:read"),
   ORGANIZATION_SALE_RESOURCE_RETURN("organization:sale:resource:return"),
   ORGANIZATION_ROLE_ASSIGN("organization:role:assign"),
-  ORGANIZATION_USER_ROLES_READ("organization:user:roles:read"),
+  ORGANIZATION_USER_ROLES_READ("organization:user:roles:read");
 
-  ORGANIZATION_SMTH("SMTH");
+  public static Permission fromValue(String value) {
+    for (Permission permission : values()) {
+      if (permission.getValue().equals(value)) {
+        return permission;
+      }
+    }
+    throw new IllegalArgumentException("Unknown permission value: " + value);
+  }
 
   private final String value;
 }

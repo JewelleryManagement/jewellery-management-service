@@ -350,9 +350,6 @@ class SaleServiceTest {
   @Test
   void testGetSaleSuccessfully() {
     when(saleRepository.findById(sale.getId())).thenReturn(Optional.of(sale));
-    when(organizationAuthorizationService.hasPermissionForSale(
-            sale.getId(), Permission.ORGANIZATION_SALE_READ.name()))
-        .thenReturn(true);
 
     saleService.getSale(sale.getId());
 

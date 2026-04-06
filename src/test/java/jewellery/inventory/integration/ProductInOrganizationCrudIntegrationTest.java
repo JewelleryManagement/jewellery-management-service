@@ -81,7 +81,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   private ProductRequestDto productRequestDto;
   private OrganizationResponseDto organization;
   private UserInOrganizationRequestDto userInOrganizationRequestDto;
-  private RoleResponseDto roleWithAllPermissions;
+  private ScopedRoleResponseDto roleWithAllPermissions;
 
   @BeforeEach
   void setUp() {
@@ -518,7 +518,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     authenticateAs(deniedUser);
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_PRODUCT_TRANSFER);
-    RoleResponseDto newRole = createRole("Test", permissions);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
     createRoleMembership(deniedUser.getId(), createSecondOrganization.getId(), newRole.getId());
 
     ResponseEntity<String> response =
@@ -549,7 +549,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     authenticateAs(deniedUser);
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_PRODUCT_TRANSFER);
-    RoleResponseDto newRole = createRole("Test", permissions);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
     createRoleMembership(deniedUser.getId(), organization.getId(), newRole.getId());
 
     ResponseEntity<String> response =
@@ -605,7 +605,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             productRequestDto, organization2.getId(), diamond.getId(), RESOURCE_QUANTITY));
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_PRODUCT_READ);
-    RoleResponseDto newRole = createRole("Test", permissions);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
     createRoleMembership(deniedUser.getId(), organization.getId(), newRole.getId());
     authenticateAs(deniedUser);
 
@@ -713,7 +713,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             SALE_DISCOUNT);
     createSaleInOrganization(saleRequestDto);
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_PRODUCT_READ);
-    RoleResponseDto newRole = createRole("Test", permissions);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
     createRoleMembership(buyer.getId(), organization.getId(), newRole.getId());
     authenticateAs(buyer);
 
@@ -751,7 +751,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             SALE_DISCOUNT);
     createSaleInOrganization(saleRequestDto);
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_SALE_READ);
-    RoleResponseDto newRole = createRole("Test", permissions);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
     createRoleMembership(buyer.getId(), organization.getId(), newRole.getId());
     authenticateAs(buyer);
 
@@ -812,7 +812,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     createSaleInOrganization(saleRequestDto2);
     Set<Permission> permissions =
         Set.of(Permission.ORGANIZATION_SALE_READ, Permission.ORGANIZATION_PRODUCT_READ);
-    RoleResponseDto newRole = createRole("Test", permissions);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
     createRoleMembership(buyer.getId(), newOrganization.getId(), newRole.getId());
     authenticateAs(buyer);
 

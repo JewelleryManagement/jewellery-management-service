@@ -34,6 +34,7 @@ public class OrganizationController {
 
   @Operation(summary = "Get organization by id")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@orgAuth.hasOrganizationPermission(#id, 'ORGANIZATION_READ')")
   @GetMapping("/{id}")
   public OrganizationResponseDto getOrganizationById(@PathVariable UUID id) {
     return organizationService.getOrganizationResponse(id);
@@ -86,7 +87,8 @@ public class OrganizationController {
 
   @Operation(summary = "Update a user permissions in organization")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_PERMISSION_UPDATE')")
+  @PreAuthorize(
+      "@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_PERMISSION_UPDATE')")
   @PutMapping("{organizationId}/users/{userId}")
   public OrganizationSingleMemberResponseDto updateUserPermissionsInOrganization(
       @PathVariable UUID organizationId,

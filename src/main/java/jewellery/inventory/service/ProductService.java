@@ -28,7 +28,6 @@ import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,18 +64,8 @@ public class ProductService implements EntityFetcher {
   }
 
   public ProductResponseDto getProductResponse(UUID id) {
-    Product product = getProduct(id);
-
-    boolean hasPermission =
-        organizationAuthorizationService.hasPermissionForProduct(
-            id, Permission.ORGANIZATION_PRODUCT_READ.name());
-
-    if (!hasPermission) {
-      throw new AccessDeniedException("You do not have permission to read this product");
-    }
-
     logger.info("Get productResponse by ID: {}", id);
-    return productMapper.mapToProductResponseDto(product);
+    return productMapper.mapToProductResponseDto(getProduct(id));
   }
 
   public Product saveProduct(Product product) {

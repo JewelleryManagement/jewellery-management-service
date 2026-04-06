@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(
-    name = "organization_memberships",
+    name = "role_memberships",
     uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id", "organization_id"})})
 public class RoleMembership {
 
@@ -28,5 +28,5 @@ public class RoleMembership {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "role_id", nullable = false)
-  private OrganizationRole role;
+  private ScopedRole role;
 }

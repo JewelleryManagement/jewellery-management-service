@@ -25,7 +25,6 @@ import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -135,18 +134,8 @@ public class SaleService {
   }
 
   public OrganizationSaleResponseDto getSale(UUID saleId) {
-    Sale sale = getSaleById(saleId);
-
-    boolean hasPermission =
-        organizationAuthorizationService.hasPermissionForSale(
-            saleId, Permission.ORGANIZATION_SALE_READ.name());
-
-    if (!hasPermission) {
-      throw new AccessDeniedException("You do not have permission to read this sale");
-    }
-
     logger.debug("Fetching a Sale from organization");
-    return saleMapper.mapToOrganizationSaleResponseDto(sale);
+    return saleMapper.mapToOrganizationSaleResponseDto(getSaleById(saleId));
   }
 
   public Sale getSaleById(UUID saleId) {

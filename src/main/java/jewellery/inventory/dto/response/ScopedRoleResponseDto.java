@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class RoleResponseDto {
+public class ScopedRoleResponseDto {
   private UUID id;
   private String name;
   private Set<Permission> permissions;

@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class RoleRequestDto {
+public class ScopedRoleRequestDto {
   private String name;
   private Set<Permission> permissions;
 }

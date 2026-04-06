@@ -747,7 +747,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             SALE_DISCOUNT);
     createSaleInOrganization(saleRequestDto2);
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_SALE_READ);
-    RoleResponseDto newRole = createRole("Test", permissions);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
     createRoleMembership(buyer.getId(), organizationSeller.getId(), newRole.getId());
     authenticateAs(buyer);
 

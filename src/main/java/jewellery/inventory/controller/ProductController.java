@@ -35,6 +35,7 @@ public class ProductController {
 
   @Operation(summary = "Get a single product")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@orgAuth.hasPermissionForProduct(#id, 'ORGANIZATION_PRODUCT_READ')")
   @GetMapping("/{id}")
   public ProductResponseDto getProduct(@PathVariable("id") UUID id) {
     return productService.getProductResponse(id);
@@ -70,7 +71,8 @@ public class ProductController {
 
   @Operation(summary = "Create a new product")
   @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("@orgAuth.hasOrganizationPermission(#productRequestDto.ownerId, 'ORGANIZATION_PRODUCT_CREATE')")
+  @PreAuthorize(
+      "@orgAuth.hasOrganizationPermission(#productRequestDto.ownerId, 'ORGANIZATION_PRODUCT_CREATE')")
   @PostMapping
   public ProductsInOrganizationResponseDto createProduct(
       @RequestBody @Valid ProductRequestDto productRequestDto) {

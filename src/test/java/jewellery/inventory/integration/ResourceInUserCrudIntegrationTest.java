@@ -116,7 +116,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   void getAllPurchasedResourcesShouldReturnEmptyArrayWhenUserHasNoResourceReadPermissions() {
     createSaleInOrganization();
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_SALE_READ);
-    RoleResponseDto newRole = createRole("Test", permissions);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
     createRoleMembership(buyer.getId(), organizationSeller.getId(), newRole.getId());
     authenticateAs(buyer);
 
@@ -135,7 +135,7 @@ class ResourceInUserCrudIntegrationTest extends AuthenticatedIntegrationTestBase
   void getAllPurchasedResourcesShouldReturnEmptyArrayWhenUserHasNoSaleReadPermissions() {
     createSaleInOrganization();
     Set<Permission> permissions = Set.of(Permission.ORGANIZATION_RESOURCE_READ);
-    RoleResponseDto newRole = createRole("Test", permissions);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
     createRoleMembership(buyer.getId(), organizationSeller.getId(), newRole.getId());
     authenticateAs(buyer);
 

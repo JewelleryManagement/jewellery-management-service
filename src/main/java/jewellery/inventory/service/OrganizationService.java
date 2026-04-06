@@ -36,8 +36,8 @@ public class OrganizationService implements EntityFetcher {
   private final AuthService authService;
   private final UserService userService;
   private final ProductMapper productMapper;
-  private final RoleService roleService;
-  private final RoleRepository roleRepository;
+  private final ScopedRoleService scopedRoleService;
+  private final ScopedRoleRepository scopedRoleRepository;
   private final OrganizationMembershipRepository organizationMembershipRepository;
   private final RoleMembershipMapper roleMembershipMapper;
   private final OrganizationAuthorizationService organizationAuthorizationService;
@@ -55,18 +55,8 @@ public class OrganizationService implements EntityFetcher {
   }
 
   public OrganizationResponseDto getOrganizationResponse(UUID id) {
-    Organization organization = getOrganization(id);
-
-    boolean hasPermission =
-        organizationAuthorizationService.hasOrganizationPermission(
-            id, Permission.ORGANIZATION_READ.name());
-
-    if (!hasPermission) {
-      throw new AccessDeniedException("You do not have permission to read this organization");
-    }
-
     logger.debug("Get organizationResponse by ID: {}", id);
-    return organizationMapper.toResponse(organization);
+    return organizationMapper.toResponse(getOrganization(id));
   }
 
   public Organization saveOrganization(Organization organization) {
@@ -79,7 +69,7 @@ public class OrganizationService implements EntityFetcher {
     makeCurrentUserOwner(organization);
     organization = saveOrganization(organization);
     UserResponseDto currentUser = authService.getCurrentUser();
-    OrganizationRole adminRole = roleService.getRoleByName("ORGANIZATION_ADMIN");
+    ScopedRole adminRole = scopedRoleService.getRoleByName("ORGANIZATION_ADMIN");
     assignRoleToUserInOrganization(currentUser.getId(), organization.getId(), adminRole.getId());
     logger.info("Organization created with ID: {}", organization.getId());
     return organizationMapper.toResponse(organization);
@@ -154,8 +144,8 @@ public class OrganizationService implements EntityFetcher {
       UUID userId, UUID organizationId, UUID roleId) {
     User user = userService.getUser(userId);
     Organization organization = getOrganization(organizationId);
-    OrganizationRole role =
-        roleRepository.findById(roleId).orElseThrow(() -> new RoleNotFoundException(roleId));
+    ScopedRole role =
+        scopedRoleRepository.findById(roleId).orElseThrow(() -> new RoleNotFoundException(roleId));
 
     if (organizationMembershipRepository.existsByUserIdAndOrganizationIdAndRoleId(
         userId, organizationId, roleId)) {

@@ -1,7 +1,7 @@
 package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizationRequest;
-import static jewellery.inventory.helper.RoleHelper.createRoleRequest;
+import static jewellery.inventory.helper.ScopedRoleHelper.createRoleRequest;
 import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
-import jewellery.inventory.dto.request.RoleRequestDto;
+import jewellery.inventory.dto.request.ScopedRoleRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
-import jewellery.inventory.dto.response.RoleResponseDto;
+import jewellery.inventory.dto.response.ScopedRoleResponseDto;
 import jewellery.inventory.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-public class RoleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
+public class ScopedRoleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private String getBaseRoleUrl() {
     return "/roles";
   }
@@ -30,21 +30,21 @@ public class RoleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return "/organizations";
   }
 
-  private RoleRequestDto roleRequestDto;
+  private ScopedRoleRequestDto scopedRoleRequestDto;
 
   @BeforeEach
   void setUp() {
-    roleRequestDto = createRoleRequest();
+    scopedRoleRequestDto = createRoleRequest();
   }
 
   @Test
   void createRoleSuccessfully() {
-    ResponseEntity<RoleResponseDto> response = createRole();
+    ResponseEntity<ScopedRoleResponseDto> response = createRole();
 
     assertNotNull(response);
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
-    assertEquals(Objects.requireNonNull(response.getBody()).getName(), roleRequestDto.getName());
-    assertEquals(response.getBody().getPermissions(), roleRequestDto.getPermissions());
+    assertEquals(Objects.requireNonNull(response.getBody()).getName(), scopedRoleRequestDto.getName());
+    assertEquals(response.getBody().getPermissions(), scopedRoleRequestDto.getPermissions());
   }
 
   @Test
@@ -52,12 +52,12 @@ public class RoleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     createRole();
 
     ResponseEntity<String> response =
-        testRestTemplate.postForEntity(getBaseRoleUrl(), roleRequestDto, String.class);
+        testRestTemplate.postForEntity(getBaseRoleUrl(), scopedRoleRequestDto, String.class);
 
     assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     assertTrue(
         Objects.requireNonNull(response.getBody())
-            .contains("Role with name: " + roleRequestDto.getName() + " already exists!"));
+            .contains("Role with name: " + scopedRoleRequestDto.getName() + " already exists!"));
   }
 
   @Test
@@ -78,7 +78,7 @@ public class RoleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void deleteRoleShouldThrowWhenRoleAlreadyAssigned() {
     OrganizationResponseDto organizationResponseDto =
         createOrganizationsWithRequest(getTestOrganizationRequest());
-    ResponseEntity<RoleResponseDto> role = createRole();
+    ResponseEntity<ScopedRoleResponseDto> role = createRole();
     createRoleMembership(
         loggedInAdminUser.getId(), organizationResponseDto.getId(), role.getBody().getId());
 
@@ -94,7 +94,7 @@ public class RoleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void deleteRoleSuccessfully() {
-    ResponseEntity<RoleResponseDto> role = createRole();
+    ResponseEntity<ScopedRoleResponseDto> role = createRole();
 
     ResponseEntity<Void> response =
         testRestTemplate.exchange(
@@ -119,28 +119,28 @@ public class RoleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getRoleSuccessfully() {
-    ResponseEntity<RoleResponseDto> role = createRole();
+    ResponseEntity<ScopedRoleResponseDto> role = createRole();
 
-    ResponseEntity<RoleResponseDto> response =
+    ResponseEntity<ScopedRoleResponseDto> response =
         testRestTemplate.exchange(
             getBaseRoleUrl() + "/" + role.getBody().getId(),
             HttpMethod.GET,
             null,
-            RoleResponseDto.class);
+            ScopedRoleResponseDto.class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertEquals(roleRequestDto.getName(), role.getBody().getName());
-    assertEquals(roleRequestDto.getPermissions(), role.getBody().getPermissions());
+    assertEquals(scopedRoleRequestDto.getName(), role.getBody().getName());
+    assertEquals(scopedRoleRequestDto.getPermissions(), role.getBody().getPermissions());
   }
 
   @Test
   void getAllRolesSuccessfully() {
-    ResponseEntity<List<RoleResponseDto>> response =
+    ResponseEntity<List<ScopedRoleResponseDto>> response =
         testRestTemplate.exchange(
             getBaseRoleUrl(),
             HttpMethod.GET,
             null,
-            new ParameterizedTypeReference<List<RoleResponseDto>>() {});
+            new ParameterizedTypeReference<List<ScopedRoleResponseDto>>() {});
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response);
@@ -154,12 +154,12 @@ public class RoleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     createOrganizationsWithRequest(getTestOrganizationRequest());
     authenticateAs(loggedInAdminUser);
 
-    ResponseEntity<List<RoleResponseDto>> response =
+    ResponseEntity<List<ScopedRoleResponseDto>> response =
         testRestTemplate.exchange(
             getBaseRoleUrl() + "/users/" + deniedUser.getId(),
             HttpMethod.GET,
             null,
-            new ParameterizedTypeReference<List<RoleResponseDto>>() {});
+            new ParameterizedTypeReference<List<ScopedRoleResponseDto>>() {});
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response);
@@ -170,12 +170,12 @@ public class RoleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   void getAllUserRolesWillReturnAllRolesThatCurrentUserHasPermissionFor() {
     createOrganizationsWithRequest(getTestOrganizationRequest());
 
-    ResponseEntity<List<RoleResponseDto>> response =
+    ResponseEntity<List<ScopedRoleResponseDto>> response =
         testRestTemplate.exchange(
             getBaseRoleUrl() + "/users/" + loggedInAdminUser.getId(),
             HttpMethod.GET,
             null,
-            new ParameterizedTypeReference<List<RoleResponseDto>>() {});
+            new ParameterizedTypeReference<List<ScopedRoleResponseDto>>() {});
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response);
@@ -190,7 +190,7 @@ public class RoleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         createOrganizationsWithRequest(getTestOrganizationRequest());
     authenticateAs(loggedInAdminUser);
 
-    ResponseEntity<List<RoleResponseDto>> response =
+    ResponseEntity<List<ScopedRoleResponseDto>> response =
         testRestTemplate.exchange(
             getBaseRoleUrl()
                 + "/organizations/"
@@ -199,7 +199,7 @@ public class RoleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
                 + deniedUser.getId(),
             HttpMethod.GET,
             null,
-            new ParameterizedTypeReference<List<RoleResponseDto>>() {});
+            new ParameterizedTypeReference<List<ScopedRoleResponseDto>>() {});
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response);
@@ -211,7 +211,7 @@ public class RoleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     OrganizationResponseDto organizationResponseDto =
         createOrganizationsWithRequest(getTestOrganizationRequest());
 
-    ResponseEntity<List<RoleResponseDto>> response =
+    ResponseEntity<List<ScopedRoleResponseDto>> response =
         testRestTemplate.exchange(
             getBaseRoleUrl()
                 + "/organizations/"
@@ -220,16 +220,16 @@ public class RoleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
                 + loggedInAdminUser.getId(),
             HttpMethod.GET,
             null,
-            new ParameterizedTypeReference<List<RoleResponseDto>>() {});
+            new ParameterizedTypeReference<List<ScopedRoleResponseDto>>() {});
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response);
     assertEquals(1, response.getBody().size());
   }
 
-  private ResponseEntity<RoleResponseDto> createRole() {
-    roleRequestDto.setName("TEST_ROLE");
-    return testRestTemplate.postForEntity(getBaseRoleUrl(), roleRequestDto, RoleResponseDto.class);
+  private ResponseEntity<ScopedRoleResponseDto> createRole() {
+    scopedRoleRequestDto.setName("TEST_ROLE");
+    return testRestTemplate.postForEntity(getBaseRoleUrl(), scopedRoleRequestDto, ScopedRoleResponseDto.class);
   }
 
   @Nullable

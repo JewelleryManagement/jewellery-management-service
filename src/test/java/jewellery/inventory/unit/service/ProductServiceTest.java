@@ -52,9 +52,6 @@ class ProductServiceTest {
   @Test
   void testGetProductWhenProductFound() {
     when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-    when(organizationAuthorizationService.hasPermissionForProduct(
-            product.getId(), Permission.ORGANIZATION_PRODUCT_READ.name()))
-        .thenReturn(true);
     ProductResponseDto response = new ProductResponseDto();
     when(productMapper.mapToProductResponseDto(any())).thenReturn(response);
 

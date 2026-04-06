@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import jewellery.inventory.utils.PermissionConverter;
 import lombok.*;
 
 @Entity
@@ -11,8 +12,8 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "organization_roles")
-public class OrganizationRole {
+@Table(name = "scoped_roles")
+public class ScopedRole {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -22,10 +23,8 @@ public class OrganizationRole {
   private String name;
 
   @ElementCollection(targetClass = Permission.class, fetch = FetchType.LAZY)
-  @CollectionTable(
-      name = "organization_role_permissions",
-      joinColumns = @JoinColumn(name = "role_id"))
-  @Enumerated(EnumType.STRING)
+  @CollectionTable(name = "role_permissions", joinColumns = @JoinColumn(name = "role_id"))
   @Column(name = "permission", nullable = false)
+  @Convert(converter = PermissionConverter.class)
   private Set<Permission> permissions = new HashSet<>();
 }
