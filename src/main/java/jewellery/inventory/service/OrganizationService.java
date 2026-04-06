@@ -24,13 +24,13 @@ import jewellery.inventory.utils.NotUsedYet;
 import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
 public class OrganizationService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(OrganizationService.class);
+  private static final String ORGANIZATION_ADMIN_ROLE_NAME = "ORGANIZATION_ADMIN";
   private final OrganizationRepository organizationRepository;
   private final OrganizationMapper organizationMapper;
   private final AuthService authService;
@@ -69,7 +69,7 @@ public class OrganizationService implements EntityFetcher {
     makeCurrentUserOwner(organization);
     organization = saveOrganization(organization);
     UserResponseDto currentUser = authService.getCurrentUser();
-    ScopedRole adminRole = scopedRoleService.getRoleByName("ORGANIZATION_ADMIN");
+    ScopedRole adminRole = scopedRoleService.getRoleByName(ORGANIZATION_ADMIN_ROLE_NAME);
     assignRoleToUserInOrganization(currentUser.getId(), organization.getId(), adminRole.getId());
     logger.info("Organization created with ID: {}", organization.getId());
     return organizationMapper.toResponse(organization);

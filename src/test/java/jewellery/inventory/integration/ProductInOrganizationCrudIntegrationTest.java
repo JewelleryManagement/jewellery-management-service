@@ -108,31 +108,18 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void createProductInOrganizationSuccessfully() throws JsonProcessingException {
-    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
-    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
-    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
-        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
-    sendResourceToOrganization(resourceInOrganizationRequest);
-    assertProductsInOrganizationSize(organization.getId().toString(), 0);
+    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganization =
+        createProductInOrganization();
 
-    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-        createProduct(
-            setOwnerAndResourceToProductRequest(
-                productRequestDto,
-                organization.getId(),
-                resourceResponse.getId(),
-                RESOURCE_QUANTITY));
-
-    assertNotNull(productInOrganizationResponse.getBody());
-    assertEquals(1, productInOrganizationResponse.getBody().getProducts().size());
-    assertEquals(HttpStatus.CREATED, productInOrganizationResponse.getStatusCode());
+    assertNotNull(productInOrganization.getBody());
+    assertEquals(1, productInOrganization.getBody().getProducts().size());
+    assertEquals(HttpStatus.CREATED, productInOrganization.getStatusCode());
     Map<String, Object> expectedEventPayload =
-        getCreateOrDeleteEventPayload(productInOrganizationResponse.getBody(), objectMapper);
+        getCreateOrDeleteEventPayload(productInOrganization.getBody(), objectMapper);
     systemEventTestHelper.assertEventWasLogged(
         ORGANIZATION_PRODUCT_CREATE,
         expectedEventPayload,
-        productInOrganizationResponse.getBody().getProducts().getFirst().getId());
+        productInOrganization.getBody().getProducts().getFirst().getId());
     assertProductsInOrganizationSize(organization.getId().toString(), 1);
   }
 
@@ -142,8 +129,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
-    ResponseEntity<ResourcesInOrganizationResponseDto> resource =
-        sendResourceToOrganization(resourceInOrganizationRequest);
+    sendResourceToOrganization(resourceInOrganizationRequest);
     assertProductsInOrganizationSize(organization.getId().toString(), 0);
 
     ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
@@ -159,31 +145,17 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void updateProductInOrganizationSuccessfully() throws JsonProcessingException {
-    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
-    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
-    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
-        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
-    sendResourceToOrganization(resourceInOrganizationRequest);
-    assertResourcesInOrganizationSize(organization.getId().toString(), 1);
-    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-        createProduct(
-            setOwnerAndResourceToProductRequest(
-                productRequestDto,
-                organization.getId(),
-                resourceResponse.getId(),
-                RESOURCE_QUANTITY));
-    assertResourcesInOrganizationSize(organization.getId().toString(), 0);
+    ProductsInOrganizationResponseDto productInOrganization =
+        createProductInOrganization().getBody();
 
     ResponseEntity<ProductsInOrganizationResponseDto> updatedProductInOrganizationResponse =
         updateProduct(
-            productRequestDto,
-            productInOrganizationResponse.getBody().getProducts().get(0).getId().toString());
+            productRequestDto, productInOrganization.getProducts().get(0).getId().toString());
 
     assertEquals(HttpStatus.OK, updatedProductInOrganizationResponse.getStatusCode());
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(
-            productInOrganizationResponse.getBody(),
+            productInOrganization,
             Objects.requireNonNull(updatedProductInOrganizationResponse.getBody()),
             objectMapper);
     systemEventTestHelper.assertEventWasLogged(
@@ -196,45 +168,24 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void updateProductInOrganizationThrowUserIsNotPartOfOrganization() {
-    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
-    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
-    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
-        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
-    ResponseEntity<ResourcesInOrganizationResponseDto> resource =
-        sendResourceToOrganization(resourceInOrganizationRequest);
-    ResponseEntity<ResourcesInOrganizationResponseDto> resource2 =
-        sendResourceToOrganization(resourceInOrganizationRequest);
-    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-        createProduct(
-            setOwnerAndResourceToProductRequest(
-                productRequestDto,
-                organization.getId(),
-                resourceResponse.getId(),
-                RESOURCE_QUANTITY));
+    ProductsInOrganizationResponseDto productInOrganization =
+        createProductInOrganization().getBody();
     productRequestDto.setAuthors(List.of());
     User newUser = createUserInDatabase(UserTestHelper.createDifferentUserRequest());
     productRequestDto.setAuthors(List.of(newUser.getId()));
 
     ResponseEntity<ProductsInOrganizationResponseDto> updatedProductInOrganizationResponse =
         updateProduct(
-            productRequestDto,
-            productInOrganizationResponse.getBody().getProducts().get(0).getId().toString());
+            productRequestDto, productInOrganization.getProducts().get(0).getId().toString());
 
     assertEquals(HttpStatus.CONFLICT, updatedProductInOrganizationResponse.getStatusCode());
   }
 
   @Test
   void deleteProductInOrganizationSuccessfully() throws JsonProcessingException {
-    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
-    sendResourceToOrganization(
-        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-        createProduct(
-            setOwnerAndResourceToProductRequest(
-                productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
-    UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
+    ProductsInOrganizationResponseDto productInOrganization =
+        createProductInOrganization().getBody();
+    UUID productId = productInOrganization.getProducts().get(0).getId();
 
     ResponseEntity<String> response =
         this.testRestTemplate.exchange(
@@ -242,25 +193,18 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
     Map<String, Object> expectedEventPayload =
-        getCreateOrDeleteEventPayload(productInOrganizationResponse.getBody(), objectMapper);
+        getCreateOrDeleteEventPayload(productInOrganization, objectMapper);
 
     systemEventTestHelper.assertEventWasLogged(
         ORGANIZATION_PRODUCT_DISASSEMBLY, expectedEventPayload, productId);
-    assertProductsInOrganizationSize(
-        productInOrganizationResponse.getBody().getOrganization().getId().toString(), 0);
+    assertProductsInOrganizationSize(productInOrganization.getOrganization().getId().toString(), 0);
   }
 
   @Test
   void transferProductSuccessfully() throws JsonProcessingException {
-    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
-    sendResourceToOrganization(
-        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-        createProduct(
-            setOwnerAndResourceToProductRequest(
-                productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
-    UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
+    ProductsInOrganizationResponseDto productInOrganization =
+        createProductInOrganization().getBody();
+    UUID productId = productInOrganization.getProducts().get(0).getId();
     OrganizationResponseDto createSecondOrganization = createOrganization();
     UUID organizationId = createSecondOrganization.getId();
 
@@ -276,7 +220,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     assertEquals(organizationId, transferResponse.getBody().getOrganization().getId());
     Map<String, Object> expectedEventPayload =
         getUpdateEventPayload(
-            productInOrganizationResponse.getBody(),
+            productInOrganization,
             Objects.requireNonNull(transferResponse.getBody()),
             objectMapper);
     systemEventTestHelper.assertEventWasLogged(
@@ -308,9 +252,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
-    ResponseEntity<ResourcesInOrganizationResponseDto> resource =
         sendResourceToOrganization(resourceInOrganizationRequest);
-
     ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
         createProduct(
             setOwnerAndResourceToProductRequest(
@@ -321,14 +263,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
     ResponseEntity<List<ProductResponseDto>> response =
         testRestTemplate.exchange(
-            getProductsUrlByResource(
-                resource
-                    .getBody()
-                    .getResourcesAndQuantities()
-                    .get(0)
-                    .getResource()
-                    .getId()
-                    .toString()),
+            getProductsUrlByResource(resourceResponse.getId().toString()),
             HttpMethod.GET,
             null,
             new ParameterizedTypeReference<List<ProductResponseDto>>() {});
@@ -360,29 +295,14 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void getProductShouldThrowWhenUserHasNoProductReadPermission() {
-    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
-    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
-    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
-        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
-    sendResourceToOrganization(resourceInOrganizationRequest);
-    assertProductsInOrganizationSize(organization.getId().toString(), 0);
-
-    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-        createProduct(
-            setOwnerAndResourceToProductRequest(
-                productRequestDto,
-                organization.getId(),
-                resourceResponse.getId(),
-                RESOURCE_QUANTITY));
-
+    ProductsInOrganizationResponseDto productInOrganization =
+        createProductInOrganization().getBody();
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     authenticateAs(deniedUser);
 
     ResponseEntity<String> response =
         this.testRestTemplate.getForEntity(
-            getProductUrl(productInOrganizationResponse.getBody().getProducts().getFirst().getId()),
-            String.class);
+            getProductUrl(productInOrganization.getProducts().getFirst().getId()), String.class);
 
     assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     assertTrue(
@@ -412,25 +332,14 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void deleteProductShouldThrowWhenUserHasNoProductDeletePermission() {
-    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
-    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
-    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
-        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
-    sendResourceToOrganization(resourceInOrganizationRequest);
-    ResponseEntity<ProductsInOrganizationResponseDto> product =
-        createProduct(
-            setOwnerAndResourceToProductRequest(
-                productRequestDto,
-                organization.getId(),
-                resourceResponse.getId(),
-                RESOURCE_QUANTITY));
+    ProductsInOrganizationResponseDto productInOrganization =
+        createProductInOrganization().getBody();
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     authenticateAs(deniedUser);
 
     ResponseEntity<String> response =
         this.testRestTemplate.exchange(
-            getProductUrl(product.getBody().getProducts().getFirst().getId()),
+            getProductUrl(productInOrganization.getProducts().getFirst().getId()),
             HttpMethod.DELETE,
             null,
             String.class);
@@ -443,27 +352,15 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void updateProductShouldThrowWhenUserHasNoProductUpdatePermissions() {
-    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
-    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
-    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
-        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
-    sendResourceToOrganization(resourceInOrganizationRequest);
-    assertResourcesInOrganizationSize(organization.getId().toString(), 1);
-    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-        createProduct(
-            setOwnerAndResourceToProductRequest(
-                productRequestDto,
-                organization.getId(),
-                resourceResponse.getId(),
-                RESOURCE_QUANTITY));
+    ProductsInOrganizationResponseDto productInOrganization =
+        createProductInOrganization().getBody();
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     authenticateAs(deniedUser);
 
     HttpEntity<ProductRequestDto> request = new HttpEntity<>(productRequestDto);
     ResponseEntity<String> response =
         this.testRestTemplate.exchange(
-            "/products/" + productInOrganizationResponse.getBody().getProducts().getFirst().getId(),
+            "/products/" + productInOrganization.getProducts().getFirst().getId(),
             HttpMethod.PUT,
             request,
             String.class);
@@ -476,15 +373,9 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void transferProductShouldThrowWhenUserHasNoProductTransferPermissionForBothOrganizations() {
-    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
-    sendResourceToOrganization(
-        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-        createProduct(
-            setOwnerAndResourceToProductRequest(
-                productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
-    UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
+    ProductsInOrganizationResponseDto productInOrganization =
+        createProductInOrganization().getBody();
+    UUID productId = productInOrganization.getProducts().get(0).getId();
     OrganizationResponseDto createSecondOrganization = createOrganization();
     UUID organizationId = createSecondOrganization.getId();
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
@@ -504,15 +395,9 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void transferProductShouldThrowWhenUserHasNoProductTransferPermissionForCurrentOrganization() {
-    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
-    sendResourceToOrganization(
-        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-        createProduct(
-            setOwnerAndResourceToProductRequest(
-                productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
-    UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
+    ProductsInOrganizationResponseDto productInOrganization =
+        createProductInOrganization().getBody();
+    UUID productId = productInOrganization.getProducts().get(0).getId();
     OrganizationResponseDto createSecondOrganization = createOrganization();
     UUID organizationId = createSecondOrganization.getId();
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
@@ -527,6 +412,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             HttpMethod.PUT,
             null,
             String.class);
+
     assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     assertTrue(
         Objects.requireNonNull(response.getBody())
@@ -535,15 +421,9 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void transferProductShouldThrowWhenUserHasNoProductTransferPermissionForNewOrganization() {
-    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
-    sendResourceToOrganization(
-        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
-        createProduct(
-            setOwnerAndResourceToProductRequest(
-                productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
-    UUID productId = productInOrganizationResponse.getBody().getProducts().get(0).getId();
+    ProductsInOrganizationResponseDto productInOrganization =
+        createProductInOrganization().getBody();
+    UUID productId = productInOrganization.getProducts().get(0).getId();
     OrganizationResponseDto createSecondOrganization = createOrganization();
     UUID organizationId = createSecondOrganization.getId();
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
@@ -558,6 +438,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             HttpMethod.PUT,
             null,
             String.class);
+
     assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     assertTrue(
         Objects.requireNonNull(response.getBody())
@@ -566,13 +447,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
 
   @Test
   void getAllProductsByResourceWillReturnEmptyArrayWhenUserHasNoProductReadPermission() {
-    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
-    sendResourceToOrganization(
-        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-            organization.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
-    createProduct(
-        setOwnerAndResourceToProductRequest(
-            productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
+    createProductInOrganization();
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     authenticateAs(deniedUser);
 
@@ -597,6 +472,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
         setOwnerAndResourceToProductRequest(
             productRequestDto, organization.getId(), diamond.getId(), RESOURCE_QUANTITY));
     OrganizationResponseDto organization2 = createOrganization();
+    addUserInOrganization(organization2.getId(), userInOrganizationRequestDto);
     sendResourceToOrganization(
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organization2.getId(), diamond.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE));
@@ -652,8 +528,6 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response);
     assertEquals(1, response.getBody().size());
-    assertEquals(
-        response.getBody().getFirst().getId(), product.getBody().getProducts().getFirst().getId());
   }
 
   @Test
@@ -948,5 +822,23 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
       SaleRequestDto saleRequestDto) {
     return this.testRestTemplate.postForEntity(
         getBaseSaleUrl(), saleRequestDto, OrganizationSaleResponseDto.class);
+  }
+
+  private ResponseEntity<ProductsInOrganizationResponseDto> createProductInOrganization() {
+    addUserInOrganization(organization.getId(), userInOrganizationRequestDto);
+    ResourceResponseDto resourceResponse = sendCreateResourceRequest();
+    ResourceInOrganizationRequestDto resourceInOrganizationRequest =
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
+    sendResourceToOrganization(resourceInOrganizationRequest);
+    assertProductsInOrganizationSize(organization.getId().toString(), 0);
+    ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
+        createProduct(
+            setOwnerAndResourceToProductRequest(
+                productRequestDto,
+                organization.getId(),
+                resourceResponse.getId(),
+                RESOURCE_QUANTITY));
+    return productInOrganizationResponse;
   }
 }

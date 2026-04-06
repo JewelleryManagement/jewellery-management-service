@@ -265,16 +265,16 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
         0, resourceResponseAfterDeletingQuantity.getBody().getResourcesAndQuantities().size());
   }
 
-//    @Test
-//    void removeResourceQuantityShouldThrowWhenOrganizationNotFound() {
-//      ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
-//      organizationResponseDto.setId(UUID.randomUUID());
-//
-//      ResponseEntity<ResourcesInOrganizationResponseDto> response =
-//          sendDeleteOperation(getDeleteResourceUrl(organizationResponseDto, resourceResponse));
-//
-//      assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-//    }
+    @Test
+    void removeResourceQuantityShouldThrowWhenOrganizationNotFound() {
+      ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
+      organizationResponseDto.setId(UUID.randomUUID());
+
+      ResponseEntity<ResourcesInOrganizationResponseDto> response =
+          sendDeleteOperation(getDeleteResourceUrl(organizationResponseDto, resourceResponse));
+
+      assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
 
   @Test
   void removeResourceQuantityShouldThrowWhenResourceNotFound() {

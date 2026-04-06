@@ -49,6 +49,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private ProductRequestDto productRequestDto;
   private ProductRequestDto productRequestDto2;
   private ProductsInOrganizationResponseDto productResponse;
+  private SaleRequestDto saleRequestDto;
 
   private String buildUrl(String... paths) {
     return "/" + String.join("/", paths);
@@ -132,17 +133,17 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
                 .getId(),
             getBigDecimal("20"));
     productResponse = createProductInOrganization(productRequestDto);
-  }
-
-  @Test
-  void removeOrganizationSaleAfterReturnAllResourcesAndProductsFromSaleInOrganization() {
-    SaleRequestDto saleRequestDto =
+    saleRequestDto =
         getSaleInOrganizationRequestDto(
             organizationSeller,
             buyer,
             productResponse,
             resourcesInOrganizationResponseDto,
             SALE_DISCOUNT);
+  }
+
+  @Test
+  void removeOrganizationSaleAfterReturnAllResourcesAndProductsFromSaleInOrganization() {
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
     ResponseEntity<ResourceReturnResponseDto> resourceReturnResponse =
@@ -169,13 +170,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void returnProductFromSaleInOrganizationSuccessfully() throws JsonProcessingException {
-    SaleRequestDto saleRequestDto =
-        getSaleInOrganizationRequestDto(
-            organizationSeller,
-            buyer,
-            productResponse,
-            resourcesInOrganizationResponseDto,
-            SALE_DISCOUNT);
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
 
@@ -204,13 +198,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void returnResourceFromSaleInOrganizationSuccessfully() throws JsonProcessingException {
-    SaleRequestDto saleRequestDto =
-        getSaleInOrganizationRequestDto(
-            organizationSeller,
-            buyer,
-            productResponse,
-            resourcesInOrganizationResponseDto,
-            SALE_DISCOUNT);
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
 
@@ -240,14 +227,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void createSaleInOrganizationSuccessfully() throws JsonProcessingException {
-    SaleRequestDto saleRequestDto =
-        getSaleInOrganizationRequestDto(
-            organizationSeller,
-            buyer,
-            productResponse,
-            resourcesInOrganizationResponseDto,
-            SALE_DISCOUNT);
-
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
 
@@ -292,13 +271,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void returnResourceSuccessfully() throws JsonProcessingException {
-    SaleRequestDto saleRequestDto =
-        getSaleInOrganizationRequestDto(
-            organizationSeller,
-            buyer,
-            productResponse,
-            resourcesInOrganizationResponseDto,
-            SALE_DISCOUNT);
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
 
@@ -325,13 +297,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void returnProductSuccessfully() throws JsonProcessingException {
-    SaleRequestDto saleRequestDto =
-        getSaleInOrganizationRequestDto(
-            organizationSeller,
-            buyer,
-            productResponse,
-            resourcesInOrganizationResponseDto,
-            SALE_DISCOUNT);
     saleRequestDto.setResources(new ArrayList<>());
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
@@ -373,6 +338,18 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getAllSalesSuccessfully() {
+    ResponseEntity<OrganizationSaleResponseDto> saleResponse =
+        createSaleInOrganization(saleRequestDto);
+
+    assertEquals(HttpStatus.CREATED, saleResponse.getStatusCode());
+    assertNotNull(saleResponse.getBody());
+    assertEquals(saleResponse.getBody().getBuyer().getId(), saleRequestDto.getBuyerId());
+    assertNotEquals(saleResponse.getBody().getBuyer().getId(), saleRequestDto.getSellerId());
+  }
+
+  @Test
+  void createSaleShouldThrowWhenResourceNotOwned() {
+    organizationSeller.setId(UUID.randomUUID());
     SaleRequestDto saleRequestDto =
         getSaleInOrganizationRequestDto(
             organizationSeller,
@@ -384,28 +361,8 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
 
-    assertEquals(HttpStatus.CREATED, saleResponse.getStatusCode());
-    assertNotNull(saleResponse.getBody());
-    assertEquals(saleResponse.getBody().getBuyer().getId(), saleRequestDto.getBuyerId());
-    assertNotEquals(saleResponse.getBody().getBuyer().getId(), saleRequestDto.getSellerId());
+    assertEquals(HttpStatus.FORBIDDEN, saleResponse.getStatusCode());
   }
-
-    @Test
-    void createSaleShouldThrowWhenResourceNotOwned() {
-      organizationSeller.setId(UUID.randomUUID());
-      SaleRequestDto saleRequestDto =
-          getSaleInOrganizationRequestDto(
-              organizationSeller,
-              buyer,
-              productResponse,
-              resourcesInOrganizationResponseDto,
-              SALE_DISCOUNT);
-
-      ResponseEntity<OrganizationSaleResponseDto> saleResponse =
-          createSaleInOrganization(saleRequestDto);
-
-      assertEquals(HttpStatus.FORBIDDEN, saleResponse.getStatusCode());
-    }
 
   @Test
   void createSaleWithResourceAndProductSuccessfully() throws JsonProcessingException {
@@ -435,34 +392,23 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(
         saleRequestDto.getProducts().get(0).getProductId(),
         saleResponse.getBody().getProducts().get(0).getId());
-
     assertEquals(
         calculateTotalPriceOfResource(saleRequestDto)
             .add(productResponse2.getProducts().getFirst().getSalePrice()),
         saleResponse.getBody().getTotalPrice().setScale(2, RoundingMode.HALF_UP));
     assertEquals(
         SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount().setScale(2, RoundingMode.HALF_UP));
-
     assertEquals(
         saleResponse.getBody().getProducts().get(0).getPartOfSale(),
         saleResponse.getBody().getId());
-
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
-
     systemEventTestHelper.assertEventWasLogged(
         ORGANIZATION_CREATE_SALE, expectedEventPayload, saleResponse.getBody().getId());
   }
 
   @Test
   void createSaleWithResourcesOnlySuccessfully() throws JsonProcessingException {
-    SaleRequestDto saleRequestDto =
-        getSaleInOrganizationRequestDto(
-            organizationSeller,
-            buyer,
-            productResponse,
-            resourcesInOrganizationResponseDto,
-            SALE_DISCOUNT);
     saleRequestDto.setProducts(new ArrayList<>());
 
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
@@ -486,18 +432,14 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             .getResourceAndQuantity()
             .getResource()
             .getId());
-
     assertEquals(
         calculateTotalPriceOfResource(saleRequestDto), saleResponse.getBody().getTotalPrice());
-
     assertEquals(getBigDecimal("10"), saleResponse.getBody().getTotalDiscount().setScale(2));
     assertEquals(
         SALE_RESOURCE_DISCOUNTED_PRICE,
         saleResponse.getBody().getTotalDiscountedPrice().setScale(2));
-
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
-
     systemEventTestHelper.assertEventWasLogged(
         ORGANIZATION_CREATE_SALE, expectedEventPayload, saleResponse.getBody().getId());
   }
@@ -508,7 +450,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         List.of(productResponse.getProducts().getFirst().getId()));
     ProductsInOrganizationResponseDto productResponse2 =
         createProductInOrganization(productRequestDto2);
-
     SaleRequestDto saleRequestDto =
         getSaleInOrganizationRequestDto(
             organizationSeller,
@@ -517,6 +458,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             resourcesInOrganizationResponseDto,
             SALE_DISCOUNT);
     saleRequestDto.setResources(new ArrayList<>());
+
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
 
@@ -536,23 +478,14 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         productResponse2.getProducts().getFirst().getSalePrice(),
         saleResponse.getBody().getTotalPrice().setScale(2, RoundingMode.HALF_UP));
     assertEquals(SALE_DISCOUNT, saleResponse.getBody().getTotalDiscount().setScale(2));
-
     Map<String, Object> expectedEventPayload =
         getCreateOrDeleteEventPayload(saleResponse.getBody(), objectMapper);
-
     systemEventTestHelper.assertEventWasLogged(
         ORGANIZATION_CREATE_SALE, expectedEventPayload, saleResponse.getBody().getId());
   }
 
   @Test
   void testGetAllPurchasedResourcesSuccessfully() throws JsonProcessingException {
-    SaleRequestDto saleRequestDto =
-        getSaleInOrganizationRequestDto(
-            organizationSeller,
-            buyer,
-            productResponse,
-            resourcesInOrganizationResponseDto,
-            SALE_DISCOUNT);
     saleRequestDto.setProducts(new ArrayList<>());
 
     createSaleInOrganization(saleRequestDto);
@@ -560,12 +493,9 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResponseEntity<String> response =
         this.testRestTemplate.getForEntity(
             getPurchasedResourcesInUserUrl(buyer.getId()), String.class);
-
     assertEquals(HttpStatus.OK, response.getStatusCode());
-
     List<PurchasedResourceQuantityResponseDto> resources =
         objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
     assertEquals(1, resources.size());
     for (PurchasedResourceQuantityResponseDto resource : resources) {
       assertEquals(resource.getResourceAndQuantity().getResource().getId(), diamond.getId());
@@ -593,13 +523,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getAllProductsByResourceSuccessfully() {
-    SaleRequestDto saleRequestDto =
-        getSaleInOrganizationRequestDto(
-            organizationSeller,
-            buyer,
-            productResponse,
-            resourcesInOrganizationResponseDto,
-            SALE_DISCOUNT);
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
 
@@ -644,13 +567,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void returnProductShouldThrowWhenUserHasNoSaleProductReturnPermission() {
-    SaleRequestDto saleRequestDto =
-        getSaleInOrganizationRequestDto(
-            organizationSeller,
-            buyer,
-            productResponse,
-            resourcesInOrganizationResponseDto,
-            SALE_DISCOUNT);
     saleRequestDto.setResources(new ArrayList<>());
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
@@ -671,13 +587,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void returnResourceShouldThrowWhenUserHasNoSaleResourceReturnPermission() {
-    SaleRequestDto saleRequestDto =
-        getSaleInOrganizationRequestDto(
-            organizationSeller,
-            buyer,
-            productResponse,
-            resourcesInOrganizationResponseDto,
-            SALE_DISCOUNT);
     saleRequestDto.setResources(new ArrayList<>());
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
@@ -705,13 +614,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
   void getAllSalesShouldReturnEmptyArrayWhenUserHasNoSaleReadPermission()
       throws JsonProcessingException {
-    SaleRequestDto saleRequestDto =
-        getSaleInOrganizationRequestDto(
-            organizationSeller,
-            buyer,
-            productResponse,
-            resourcesInOrganizationResponseDto,
-            SALE_DISCOUNT);
     createSaleInOrganization(saleRequestDto);
     authenticateAs(buyer);
 
@@ -726,13 +628,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getAllSalesReturnsOnlySalesUserHasReadPermissionFor() throws JsonProcessingException {
-    SaleRequestDto saleRequestDto =
-        getSaleInOrganizationRequestDto(
-            organizationSeller,
-            buyer,
-            productResponse,
-            resourcesInOrganizationResponseDto,
-            SALE_DISCOUNT);
     createSaleInOrganization(saleRequestDto);
     OrganizationResponseDto organizationSeller2 =
         createOrganizationInDatabase(OrganizationTestHelper.getTestOrganizationRequest());
@@ -762,13 +657,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getSaleShouldThrowWhenUserHasNoSaleReadPermission() {
-    SaleRequestDto saleRequestDto =
-        getSaleInOrganizationRequestDto(
-            organizationSeller,
-            buyer,
-            productResponse,
-            resourcesInOrganizationResponseDto,
-            SALE_DISCOUNT);
     ResponseEntity<OrganizationSaleResponseDto> saleInOrganization =
         createSaleInOrganization(saleRequestDto);
     authenticateAs(buyer);
@@ -788,13 +676,6 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getAllSalesByResourceShouldReturnEmptyArrayWhenUserHasNoSaleReadPermission() {
-    SaleRequestDto saleRequestDto =
-        getSaleInOrganizationRequestDto(
-            organizationSeller,
-            buyer,
-            productResponse,
-            resourcesInOrganizationResponseDto,
-            SALE_DISCOUNT);
     createSaleInOrganization(saleRequestDto);
     authenticateAs(buyer);
 

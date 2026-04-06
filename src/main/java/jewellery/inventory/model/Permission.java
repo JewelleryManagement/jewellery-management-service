@@ -7,11 +7,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum Permission {
   ORGANIZATION_READ("organization:read"),
-  ORGANIZATION_USER_ADD("organization:user:add"),
-  ORGANIZATION_USER_DELETE("organization:user:delete"),
   ORGANIZATION_DELETE("organization:delete"),
   ORGANIZATION_PERMISSION_UPDATE("organization:permission:update"),
+
+  ORGANIZATION_USER_ADD("organization:user:add"),
+  ORGANIZATION_USER_DELETE("organization:user:delete"),
   ORGANIZATION_USER_READ("organization:user:read"),
+  ORGANIZATION_USER_ROLES_READ("organization:user:roles:read"),
 
   ORGANIZATION_RESOURCE_ADD("organization:resource:add"),
   ORGANIZATION_RESOURCE_DELETE("organization:resource:delete"),
@@ -28,8 +30,8 @@ public enum Permission {
   ORGANIZATION_SALE_PRODUCT_RETURN("organization:sale:product:return"),
   ORGANIZATION_SALE_READ("organization:sale:read"),
   ORGANIZATION_SALE_RESOURCE_RETURN("organization:sale:resource:return"),
-  ORGANIZATION_ROLE_ASSIGN("organization:role:assign"),
-  ORGANIZATION_USER_ROLES_READ("organization:user:roles:read");
+
+  ORGANIZATION_ROLE_ASSIGN("organization:role:assign");
 
   public static Permission fromValue(String value) {
     for (Permission permission : values()) {

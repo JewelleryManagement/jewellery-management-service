@@ -125,7 +125,7 @@ public class OrganizationController {
     return organizationService.getProductsInOrganization(organizationId);
   }
 
-  @Operation(summary = "Get all products in organization")
+  @Operation(summary = "Assign role to user")
   @ResponseStatus(HttpStatus.CREATED)
   @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_ROLE_ASSIGN')")
   @PostMapping("/{organizationId}/users/{userId}/roles/{roleId}")
