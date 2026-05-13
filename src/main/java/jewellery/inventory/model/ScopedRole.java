@@ -22,6 +22,10 @@ public class ScopedRole {
   @Column(nullable = false, unique = true)
   private String name;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "role_type", nullable = false, length = 50)
+  private RoleType roleType;
+
   @ElementCollection(targetClass = Permission.class, fetch = FetchType.LAZY)
   @CollectionTable(name = "role_permissions", joinColumns = @JoinColumn(name = "role_id"))
   @Column(name = "permission", nullable = false)

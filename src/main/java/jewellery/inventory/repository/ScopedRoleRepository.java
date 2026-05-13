@@ -3,8 +3,8 @@ package jewellery.inventory.repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import jewellery.inventory.model.Permission;
+import jewellery.inventory.model.RoleType;
 import jewellery.inventory.model.ScopedRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -44,4 +44,6 @@ public interface ScopedRoleRepository extends JpaRepository<ScopedRole, UUID> {
 """)
   List<ScopedRole> findVisibleRolesForUserByOrganization(
       UUID targetUserId, UUID currentUserId, UUID organizationId, Permission permission);
+
+  List<ScopedRole> findByRoleType(RoleType roleType);
 }

@@ -4,7 +4,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.request.ScopedRoleRequestDto;
+import jewellery.inventory.dto.response.PermissionResponseDto;
 import jewellery.inventory.dto.response.ScopedRoleResponseDto;
+import jewellery.inventory.model.RoleType;
 import jewellery.inventory.service.ScopedRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -57,5 +59,19 @@ public class ScopedRoleController {
   public List<ScopedRoleResponseDto> getAllUserRoles(
       @PathVariable UUID organizationId, @PathVariable UUID userId) {
     return scopedRoleService.getAllUserRolesByOrganization(userId, organizationId);
+  }
+
+  @Operation(summary = "Get all roles by type")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/type/{roleType}")
+  public List<ScopedRoleResponseDto> getRolesByType(@PathVariable RoleType roleType) {
+    return scopedRoleService.getRolesByType(roleType);
+  }
+
+  @Operation(summary = "Get permissions")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/permissions")
+  public List<PermissionResponseDto> getAllPermissions() {
+    return scopedRoleService.getAllPermissions();
   }
 }

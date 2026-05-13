@@ -1,6 +1,7 @@
 CREATE TABLE scoped_roles (
     id UUID PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE
+    name VARCHAR(255) NOT NULL UNIQUE,
+    role_type VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE role_permissions (
@@ -41,8 +42,12 @@ CREATE TABLE role_memberships (
         UNIQUE (user_id, organization_id, role_id)
 );
 
-INSERT INTO scoped_roles (id, name)
-VALUES ('8f279d03-10d7-48bb-b985-dc51bcc52fdc', 'ORGANIZATION_ADMIN');
+INSERT INTO scoped_roles (id, name, role_type)
+VALUES (
+    '8f279d03-10d7-48bb-b985-dc51bcc52fdc',
+    'ORGANIZATION_ADMIN',
+    'ORGANIZATION'
+);
 
 INSERT INTO role_permissions (role_id, permission)
 SELECT r.id, p.permission
@@ -68,7 +73,9 @@ unnest(ARRAY[
     'organization:sale:read',
     'organization:sale:resource:return',
     'organization:role:assign',
-    'organization:user:roles:read'
+    'organization:user:roles:read',
+    'organization:event:read',
+    'organization:role:read'
 ]) AS p(permission)
 WHERE r.name = 'ORGANIZATION_ADMIN'
 ON CONFLICT (role_id, permission) DO NOTHING;
@@ -92,3 +99,6 @@ WHERE NOT EXISTS (
       AND rm.organization_id = src.organization_id
       AND rm.role_id = '8f279d03-10d7-48bb-b985-dc51bcc52fdc'
 );
+
+ALTER TABLE user_in_organization
+DROP COLUMN IF EXISTS organization_permission;

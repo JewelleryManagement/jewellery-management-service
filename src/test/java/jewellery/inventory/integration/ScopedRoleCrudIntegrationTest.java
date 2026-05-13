@@ -2,6 +2,7 @@ package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizationRequest;
 import static jewellery.inventory.helper.ScopedRoleHelper.createRoleRequest;
+import static jewellery.inventory.helper.ScopedRoleHelper.extractPermissions;
 import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -13,6 +14,7 @@ import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.ScopedRoleRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.ScopedRoleResponseDto;
+import jewellery.inventory.model.RoleType;
 import jewellery.inventory.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,8 +45,9 @@ public class ScopedRoleCrudIntegrationTest extends AuthenticatedIntegrationTestB
 
     assertNotNull(response);
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
-    assertEquals(Objects.requireNonNull(response.getBody()).getName(), scopedRoleRequestDto.getName());
-    assertEquals(response.getBody().getPermissions(), scopedRoleRequestDto.getPermissions());
+    assertEquals(
+        Objects.requireNonNull(response.getBody()).getName(), scopedRoleRequestDto.getName());
+    assertEquals(extractPermissions(response.getBody()), scopedRoleRequestDto.getPermissions());
   }
 
   @Test
@@ -130,7 +133,9 @@ public class ScopedRoleCrudIntegrationTest extends AuthenticatedIntegrationTestB
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertEquals(scopedRoleRequestDto.getName(), role.getBody().getName());
-    assertEquals(scopedRoleRequestDto.getPermissions(), role.getBody().getPermissions());
+    assertEquals(
+        scopedRoleRequestDto.getPermissions(),
+        extractPermissions(Objects.requireNonNull(response.getBody())));
   }
 
   @Test
@@ -138,6 +143,20 @@ public class ScopedRoleCrudIntegrationTest extends AuthenticatedIntegrationTestB
     ResponseEntity<List<ScopedRoleResponseDto>> response =
         testRestTemplate.exchange(
             getBaseRoleUrl(),
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<ScopedRoleResponseDto>>() {});
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response);
+    assertEquals(1, response.getBody().size());
+  }
+
+  @Test
+  void getRolesByTypeSuccessfully() {
+    ResponseEntity<List<ScopedRoleResponseDto>> response =
+        testRestTemplate.exchange(
+            getBaseRoleUrl() + "/type/" + RoleType.ORGANIZATION,
             HttpMethod.GET,
             null,
             new ParameterizedTypeReference<List<ScopedRoleResponseDto>>() {});
@@ -229,7 +248,8 @@ public class ScopedRoleCrudIntegrationTest extends AuthenticatedIntegrationTestB
 
   private ResponseEntity<ScopedRoleResponseDto> createRole() {
     scopedRoleRequestDto.setName("TEST_ROLE");
-    return testRestTemplate.postForEntity(getBaseRoleUrl(), scopedRoleRequestDto, ScopedRoleResponseDto.class);
+    return testRestTemplate.postForEntity(
+        getBaseRoleUrl(), scopedRoleRequestDto, ScopedRoleResponseDto.class);
   }
 
   @Nullable

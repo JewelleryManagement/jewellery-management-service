@@ -17,7 +17,6 @@ import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.not_found.ProductNotFoundException;
-import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
 import jewellery.inventory.exception.organization.ProductIsNotPartOfOrganizationException;
 import jewellery.inventory.exception.product.ProductIsContentException;
@@ -35,7 +34,6 @@ import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.ResourceInOrganizationService;
 import jewellery.inventory.service.UserService;
 import jewellery.inventory.service.security.AuthService;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -158,19 +156,6 @@ class ProductInOrganizationServiceTest {
   }
 
   @Test
-  void transferProductShouldThrowWhenNoPermission() {
-    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
-    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-    when(productService.transferProduct(product.getId(), organization.getId()))
-        .thenThrow(MissingOrganizationPermissionException.class);
-    product.setOrganization(organizationWithProduct);
-
-    assertThrows(
-        MissingOrganizationPermissionException.class,
-        () -> productService.transferProduct(product.getId(), organization.getId()));
-  }
-
-  @Test
   void createProductInOrganizationSuccessfully() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
     when(resourceInOrganizationService.findResourceInOrganizationOrThrow(
@@ -253,19 +238,6 @@ class ProductInOrganizationServiceTest {
   }
 
   @Test
-  void updateProductInOrganizationThrowMissingOrganizationPermissionException() {
-    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-
-    doThrow(MissingOrganizationPermissionException.class)
-        .when(organizationService)
-        .validateCurrentUserPermission(organization, OrganizationPermission.EDIT_PRODUCT);
-
-    assertThrows(
-        MissingOrganizationPermissionException.class,
-        () -> productService.updateProduct(product.getId(), productRequestDto));
-  }
-
-  @Test
   void updateProductInOrganizationThrowOrganizationNotOwnerException() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
     when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
@@ -277,20 +249,6 @@ class ProductInOrganizationServiceTest {
   }
 
   @Test
-  void updateProductInOrganizationProductIsSoldException() {
-    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-    product.setPartOfSale(new ProductPriceDiscount());
-
-    doThrow(ProductIsSoldException.class)
-        .when(organizationService)
-        .validateCurrentUserPermission(organization, OrganizationPermission.EDIT_PRODUCT);
-
-    assertThrows(
-        ProductIsSoldException.class,
-        () -> productService.updateProduct(product.getId(), productRequestDto));
-  }
-
-  @Test
   void deleteProductInOrganizationSuccessfully() {
     when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
 
@@ -298,20 +256,6 @@ class ProductInOrganizationServiceTest {
 
     verify(productRepository, times(1)).findById(product.getId());
     verify(productRepository, times(1)).deleteById(product.getId());
-  }
-
-  @Test
-  void deleteProductInOrganizationThrowMissingOrganizationPermissionException() {
-    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
-
-    doThrow(MissingOrganizationPermissionException.class)
-        .when(organizationService)
-        .validateCurrentUserPermission(
-            organizationWithProduct, OrganizationPermission.DISASSEMBLE_PRODUCT);
-
-    Assertions.assertThrows(
-        MissingOrganizationPermissionException.class,
-        () -> productService.deleteProductInOrganization(product.getId()));
   }
 
   @Test

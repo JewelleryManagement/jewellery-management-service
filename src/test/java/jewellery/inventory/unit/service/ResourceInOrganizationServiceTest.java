@@ -17,7 +17,6 @@ import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResou
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInOrganizationNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
-import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.helper.OrganizationTestHelper;
 import jewellery.inventory.helper.ResourceInOrganizationTestHelper;
@@ -98,21 +97,6 @@ class ResourceInOrganizationServiceTest {
   }
 
   @Test
-  void testAddResourceToOrganizationShouldThrowMissingOrganizationPermissionException() {
-    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-
-    doThrow(MissingOrganizationPermissionException.class)
-        .when(organizationService)
-        .validateCurrentUserPermission(organization, OrganizationPermission.ADD_RESOURCE_QUANTITY);
-
-    Assertions.assertThrows(
-        MissingOrganizationPermissionException.class,
-        () ->
-            resourceInOrganizationService.addResourceToOrganization(
-                resourceInOrganizationRequestDto));
-  }
-
-  @Test
   void testAddResourceToOrganizationSuccessfully() {
     ResourcesInOrganizationResponseDto resourcesInOrganizationResponseDto =
         resourceInOrganizationMapper.toResourcesInOrganizationResponse(organization);
@@ -125,8 +109,6 @@ class ResourceInOrganizationServiceTest {
     resourceInOrganizationService.addResourceToOrganization(resourceInOrganizationRequestDto);
 
     verify(organizationService, times(1)).getOrganization(organization.getId());
-    verify(organizationService, times(1))
-        .validateCurrentUserPermission(organization, OrganizationPermission.ADD_RESOURCE_QUANTITY);
     verify(resourceService, times(1))
         .getResourceById(resourceInOrganizationRequestDto.getResourceId());
     verify(resourceInOrganizationMapper, times(1))
@@ -143,21 +125,6 @@ class ResourceInOrganizationServiceTest {
         () ->
             resourceInOrganizationService.removeQuantityFromResource(
                 organization.getId(), resource.getId(), QUANTITY));
-  }
-
-  @Test
-  void testRemoveQuantityFromResourceShouldThrowMissingOrganizationPermissionException() {
-    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-
-    doThrow(MissingOrganizationPermissionException.class)
-        .when(organizationService)
-        .validateCurrentUserPermission(organization, OrganizationPermission.ADD_RESOURCE_QUANTITY);
-
-    Assertions.assertThrows(
-        MissingOrganizationPermissionException.class,
-        () ->
-            resourceInOrganizationService.addResourceToOrganization(
-                resourceInOrganizationRequestDto));
   }
 
   @Test
@@ -222,19 +189,6 @@ class ResourceInOrganizationServiceTest {
 
     Assertions.assertThrows(
         OrganizationNotFoundException.class,
-        () -> resourceInOrganizationService.transferResource(transferResourceRequestDto));
-  }
-
-  @Test
-  void
-      testTransferResourceShouldThrowMissingOrganizationPermissionExceptionWhenUserHaveNoPermissionToTransfer() {
-    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-    doThrow(MissingOrganizationPermissionException.class)
-        .when(organizationService)
-        .validateCurrentUserPermission(organization, OrganizationPermission.TRANSFER_RESOURCE);
-
-    Assertions.assertThrows(
-        MissingOrganizationPermissionException.class,
         () -> resourceInOrganizationService.transferResource(transferResourceRequestDto));
   }
 

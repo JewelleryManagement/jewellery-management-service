@@ -1,16 +1,13 @@
 package jewellery.inventory.dto.request;
 
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jewellery.inventory.model.OrganizationPermission;
-import lombok.Data;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import lombok.Data;
+
 @Data
 public class UserInOrganizationRequestDto {
-    @NotNull
-    private UUID userId;
-    @NotEmpty
-    private List<OrganizationPermission> organizationPermission;
+  @NotNull private UUID userId;
+  private List<UUID> organizationRoles = new ArrayList<>();
 }

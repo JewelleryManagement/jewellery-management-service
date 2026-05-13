@@ -47,9 +47,6 @@ public class ResourceInOrganizationService implements EntityFetcher {
     Organization previousOwner =
         organizationService.getOrganization(transferResourceRequestDto.getPreviousOwnerId());
 
-    organizationService.validateCurrentUserPermission(
-        previousOwner, OrganizationPermission.TRANSFER_RESOURCE);
-
     Organization newOwner =
         organizationService.getOrganization(transferResourceRequestDto.getNewOwnerId());
 
@@ -82,9 +79,6 @@ public class ResourceInOrganizationService implements EntityFetcher {
       ResourceInOrganizationRequestDto resourceInOrganizationRequestDto) {
     Organization organization =
         organizationService.getOrganization(resourceInOrganizationRequestDto.getOrganizationId());
-
-    organizationService.validateCurrentUserPermission(
-        organization, OrganizationPermission.ADD_RESOURCE_QUANTITY);
 
     Resource resource =
         resourceService.getResourceById(resourceInOrganizationRequestDto.getResourceId());
@@ -128,9 +122,6 @@ public class ResourceInOrganizationService implements EntityFetcher {
   public ResourcesInOrganizationResponseDto removeQuantityFromResourceNoLog(
       UUID organizationId, UUID resourceId, BigDecimal quantity) {
     Organization organization = organizationService.getOrganization(organizationId);
-
-    organizationService.validateCurrentUserPermission(
-        organization, OrganizationPermission.REMOVE_RESOURCE_QUANTITY);
 
     ResourceInOrganization resourceInOrganization =
         findResourceInOrganizationOrThrow(organization, resourceId);

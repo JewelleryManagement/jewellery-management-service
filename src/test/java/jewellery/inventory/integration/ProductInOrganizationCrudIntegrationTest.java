@@ -252,7 +252,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organization.getId(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
-        sendResourceToOrganization(resourceInOrganizationRequest);
+    sendResourceToOrganization(resourceInOrganizationRequest);
     ResponseEntity<ProductsInOrganizationResponseDto> productInOrganizationResponse =
         createProduct(
             setOwnerAndResourceToProductRequest(
@@ -624,7 +624,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
             resourcesInOrganizationResponseDtoResponseEntity.getBody(),
             SALE_DISCOUNT);
     createSaleInOrganization(saleRequestDto);
-    Set<Permission> permissions = Set.of(Permission.ORGANIZATION_SALE_READ);
+    Set<Permission> permissions = Set.of(Permission.ORGANIZATION_READ);
     ScopedRoleResponseDto newRole = createRole("Test", permissions);
     createRoleMembership(buyer.getId(), organization.getId(), newRole.getId());
     authenticateAs(buyer);

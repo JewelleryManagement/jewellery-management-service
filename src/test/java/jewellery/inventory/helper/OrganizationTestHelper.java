@@ -1,7 +1,6 @@
 package jewellery.inventory.helper;
 
 import static jewellery.inventory.helper.UserTestHelper.createTestUserResponseDto;
-import static jewellery.inventory.model.OrganizationPermission.EDIT_PRODUCT;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -37,7 +36,7 @@ public class OrganizationTestHelper {
   public static Organization getOrganizationWithUserWithNoPermissions(
       Organization organization, User user) {
     organization.setUsersInOrganization(
-        List.of(new UserInOrganization(UUID.randomUUID(), user, organization, new ArrayList<>())));
+        List.of(new UserInOrganization(UUID.randomUUID(), user, organization)));
     return organization;
   }
 
@@ -59,7 +58,6 @@ public class OrganizationTestHelper {
     userInOrganization.setId(UUID.randomUUID());
     userInOrganization.setOrganization(organization);
     userInOrganization.setUser(user);
-    userInOrganization.setOrganizationPermission(List.of(OrganizationPermission.values()));
 
     return userInOrganization;
   }
@@ -70,7 +68,6 @@ public class OrganizationTestHelper {
     userInOrganization.setId(UUID.randomUUID());
     userInOrganization.setUser(new User());
     userInOrganization.setOrganization(organization);
-    userInOrganization.setOrganizationPermission(List.of(OrganizationPermission.values()));
     organization.setUsersInOrganization(List.of(userInOrganization));
     return organization;
   }
@@ -86,7 +83,6 @@ public class OrganizationTestHelper {
   public static UserInOrganizationRequestDto getTestUserInOrganizationRequest(UUID userId) {
     UserInOrganizationRequestDto request = new UserInOrganizationRequestDto();
     request.setUserId(userId);
-    request.setOrganizationPermission(Arrays.asList(OrganizationPermission.values()));
     return request;
   }
 
@@ -113,8 +109,6 @@ public class OrganizationTestHelper {
     dto.setOrganization(organization);
     dto.setId(UUID.randomUUID());
     dto.setUser(organization.getUsersInOrganization().get(0).getUser());
-    dto.setOrganizationPermission(
-        organization.getUsersInOrganization().get(0).getOrganizationPermission());
     return dto;
   }
 
@@ -133,7 +127,6 @@ public class OrganizationTestHelper {
     UserInOrganizationResponseDto userInOrganizationResponseDto =
         new UserInOrganizationResponseDto();
     userInOrganizationResponseDto.setUser(createTestUserResponseDto(user));
-    userInOrganizationResponseDto.setOrganizationPermissions(List.of(EDIT_PRODUCT));
     return userInOrganizationResponseDto;
   }
 }

@@ -61,9 +61,6 @@ public class SaleService {
 
     organizationService.validateUserInOrganization(
         organizationService.getOrganization(saleRequestDto.getSellerId()));
-    organizationService.validateCurrentUserPermission(
-        organizationService.getOrganization(saleRequestDto.getSellerId()),
-        OrganizationPermission.CREATE_SALE);
     throwExceptionIfProductIsSold(saleRequestDto);
     throwExceptionIfProductIsPartOfAnotherProduct(saleRequestDto);
     throwExceptionIfSellerNotProductOwner(saleRequestDto);
@@ -89,9 +86,6 @@ public class SaleService {
 
     organizationService.validateUserInOrganization(
         organizationService.getOrganization(sale.getOrganizationSeller().getId()));
-    organizationService.validateCurrentUserPermission(
-        organizationService.getOrganization(sale.getOrganizationSeller().getId()),
-        OrganizationPermission.RETURN_PRODUCT);
 
     removeProductFromSale(productId, sale);
     updateProductsOrganizationOwner(productToReturn, sale.getOrganizationSeller(), sale);
@@ -109,9 +103,6 @@ public class SaleService {
 
     organizationService.validateUserInOrganization(
         organizationService.getOrganization(sale.getOrganizationSeller().getId()));
-    organizationService.validateCurrentUserPermission(
-        organizationService.getOrganization(sale.getOrganizationSeller().getId()),
-        OrganizationPermission.RETURN_RESOURCE);
 
     returnResourceFromSaleToOrganization(sale, resourceToReturn);
     removeResourceFromSale(sale, resourceToReturn);

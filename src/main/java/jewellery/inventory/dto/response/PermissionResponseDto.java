@@ -1,8 +1,7 @@
 package jewellery.inventory.dto.response;
 
 import java.util.Set;
-import java.util.UUID;
-import jewellery.inventory.model.RoleType;
+import jewellery.inventory.model.Permission;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,9 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScopedRoleResponseDto {
-  private UUID id;
-  private String name;
-  private RoleType roleType;
-  private Set<PermissionResponseDto> permissions;
+public class PermissionResponseDto {
+  private Permission permission;
+  private Set<Permission> included;
 }

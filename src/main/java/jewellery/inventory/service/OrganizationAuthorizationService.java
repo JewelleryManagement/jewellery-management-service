@@ -3,7 +3,7 @@ package jewellery.inventory.service;
 import java.util.UUID;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.Permission;
-import jewellery.inventory.repository.OrganizationMembershipRepository;
+import jewellery.inventory.repository.RoleMembershipRepository;
 import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class OrganizationAuthorizationService {
 
-  private final OrganizationMembershipRepository membershipRepository;
+  private final RoleMembershipRepository membershipRepository;
   private final AuthService authService;
 
   @Transactional(readOnly = true)

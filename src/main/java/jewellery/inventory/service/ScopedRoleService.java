@@ -1,17 +1,17 @@
 package jewellery.inventory.service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import jewellery.inventory.dto.request.ScopedRoleRequestDto;
+import jewellery.inventory.dto.response.PermissionResponseDto;
 import jewellery.inventory.dto.response.ScopedRoleResponseDto;
 import jewellery.inventory.exception.not_found.RoleNotFoundException;
 import jewellery.inventory.exception.role.RoleAlreadyAssignedException;
 import jewellery.inventory.exception.role.RoleNameAlreadyExistsException;
 import jewellery.inventory.mapper.ScopedRoleMapper;
 import jewellery.inventory.model.Permission;
+import jewellery.inventory.model.RoleType;
 import jewellery.inventory.model.ScopedRole;
-import jewellery.inventory.repository.OrganizationMembershipRepository;
+import jewellery.inventory.repository.RoleMembershipRepository;
 import jewellery.inventory.repository.ScopedRoleRepository;
 import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ScopedRoleService {
   private final ScopedRoleRepository scopedRoleRepository;
   private final ScopedRoleMapper scopedRoleMapper;
-  private final OrganizationMembershipRepository organizationMembershipRepository;
+  private final RoleMembershipRepository roleMembershipRepository;
   private final AuthService authService;
 
   public ScopedRoleResponseDto createRole(ScopedRoleRequestDto request) {
@@ -33,9 +33,17 @@ public class ScopedRoleService {
       throw new RoleNameAlreadyExistsException(roleName);
     }
 
+    if (request.getRoleType() == null) {
+      throw new IllegalArgumentException("Role type must not be null");
+    }
+
+    Set<Permission> requestedPermissions =
+        request.getPermissions() == null ? Set.of() : new HashSet<>(request.getPermissions());
+
     ScopedRole role = new ScopedRole();
     role.setName(roleName);
-    role.setPermissions(new HashSet<>(request.getPermissions()));
+    role.setRoleType(request.getRoleType());
+    role.setPermissions(Permission.resolveAll(requestedPermissions));
 
     return scopedRoleMapper.toResponse(scopedRoleRepository.save(role));
   }
@@ -44,7 +52,7 @@ public class ScopedRoleService {
   public void deleteRole(UUID roleId) {
     ScopedRole role = getRoleById(roleId);
 
-    if (organizationMembershipRepository.existsByRoleId(roleId)) {
+    if (roleMembershipRepository.existsByRoleId(roleId)) {
       throw new RoleAlreadyAssignedException();
     }
 
@@ -61,6 +69,12 @@ public class ScopedRoleService {
 
   public ScopedRole getRoleByName(String name) {
     return scopedRoleRepository.findByName(name).orElseThrow(() -> new RoleNotFoundException(name));
+  }
+
+  public List<ScopedRoleResponseDto> getRolesByType(RoleType roleType) {
+    return scopedRoleRepository.findByRoleType(roleType).stream()
+        .map(scopedRoleMapper::toResponse)
+        .toList();
   }
 
   @Transactional(readOnly = true)
@@ -85,6 +99,14 @@ public class ScopedRoleService {
             targetUserId, currentUserId, organizationId, Permission.ORGANIZATION_USER_ROLES_READ)
         .stream()
         .map(scopedRoleMapper::toResponse)
+        .toList();
+  }
+
+  public List<PermissionResponseDto> getAllPermissions() {
+    return Arrays.stream(Permission.values())
+        .map(
+            permission ->
+                new PermissionResponseDto(permission, permission.resolveIncludedPermissions()))
         .toList();
   }
 

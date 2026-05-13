@@ -11,7 +11,9 @@ import lombok.*;
 @AllArgsConstructor
 @Table(
     name = "role_memberships",
-    uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id", "organization_id"})})
+    uniqueConstraints = {
+      @UniqueConstraint(columnNames = {"user_id", "organization_id", "role_id"})
+    })
 public class RoleMembership {
 
   @Id

@@ -42,7 +42,6 @@ public class ProductService implements EntityFetcher {
   private final ResourceInOrganizationService resourceInOrganizationService;
   private final ResourceInProductRepository resourceInProductRepository;
   private final AuthService authService;
-  private final OrganizationAuthorizationService organizationAuthorizationService;
 
   public List<ProductResponseDto> getByOwner(UUID ownerId) {
     UUID currentUserId = authService.getCurrentUser().getId();
@@ -78,8 +77,6 @@ public class ProductService implements EntityFetcher {
       ProductRequestDto productRequestDto) {
     Organization organization = organizationService.getOrganization(productRequestDto.getOwnerId());
 
-    organizationService.validateCurrentUserPermission(
-        organization, OrganizationPermission.CREATE_PRODUCT);
     validateUsersAreMembersOfOrganization(organization, getAuthors(productRequestDto));
 
     Product product = persistProductWithoutResourcesAndProducts(productRequestDto, organization);
@@ -92,10 +89,6 @@ public class ProductService implements EntityFetcher {
   public void deleteProductInOrganization(UUID productId) {
     Product product = getProduct(productId);
     throwExceptionIfProductIsNotPartOfOrganization(product);
-    Organization organization = product.getOrganization();
-
-    organizationService.validateCurrentUserPermission(
-        organization, OrganizationPermission.DISASSEMBLE_PRODUCT);
 
     throwExceptionIfProductIsSold(product);
     throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
@@ -113,8 +106,6 @@ public class ProductService implements EntityFetcher {
 
     Organization organization = organizationService.getOrganization(productRequestDto.getOwnerId());
 
-    organizationService.validateCurrentUserPermission(
-        organization, OrganizationPermission.EDIT_PRODUCT);
     validateUsersAreMembersOfOrganization(organization, getAuthors(productRequestDto));
 
     Product product = getProduct(productId);
@@ -138,9 +129,6 @@ public class ProductService implements EntityFetcher {
     throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
 
     Organization recipient = organizationService.getOrganization(recipientId);
-
-    organizationService.validateCurrentUserPermission(
-        product.getOrganization(), OrganizationPermission.TRANSFER_PRODUCT);
 
     updateProductOrganizationRecursively(product, recipient);
     logger.info(

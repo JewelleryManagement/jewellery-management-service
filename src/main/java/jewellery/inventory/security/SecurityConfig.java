@@ -35,10 +35,10 @@ public class SecurityConfig {
   private static final String ERROR_ENDPOINT = "/error/**";
   private static final String ACCESS_DENIED_MESSAGE =
       """
-    {
-      "message": "You do not have permission to perform this action"
-    }
-    """;
+      {
+       "error": "You do not have permission to perform this action"
+      }
+      """;
 
   @Value("${cors.allowedOrigins}")
   private String[] allowedOrigins;

@@ -90,7 +90,6 @@ public class GlobalExceptionHandler {
     ProductOwnerEqualsRecipientException.class,
     ProductNotSoldException.class,
     ProductPartOfItselfException.class,
-    MissingOrganizationPermissionException.class,
     UserIsNotPartOfOrganizationException.class,
     UserIsPartOfOrganizationException.class,
     OrphanResourcesInOrganizationException.class,

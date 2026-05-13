@@ -19,6 +19,7 @@ import jewellery.inventory.helper.SystemEventTestHelper;
 import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.model.Image;
 import jewellery.inventory.model.Permission;
+import jewellery.inventory.model.RoleType;
 import jewellery.inventory.model.User;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.ImageService;
@@ -41,7 +42,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 public abstract class AuthenticatedIntegrationTestBase {
-  private static final String ADMIN_ROLE_NAME = "ORGANIZATION_ADMIN";
+  protected static final String ADMIN_ROLE_NAME = "ORGANIZATION_ADMIN";
 
   @Autowired protected ObjectMapper objectMapper;
 
@@ -58,7 +59,7 @@ public abstract class AuthenticatedIntegrationTestBase {
   @Autowired private PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   @Autowired private ResourceInOrganizationRepository resourceInOrganizationRepository;
   @Autowired private ScopedRoleRepository scopedRoleRepository;
-  @Autowired private OrganizationMembershipRepository organizationMembershipRepository;
+  @Autowired private RoleMembershipRepository roleMembershipRepository;
   @Autowired private ScopedRoleService scopedRoleService;
   @Autowired private OrganizationService organizationService;
 
@@ -79,7 +80,7 @@ public abstract class AuthenticatedIntegrationTestBase {
     resourceRepository.deleteAll();
     resourceInProductRepository.deleteAll();
     scopedRoleRepository.deleteAll();
-    organizationMembershipRepository.deleteAll();
+    roleMembershipRepository.deleteAll();
     loggedInAdminUser = createTestAdminUser();
     authenticateAs(loggedInAdminUser);
     setupTestRestTemplateWithAuthHeaders();
@@ -99,17 +100,19 @@ public abstract class AuthenticatedIntegrationTestBase {
 
   private void createRoleWithAllPermissions() {
     Set<Permission> permissions = EnumSet.allOf(Permission.class);
-    ScopedRoleRequestDto scopedRoleRequestDto = new ScopedRoleRequestDto(ADMIN_ROLE_NAME, permissions);
+    ScopedRoleRequestDto scopedRoleRequestDto =
+        new ScopedRoleRequestDto(ADMIN_ROLE_NAME, RoleType.ORGANIZATION, permissions);
     scopedRoleService.createRole(scopedRoleRequestDto);
   }
 
   protected ScopedRoleResponseDto createRole(String roleName, Set<Permission> permissions) {
-    ScopedRoleRequestDto scopedRoleRequestDto = new ScopedRoleRequestDto(roleName, permissions);
+    ScopedRoleRequestDto scopedRoleRequestDto =
+        new ScopedRoleRequestDto(roleName, RoleType.ORGANIZATION, permissions);
     return scopedRoleService.createRole(scopedRoleRequestDto);
   }
 
   protected void createRoleMembership(UUID userId, UUID organizationId, UUID roleId) {
-    organizationService.assignRoleToUserInOrganization(userId, organizationId, roleId);
+    roleMembershipRepository.insertAll(userId, organizationId, new UUID[] {roleId});
   }
 
   protected void authenticateAs(User user) {

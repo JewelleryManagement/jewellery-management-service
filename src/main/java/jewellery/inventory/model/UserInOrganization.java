@@ -1,8 +1,6 @@
 package jewellery.inventory.model;
 
 import jakarta.persistence.*;
-
-import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,10 +22,8 @@ import lombok.ToString;
 public class UserInOrganization {
   @Id @GeneratedValue private UUID id;
   @ManyToOne private User user;
+
   @ManyToOne
   @JoinColumn(name = "organization_id")
   private Organization organization;
-  @Enumerated(EnumType.STRING)
-  @Column(name = "organization_permission")
-  private List<OrganizationPermission> organizationPermission;
 }

@@ -3,12 +3,13 @@ package jewellery.inventory.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.UpdateUserInOrganizationRequest;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.*;
-import jewellery.inventory.model.OrganizationPermission;
+import jewellery.inventory.model.Permission;
 import jewellery.inventory.service.OrganizationService;
 import jewellery.inventory.service.UserInOrganizationService;
 import jewellery.inventory.utils.NotUsedYet;
@@ -42,10 +43,10 @@ public class OrganizationController {
 
   @Operation(summary = "Get organizations by permission")
   @ResponseStatus(HttpStatus.OK)
-  @GetMapping("/by-permission/{organizationPermission}")
+  @GetMapping("/by-permission/{permission}")
   public List<OrganizationResponseDto> getOrganizationsByPermission(
-      @PathVariable OrganizationPermission organizationPermission) {
-    return organizationService.getOrganizationsByPermission(organizationPermission);
+      @PathVariable Permission permission) {
+    return organizationService.getOrganizationsByPermission(permission);
   }
 
   @Operation(summary = "Create a new organization")
@@ -90,21 +91,30 @@ public class OrganizationController {
   @PreAuthorize(
       "@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_PERMISSION_UPDATE')")
   @PutMapping("{organizationId}/users/{userId}")
-  public OrganizationSingleMemberResponseDto updateUserPermissionsInOrganization(
+  public OrganizationSingleMemberResponseDto updateUserRolesInOrganization(
       @PathVariable UUID organizationId,
       @PathVariable UUID userId,
       @RequestBody @Valid UpdateUserInOrganizationRequest updateUserInOrganizationRequest) {
-    return userInOrganizationService.updateUserPermissionsInOrganization(
-        userId, organizationId, updateUserInOrganizationRequest.getOrganizationPermission());
+    return userInOrganizationService.updateUserRolesInOrganization(
+        userId, organizationId, updateUserInOrganizationRequest.getOrganizationRoles());
   }
 
   @Operation(summary = "Get all users in organization")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_READ')")
   @GetMapping("{organizationId}/users")
-  public OrganizationMembersResponseDto getAllUsersInOrganization(
+  public List<UserInOrganizationResponseDto> getAllUsersInOrganization(
       @PathVariable UUID organizationId) {
     return userInOrganizationService.getAllUsersInOrganization(organizationId);
+  }
+
+  @Operation(summary = "Get all users in organization with roles")
+  @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_READ')")
+  @GetMapping("{organizationId}/users/roles")
+  public List<UserInOrganizationResponseDto> getAllUsersInOrganizationWithRoles(
+      @PathVariable UUID organizationId) {
+    return userInOrganizationService.getAllUsersInOrganizationWithRoles(organizationId);
   }
 
   @Operation(summary = "Get user in organization")
@@ -125,12 +135,10 @@ public class OrganizationController {
     return organizationService.getProductsInOrganization(organizationId);
   }
 
-  @Operation(summary = "Assign role to user")
-  @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_ROLE_ASSIGN')")
-  @PostMapping("/{organizationId}/users/{userId}/roles/{roleId}")
-  public RoleMembershipResponseDto assignRole(
-      @PathVariable UUID userId, @PathVariable UUID organizationId, @PathVariable UUID roleId) {
-    return organizationService.assignRoleToUserInOrganization(userId, organizationId, roleId);
+  @Operation(summary = "Get current user permissions")
+  @ResponseStatus(HttpStatus.OK)
+  @GetMapping("/{organizationId}/permissions")
+  public Set<Permission> getCurrentUserPermissions(@PathVariable UUID organizationId) {
+    return userInOrganizationService.getCurrentUserPermissions(organizationId);
   }
 }

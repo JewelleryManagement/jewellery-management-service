@@ -1,7 +1,6 @@
 package jewellery.inventory.unit.service;
 
-import static jewellery.inventory.helper.ScopedRoleHelper.createRole;
-import static jewellery.inventory.helper.ScopedRoleHelper.createRoleRequest;
+import static jewellery.inventory.helper.ScopedRoleHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -19,8 +18,9 @@ import jewellery.inventory.helper.OrganizationTestHelper;
 import jewellery.inventory.mapper.ScopedRoleMapper;
 import jewellery.inventory.model.Organization;
 import jewellery.inventory.model.Permission;
+import jewellery.inventory.model.RoleType;
 import jewellery.inventory.model.ScopedRole;
-import jewellery.inventory.repository.OrganizationMembershipRepository;
+import jewellery.inventory.repository.RoleMembershipRepository;
 import jewellery.inventory.repository.ScopedRoleRepository;
 import jewellery.inventory.service.ScopedRoleService;
 import jewellery.inventory.service.security.AuthService;
@@ -36,7 +36,7 @@ public class ScopedRoleServiceTest {
   @InjectMocks private ScopedRoleService scopedRoleService;
   @Mock private ScopedRoleRepository scopedRoleRepository;
   @Mock private ScopedRoleMapper scopedRoleMapper;
-  @Mock private OrganizationMembershipRepository organizationMembershipRepository;
+  @Mock private RoleMembershipRepository roleMembershipRepository;
   @Mock private AuthService authService;
 
   private ScopedRoleRequestDto scopedRoleRequestDto;
@@ -60,7 +60,8 @@ public class ScopedRoleServiceTest {
         .thenThrow(RoleNameAlreadyExistsException.class);
 
     assertThrows(
-        RoleNameAlreadyExistsException.class, () -> scopedRoleService.createRole(scopedRoleRequestDto));
+        RoleNameAlreadyExistsException.class,
+        () -> scopedRoleService.createRole(scopedRoleRequestDto));
   }
 
   @Test
@@ -69,11 +70,12 @@ public class ScopedRoleServiceTest {
     when(scopedRoleRepository.save(any(ScopedRole.class))).thenReturn(scopedRole);
     when(scopedRoleMapper.toResponse(scopedRole)).thenReturn(this.scopedRoleResponseDto);
 
-    ScopedRoleResponseDto scopedRoleResponseDto = scopedRoleService.createRole(scopedRoleRequestDto);
+    ScopedRoleResponseDto scopedRoleResponseDto =
+        scopedRoleService.createRole(scopedRoleRequestDto);
 
     assertNotNull(scopedRoleResponseDto);
     assertEquals(scopedRoleResponseDto.getName(), scopedRoleRequestDto.getName());
-    assertEquals(scopedRoleResponseDto.getPermissions(), scopedRoleRequestDto.getPermissions());
+    assertEquals(extractPermissions(scopedRoleResponseDto), scopedRoleRequestDto.getPermissions());
     verify(scopedRoleRepository, times(1)).existsByName(scopedRoleRequestDto.getName());
     verify(scopedRoleRepository, times(1)).save(any(ScopedRole.class));
     verify(scopedRoleMapper, times(1)).toResponse(scopedRole);
@@ -85,7 +87,8 @@ public class ScopedRoleServiceTest {
         .thenThrow(RoleNotFoundException.class);
 
     assertThrows(
-        RoleNotFoundException.class, () -> scopedRoleService.getRoleByName(scopedRoleRequestDto.getName()));
+        RoleNotFoundException.class,
+        () -> scopedRoleService.getRoleByName(scopedRoleRequestDto.getName()));
   }
 
   @Test
@@ -113,7 +116,7 @@ public class ScopedRoleServiceTest {
   void deleteRoleShouldThrowWhenRoleAlreadyAssigned() {
     when(scopedRoleRepository.findById(scopedRole.getId()))
         .thenReturn(Optional.ofNullable(scopedRole));
-    when(organizationMembershipRepository.existsByRoleId(scopedRole.getId()))
+    when(roleMembershipRepository.existsByRoleId(scopedRole.getId()))
         .thenThrow(RoleAlreadyAssignedException.class);
 
     assertThrows(
@@ -124,13 +127,12 @@ public class ScopedRoleServiceTest {
   void deleteRoleSuccessfully() {
     when(scopedRoleRepository.findById(scopedRole.getId()))
         .thenReturn(Optional.ofNullable(scopedRole));
-    when(organizationMembershipRepository.existsByRoleId(scopedRole.getId()))
-        .thenReturn(false);
+    when(roleMembershipRepository.existsByRoleId(scopedRole.getId())).thenReturn(false);
 
     scopedRoleService.deleteRole(scopedRole.getId());
 
     verify(scopedRoleRepository, times(1)).findById(scopedRole.getId());
-    verify(organizationMembershipRepository, times(1)).existsByRoleId(scopedRole.getId());
+    verify(roleMembershipRepository, times(1)).existsByRoleId(scopedRole.getId());
   }
 
   @Test
@@ -150,7 +152,7 @@ public class ScopedRoleServiceTest {
 
     assertNotNull(role);
     assertEquals(role.getName(), scopedRole.getName());
-    assertEquals(role.getPermissions(), scopedRole.getPermissions());
+    assertEquals(extractPermissions(role), scopedRole.getPermissions());
     verify(scopedRoleRepository, times(1)).findById(scopedRole.getId());
   }
 
@@ -176,8 +178,37 @@ public class ScopedRoleServiceTest {
     assertEquals(1, roles.size());
     assertEquals(scopedRole.getId(), roles.getFirst().getId());
     assertEquals(scopedRole.getName(), roles.getFirst().getName());
-    assertEquals(scopedRole.getPermissions(), roles.getFirst().getPermissions());
+    assertEquals(scopedRole.getPermissions(), extractPermissions(roles.getFirst()));
     verify(scopedRoleRepository, times(1)).findAll();
+    verify(scopedRoleMapper, times(1)).toResponse(scopedRole);
+  }
+
+  @Test
+  void getRolesByTypeShouldReturnEmptyArrayWhenThereAreNoRolesOfGivenType() {
+    when(scopedRoleRepository.findByRoleType(RoleType.ORGANIZATION))
+        .thenReturn(Collections.emptyList());
+
+    List<ScopedRoleResponseDto> roles = scopedRoleService.getRolesByType(RoleType.ORGANIZATION);
+
+    assertNotNull(roles);
+    assertTrue(roles.isEmpty());
+    verify(scopedRoleRepository).findByRoleType(RoleType.ORGANIZATION);
+  }
+
+  @Test
+  void getRolesByTypeSuccessfully() {
+    when(scopedRoleRepository.findByRoleType(RoleType.ORGANIZATION))
+        .thenReturn(List.of(scopedRole));
+    when(scopedRoleMapper.toResponse(scopedRole)).thenReturn(scopedRoleResponseDto);
+
+    List<ScopedRoleResponseDto> roles = scopedRoleService.getRolesByType(RoleType.ORGANIZATION);
+
+    assertNotNull(roles);
+    assertEquals(1, roles.size());
+    assertEquals(scopedRole.getId(), roles.getFirst().getId());
+    assertEquals(scopedRole.getName(), roles.getFirst().getName());
+    assertEquals(scopedRole.getPermissions(), extractPermissions(roles.getFirst()));
+    verify(scopedRoleRepository, times(1)).findByRoleType(RoleType.ORGANIZATION);
     verify(scopedRoleMapper, times(1)).toResponse(scopedRole);
   }
 
@@ -188,7 +219,8 @@ public class ScopedRoleServiceTest {
             targetUser.getId(), currentUser.getId(), Permission.ORGANIZATION_USER_ROLES_READ))
         .thenReturn(Collections.emptyList());
 
-    List<ScopedRoleResponseDto> allUserRoles = scopedRoleService.getAllUserRoles(targetUser.getId());
+    List<ScopedRoleResponseDto> allUserRoles =
+        scopedRoleService.getAllUserRoles(targetUser.getId());
 
     assertNotNull(allUserRoles);
     assertEquals(0, allUserRoles.size());
@@ -205,7 +237,8 @@ public class ScopedRoleServiceTest {
             targetUser.getId(), currentUser.getId(), Permission.ORGANIZATION_USER_ROLES_READ))
         .thenReturn(List.of(scopedRole));
 
-    List<ScopedRoleResponseDto> allUserRoles = scopedRoleService.getAllUserRoles(targetUser.getId());
+    List<ScopedRoleResponseDto> allUserRoles =
+        scopedRoleService.getAllUserRoles(targetUser.getId());
 
     assertNotNull(allUserRoles);
     assertEquals(1, allUserRoles.size());
@@ -263,10 +296,5 @@ public class ScopedRoleServiceTest {
             currentUser.getId(),
             organization.getId(),
             Permission.ORGANIZATION_USER_ROLES_READ);
-  }
-
-  private ScopedRoleResponseDto createRoleResponse(ScopedRole scopedRole) {
-    return new ScopedRoleResponseDto(
-        scopedRole.getId(), scopedRole.getName(), scopedRole.getPermissions());
   }
 }

@@ -15,7 +15,7 @@ import jewellery.inventory.helper.ProductTestHelper;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
-import jewellery.inventory.repository.OrganizationMembershipRepository;
+import jewellery.inventory.repository.RoleMembershipRepository;
 import jewellery.inventory.service.OrganizationAuthorizationService;
 import jewellery.inventory.service.security.AuthService;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class OrganizationAuthorizationServiceTest {
   @InjectMocks private OrganizationAuthorizationService organizationAuthorizationService;
-  @Mock private OrganizationMembershipRepository organizationMembershipRepository;
+  @Mock private RoleMembershipRepository roleMembershipRepository;
   @Mock private AuthService authService;
 
   private Organization organization;
@@ -68,7 +68,7 @@ public class OrganizationAuthorizationServiceTest {
   @Test
   void hasOrganizationPermissionReturnFalseWhenCurrentUserHasNoPermission() {
     when(authService.getCurrentUser()).thenReturn(currentUser);
-    when(organizationMembershipRepository.hasPermissionInOrganization(
+    when(roleMembershipRepository.hasPermissionInOrganization(
             currentUser.getId(), organization.getId(), permission))
         .thenReturn(false);
 
@@ -82,7 +82,7 @@ public class OrganizationAuthorizationServiceTest {
   @Test
   void hasOrganizationPermissionReturnTrueWhenCurrentUserHasNoPermission() {
     when(authService.getCurrentUser()).thenReturn(currentUser);
-    when(organizationMembershipRepository.hasPermissionInOrganization(
+    when(roleMembershipRepository.hasPermissionInOrganization(
             currentUser.getId(), organization.getId(), permission))
         .thenReturn(true);
 
@@ -107,7 +107,7 @@ public class OrganizationAuthorizationServiceTest {
   @Test
   void hasPermissionForProductReturnFalseWhenCurrentUserHasNoPermission() {
     when(authService.getCurrentUser()).thenReturn(currentUser);
-    when(organizationMembershipRepository.hasAccessToProduct(
+    when(roleMembershipRepository.hasAccessToProduct(
             product.getId(), currentUser.getId(), permission))
         .thenReturn(false);
 
@@ -121,7 +121,7 @@ public class OrganizationAuthorizationServiceTest {
   @Test
   void hasPermissionForProductReturnTrueWhenCurrentUserHasNoPermission() {
     when(authService.getCurrentUser()).thenReturn(currentUser);
-    when(organizationMembershipRepository.hasAccessToProduct(
+    when(roleMembershipRepository.hasAccessToProduct(
             product.getId(), currentUser.getId(), permission))
         .thenReturn(true);
 
@@ -145,7 +145,7 @@ public class OrganizationAuthorizationServiceTest {
   @Test
   void hasPermissionForSaleShouldReturnFalseWhenCurrentUserHasNoPermission() {
     when(authService.getCurrentUser()).thenReturn(currentUser);
-    when(organizationMembershipRepository.hasAccessToSale(
+    when(roleMembershipRepository.hasAccessToSale(
             sale.getId(), currentUser.getId(), permission))
         .thenReturn(false);
 
@@ -158,7 +158,7 @@ public class OrganizationAuthorizationServiceTest {
   @Test
   void hasPermissionForSaleShouldReturnTrueWhenCurrentUserHasNoPermission() {
     when(authService.getCurrentUser()).thenReturn(currentUser);
-    when(organizationMembershipRepository.hasAccessToSale(
+    when(roleMembershipRepository.hasAccessToSale(
             sale.getId(), currentUser.getId(), permission))
         .thenReturn(true);
 
