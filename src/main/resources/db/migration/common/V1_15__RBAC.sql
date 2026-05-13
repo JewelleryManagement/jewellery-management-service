@@ -57,7 +57,7 @@ unnest(ARRAY[
     'organization:user:add',
     'organization:user:delete',
     'organization:delete',
-    'organization:permission:update',
+    'organization:role:update',
     'organization:user:read',
     'organization:resource:add',
     'organization:resource:delete',

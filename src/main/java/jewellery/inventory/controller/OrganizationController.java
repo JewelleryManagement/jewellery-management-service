@@ -89,7 +89,7 @@ public class OrganizationController {
   @Operation(summary = "Update a user permissions in organization")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize(
-      "@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_PERMISSION_UPDATE')")
+      "@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_ROLE_UPDATE')")
   @PutMapping("{organizationId}/users/{userId}")
   public OrganizationSingleMemberResponseDto updateUserRolesInOrganization(
       @PathVariable UUID organizationId,

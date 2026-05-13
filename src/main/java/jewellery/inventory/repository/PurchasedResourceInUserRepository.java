@@ -15,8 +15,6 @@ public interface PurchasedResourceInUserRepository
     extends JpaRepository<PurchasedResourceInUser, UUID> {
   Optional<PurchasedResourceInUser> findByResourceIdAndPartOfSaleId(UUID resourceId, UUID saleId);
 
-  List<PurchasedResourceInUser> findAllByOwnerId(UUID ownerId);
-
   @Query(
 """
     select pru

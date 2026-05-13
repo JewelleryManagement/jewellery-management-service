@@ -19,7 +19,6 @@ import jewellery.inventory.exception.organization.OrphanResourcesInOrganizationE
 import jewellery.inventory.helper.*;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.mapper.ProductMapper;
-import jewellery.inventory.mapper.RoleMembershipMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.OrganizationRepository;
@@ -48,11 +47,9 @@ class OrganizationServiceTest {
   @Mock private ScopedRoleService scopedRoleService;
   @Mock private ScopedRoleRepository scopedRoleRepository;
   @Mock private RoleMembershipRepository roleMembershipRepository;
-  @Mock private RoleMembershipMapper roleMembershipMapper;
   @Mock private OrganizationAuthorizationService organizationAuthorizationService;
   private Organization organization;
   private Organization organizationWithUserAllPermission;
-  private Organization organizationWithNoUserPermissions;
   private User user;
   private OrganizationRequestDto organizationRequestDto;
   private OrganizationResponseDto organizationResponseDto;
@@ -72,8 +69,6 @@ class OrganizationServiceTest {
     user = UserTestHelper.createSecondTestUser();
     userInOrganization = createUserInOrganizationAllPermissions(user, organization);
     organization.setUsersInOrganization(List.of(userInOrganization));
-    organizationWithNoUserPermissions =
-        getOrganizationWithUserWithNoPermissions(organization, user);
     organizationWithUserAllPermission = getTestOrganizationWithUserWithAllPermissions(user);
     userResponseDto = getTestExecutor(user);
     organizationResponseDto = getTestOrganizationResponseDto(organization);

@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 public enum Permission {
   ORGANIZATION_READ("organization:read"),
   ORGANIZATION_DELETE("organization:delete"),
-  ORGANIZATION_PERMISSION_UPDATE("organization:permission:update"), // / ?
 
   ORGANIZATION_USER_ADD("organization:user:add"),
   ORGANIZATION_USER_DELETE("organization:user:delete"),
@@ -36,6 +35,7 @@ public enum Permission {
 
   ORGANIZATION_ROLE_ASSIGN("organization:role:assign"),
   ORGANIZATION_ROLE_READ("organization:role:read"),
+  ORGANIZATION_ROLE_UPDATE("organization:role:update"),
 
   ORGANIZATION_EVENT_READ("organization:event:read");
 

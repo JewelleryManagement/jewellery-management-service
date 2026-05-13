@@ -281,7 +281,7 @@ public class SaleTestHelper {
                   return new PurchasedResourceQuantityRequestDto(
                       resourceQuantityRequestDto, saleDiscount);
                 })
-            .collect(Collectors.toList());
+            .toList();
     saleRequestDto.setResources(resources);
     saleRequestDto.setProducts(new ArrayList<>());
     saleRequestDto.setDate(LocalDateTime.now());

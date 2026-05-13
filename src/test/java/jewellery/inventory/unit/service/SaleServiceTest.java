@@ -72,7 +72,7 @@ class SaleServiceTest {
     user = UserTestHelper.createTestUserWithRandomId();
     userResponseDto = UserTestHelper.createTestUserResponseDto(user);
     seller = OrganizationTestHelper.getTestOrganization();
-    buyer = UserTestHelper.createTestUserWithId();
+    buyer = UserTestHelper.createTestUserWithRandomId();
     resource = ResourceTestHelper.getPearl();
     product = ProductTestHelper.getTestProduct(user, new Resource());
     productDiscountRequestDto =

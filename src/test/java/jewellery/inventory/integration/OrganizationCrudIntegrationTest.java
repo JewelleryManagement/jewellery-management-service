@@ -41,10 +41,6 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return "/organizations/" + organizationId + "/users";
   }
 
-  private String getAssignRoleUrl(UUID organizationId, UUID userId, UUID roleId) {
-    return "/organizations/" + organizationId + "/users/" + userId + "/roles/" + roleId;
-  }
-
   private OrganizationRequestDto organizationRequestDto;
   private User user;
   private UserInOrganizationRequestDto userInOrganizationRequestDto;
@@ -59,7 +55,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void deleteOrganizationSuccessfully() throws JsonProcessingException {
+  void deleteOrganizationSuccessfully() {
     ResponseEntity<HttpStatus> response =
         this.testRestTemplate.exchange(
             getOrganizationByIdUrl(organizationResponseDto.getId()),
@@ -182,7 +178,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void updateUserInOrganizationSuccessfully() throws JsonProcessingException {
+  void updateUserInOrganizationSuccessfully() {
     OrganizationSingleMemberResponseDto singleMemberResponseDto =
         addUserInOrganization(organizationResponseDto.getId());
 
@@ -210,7 +206,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void addUserInOrganizationSuccessfully() throws JsonProcessingException {
+  void addUserInOrganizationSuccessfully() {
     ResponseEntity<OrganizationSingleMemberResponseDto> response =
         this.testRestTemplate.postForEntity(
             getOrganizationUsersUrl(organizationResponseDto.getId()),
@@ -229,11 +225,10 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void addUserInOrganizationThrowUserIsPartOfOrganizationException() {
-    ResponseEntity<OrganizationSingleMemberResponseDto> response =
-        this.testRestTemplate.postForEntity(
-            getOrganizationUsersUrl(organizationResponseDto.getId()),
-            userInOrganizationRequestDto,
-            OrganizationSingleMemberResponseDto.class);
+    this.testRestTemplate.postForEntity(
+        getOrganizationUsersUrl(organizationResponseDto.getId()),
+        userInOrganizationRequestDto,
+        OrganizationSingleMemberResponseDto.class);
 
     ResponseEntity<OrganizationSingleMemberResponseDto> responseSameUser =
         this.testRestTemplate.postForEntity(

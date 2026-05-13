@@ -107,7 +107,7 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   }
 
   @Test
-  void createProductInOrganizationSuccessfully() throws JsonProcessingException {
+  void createProductInOrganizationSuccessfully() {
     ResponseEntity<ProductsInOrganizationResponseDto> productInOrganization =
         createProductInOrganization();
 

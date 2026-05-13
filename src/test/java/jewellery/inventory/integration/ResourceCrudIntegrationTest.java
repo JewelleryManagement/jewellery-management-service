@@ -304,11 +304,11 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     List<ResourceResponseDto> responseDto = response.getBody();
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(responseDto);
-    assertEquals(responseDto.get(0).getClazz(), "Element");
-    assertEquals(responseDto.get(0).getQuantityType(), "28");
+    assertEquals("Element", responseDto.get(0).getClazz());
+    assertEquals("28", responseDto.get(0).getQuantityType());
     assertEquals(responseDto.get(0).getPricePerQuantity(), BigDecimal.valueOf(30));
-    assertEquals(responseDto.get(0).getNote(), "smth");
-    assertEquals(responseDto.get(0).getSku(), "S.K.U");
+    assertEquals("smth", responseDto.get(0).getNote());
+    assertEquals("S.K.U", responseDto.get(0).getSku());
   }
 
   private void willImportCsvReturnsBadRequest(MockMultipartFile TestWrongContentFile) {

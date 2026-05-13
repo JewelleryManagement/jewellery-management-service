@@ -65,7 +65,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   }
 
   @Test
-  void transferResourceToOrganizationSuccessfully() throws JsonProcessingException {
+  void transferResourceToOrganizationSuccessfully() {
     OrganizationResponseDto newOwnerOrganizationResponseDto = createOrganization();
     ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
@@ -125,7 +125,7 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
   }
 
   @Test
-  void addResourceToOrganizationSuccessfully() throws JsonProcessingException {
+  void addResourceToOrganizationSuccessfully() {
     ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
     ResourceInOrganizationRequestDto resourceInOrganizationRequest =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
@@ -153,18 +153,18 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
         ORGANIZATION_ADD_RESOURCE_QUANTITY, expectedEventPayload, resourceResponse.getId());
   }
 
-    @Test
-    void addResourceToOrganizationShouldThrowWhenOrganizationNotFound() {
-      ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
-      ResourceInOrganizationRequestDto request =
-          ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
-              UUID.randomUUID(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
+  @Test
+  void addResourceToOrganizationShouldThrowWhenOrganizationNotFound() {
+    ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
+    ResourceInOrganizationRequestDto request =
+        ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
+            UUID.randomUUID(), resourceResponse.getId(), RESOURCE_QUANTITY, RESOURCE_PRICE);
 
-      ResponseEntity<ResourcesInOrganizationResponseDto> response =
-          sendResourceToOrganization(request);
+    ResponseEntity<ResourcesInOrganizationResponseDto> response =
+        sendResourceToOrganization(request);
 
-      assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-    }
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+  }
 
   @Test
   void addResourceToOrganizationShouldThrowWhenResourceNotFound() {
@@ -265,16 +265,16 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
         0, resourceResponseAfterDeletingQuantity.getBody().getResourcesAndQuantities().size());
   }
 
-    @Test
-    void removeResourceQuantityShouldThrowWhenOrganizationNotFound() {
-      ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
-      organizationResponseDto.setId(UUID.randomUUID());
+  @Test
+  void removeResourceQuantityShouldThrowWhenOrganizationNotFound() {
+    ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
+    organizationResponseDto.setId(UUID.randomUUID());
 
-      ResponseEntity<ResourcesInOrganizationResponseDto> response =
-          sendDeleteOperation(getDeleteResourceUrl(organizationResponseDto, resourceResponse));
+    ResponseEntity<ResourcesInOrganizationResponseDto> response =
+        sendDeleteOperation(getDeleteResourceUrl(organizationResponseDto, resourceResponse));
 
-      assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-    }
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+  }
 
   @Test
   void removeResourceQuantityShouldThrowWhenResourceNotFound() {

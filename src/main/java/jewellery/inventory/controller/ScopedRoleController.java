@@ -56,7 +56,7 @@ public class ScopedRoleController {
   @Operation(summary = "Get all user roles for organization")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/organizations/{organizationId}/users/{userId}")
-  public List<ScopedRoleResponseDto> getAllUserRoles(
+  public List<ScopedRoleResponseDto> getAllUserRolesForOrganization(
       @PathVariable UUID organizationId, @PathVariable UUID userId) {
     return scopedRoleService.getAllUserRolesByOrganization(userId, organizationId);
   }

@@ -169,7 +169,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void returnProductFromSaleInOrganizationSuccessfully() throws JsonProcessingException {
+  void returnProductFromSaleInOrganizationSuccessfully() {
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
 
@@ -197,7 +197,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void returnResourceFromSaleInOrganizationSuccessfully() throws JsonProcessingException {
+  void returnResourceFromSaleInOrganizationSuccessfully() {
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
 
@@ -226,7 +226,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void createSaleInOrganizationSuccessfully() throws JsonProcessingException {
+  void createSaleInOrganizationSuccessfully() {
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
 
@@ -270,7 +270,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void returnResourceSuccessfully() throws JsonProcessingException {
+  void returnResourceSuccessfully() {
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
 
@@ -296,7 +296,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
-  void returnProductSuccessfully() throws JsonProcessingException {
+  void returnProductSuccessfully() {
     saleRequestDto.setResources(new ArrayList<>());
     ResponseEntity<OrganizationSaleResponseDto> saleResponse =
         createSaleInOrganization(saleRequestDto);
@@ -568,8 +568,7 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   @Test
   void returnProductShouldThrowWhenUserHasNoSaleProductReturnPermission() {
     saleRequestDto.setResources(new ArrayList<>());
-    ResponseEntity<OrganizationSaleResponseDto> saleResponse =
-        createSaleInOrganization(saleRequestDto);
+    createSaleInOrganization(saleRequestDto);
     authenticateAs(buyer);
 
     ResponseEntity<String> response =

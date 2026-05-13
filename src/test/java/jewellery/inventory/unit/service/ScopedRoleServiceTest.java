@@ -32,7 +32,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class ScopedRoleServiceTest {
+class ScopedRoleServiceTest {
   @InjectMocks private ScopedRoleService scopedRoleService;
   @Mock private ScopedRoleRepository scopedRoleRepository;
   @Mock private ScopedRoleMapper scopedRoleMapper;

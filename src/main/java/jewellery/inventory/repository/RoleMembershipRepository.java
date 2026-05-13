@@ -25,8 +25,6 @@ public interface RoleMembershipRepository extends JpaRepository<RoleMembership, 
       """)
   boolean hasPermissionInOrganization(UUID userId, UUID organizationId, Permission permission);
 
-  boolean existsByUserIdAndOrganizationIdAndRoleId(UUID userId, UUID organizationId, UUID roleId);
-
   @Query(
       """
       select count(m) > 0

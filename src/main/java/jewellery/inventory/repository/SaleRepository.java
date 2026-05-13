@@ -13,15 +13,6 @@ import org.springframework.stereotype.Repository;
 public interface SaleRepository extends JpaRepository<Sale, UUID> {
   @Query(
 """
-    SELECT DISTINCT s
-    FROM Sale s
-    JOIN s.resources pri
-    WHERE pri.resource.id = :resourceId
-""")
-  List<Sale> findAllByResourceId(@Param("resourceId") UUID resourceId);
-
-  @Query(
-"""
     select distinct s
     from Sale s
     join RoleMembership m on m.organization = s.organizationSeller

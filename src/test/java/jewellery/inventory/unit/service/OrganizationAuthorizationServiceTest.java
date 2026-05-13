@@ -26,7 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class OrganizationAuthorizationServiceTest {
+class OrganizationAuthorizationServiceTest {
   @InjectMocks private OrganizationAuthorizationService organizationAuthorizationService;
   @Mock private RoleMembershipRepository roleMembershipRepository;
   @Mock private AuthService authService;
@@ -145,8 +145,7 @@ public class OrganizationAuthorizationServiceTest {
   @Test
   void hasPermissionForSaleShouldReturnFalseWhenCurrentUserHasNoPermission() {
     when(authService.getCurrentUser()).thenReturn(currentUser);
-    when(roleMembershipRepository.hasAccessToSale(
-            sale.getId(), currentUser.getId(), permission))
+    when(roleMembershipRepository.hasAccessToSale(sale.getId(), currentUser.getId(), permission))
         .thenReturn(false);
 
     boolean hasPermission =
@@ -158,8 +157,7 @@ public class OrganizationAuthorizationServiceTest {
   @Test
   void hasPermissionForSaleShouldReturnTrueWhenCurrentUserHasNoPermission() {
     when(authService.getCurrentUser()).thenReturn(currentUser);
-    when(roleMembershipRepository.hasAccessToSale(
-            sale.getId(), currentUser.getId(), permission))
+    when(roleMembershipRepository.hasAccessToSale(sale.getId(), currentUser.getId(), permission))
         .thenReturn(true);
 
     boolean hasPermission =

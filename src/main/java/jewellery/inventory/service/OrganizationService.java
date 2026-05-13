@@ -12,7 +12,6 @@ import jewellery.inventory.exception.organization.OrphanResourcesInOrganizationE
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.mapper.ProductMapper;
-import jewellery.inventory.mapper.RoleMembershipMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.security.AuthService;
@@ -34,9 +33,7 @@ public class OrganizationService implements EntityFetcher {
   private final UserService userService;
   private final ProductMapper productMapper;
   private final ScopedRoleService scopedRoleService;
-  private final ScopedRoleRepository scopedRoleRepository;
   private final RoleMembershipRepository roleMembershipRepository;
-  private final RoleMembershipMapper roleMembershipMapper;
 
   public List<OrganizationResponseDto> getAllOrganizationsResponsesForCurrentUser() {
     logger.debug("Fetching all organization responses for current user");
