@@ -49,6 +49,23 @@ INSERT INTO users (
     'ADMIN'
 );
 
+INSERT INTO users (
+    id,
+    first_name,
+    last_name,
+    email,
+    password,
+    role
+) VALUES
+(
+    '3f1d8c4a-6c7b-4d0d-9d5a-2b9d8a71f4c2',
+    'UserWithManyPermissions',
+    'UserWithManyPermissions',
+    'withManyPermissions@gmail.com',
+    '$2a$10$GBjllOzjHSeTnu4R5jbIUONnGomCq6yGHyMw6BTPNEnMPZ5rAYHsO',
+    'ADMIN'
+);
+
 INSERT INTO user_in_organization (
     id,
     user_id,
@@ -69,6 +86,16 @@ INSERT INTO user_in_organization (
     '640809ce-f04b-46c3-9a01-9cd33034d185'
 );
 
+INSERT INTO user_in_organization (
+    id,
+    user_id,
+    organization_id
+) VALUES (
+    gen_random_uuid(),
+    '3f1d8c4a-6c7b-4d0d-9d5a-2b9d8a71f4c2',
+    '640809ce-f04b-46c3-9a01-9cd33034d185'
+);
+
 INSERT INTO scoped_roles (
     id,
     name,
@@ -86,6 +113,16 @@ INSERT INTO scoped_roles (
 ) VALUES (
     '2c1b7a54-6f2d-48fd-b2d1-91f4b8d83a7c',
     'TEST_SOME_PERMISSIONS',
+    'ORGANIZATION'
+);
+
+INSERT INTO scoped_roles (
+    id,
+    name,
+    role_type
+) VALUES (
+    'b7a2e913-5c44-48b3-a5d2-8f3d1f9c7e61',
+    'TEST_MANY_PERMISSIONS',
     'ORGANIZATION'
 );
 
@@ -110,6 +147,19 @@ FROM unnest(ARRAY[
     'organization:sale:read'
 ]) AS permission;
 
+INSERT INTO role_permissions (role_id, permission)
+SELECT
+  'b7a2e913-5c44-48b3-a5d2-8f3d1f9c7e61'::uuid,
+  permission
+FROM unnest(ARRAY[
+    'organization:read',
+    'organization:user:read',
+    'organization:product:read',
+    'organization:resource:read',
+    'organization:sale:read',
+    'organization:user:add'
+]) AS permission;
+
 INSERT INTO role_memberships (
     id,
     user_id,
@@ -132,4 +182,16 @@ INSERT INTO role_memberships (
     '9f3f0c9e-7d8d-4a2a-9a7d-2e6a8c2f4d11',
     '640809ce-f04b-46c3-9a01-9cd33034d185',
     '2c1b7a54-6f2d-48fd-b2d1-91f4b8d83a7c'
+);
+
+INSERT INTO role_memberships (
+    id,
+    user_id,
+    organization_id,
+    role_id
+) VALUES (
+    '0d9f6b28-1a73-4e65-92fc-c4a8d3b5179e',
+    '3f1d8c4a-6c7b-4d0d-9d5a-2b9d8a71f4c2',
+    '640809ce-f04b-46c3-9a01-9cd33034d185',
+    'b7a2e913-5c44-48b3-a5d2-8f3d1f9c7e61'
 );
