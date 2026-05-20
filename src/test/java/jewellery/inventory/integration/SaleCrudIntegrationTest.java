@@ -83,8 +83,8 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return "/organizations";
   }
 
-  private String getOrganizationUsersUrl(UUID organizationId) {
-    return "/organizations/" + organizationId + "/users";
+  private String getOrganizationUsersUrl(UUID organizationId, UUID userId) {
+    return "/organizations/" + organizationId + "/users/" + userId;
   }
 
   private String getSaleReturnResourceUrl(UUID saleId, UUID resourceId) {
@@ -753,8 +753,9 @@ class SaleCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
       UserInOrganizationRequestDto userInOrganizationRequestDto) {
     return this.testRestTemplate
         .postForEntity(
-            getOrganizationUsersUrl(organizationSeller.getId()),
-            userInOrganizationRequestDto,
+            getOrganizationUsersUrl(
+                organizationSeller.getId(), userInOrganizationRequestDto.getUserId()),
+            null,
             OrganizationSingleMemberResponseDto.class)
         .getBody();
   }

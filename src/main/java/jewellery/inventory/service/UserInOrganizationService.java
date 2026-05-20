@@ -105,17 +105,21 @@ public class UserInOrganizationService implements EntityFetcher {
   @Transactional
   @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_CREATE)
   public OrganizationSingleMemberResponseDto addUserInOrganization(
+      UUID organizationId, UUID userId) {
+
+    UserInOrganization userInOrganization = createOrganizationMembership(organizationId, userId);
+
+    return organizationMapper.toOrganizationSingleMemberResponseDto(
+        userInOrganization, Collections.emptyList());
+  }
+
+  @Transactional
+  @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_CREATE)
+  public OrganizationSingleMemberResponseDto addUserInOrganizationWithRoles(
       UUID organizationId, UserInOrganizationRequestDto userInOrganizationRequestDto) {
 
-    Organization organization = organizationService.getOrganization(organizationId);
-
-    validateUserIsNotPartOfOrganization(
-        organization, userService.getUser(userInOrganizationRequestDto.getUserId()));
-
     UserInOrganization userInOrganization =
-        createUserInOrganization(userInOrganizationRequestDto, organization);
-
-    addUserToOrganization(userInOrganization, organization);
+        createOrganizationMembership(organizationId, userInOrganizationRequestDto.getUserId());
 
     if (!userInOrganizationRequestDto.getOrganizationRoles().isEmpty()) {
       roleMembershipRepository.insertAll(
@@ -173,6 +177,15 @@ public class UserInOrganizationService implements EntityFetcher {
         currentUserId, organizationId);
   }
 
+  private UserInOrganization createOrganizationMembership(UUID organizationId, UUID userId) {
+    Organization organization = organizationService.getOrganization(organizationId);
+    User user = userService.getUser(userId);
+    validateUserIsNotPartOfOrganization(organization, user);
+    UserInOrganization userInOrganization = createUserInOrganization(userId, organization);
+    addUserToOrganization(userInOrganization, organization);
+    return userInOrganization;
+  }
+
   private void validateUserIsNotPartOfOrganization(Organization organization, User userForAdd) {
     boolean isPart =
         organization.getUsersInOrganization().stream()
@@ -182,17 +195,16 @@ public class UserInOrganizationService implements EntityFetcher {
     }
   }
 
-  private UserInOrganization createUserInOrganization(
-      UserInOrganizationRequestDto requestDto, Organization organization) {
+  private UserInOrganization createUserInOrganization(UUID userId, Organization organization) {
     UserInOrganization userInOrganization = new UserInOrganization();
-    userInOrganization.setUser(userService.getUser(requestDto.getUserId()));
+    userInOrganization.setUser(userService.getUser(userId));
     userInOrganization.setOrganization(organization);
-    userInOrganizationRepository.save(userInOrganization);
+    UserInOrganization savedUser = userInOrganizationRepository.save(userInOrganization);
     logger.debug(
         "Successfully created user in organization. User ID: {}, Organization ID: {}",
         userInOrganization.getUser().getId(),
         userInOrganization.getOrganization().getId());
-    return userInOrganization;
+    return savedUser;
   }
 
   private void addUserToOrganization(

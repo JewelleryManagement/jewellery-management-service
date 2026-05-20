@@ -86,6 +86,14 @@ public class OrganizationTestHelper {
     return request;
   }
 
+  public static UserInOrganizationRequestDto getTestUserInOrganizationRequestWithRoles(
+      UUID userId, List<UUID> roleIds) {
+    UserInOrganizationRequestDto request = new UserInOrganizationRequestDto();
+    request.setUserId(userId);
+    request.setOrganizationRoles(roleIds);
+    return request;
+  }
+
   public static UserResponseDto getTestExecutor(User user) {
     UserResponseDto responseDto = new UserResponseDto();
     responseDto.setId(user.getId());
@@ -128,5 +136,23 @@ public class OrganizationTestHelper {
         new UserInOrganizationResponseDto();
     userInOrganizationResponseDto.setUser(createTestUserResponseDto(user));
     return userInOrganizationResponseDto;
+  }
+
+  public static UserInOrganization createUserInOrganization(User user, Organization organization) {
+    return UserInOrganization.builder()
+        .id(UUID.randomUUID())
+        .user(user)
+        .organization(organization)
+        .build();
+  }
+
+  public static OrganizationSingleMemberResponseDto createOrganizationSingleMemberResponseDto(
+      UserInOrganizationResponseDto userInOrganizationResponseDto,
+      OrganizationResponseDto organizationResponseDto) {
+    OrganizationSingleMemberResponseDto organizationSingleMemberResponseDto =
+        new OrganizationSingleMemberResponseDto();
+    organizationSingleMemberResponseDto.setOrganization(organizationResponseDto);
+    organizationSingleMemberResponseDto.setMember(userInOrganizationResponseDto);
+    return organizationSingleMemberResponseDto;
   }
 }

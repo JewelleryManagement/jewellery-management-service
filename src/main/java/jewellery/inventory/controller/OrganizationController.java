@@ -60,12 +60,21 @@ public class OrganizationController {
   @Operation(summary = "Add a user in organization")
   @ResponseStatus(HttpStatus.CREATED)
   @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_ADD')")
-  @PostMapping("/{organizationId}/users")
+  @PostMapping("/{organizationId}/users/{userId}")
   public OrganizationSingleMemberResponseDto addUserInOrganization(
-      @PathVariable UUID organizationId,
-      @RequestBody @Valid UserInOrganizationRequestDto userInOrganizationRequestDto) {
-    return userInOrganizationService.addUserInOrganization(
-        organizationId, userInOrganizationRequestDto);
+      @PathVariable UUID organizationId, @PathVariable UUID userId) {
+    return userInOrganizationService.addUserInOrganization(organizationId, userId);
+  }
+
+  @Operation(summary = "Add a user in organization with roles")
+  @ResponseStatus(HttpStatus.CREATED)
+  @PreAuthorize(
+      "@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_ADD') && "
+          + "@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_ROLE_ASSIGN')")
+  @PostMapping("/{organizationId}/users/roles")
+  public OrganizationSingleMemberResponseDto addUserInOrganizationWithRoles(
+      @PathVariable UUID organizationId, @RequestBody @Valid UserInOrganizationRequestDto request) {
+    return userInOrganizationService.addUserInOrganizationWithRoles(organizationId, request);
   }
 
   @Operation(summary = "Delete a user in organization")
@@ -88,8 +97,7 @@ public class OrganizationController {
 
   @Operation(summary = "Update a user permissions in organization")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize(
-      "@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_ROLE_UPDATE')")
+  @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_ROLE_UPDATE')")
   @PutMapping("{organizationId}/users/{userId}")
   public OrganizationSingleMemberResponseDto updateUserRolesInOrganization(
       @PathVariable UUID organizationId,

@@ -65,8 +65,8 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
     return buildUrl("products", "resource", resourceId);
   }
 
-  private String getOrganizationUsersUrl(UUID organizationId) {
-    return "/organizations/" + organizationId + "/users";
+  private String getOrganizationUsersUrl(UUID organizationId, UUID userId) {
+    return "/organizations/" + organizationId + "/users/" + userId;
   }
 
   private String getBaseSaleUrl() {
@@ -799,8 +799,8 @@ class ProductInOrganizationCrudIntegrationTest extends AuthenticatedIntegrationT
   private void addUserInOrganization(UUID organizationID, UserInOrganizationRequestDto requestDto) {
     ResponseEntity<OrganizationSingleMemberResponseDto> addUserInOrganization =
         this.testRestTemplate.postForEntity(
-            getOrganizationUsersUrl(organizationID),
-            requestDto,
+            getOrganizationUsersUrl(organizationID, requestDto.getUserId()),
+            null,
             OrganizationSingleMemberResponseDto.class);
     assertEquals(HttpStatus.CREATED, addUserInOrganization.getStatusCode());
   }
