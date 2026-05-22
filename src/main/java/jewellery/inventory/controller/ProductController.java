@@ -43,7 +43,7 @@ public class ProductController {
 
   @Operation(summary = "Upload new image in file system and attach to product")
   @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("@orgAuth.hasPermissionForProduct(#productId, 'ORGANIZATION_PRODUCT_CREATE')")
+  @PreAuthorize("@orgAuth.hasPermissionForProduct(#productId, 'ORGANIZATION_PRODUCT_UPDATE')")
   @PostMapping(value = "/{productId}/picture")
   public ImageResponseDto uploadImage(
       @PathVariable("productId") @Valid UUID productId,
