@@ -21,6 +21,7 @@ import jewellery.inventory.mapper.SaleMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.SaleRepository;
+import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,6 +42,8 @@ public class SaleService {
   private final ResourceService resourceService;
   private final ProductMapper productMapper;
   private final PurchasedResourceInUserService purchasedResourceInUserService;
+  private final AuthService authService;
+  private final OrganizationAuthorizationService organizationAuthorizationService;
 
   @LogCreateEvent(eventType = EventType.ORGANIZATION_CREATE_SALE)
   @Transactional
@@ -58,9 +61,6 @@ public class SaleService {
 
     organizationService.validateUserInOrganization(
         organizationService.getOrganization(saleRequestDto.getSellerId()));
-    organizationService.validateCurrentUserPermission(
-        organizationService.getOrganization(saleRequestDto.getSellerId()),
-        OrganizationPermission.CREATE_SALE);
     throwExceptionIfProductIsSold(saleRequestDto);
     throwExceptionIfProductIsPartOfAnotherProduct(saleRequestDto);
     throwExceptionIfSellerNotProductOwner(saleRequestDto);
@@ -86,9 +86,6 @@ public class SaleService {
 
     organizationService.validateUserInOrganization(
         organizationService.getOrganization(sale.getOrganizationSeller().getId()));
-    organizationService.validateCurrentUserPermission(
-        organizationService.getOrganization(sale.getOrganizationSeller().getId()),
-        OrganizationPermission.RETURN_PRODUCT);
 
     removeProductFromSale(productId, sale);
     updateProductsOrganizationOwner(productToReturn, sale.getOrganizationSeller(), sale);
@@ -106,9 +103,6 @@ public class SaleService {
 
     organizationService.validateUserInOrganization(
         organizationService.getOrganization(sale.getOrganizationSeller().getId()));
-    organizationService.validateCurrentUserPermission(
-        organizationService.getOrganization(sale.getOrganizationSeller().getId()),
-        OrganizationPermission.RETURN_RESOURCE);
 
     returnResourceFromSaleToOrganization(sale, resourceToReturn);
     removeResourceFromSale(sale, resourceToReturn);
@@ -119,9 +113,13 @@ public class SaleService {
   }
 
   public List<OrganizationSaleResponseDto> getAllSales() {
-    logger.debug("Fetching all Sales from organization");
-    return saleRepository.findAll().stream()
-        .filter(sale -> sale.getOrganizationSeller() != null)
+    logger.debug("Fetching all sales for current user");
+
+    UUID currentUserId = authService.getCurrentUser().getId();
+
+    return saleRepository
+        .findAllByUserIdAndPermission(currentUserId, Permission.ORGANIZATION_SALE_READ)
+        .stream()
         .map(saleMapper::mapToOrganizationSaleResponseDto)
         .toList();
   }
@@ -154,8 +152,12 @@ public class SaleService {
   }
 
   public List<OrganizationSaleResponseDto> getAllSalesByResource(UUID resourceId) {
-    return saleRepository.findAllByResourceId(resourceId).stream()
-        .filter(sale -> sale.getOrganizationSeller() != null)
+    UUID currentUserId = authService.getCurrentUser().getId();
+
+    return saleRepository
+        .findAllByResourceIdAndUserIdAndPermission(
+            resourceId, currentUserId, Permission.ORGANIZATION_SALE_READ)
+        .stream()
         .map(saleMapper::mapToOrganizationSaleResponseDto)
         .toList();
   }

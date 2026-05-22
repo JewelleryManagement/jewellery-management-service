@@ -50,20 +50,23 @@ public class ResourceInOrganizationMapper {
         .build();
   }
 
-  public ResourceOwnedByOrganizationsResponseDto toResourcesOwnedByOrganizationsResponseDto(Resource resource) {
+  public ResourceOwnedByOrganizationsResponseDto toResourcesOwnedByOrganizationsResponseDto(
+      Resource resource, List<ResourceInOrganization> affiliations) {
     List<OrganizationQuantityResponseDto> organizationQuantityResponseDtos =
-            resource.getOrganizationAffiliations().stream()
-                    .map(
-                            resourceInOrganization ->
-                                    OrganizationQuantityResponseDto.builder()
-                                            .owner(organizationMapper.toResponse(resourceInOrganization.getOrganization()))
-                                            .quantity(resourceInOrganization.getQuantity())
-                                            .build())
-                    .toList();
+        affiliations.stream()
+            .map(
+                resourceInOrganization ->
+                    OrganizationQuantityResponseDto.builder()
+                        .owner(
+                            organizationMapper.toResponse(resourceInOrganization.getOrganization()))
+                        .quantity(resourceInOrganization.getQuantity())
+                        .build())
+            .toList();
+
     return ResourceOwnedByOrganizationsResponseDto.builder()
-            .organizationsAndQuantities(organizationQuantityResponseDtos)
-            .resource(resourceMapper.toResourceResponse(resource))
-            .build();
+        .organizationsAndQuantities(organizationQuantityResponseDtos)
+        .resource(resourceMapper.toResourceResponse(resource))
+        .build();
   }
 
   private List<ResourceQuantityResponseDto> getResourcesQuantitiesResponseDto(

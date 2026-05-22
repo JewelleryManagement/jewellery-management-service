@@ -3,6 +3,7 @@ package jewellery.inventory.service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
@@ -23,6 +24,7 @@ import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.model.resource.ResourceInProduct;
 import jewellery.inventory.repository.*;
+import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,10 +41,19 @@ public class ProductService implements EntityFetcher {
   private final UserService userService;
   private final ResourceInOrganizationService resourceInOrganizationService;
   private final ResourceInProductRepository resourceInProductRepository;
+  private final AuthService authService;
 
   public List<ProductResponseDto> getByOwner(UUID ownerId) {
-    List<Product> products = productRepository.findAllByOwnerId(ownerId);
-    logger.info("Get product by owner with ID: {}", ownerId);
+    UUID currentUserId = authService.getCurrentUser().getId();
+
+    Set<Permission> requiredPermissions =
+        Set.of(Permission.ORGANIZATION_PRODUCT_READ, Permission.ORGANIZATION_SALE_READ);
+
+    List<Product> products =
+        productRepository.findAllReadableByOwnerId(
+            ownerId, currentUserId, requiredPermissions, requiredPermissions.size());
+
+    logger.info("Get products by owner with ID: {}", ownerId);
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
@@ -66,8 +77,6 @@ public class ProductService implements EntityFetcher {
       ProductRequestDto productRequestDto) {
     Organization organization = organizationService.getOrganization(productRequestDto.getOwnerId());
 
-    organizationService.validateCurrentUserPermission(
-        organization, OrganizationPermission.CREATE_PRODUCT);
     validateUsersAreMembersOfOrganization(organization, getAuthors(productRequestDto));
 
     Product product = persistProductWithoutResourcesAndProducts(productRequestDto, organization);
@@ -80,10 +89,6 @@ public class ProductService implements EntityFetcher {
   public void deleteProductInOrganization(UUID productId) {
     Product product = getProduct(productId);
     throwExceptionIfProductIsNotPartOfOrganization(product);
-    Organization organization = product.getOrganization();
-
-    organizationService.validateCurrentUserPermission(
-        organization, OrganizationPermission.DISASSEMBLE_PRODUCT);
 
     throwExceptionIfProductIsSold(product);
     throwExceptionIfProductIsPartOfAnotherProduct(productId, product);
@@ -101,8 +106,6 @@ public class ProductService implements EntityFetcher {
 
     Organization organization = organizationService.getOrganization(productRequestDto.getOwnerId());
 
-    organizationService.validateCurrentUserPermission(
-        organization, OrganizationPermission.EDIT_PRODUCT);
     validateUsersAreMembersOfOrganization(organization, getAuthors(productRequestDto));
 
     Product product = getProduct(productId);
@@ -127,9 +130,6 @@ public class ProductService implements EntityFetcher {
 
     Organization recipient = organizationService.getOrganization(recipientId);
 
-    organizationService.validateCurrentUserPermission(
-        product.getOrganization(), OrganizationPermission.TRANSFER_PRODUCT);
-
     updateProductOrganizationRecursively(product, recipient);
     logger.info(
         "Transferred product with ID {} to new organization with ID {}", productId, recipientId);
@@ -140,7 +140,12 @@ public class ProductService implements EntityFetcher {
   }
 
   public List<ProductResponseDto> getAllProductsByResource(UUID resourceId) {
-    return productRepository.findAllByResourceId(resourceId).stream()
+    UUID currentUserId = authService.getCurrentUser().getId();
+
+    return productRepository
+        .findAllByResourceIdAndUserIdAndPermission(
+            resourceId, currentUserId, Permission.ORGANIZATION_PRODUCT_READ)
+        .stream()
         .map(productMapper::mapToProductResponseDto)
         .toList();
   }

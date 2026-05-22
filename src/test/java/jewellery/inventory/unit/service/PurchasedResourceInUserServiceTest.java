@@ -5,22 +5,24 @@ import static jewellery.inventory.helper.ResourceTestHelper.getPearlResponseDto;
 import static jewellery.inventory.helper.UserTestHelper.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.util.*;
 import jewellery.inventory.dto.response.PurchasedResourceQuantityResponseDto;
 import jewellery.inventory.dto.response.ResourceQuantityResponseDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
-import jewellery.inventory.exception.not_found.UserNotFoundException;
+import jewellery.inventory.helper.UserTestHelper;
 import jewellery.inventory.mapper.PurchasedResourceInUserMapper;
+import jewellery.inventory.model.Permission;
 import jewellery.inventory.model.PurchasedResourceInUser;
 import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.PurchasedResourceInUserRepository;
 import jewellery.inventory.service.PurchasedResourceInUserService;
 import jewellery.inventory.service.UserService;
+import jewellery.inventory.service.security.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,11 +36,13 @@ class PurchasedResourceInUserServiceTest {
   @InjectMocks private PurchasedResourceInUserService purchasedResourceInUserService;
   @Mock private PurchasedResourceInUserRepository purchasedResourceInUserRepository;
   @Mock private PurchasedResourceInUserMapper purchasedResourceInUserMapper;
+  @Mock AuthService authService;
   private User user;
   private Resource resource;
   private ResourceResponseDto resourceResponseDto;
   private PurchasedResourceQuantityResponseDto purchasedResourceQuantityResponseDto1;
   private PurchasedResourceQuantityResponseDto purchasedResourceQuantityResponseDto2;
+  private UserResponseDto userResponseDto;
 
   private UUID userId;
   private PurchasedResourceInUser purchasedResourceInUser1;
@@ -50,6 +54,7 @@ class PurchasedResourceInUserServiceTest {
   @BeforeEach
   void setUp() {
     user = createTestUserWithRandomId();
+    userResponseDto = UserTestHelper.createTestUserResponseDto(user);
     resource = getPearl();
     resourceResponseDto = getPearlResponseDto();
     purchasedResourceInUser1 = getPurchasedResourceInUser();
@@ -62,10 +67,13 @@ class PurchasedResourceInUserServiceTest {
 
   @Test
   void getAllPurchasedResourcesSuccessfully() {
-    when(userService.getUser(userId)).thenReturn(user);
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
+    Set<Permission> permissions =
+        Set.of(Permission.ORGANIZATION_RESOURCE_READ, Permission.ORGANIZATION_SALE_READ);
     List<PurchasedResourceInUser> purchasedResourcesInUsers =
         List.of(purchasedResourceInUser1, purchasedResourceInUser2);
-    when(purchasedResourceInUserRepository.findAllByOwnerId(userId))
+    when(purchasedResourceInUserRepository.findAllByOwnerIdAndAllPermissions(
+            userResponseDto.getId(), userResponseDto.getId(), permissions, permissions.size()))
         .thenReturn(purchasedResourcesInUsers);
     when(purchasedResourceInUserMapper.toPurchasedResourceQuantityResponseDto(
             purchasedResourceInUser1))
@@ -75,34 +83,31 @@ class PurchasedResourceInUserServiceTest {
         .thenReturn(purchasedResourceQuantityResponseDto2);
 
     List<PurchasedResourceQuantityResponseDto> allPurchasedResources =
-        purchasedResourceInUserService.getAllPurchasedResources(userId);
+        purchasedResourceInUserService.getAllPurchasedResources(userResponseDto.getId());
 
     assertNotNull(allPurchasedResources);
     assertEquals(2, allPurchasedResources.size());
     assertEquals(allPurchasedResources.get(0), purchasedResourceQuantityResponseDto1);
     assertEquals(allPurchasedResources.get(1), purchasedResourceQuantityResponseDto2);
 
-    verify(userService).getUser(userId);
-    verify(purchasedResourceInUserRepository).findAllByOwnerId(userId);
-    verify(purchasedResourceInUserMapper)
+    verify(authService, times(1)).getCurrentUser();
+    verify(purchasedResourceInUserRepository, times(1))
+        .findAllByOwnerIdAndAllPermissions(
+            userResponseDto.getId(), userResponseDto.getId(), permissions, permissions.size());
+    verify(purchasedResourceInUserMapper, times(1))
         .toPurchasedResourceQuantityResponseDto(purchasedResourceInUser1);
-    verify(purchasedResourceInUserMapper)
+    verify(purchasedResourceInUserMapper, times(1))
         .toPurchasedResourceQuantityResponseDto(purchasedResourceInUser2);
   }
 
   @Test
-  void getAllPurchasedResourcesThrowsExceptionWhenUserNotFound() {
-    when(userService.getUser(userId)).thenThrow(UserNotFoundException.class);
-
-    assertThrows(
-        UserNotFoundException.class,
-        () -> purchasedResourceInUserService.getAllPurchasedResources(userId));
-  }
-
-  @Test
   void getAllPurchasedResourcesReturnsEmptyListWhenThereAreNoPurchasedResources() {
-    when(userService.getUser(userId)).thenReturn(user);
-    when(purchasedResourceInUserRepository.findAllByOwnerId(user.getId())).thenReturn(List.of());
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
+    Set<Permission> permissions =
+        Set.of(Permission.ORGANIZATION_RESOURCE_READ, Permission.ORGANIZATION_SALE_READ);
+    when(purchasedResourceInUserRepository.findAllByOwnerIdAndAllPermissions(
+            userResponseDto.getId(), userResponseDto.getId(), permissions, permissions.size()))
+        .thenReturn(List.of());
 
     List<PurchasedResourceQuantityResponseDto> allPurchasedResources =
         purchasedResourceInUserService.getAllPurchasedResources(userId);
@@ -110,8 +115,10 @@ class PurchasedResourceInUserServiceTest {
     assertNotNull(allPurchasedResources);
     assertTrue(allPurchasedResources.isEmpty());
 
-    verify(userService).getUser(userId);
-    verify(purchasedResourceInUserRepository).findAllByOwnerId(userId);
+    verify(authService, times(1)).getCurrentUser();
+    verify(purchasedResourceInUserRepository, times(1))
+        .findAllByOwnerIdAndAllPermissions(
+            userResponseDto.getId(), userResponseDto.getId(), permissions, permissions.size());
   }
 
   private PurchasedResourceInUser getPurchasedResourceInUser() {

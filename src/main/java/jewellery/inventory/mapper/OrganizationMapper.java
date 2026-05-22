@@ -1,9 +1,7 @@
 package jewellery.inventory.mapper;
 
-import java.util.ArrayList;
 import java.util.List;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
-import jewellery.inventory.dto.response.OrganizationMembersResponseDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.OrganizationSingleMemberResponseDto;
 import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
@@ -15,6 +13,7 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class OrganizationMapper {
   private UserMapper userMapper;
+  private final ScopedRoleMapper scopedRoleMapper;
 
   public Organization toEntity(OrganizationRequestDto dto) {
     Organization organization = new Organization();
@@ -36,37 +35,16 @@ public class OrganizationMapper {
     return null;
   }
 
-  public OrganizationMembersResponseDto toOrganizationMembersResponseDto(
-      Organization organization) {
-    OrganizationMembersResponseDto membersResponseDto = new OrganizationMembersResponseDto();
-    membersResponseDto.setMembers(toListUserInOrganizationResponseDto(organization));
-    membersResponseDto.setOrganization(toResponse(organization));
-    return membersResponseDto;
-  }
-
   public OrganizationSingleMemberResponseDto toOrganizationSingleMemberResponseDto(
-      UserInOrganization userInOrganization) {
+      UserInOrganization userInOrganization, List<ScopedRole> organizationRoles) {
     OrganizationSingleMemberResponseDto memberResponseDto =
         new OrganizationSingleMemberResponseDto();
-    memberResponseDto.setMember(toUserInOrganizationResponseDto(userInOrganization));
+    memberResponseDto.setMember(
+        toUserInOrganizationResponseDto(userInOrganization, organizationRoles));
+
     memberResponseDto.setOrganization(toResponse(userInOrganization.getOrganization()));
+
     return memberResponseDto;
-  }
-
-  private List<UserInOrganizationResponseDto> toListUserInOrganizationResponseDto(
-      Organization organization) {
-    List<UserInOrganizationResponseDto> userResponseDtoList = new ArrayList<>();
-
-    organization
-        .getUsersInOrganization()
-        .forEach(
-            userInOrg -> {
-              UserInOrganizationResponseDto userResponseDto =
-                  toUserInOrganizationResponseDto(userInOrg);
-              userResponseDtoList.add(userResponseDto);
-            });
-
-    return userResponseDtoList;
   }
 
   public UserInOrganizationResponseDto toUserInOrganizationResponseDto(
@@ -74,8 +52,16 @@ public class OrganizationMapper {
     UserInOrganizationResponseDto userResponseDto = new UserInOrganizationResponseDto();
 
     userResponseDto.setUser(userMapper.toUserResponse(userInOrganization.getUser()));
-    userResponseDto.setOrganizationPermissions(userInOrganization.getOrganizationPermission());
-
     return userResponseDto;
+  }
+
+  public UserInOrganizationResponseDto toUserInOrganizationResponseDto(
+      UserInOrganization userInOrganization, List<ScopedRole> organizationRoles) {
+    UserInOrganizationResponseDto dto = new UserInOrganizationResponseDto();
+
+    dto.setUser(userMapper.toUserResponse(userInOrganization.getUser()));
+    dto.setOrganizationRoles(scopedRoleMapper.toResponseList(organizationRoles));
+
+    return dto;
   }
 }

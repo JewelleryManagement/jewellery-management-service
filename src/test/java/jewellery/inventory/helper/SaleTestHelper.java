@@ -227,7 +227,7 @@ public class SaleTestHelper {
   }
 
   public static SaleRequestDto getSaleInOrganizationRequestDto(
-      Organization seller,
+      OrganizationResponseDto seller,
       User buyer,
       ProductsInOrganizationResponseDto productsInOrganizationResponseDto,
       ResourcesInOrganizationResponseDto resourcesInOrganizationResponseDto,
@@ -281,7 +281,7 @@ public class SaleTestHelper {
                   return new PurchasedResourceQuantityRequestDto(
                       resourceQuantityRequestDto, saleDiscount);
                 })
-            .collect(Collectors.toList());
+            .toList();
     saleRequestDto.setResources(resources);
     saleRequestDto.setProducts(new ArrayList<>());
     saleRequestDto.setDate(LocalDateTime.now());

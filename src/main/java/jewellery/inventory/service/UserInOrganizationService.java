@@ -1,24 +1,26 @@
 package jewellery.inventory.service;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
-import jewellery.inventory.dto.response.OrganizationMembersResponseDto;
 import jewellery.inventory.dto.response.OrganizationSingleMemberResponseDto;
 import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.exception.organization.UserIsPartOfOrganizationException;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.model.*;
+import jewellery.inventory.repository.RoleMembershipRepository;
 import jewellery.inventory.repository.UserInOrganizationRepository;
+import jewellery.inventory.service.security.AuthService;
 import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -28,59 +30,120 @@ public class UserInOrganizationService implements EntityFetcher {
   private final UserService userService;
   private final UserInOrganizationRepository userInOrganizationRepository;
   private final OrganizationService organizationService;
+  private final RoleMembershipRepository roleMembershipRepository;
+  private final AuthService authService;
 
-  public OrganizationMembersResponseDto getAllUsersInOrganization(UUID organizationId) {
+  public List<UserInOrganizationResponseDto> getAllUsersInOrganization(UUID organizationId) {
     Organization organization = organizationService.getOrganization(organizationId);
     organizationService.validateUserInOrganization(organization);
-    return organizationMapper.toOrganizationMembersResponseDto(organization);
+
+    return organization.getUsersInOrganization().stream()
+        .map(organizationMapper::toUserInOrganizationResponseDto)
+        .toList();
   }
 
+  @Transactional(readOnly = true)
+  public List<UserInOrganizationResponseDto> getAllUsersInOrganizationWithRoles(
+      UUID organizationId) {
+    Organization organization = organizationService.getOrganization(organizationId);
+    organizationService.validateUserInOrganization(organization);
+
+    List<UserInOrganization> usersInOrganization = organization.getUsersInOrganization();
+
+    if (usersInOrganization.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    List<UUID> userIds =
+        usersInOrganization.stream()
+            .map(userInOrganization -> userInOrganization.getUser().getId())
+            .toList();
+
+    Map<UUID, List<ScopedRole>> rolesByUserId =
+        roleMembershipRepository.findAllByOrganizationIdAndUserIds(organizationId, userIds).stream()
+            .collect(
+                Collectors.groupingBy(
+                    membership -> membership.getUser().getId(),
+                    Collectors.mapping(RoleMembership::getRole, Collectors.toList())));
+
+    return usersInOrganization.stream()
+        .map(
+            userInOrganization ->
+                organizationMapper.toUserInOrganizationResponseDto(
+                    userInOrganization,
+                    rolesByUserId.getOrDefault(
+                        userInOrganization.getUser().getId(), Collections.emptyList())))
+        .toList();
+  }
+
+  @Transactional
   @LogUpdateEvent(eventType = EventType.ORGANIZATION_USER_UPDATE)
-  public OrganizationSingleMemberResponseDto updateUserPermissionsInOrganization(
-      UUID userId, UUID organizationId, List<OrganizationPermission> organizationPermissionList) {
-    organizationService.validateCurrentUserPermission(
-        organizationService.getOrganization(organizationId), OrganizationPermission.MANAGE_USERS);
+  public OrganizationSingleMemberResponseDto updateUserRolesInOrganization(
+      UUID userId, UUID organizationId, Set<UUID> organizationRolesIdList) {
 
     UserInOrganization userInOrganization =
         getUserInOrganizationByUserIdAndOrganizationId(userId, organizationId);
 
-    Organization organization = userInOrganization.getOrganization();
+    roleMembershipRepository.deleteAllByUserAndOrganization(userId, organizationId);
 
-    organizationService.validateCurrentUserPermission(
-        organization, OrganizationPermission.MANAGE_USERS);
+    if (!organizationRolesIdList.isEmpty()) {
+      roleMembershipRepository.insertAll(
+          userId, organizationId, organizationRolesIdList.toArray(UUID[]::new));
+    }
 
-    changeUserPermissionInOrganization(userInOrganization, organizationPermissionList);
+    List<ScopedRole> organizationRoles =
+        roleMembershipRepository
+            .findAllByOrganizationIdAndUserIds(organizationId, List.of(userId))
+            .stream()
+            .map(RoleMembership::getRole)
+            .toList();
 
-    logger.info(
-        "Successfully updated user permissions in the organization. Organization ID: {}, User ID: {}",
-        organizationId,
-        userId);
-    return organizationMapper.toOrganizationSingleMemberResponseDto(userInOrganization);
+    return organizationMapper.toOrganizationSingleMemberResponseDto(
+        userInOrganization, organizationRoles);
   }
 
+  @Transactional
   @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_CREATE)
   public OrganizationSingleMemberResponseDto addUserInOrganization(
-      UUID organizationId, UserInOrganizationRequestDto userInOrganizationRequestDto) {
-    Organization organization = organizationService.getOrganization(organizationId);
+      UUID organizationId, UUID userId) {
 
-    organizationService.validateCurrentUserPermission(
-        organization, OrganizationPermission.MANAGE_USERS);
+    UserInOrganization userInOrganization = createOrganizationMembership(organizationId, userId);
 
-    validateUserIsNotPartOfOrganization(
-        organization, userService.getUser(userInOrganizationRequestDto.getUserId()));
-
-    UserInOrganization userInOrganization =
-        createUserInOrganization(userInOrganizationRequestDto, organization);
-    addUserToOrganization(userInOrganization, organization);
-
-    return organizationMapper.toOrganizationSingleMemberResponseDto(userInOrganization);
+    return organizationMapper.toOrganizationSingleMemberResponseDto(
+        userInOrganization, Collections.emptyList());
   }
 
+  @Transactional
+  @LogCreateEvent(eventType = EventType.ORGANIZATION_USER_CREATE)
+  public OrganizationSingleMemberResponseDto addUserInOrganizationWithRoles(
+      UUID organizationId, UserInOrganizationRequestDto userInOrganizationRequestDto) {
+
+    UserInOrganization userInOrganization =
+        createOrganizationMembership(organizationId, userInOrganizationRequestDto.getUserId());
+
+    if (!userInOrganizationRequestDto.getOrganizationRoles().isEmpty()) {
+      roleMembershipRepository.insertAll(
+          userInOrganization.getUser().getId(),
+          organizationId,
+          userInOrganizationRequestDto.getOrganizationRoles().toArray(UUID[]::new));
+    }
+
+    List<ScopedRole> organizationRoles =
+        roleMembershipRepository
+            .findAllByOrganizationIdAndUserIds(
+                organizationId, List.of(userInOrganizationRequestDto.getUserId()))
+            .stream()
+            .map(RoleMembership::getRole)
+            .toList();
+
+    return organizationMapper.toOrganizationSingleMemberResponseDto(
+        userInOrganization, organizationRoles);
+  }
+
+  @Transactional
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_USER_DELETE)
   public void deleteUserInOrganization(UUID userId, UUID organizationId) {
     Organization organization = organizationService.getOrganization(organizationId);
-    organizationService.validateCurrentUserPermission(
-        organization, OrganizationPermission.MANAGE_USERS);
 
     boolean isFoundAndDeleted =
         organization
@@ -90,6 +153,8 @@ public class UserInOrganizationService implements EntityFetcher {
     if (!isFoundAndDeleted) {
       throw new UserNotFoundException(userId);
     }
+
+    roleMembershipRepository.deleteAllByUserAndOrganization(userId, organizationId);
 
     organizationService.saveOrganization(organization);
     logger.info(
@@ -105,6 +170,22 @@ public class UserInOrganizationService implements EntityFetcher {
     return organizationMapper.toUserInOrganizationResponseDto(userInOrganization);
   }
 
+  public Set<Permission> getCurrentUserPermissions(UUID organizationId) {
+    UUID currentUserId = authService.getCurrentUser().getId();
+
+    return roleMembershipRepository.findPermissionsByUserIdAndOrganizationId(
+        currentUserId, organizationId);
+  }
+
+  private UserInOrganization createOrganizationMembership(UUID organizationId, UUID userId) {
+    Organization organization = organizationService.getOrganization(organizationId);
+    User user = userService.getUser(userId);
+    validateUserIsNotPartOfOrganization(organization, user);
+    UserInOrganization userInOrganization = createUserInOrganization(userId, organization);
+    addUserToOrganization(userInOrganization, organization);
+    return userInOrganization;
+  }
+
   private void validateUserIsNotPartOfOrganization(Organization organization, User userForAdd) {
     boolean isPart =
         organization.getUsersInOrganization().stream()
@@ -114,19 +195,16 @@ public class UserInOrganizationService implements EntityFetcher {
     }
   }
 
-  private UserInOrganization createUserInOrganization(
-      UserInOrganizationRequestDto requestDto, Organization organization) {
+  private UserInOrganization createUserInOrganization(UUID userId, Organization organization) {
     UserInOrganization userInOrganization = new UserInOrganization();
-    userInOrganization.setUser(userService.getUser(requestDto.getUserId()));
+    userInOrganization.setUser(userService.getUser(userId));
     userInOrganization.setOrganization(organization);
-    userInOrganization.setOrganizationPermission(requestDto.getOrganizationPermission());
-    userInOrganizationRepository.save(userInOrganization);
+    UserInOrganization savedUser = userInOrganizationRepository.save(userInOrganization);
     logger.debug(
-        "Successfully created user in organization. User ID: {}, Organization ID: {}, Organization Permission: {}",
+        "Successfully created user in organization. User ID: {}, Organization ID: {}",
         userInOrganization.getUser().getId(),
-        userInOrganization.getOrganization().getId(),
-        userInOrganization.getOrganizationPermission());
-    return userInOrganization;
+        userInOrganization.getOrganization().getId());
+    return savedUser;
   }
 
   private void addUserToOrganization(
@@ -139,19 +217,6 @@ public class UserInOrganizationService implements EntityFetcher {
     organizationService.saveOrganization(organization);
   }
 
-  private void changeUserPermissionInOrganization(
-      UserInOrganization userInOrganization,
-      List<OrganizationPermission> organizationPermissionList) {
-
-    userInOrganization.setOrganizationPermission(organizationPermissionList);
-    userInOrganizationRepository.save(userInOrganization);
-    logger.info(
-        "User permissions successfully changed in organization. User ID: {}, Organization ID: {}, New Permissions: {}",
-        userInOrganization.getUser().getId(),
-        userInOrganization.getOrganization().getId(),
-        organizationPermissionList);
-  }
-
   private UserInOrganization getUserInOrganizationByUserIdAndOrganizationId(
       UUID userId, UUID organizationId) {
     return userInOrganizationRepository
@@ -161,13 +226,26 @@ public class UserInOrganizationService implements EntityFetcher {
 
   @Override
   public Object fetchEntity(Object... ids) {
+    UUID userId = (UUID) ids[0];
+    UUID organizationId = (UUID) ids[1];
+
     UserInOrganization userInOrganization =
         userInOrganizationRepository
-            .findByUserIdAndOrganizationId((UUID) ids[0], (UUID) ids[1])
+            .findByUserIdAndOrganizationId(userId, organizationId)
             .orElse(null);
+
     if (userInOrganization == null) {
       return null;
     }
-    return organizationMapper.toOrganizationSingleMemberResponseDto(userInOrganization);
+
+    List<ScopedRole> organizationRoles =
+        roleMembershipRepository
+            .findAllByOrganizationIdAndUserIds(organizationId, List.of(userId))
+            .stream()
+            .map(RoleMembership::getRole)
+            .toList();
+
+    return organizationMapper.toOrganizationSingleMemberResponseDto(
+        userInOrganization, organizationRoles);
   }
 }

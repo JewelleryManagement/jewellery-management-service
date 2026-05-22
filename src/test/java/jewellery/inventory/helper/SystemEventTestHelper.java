@@ -34,7 +34,7 @@ public class SystemEventTestHelper {
       EventType eventType, Map<String, Object> toCompare, UUID relatedId) {
 
     Optional<SystemEventLiteResponseDto> eventOptional =
-            findEventByType(testRestTemplate, eventType, relatedId);
+        findEventByType(testRestTemplate, eventType, relatedId);
 
     assertTrue(
         eventOptional.isPresent(),

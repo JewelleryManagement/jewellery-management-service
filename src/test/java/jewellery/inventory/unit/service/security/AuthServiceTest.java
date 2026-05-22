@@ -1,8 +1,6 @@
 package jewellery.inventory.unit.service.security;
 
-import static jewellery.inventory.helper.UserTestHelper.USER_EMAIL;
-import static jewellery.inventory.helper.UserTestHelper.USER_PASSWORD;
-import static jewellery.inventory.helper.UserTestHelper.createTestUserWithId;
+import static jewellery.inventory.helper.UserTestHelper.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -49,7 +47,7 @@ class AuthServiceTest {
     authRequest.setEmail(USER_EMAIL);
     authRequest.setPassword(USER_PASSWORD);
 
-    user = createTestUserWithId();
+    user = createTestUserWithRandomId();
   }
 
   @Test

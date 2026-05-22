@@ -1,5 +1,7 @@
 package jewellery.inventory.unit.service;
 
+import static jewellery.inventory.helper.UserTestHelper.createTestUser;
+import static jewellery.inventory.helper.UserTestHelper.createTestUserResponseDto;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -10,11 +12,11 @@ import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
 import jewellery.inventory.dto.request.TransferResourceRequestDto;
 import jewellery.inventory.dto.response.ResourceOwnedByOrganizationsResponseDto;
 import jewellery.inventory.dto.response.ResourcesInOrganizationResponseDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.invalid_resource_quantity.InsufficientResourceQuantityException;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceInOrganizationNotFoundException;
 import jewellery.inventory.exception.not_found.ResourceNotFoundException;
-import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
 import jewellery.inventory.helper.OrganizationTestHelper;
 import jewellery.inventory.helper.ResourceInOrganizationTestHelper;
@@ -26,6 +28,7 @@ import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceInOrganizationRepository;
 import jewellery.inventory.service.*;
+import jewellery.inventory.service.security.AuthService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,6 +48,7 @@ class ResourceInOrganizationServiceTest {
   @Mock private ResourceInOrganizationMapper resourceInOrganizationMapper;
   @Mock private OrganizationMapper organizationMapper;
   @Mock private ResourceMapper resourceMapper;
+  @Mock private AuthService authService;
 
   private Organization organization;
   private Organization secondOrganization;
@@ -56,9 +60,11 @@ class ResourceInOrganizationServiceTest {
   private static final BigDecimal QUANTITY = BigDecimal.ONE;
   private static final BigDecimal BIG_QUANTITY = BigDecimal.valueOf(1000);
   private static final BigDecimal DEAL_PRICE = BigDecimal.TEN;
+  private UserResponseDto userResponseDto;
 
   @BeforeEach
   void setUp() {
+    userResponseDto = createTestUserResponseDto(createTestUser());
     organization = OrganizationTestHelper.getTestOrganization();
     secondOrganization = OrganizationTestHelper.getTestOrganization();
     resource = ResourceTestHelper.getPearl();
@@ -91,21 +97,6 @@ class ResourceInOrganizationServiceTest {
   }
 
   @Test
-  void testAddResourceToOrganizationShouldThrowMissingOrganizationPermissionException() {
-    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-
-    doThrow(MissingOrganizationPermissionException.class)
-        .when(organizationService)
-        .validateCurrentUserPermission(organization, OrganizationPermission.ADD_RESOURCE_QUANTITY);
-
-    Assertions.assertThrows(
-        MissingOrganizationPermissionException.class,
-        () ->
-            resourceInOrganizationService.addResourceToOrganization(
-                resourceInOrganizationRequestDto));
-  }
-
-  @Test
   void testAddResourceToOrganizationSuccessfully() {
     ResourcesInOrganizationResponseDto resourcesInOrganizationResponseDto =
         resourceInOrganizationMapper.toResourcesInOrganizationResponse(organization);
@@ -118,8 +109,6 @@ class ResourceInOrganizationServiceTest {
     resourceInOrganizationService.addResourceToOrganization(resourceInOrganizationRequestDto);
 
     verify(organizationService, times(1)).getOrganization(organization.getId());
-    verify(organizationService, times(1))
-        .validateCurrentUserPermission(organization, OrganizationPermission.ADD_RESOURCE_QUANTITY);
     verify(resourceService, times(1))
         .getResourceById(resourceInOrganizationRequestDto.getResourceId());
     verify(resourceInOrganizationMapper, times(1))
@@ -136,21 +125,6 @@ class ResourceInOrganizationServiceTest {
         () ->
             resourceInOrganizationService.removeQuantityFromResource(
                 organization.getId(), resource.getId(), QUANTITY));
-  }
-
-  @Test
-  void testRemoveQuantityFromResourceShouldThrowMissingOrganizationPermissionException() {
-    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-
-    doThrow(MissingOrganizationPermissionException.class)
-        .when(organizationService)
-        .validateCurrentUserPermission(organization, OrganizationPermission.ADD_RESOURCE_QUANTITY);
-
-    Assertions.assertThrows(
-        MissingOrganizationPermissionException.class,
-        () ->
-            resourceInOrganizationService.addResourceToOrganization(
-                resourceInOrganizationRequestDto));
   }
 
   @Test
@@ -220,19 +194,6 @@ class ResourceInOrganizationServiceTest {
 
   @Test
   void
-      testTransferResourceShouldThrowMissingOrganizationPermissionExceptionWhenUserHaveNoPermissionToTransfer() {
-    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-    doThrow(MissingOrganizationPermissionException.class)
-        .when(organizationService)
-        .validateCurrentUserPermission(organization, OrganizationPermission.TRANSFER_RESOURCE);
-
-    Assertions.assertThrows(
-        MissingOrganizationPermissionException.class,
-        () -> resourceInOrganizationService.transferResource(transferResourceRequestDto));
-  }
-
-  @Test
-  void
       testTransferResourceShouldThrowOrganizationNotFoundExceptionWhenNewOwnerOrganizationDoesNotExists() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
     when(organizationService.getOrganization(secondOrganization.getId()))
@@ -288,9 +249,15 @@ class ResourceInOrganizationServiceTest {
   @Test
   void testGetOrganizationsAndQuantitiesSuccessfully() {
     when(resourceService.getResourceById(resource.getId())).thenReturn(resource);
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
+    when(resourceInOrganizationRepository.findAllByResourceIdAndUserIdAndPermission(
+            resource.getId(), userResponseDto.getId(), Permission.ORGANIZATION_RESOURCE_READ))
+        .thenReturn(List.of(resourceInOrganization));
+
     ResourceOwnedByOrganizationsResponseDto response =
         ResourceInOrganizationTestHelper.getResourceOwnedByOrganizationsResponseDto(organization);
-    when(resourceInOrganizationService.getOrganizationsAndQuantities(resource.getId()))
+    when(resourceInOrganizationMapper.toResourcesOwnedByOrganizationsResponseDto(
+            resource, List.of(resourceInOrganization)))
         .thenReturn(response);
 
     ResourceOwnedByOrganizationsResponseDto actual =
@@ -302,14 +269,20 @@ class ResourceInOrganizationServiceTest {
         organization.getId(), actual.getOrganizationsAndQuantities().get(0).getOwner().getId());
     Assertions.assertEquals(
         BigDecimal.TEN, actual.getOrganizationsAndQuantities().get(0).getQuantity());
+
+    verify(resourceService, times(1)).getResourceById(resource.getId());
+    verify(authService, times(1)).getCurrentUser();
+    verify(resourceInOrganizationRepository, times(1))
+        .findAllByResourceIdAndUserIdAndPermission(
+            resource.getId(), userResponseDto.getId(), Permission.ORGANIZATION_RESOURCE_READ);
     verify(resourceInOrganizationMapper, times(1))
-        .toResourcesOwnedByOrganizationsResponseDto(resource);
+        .toResourcesOwnedByOrganizationsResponseDto(resource, List.of(resourceInOrganization));
   }
 
   @Test
   void testGetOrganizationsAndQuantitiesShouldThrowWhenResourceNotFound() {
-    when(resourceInOrganizationService.getOrganizationsAndQuantities(resource.getId()))
-        .thenThrow(new ResourceNotFoundException(resource.getId()));
+    when(resourceService.getResourceById(resource.getId()))
+        .thenThrow(ResourceNotFoundException.class);
 
     Assertions.assertThrows(
         ResourceNotFoundException.class,

@@ -88,12 +88,6 @@ public class UserTestHelper {
     return user;
   }
 
-  public static User createTestUserWithId() {
-    User user = createTestUser();
-    user.setId(UUID.randomUUID());
-    return user;
-  }
-
   public static UserRequestDto createTestUserRequest() {
     UserRequestDto userRequest = new UserRequestDto();
     userRequest.setFirstName(FIRST_NAME);
@@ -110,6 +104,7 @@ public class UserTestHelper {
     userRequest.setLastName("different_last_name");
     userRequest.setEmail("user@example.com");
     userRequest.setPassword(USER_PASSWORD);
+    userRequest.setRole(Role.ADMIN);
     return userRequest;
   }
 

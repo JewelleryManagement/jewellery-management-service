@@ -3,30 +3,29 @@ package jewellery.inventory.unit.service;
 import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizationRequest;
 import static jewellery.inventory.helper.ProductTestHelper.getTestProduct;
+import static jewellery.inventory.helper.ScopedRoleHelper.createRole;
+import static jewellery.inventory.helper.ScopedRoleHelper.createRoleRequest;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.util.*;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
+import jewellery.inventory.dto.request.ScopedRoleRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
-import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.OrphanProductsInOrganizationException;
 import jewellery.inventory.exception.organization.OrphanResourcesInOrganizationException;
-import jewellery.inventory.helper.OrganizationTestHelper;
-import jewellery.inventory.helper.ResourceInOrganizationTestHelper;
-import jewellery.inventory.helper.ResourceTestHelper;
-import jewellery.inventory.helper.UserTestHelper;
+import jewellery.inventory.helper.*;
 import jewellery.inventory.mapper.OrganizationMapper;
 import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.OrganizationRepository;
+import jewellery.inventory.repository.RoleMembershipRepository;
+import jewellery.inventory.repository.ScopedRoleRepository;
 import jewellery.inventory.repository.UserInOrganizationRepository;
-import jewellery.inventory.service.OrganizationService;
-import jewellery.inventory.service.UserInOrganizationService;
-import jewellery.inventory.service.UserService;
+import jewellery.inventory.service.*;
 import jewellery.inventory.service.security.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,9 +44,12 @@ class OrganizationServiceTest {
   @Mock private AuthService authService;
   @Mock private UserService userService;
   @Mock private UserInOrganizationRepository userInOrganizationRepository;
+  @Mock private ScopedRoleService scopedRoleService;
+  @Mock private ScopedRoleRepository scopedRoleRepository;
+  @Mock private RoleMembershipRepository roleMembershipRepository;
+  @Mock private OrganizationAuthorizationService organizationAuthorizationService;
   private Organization organization;
   private Organization organizationWithUserAllPermission;
-  private Organization organizationWithNoUserPermissions;
   private User user;
   private OrganizationRequestDto organizationRequestDto;
   private OrganizationResponseDto organizationResponseDto;
@@ -57,6 +59,8 @@ class OrganizationServiceTest {
   private ResourceInOrganization resourceInOrganization;
   private Organization organizationWithProduct;
   private UserInOrganization userInOrganization;
+  private ScopedRoleRequestDto scopedRoleRequestDto;
+  private ScopedRole adminRole;
 
   @BeforeEach
   void setUp() {
@@ -65,8 +69,6 @@ class OrganizationServiceTest {
     user = UserTestHelper.createSecondTestUser();
     userInOrganization = createUserInOrganizationAllPermissions(user, organization);
     organization.setUsersInOrganization(List.of(userInOrganization));
-    organizationWithNoUserPermissions =
-        getOrganizationWithUserWithNoPermissions(organization, user);
     organizationWithUserAllPermission = getTestOrganizationWithUserWithAllPermissions(user);
     userResponseDto = getTestExecutor(user);
     organizationResponseDto = getTestOrganizationResponseDto(organization);
@@ -81,14 +83,17 @@ class OrganizationServiceTest {
     organizationWithProduct =
         setProductAndResourcesToOrganization(
             OrganizationTestHelper.getTestOrganization(), product, resourceInOrganization);
+    scopedRoleRequestDto = createRoleRequest();
+    adminRole = createRole(scopedRoleRequestDto);
   }
 
   @Test
   void testGetAllOrganizations() {
     List<Organization> organizations = List.of(organizationWithUserAllPermission);
-    when(organizationRepository.findAll()).thenReturn(organizations);
     when(authService.getCurrentUser()).thenReturn(userResponseDto);
-    when(userService.getUser(user.getId())).thenReturn(user);
+    when(organizationRepository.findOrganizationsByUserIdAndPermission(
+            userResponseDto.getId(), Permission.ORGANIZATION_READ))
+        .thenReturn(organizations);
 
     List<OrganizationResponseDto> responses =
         organizationService.getAllOrganizationsResponsesForCurrentUser();
@@ -98,10 +103,8 @@ class OrganizationServiceTest {
 
   @Test
   void testGetOrganizationWhenItsFound() {
-
     when(organizationRepository.findById(organization.getId()))
         .thenReturn(Optional.of(organization));
-
     OrganizationResponseDto response = new OrganizationResponseDto();
     when(organizationMapper.toResponse(any())).thenReturn(response);
 
@@ -121,36 +124,28 @@ class OrganizationServiceTest {
     when(authService.getCurrentUser()).thenReturn(userResponseDto);
     when(userService.getUser(user.getId())).thenReturn(user);
     when(organizationRepository.save(organization)).thenReturn(organization);
+    when(scopedRoleService.getRoleByName(scopedRoleRequestDto.getName())).thenReturn(adminRole);
     when(organizationMapper.toResponse(organization)).thenReturn(organizationResponseDto);
 
     OrganizationResponseDto actual = organizationService.create(organizationRequestDto);
+
     assertNotNull(actual);
-    assertEquals(actual, organizationResponseDto);
+    assertEquals(organizationResponseDto, actual);
+    verify(organizationMapper, times(1)).toEntity(organizationRequestDto);
+    verify(authService, times(2)).getCurrentUser();
+    verify(userService, times(1)).getUser(user.getId());
+    verify(organizationRepository, times(1)).save(organization);
+    verify(scopedRoleService, times(1)).getRoleByName(scopedRoleRequestDto.getName());
+    verify(organizationMapper, times(1)).toResponse(organization);
   }
 
   @Test
   void deleteOrganizationSuccessfully() {
     when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
         .thenReturn(Optional.of(organizationWithUserAllPermission));
-    when(authService.getCurrentUser()).thenReturn(userResponseDto);
-    when(userService.getUser(user.getId())).thenReturn(user);
 
     organizationService.delete(organizationWithUserAllPermission.getId());
     verify(organizationRepository, times(1)).delete(organizationWithUserAllPermission);
-    verify(userService, times(1)).getUser(user.getId());
-    verify(authService, times(1)).getCurrentUser();
-  }
-
-  @Test
-  void deleteOrganizationThrowMissingOrganizationPermissionException() {
-    when(organizationRepository.findById(organizationWithNoUserPermissions.getId()))
-        .thenReturn(Optional.of(organizationWithNoUserPermissions));
-    when(authService.getCurrentUser()).thenReturn(userResponseDto);
-    when(userService.getUser(user.getId())).thenReturn(user);
-
-    assertThrows(
-        MissingOrganizationPermissionException.class,
-        () -> organizationService.delete(organizationWithNoUserPermissions.getId()));
   }
 
   @Test
@@ -169,9 +164,6 @@ class OrganizationServiceTest {
     when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
         .thenReturn(Optional.of(organizationWithUserAllPermission));
 
-    when(authService.getCurrentUser()).thenReturn(userResponseDto);
-    when(userService.getUser(user.getId())).thenReturn(user);
-
     assertThrows(
         OrphanProductsInOrganizationException.class,
         () -> organizationService.delete(organizationWithUserAllPermission.getId()));
@@ -183,9 +175,6 @@ class OrganizationServiceTest {
         List.of(new ResourceInOrganization()));
     when(organizationRepository.findById(organizationWithUserAllPermission.getId()))
         .thenReturn(Optional.of(organizationWithUserAllPermission));
-
-    when(authService.getCurrentUser()).thenReturn(userResponseDto);
-    when(userService.getUser(user.getId())).thenReturn(user);
 
     assertThrows(
         OrphanResourcesInOrganizationException.class,

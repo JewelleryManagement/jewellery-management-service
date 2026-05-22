@@ -5,11 +5,8 @@ import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
-import jewellery.inventory.dto.response.OrganizationResponseDto;
-import jewellery.inventory.dto.response.ProductResponseDto;
-import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
-import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.OrphanProductsInOrganizationException;
 import jewellery.inventory.exception.organization.OrphanResourcesInOrganizationException;
 import jewellery.inventory.exception.organization.UserIsNotPartOfOrganizationException;
@@ -23,20 +20,31 @@ import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
 public class OrganizationService implements EntityFetcher {
   private static final Logger logger = LogManager.getLogger(OrganizationService.class);
+  private static final String ORGANIZATION_ADMIN_ROLE_NAME = "ORGANIZATION_ADMIN";
   private final OrganizationRepository organizationRepository;
   private final OrganizationMapper organizationMapper;
   private final AuthService authService;
   private final UserService userService;
   private final ProductMapper productMapper;
+  private final ScopedRoleService scopedRoleService;
+  private final RoleMembershipRepository roleMembershipRepository;
 
   public List<OrganizationResponseDto> getAllOrganizationsResponsesForCurrentUser() {
-    logger.debug("Fetching all organizationsResponses for current user ");
-    return getOrganizationsUserIsPartOf().stream().map(organizationMapper::toResponse).toList();
+    logger.debug("Fetching all organization responses for current user");
+
+    UserResponseDto currentUser = authService.getCurrentUser();
+
+    return organizationRepository
+        .findOrganizationsByUserIdAndPermission(currentUser.getId(), Permission.ORGANIZATION_READ)
+        .stream()
+        .map(organizationMapper::toResponse)
+        .toList();
   }
 
   public OrganizationResponseDto getOrganizationResponse(UUID id) {
@@ -49,10 +57,15 @@ public class OrganizationService implements EntityFetcher {
   }
 
   @LogCreateEvent(eventType = EventType.ORGANIZATION_CREATE)
+  @Transactional
   public OrganizationResponseDto create(OrganizationRequestDto organizationRequestDto) {
     Organization organization = organizationMapper.toEntity(organizationRequestDto);
     makeCurrentUserOwner(organization);
     organization = saveOrganization(organization);
+    UserResponseDto currentUser = authService.getCurrentUser();
+    ScopedRole adminRole = scopedRoleService.getRoleByName(ORGANIZATION_ADMIN_ROLE_NAME);
+    roleMembershipRepository.insertAll(
+        currentUser.getId(), organization.getId(), new UUID[] {adminRole.getId()});
     logger.info("Organization created with ID: {}", organization.getId());
     return organizationMapper.toResponse(organization);
   }
@@ -61,8 +74,7 @@ public class OrganizationService implements EntityFetcher {
   @LogDeleteEvent(eventType = EventType.ORGANIZATION_DELETE)
   public void delete(UUID organizationId) {
     Organization organizationForDelete = getOrganization(organizationId);
-    validateCurrentUserPermission(
-        organizationForDelete, OrganizationPermission.DESTROY_ORGANIZATION);
+
     verifyNoProductsOrResourcesInOrganization(organizationForDelete);
     organizationRepository.delete(organizationForDelete);
   }
@@ -88,29 +100,15 @@ public class OrganizationService implements EntityFetcher {
         organization.getId());
   }
 
-  public List<OrganizationResponseDto> getOrganizationsByPermission(
-      OrganizationPermission organizationPermission) {
-    User currentUser = userService.getUser(authService.getCurrentUser().getId());
-    return getAll().stream()
-        .filter(
-            organization ->
-                doesUserHavePermissionForOrganization(
-                    organization, currentUser, organizationPermission))
+  @Transactional(readOnly = true)
+  public List<OrganizationResponseDto> getOrganizationsByPermission(Permission permission) {
+    UUID currentUserId = authService.getCurrentUser().getId();
+
+    return organizationRepository
+        .findOrganizationsByUserIdAndPermission(currentUserId, permission)
+        .stream()
         .map(organizationMapper::toResponse)
         .toList();
-  }
-
-  public void validateCurrentUserPermission(
-      Organization organization, OrganizationPermission permission) {
-    User currentUser = userService.getUser(authService.getCurrentUser().getId());
-    if (!hasPermission(currentUser, organization, permission)) {
-      throw new MissingOrganizationPermissionException(
-          currentUser.getId(), organization.getId(), permission);
-    }
-    logger.debug(
-        "User permission validation successful. User ID: {}, Organization ID: {}",
-        currentUser.getId(),
-        organization.getId());
   }
 
   public ProductsInOrganizationResponseDto getProductsInOrganization(UUID organizationId) {
@@ -125,39 +123,12 @@ public class OrganizationService implements EntityFetcher {
     return products.stream().map(productMapper::mapToProductResponseDto).toList();
   }
 
-  private List<Organization> getOrganizationsUserIsPartOf() {
-    User currentUser = userService.getUser(authService.getCurrentUser().getId());
-    return getAll().stream()
-        .filter(
-            org ->
-                org.getUsersInOrganization().stream()
-                    .anyMatch(userOrg -> userOrg.getUser().equals(currentUser)))
-        .toList();
-  }
-
-  private boolean doesUserHavePermissionForOrganization(
-      Organization organization, User currentUser, OrganizationPermission organizationPermission) {
-    return organization.getUsersInOrganization().stream()
-        .anyMatch(
-            userInOrganization ->
-                userInOrganization.getUser().getId().equals(currentUser.getId())
-                    && userInOrganization
-                        .getOrganizationPermission()
-                        .contains(organizationPermission));
-  }
-
   private void makeCurrentUserOwner(Organization organization) {
     UserInOrganization userInOrganizationOwner = new UserInOrganization();
     User user = userService.getUser(authService.getCurrentUser().getId());
     userInOrganizationOwner.setUser(user);
     userInOrganizationOwner.setOrganization(organization);
-    userInOrganizationOwner.setOrganizationPermission(
-        Arrays.asList(OrganizationPermission.values()));
     organization.setUsersInOrganization(List.of(userInOrganizationOwner));
-  }
-
-  private List<Organization> getAll() {
-    return organizationRepository.findAll();
   }
 
   private void verifyNoProductsOrResourcesInOrganization(Organization organization) {
@@ -167,15 +138,6 @@ public class OrganizationService implements EntityFetcher {
     if (!organization.getResourceInOrganization().isEmpty()) {
       throw new OrphanResourcesInOrganizationException(organization.getId());
     }
-  }
-
-  private boolean hasPermission(
-      User user, Organization organization, OrganizationPermission permission) {
-    return organization.getUsersInOrganization().stream()
-        .anyMatch(
-            userInOrganization ->
-                userInOrganization.getUser().equals(user)
-                    && userInOrganization.getOrganizationPermission().contains(permission));
   }
 
   @Override

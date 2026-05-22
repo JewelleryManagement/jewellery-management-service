@@ -1,10 +1,10 @@
 package jewellery.inventory.dto.request;
 
-import java.util.List;
-import jewellery.inventory.model.OrganizationPermission;
+import java.util.Set;
+import java.util.UUID;
 import lombok.Data;
 
 @Data
 public class UpdateUserInOrganizationRequest {
-  private List<OrganizationPermission> organizationPermission;
+  private Set<UUID> organizationRoles;
 }

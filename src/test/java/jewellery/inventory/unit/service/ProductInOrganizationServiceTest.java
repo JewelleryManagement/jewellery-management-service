@@ -3,6 +3,7 @@ package jewellery.inventory.unit.service;
 import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static jewellery.inventory.helper.ProductTestHelper.getProductRequestDtoForOrganization;
 import static jewellery.inventory.helper.ProductTestHelper.getTestProduct;
+import static jewellery.inventory.helper.UserTestHelper.createTestUserResponseDto;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -13,9 +14,9 @@ import java.util.Optional;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.dto.response.ProductsInOrganizationResponseDto;
+import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.exception.not_found.OrganizationNotFoundException;
 import jewellery.inventory.exception.not_found.ProductNotFoundException;
-import jewellery.inventory.exception.organization.MissingOrganizationPermissionException;
 import jewellery.inventory.exception.organization.OrganizationNotOwnerException;
 import jewellery.inventory.exception.organization.ProductIsNotPartOfOrganizationException;
 import jewellery.inventory.exception.product.ProductIsContentException;
@@ -32,7 +33,7 @@ import jewellery.inventory.service.OrganizationService;
 import jewellery.inventory.service.ProductService;
 import jewellery.inventory.service.ResourceInOrganizationService;
 import jewellery.inventory.service.UserService;
-import org.junit.jupiter.api.Assertions;
+import jewellery.inventory.service.security.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,6 +51,7 @@ class ProductInOrganizationServiceTest {
   @Mock private ProductMapper productMapper;
   @Mock private UserService userService;
   @Mock private OrganizationRepository organizationRepository;
+  @Mock private AuthService authService;
   private static final BigDecimal QUANTITY = BigDecimal.valueOf(30);
   private Organization organization;
   private Organization organizationWithProduct;
@@ -61,10 +63,12 @@ class ProductInOrganizationServiceTest {
   private User user;
   private UserInOrganization userInOrganization;
   private ProductsInOrganizationResponseDto productsInOrganizationResponseDto;
+  private UserResponseDto userResponseDto;
 
   @BeforeEach
   void setUp() {
     user = UserTestHelper.createSecondTestUser();
+    userResponseDto = createTestUserResponseDto(user);
     organization = OrganizationTestHelper.getTestOrganization();
     userInOrganization = createUserInOrganizationAllPermissions(user, organization);
     organization.setUsersInOrganization(List.of(userInOrganization));
@@ -152,19 +156,6 @@ class ProductInOrganizationServiceTest {
   }
 
   @Test
-  void transferProductShouldThrowWhenNoPermission() {
-    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
-    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-    when(productService.transferProduct(product.getId(), organization.getId()))
-        .thenThrow(MissingOrganizationPermissionException.class);
-    product.setOrganization(organizationWithProduct);
-
-    assertThrows(
-        MissingOrganizationPermissionException.class,
-        () -> productService.transferProduct(product.getId(), organization.getId()));
-  }
-
-  @Test
   void createProductInOrganizationSuccessfully() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
     when(resourceInOrganizationService.findResourceInOrganizationOrThrow(
@@ -247,19 +238,6 @@ class ProductInOrganizationServiceTest {
   }
 
   @Test
-  void updateProductInOrganizationThrowMissingOrganizationPermissionException() {
-    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-
-    doThrow(MissingOrganizationPermissionException.class)
-        .when(organizationService)
-        .validateCurrentUserPermission(organization, OrganizationPermission.EDIT_PRODUCT);
-
-    assertThrows(
-        MissingOrganizationPermissionException.class,
-        () -> productService.updateProduct(product.getId(), productRequestDto));
-  }
-
-  @Test
   void updateProductInOrganizationThrowOrganizationNotOwnerException() {
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
     when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
@@ -271,20 +249,6 @@ class ProductInOrganizationServiceTest {
   }
 
   @Test
-  void updateProductInOrganizationProductIsSoldException() {
-    when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
-    product.setPartOfSale(new ProductPriceDiscount());
-
-    doThrow(ProductIsSoldException.class)
-        .when(organizationService)
-        .validateCurrentUserPermission(organization, OrganizationPermission.EDIT_PRODUCT);
-
-    assertThrows(
-        ProductIsSoldException.class,
-        () -> productService.updateProduct(product.getId(), productRequestDto));
-  }
-
-  @Test
   void deleteProductInOrganizationSuccessfully() {
     when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
 
@@ -292,20 +256,6 @@ class ProductInOrganizationServiceTest {
 
     verify(productRepository, times(1)).findById(product.getId());
     verify(productRepository, times(1)).deleteById(product.getId());
-  }
-
-  @Test
-  void deleteProductInOrganizationThrowMissingOrganizationPermissionException() {
-    when(productRepository.findById(product.getId())).thenReturn(Optional.ofNullable(product));
-
-    doThrow(MissingOrganizationPermissionException.class)
-        .when(organizationService)
-        .validateCurrentUserPermission(
-            organizationWithProduct, OrganizationPermission.DISASSEMBLE_PRODUCT);
-
-    Assertions.assertThrows(
-        MissingOrganizationPermissionException.class,
-        () -> productService.deleteProductInOrganization(product.getId()));
   }
 
   @Test
@@ -329,18 +279,31 @@ class ProductInOrganizationServiceTest {
   }
 
   @Test
-  void getAllProductsByResourceReturnsEmptyArrayWhenResourceIsNotPartOfProduct(){
-    List<ProductResponseDto> products= productService.getAllProductsByResource(resourceInOrganization.getId());
-    assertEquals(0,products.size());
+  void getAllProductsByResourceReturnsEmptyArrayWhenResourceIsNotPartOfProduct() {
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
+
+    List<ProductResponseDto> products =
+        productService.getAllProductsByResource(resourceInOrganization.getId());
+    assertEquals(0, products.size());
   }
 
   @Test
-  void getAllProductsByResourceSuccessfully(){
-    when(productRepository.findAllByResourceId(resourceInOrganization.getId())).thenReturn(List.of(product));
+  void getAllProductsByResourceSuccessfully() {
+    when(authService.getCurrentUser()).thenReturn(userResponseDto);
+    when(productRepository.findAllByResourceIdAndUserIdAndPermission(
+            resourceInOrganization.getId(),
+            userResponseDto.getId(),
+            Permission.ORGANIZATION_PRODUCT_READ))
+        .thenReturn(List.of(product));
 
-    List<ProductResponseDto> products= productService.getAllProductsByResource(resourceInOrganization.getId());
-    assertEquals(1,products.size());
-    verify(productRepository, times(1)).findAllByResourceId(resourceInOrganization.getId());
+    List<ProductResponseDto> products =
+        productService.getAllProductsByResource(resourceInOrganization.getId());
+    assertEquals(1, products.size());
+    verify(productRepository, times(1))
+        .findAllByResourceIdAndUserIdAndPermission(
+            resourceInOrganization.getId(),
+            userResponseDto.getId(),
+            Permission.ORGANIZATION_PRODUCT_READ);
   }
 
   private ProductResponseDto productToResponse(Product product) {

@@ -21,6 +21,8 @@ import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.organization.*;
 import jewellery.inventory.exception.product.*;
 import jewellery.inventory.exception.resource.ResourceInUseException;
+import jewellery.inventory.exception.role.RoleAlreadyAssignedException;
+import jewellery.inventory.exception.role.RoleNameAlreadyExistsException;
 import jewellery.inventory.exception.sale.EmptySaleException;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import org.apache.logging.log4j.LogManager;
@@ -88,14 +90,15 @@ public class GlobalExceptionHandler {
     ProductOwnerEqualsRecipientException.class,
     ProductNotSoldException.class,
     ProductPartOfItselfException.class,
-    MissingOrganizationPermissionException.class,
     UserIsNotPartOfOrganizationException.class,
     UserIsPartOfOrganizationException.class,
     OrphanResourcesInOrganizationException.class,
     OrphanProductsInOrganizationException.class,
     OrganizationNotOwnerException.class,
     ProductIsNotPartOfOrganizationException.class,
-    ResourceInUseException.class
+    ResourceInUseException.class,
+    RoleNameAlreadyExistsException.class,
+    RoleAlreadyAssignedException.class
   })
   public ResponseEntity<Object> handleEntityConstraintConflict(RuntimeException ex) {
     return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), ex);

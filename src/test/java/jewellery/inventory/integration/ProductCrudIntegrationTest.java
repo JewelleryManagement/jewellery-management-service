@@ -4,9 +4,7 @@ import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizat
 import static jewellery.inventory.helper.OrganizationTestHelper.getTestUserInOrganizationRequest;
 import static jewellery.inventory.helper.ProductTestHelper.*;
 import static jewellery.inventory.helper.ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto;
-import static jewellery.inventory.helper.SystemEventTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.*;
-import static jewellery.inventory.model.EventType.*;
 import static jewellery.inventory.utils.BigDecimalUtil.getBigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -64,8 +62,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return buildUrl("organizations", "resources-availability");
   }
 
-  private String getOrganizationUsersUrl(UUID organizationId) {
-    return "/organizations/" + organizationId + "/users";
+  private String getOrganizationUsersUrl(UUID organizationId, UUID userId) {
+    return "/organizations/" + organizationId + "/users/" + userId;
   }
 
   private String getBaseResourceUrl() {
@@ -212,6 +210,58 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(productRequestDto.getCatalogNumber(), responseBody.getCatalogNumber());
   }
 
+  @Test
+  void uploadImageShouldThrowWhenUserHasNoProductCreatePermission() {
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.postForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()),
+            createMultipartRequest(IMAGE_FILE),
+            String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
+  void getImageShouldThrowWhenUserHasNoProductReadPermission() {
+    uploadImageAndAssertSuccessfulResponse(productResponseDto);
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.getForEntity(
+            getBaseProductImageUrl(productResponseDto.getId()), String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
+  void deleteImageShouldThrowWhenUserHasNoProductUpdatePermission() {
+    uploadImageAndAssertSuccessfulResponse(productResponseDto);
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.exchange(
+            getBaseProductImageUrl(productResponseDto.getId()),
+            HttpMethod.DELETE,
+            null,
+            String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
   private void uploadImageAndAssertSuccessfulResponse(ProductResponseDto productResponse) {
     ResponseEntity<ImageResponseDto> response =
         this.testRestTemplate.postForEntity(
@@ -250,8 +300,8 @@ class ProductCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   private void addUserInOrganization(UUID organizationID, UserInOrganizationRequestDto requestDto) {
     ResponseEntity<OrganizationSingleMemberResponseDto> addUserInOrganization =
         this.testRestTemplate.postForEntity(
-            getOrganizationUsersUrl(organizationID),
-            requestDto,
+            getOrganizationUsersUrl(organizationID, requestDto.getUserId()),
+            null,
             OrganizationSingleMemberResponseDto.class);
     assertEquals(HttpStatus.CREATED, addUserInOrganization.getStatusCode());
   }
