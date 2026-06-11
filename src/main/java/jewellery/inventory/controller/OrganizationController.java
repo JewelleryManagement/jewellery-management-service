@@ -51,7 +51,7 @@ public class OrganizationController {
 
   @Operation(summary = "Create a new organization")
   @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("@auth.hasOrganizationPermission(#id, 'SYSTEM_ORGANIZATION_CREATE')")
+  @PreAuthorize("@auth.hasSystemPermission('SYSTEM_ORGANIZATION_CREATE')")
   @PostMapping
   public OrganizationResponseDto create(
       @RequestBody @Valid OrganizationRequestDto organizationRequestDto) {
