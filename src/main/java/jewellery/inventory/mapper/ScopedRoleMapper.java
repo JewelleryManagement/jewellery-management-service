@@ -1,6 +1,7 @@
 package jewellery.inventory.mapper;
 
 import java.util.List;
+import java.util.Set;
 import jewellery.inventory.dto.response.PermissionResponseDto;
 import jewellery.inventory.dto.response.ScopedRoleResponseDto;
 import jewellery.inventory.model.Permission;
@@ -15,6 +16,8 @@ public interface ScopedRoleMapper {
   ScopedRoleResponseDto toResponse(ScopedRole role);
 
   List<ScopedRoleResponseDto> toResponseList(List<ScopedRole> roles);
+
+  Set<PermissionResponseDto> toPermissionResponseSet(Set<Permission> permissions);
 
   default PermissionResponseDto map(Permission permission) {
     if (permission == null) {

@@ -50,7 +50,7 @@ class SaleServiceTest {
   @Mock private ResourceService resourceService;
   @Mock private ProductMapper productMapper;
   @Mock private AuthService authService;
-  @Mock private OrganizationAuthorizationService organizationAuthorizationService;
+  @Mock private AuthorizationService authorizationService;
 
   private User user;
   private SaleRequestDto saleRequestDto;

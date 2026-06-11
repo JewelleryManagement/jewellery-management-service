@@ -14,11 +14,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.micrometer.common.lang.Nullable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.DetailedUserResponseDto;
+import jewellery.inventory.model.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -99,6 +102,22 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
+  void createUserShouldThrowWhenUserHasNoCreatePermission() {
+    UserRequestDto deniedUserRequest = createTestUserRequest();
+    UserRequestDto newUserRequest = createTestUserRequest();
+    User deniedUser = createUserInDatabase(deniedUserRequest);
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), newUserRequest, String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
   void getAllUsersSuccessfully() {
     UserRequestDto userRequest = createTestUserRequest();
 
@@ -118,6 +137,21 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertFalse(users.isEmpty());
     assertEquals(userRequest.getFirstName(), users.get(1).getFirstName());
     assertEquals(userRequest.getEmail(), users.get(1).getEmail());
+  }
+
+  @Test
+  void getAllUsersShouldThrowWhenUserHasNoReadPermission() {
+    UserRequestDto deniedUserRequest = createTestUserRequest();
+    User deniedUser = createUserInDatabase(deniedUserRequest);
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.exchange(getBaseUserUrl(), HttpMethod.GET, null, String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
   }
 
   @Test
@@ -147,6 +181,22 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     ResponseEntity<String> response =
         this.testRestTemplate.getForEntity(getBaseUserUrl() + "/" + randomId, String.class);
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+  }
+
+  @Test
+  void getUserShouldThrowWhenUserHasNoReadPermission() {
+    UUID randomId = UUID.randomUUID();
+    UserRequestDto deniedUserRequest = createTestUserRequest();
+    User deniedUser = createUserInDatabase(deniedUserRequest);
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.getForEntity(getBaseUserUrl() + "/" + randomId, String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
   }
 
   @Test
@@ -221,6 +271,29 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
+  void updateUserShouldThrowWhenUserHasNoUpdatePermission() throws JsonProcessingException {
+    UserRequestDto deniedUserRequest = createTestUserRequest();
+    UserRequestDto newUserRequest = createDifferentUserRequest();
+    UserRequestDto updateRequest = createDifferentUserRequest();
+    User userInDatabase = createUserInDatabase(newUserRequest);
+    User deniedUser = createUserInDatabase(deniedUserRequest);
+    authenticateAs(deniedUser);
+
+    HttpEntity<UserRequestDto> requestUpdate = new HttpEntity<>(updateRequest);
+    ResponseEntity<String> response =
+        this.testRestTemplate.exchange(
+            getBaseUserUrl() + "/" + userInDatabase.getId(),
+            HttpMethod.PUT,
+            requestUpdate,
+            String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
   void deleteUserSuccessfully() throws JsonProcessingException {
     UserRequestDto userRequest = createTestUserRequest();
     ResponseEntity<DetailedUserResponseDto> userResponseEntity =
@@ -260,6 +333,24 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
 
+  @Test
+  void deleteUserShouldThrowWhenUserHasNoDeletePermission() {
+    UserRequestDto deniedUserRequest = createTestUserRequest();
+    UserRequestDto newUserRequest = createDifferentUserRequest();
+    User userInDatabase = createUserInDatabase(newUserRequest);
+    User deniedUser = createUserInDatabase(deniedUserRequest);
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.exchange(
+            getBaseUserUrl() + "/" + userInDatabase.getId(), HttpMethod.DELETE, null, String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
   private DetailedUserResponseDto sendUserCreateRequest(UserRequestDto userRequest) {
     ResponseEntity<DetailedUserResponseDto> userResponseEntity =
         this.testRestTemplate.postForEntity(
@@ -267,5 +358,13 @@ class UserCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     DetailedUserResponseDto createdUser = userResponseEntity.getBody();
     assertNotNull(createdUser);
     return createdUser;
+  }
+
+  @Nullable
+  private User createUserInDatabase(UserRequestDto userRequest) {
+    ResponseEntity<User> createUser =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, User.class);
+
+    return createUser.getBody();
   }
 }

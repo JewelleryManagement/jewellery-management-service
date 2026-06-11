@@ -3,18 +3,29 @@ package jewellery.inventory.service;
 import java.util.UUID;
 import jewellery.inventory.dto.response.UserResponseDto;
 import jewellery.inventory.model.Permission;
+import jewellery.inventory.model.RoleType;
 import jewellery.inventory.repository.RoleMembershipRepository;
 import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service("orgAuth")
+@Service("auth")
 @RequiredArgsConstructor
-public class OrganizationAuthorizationService {
+public class AuthorizationService {
 
   private final RoleMembershipRepository membershipRepository;
   private final AuthService authService;
+
+  @Transactional(readOnly = true)
+  public boolean hasSystemPermission(String permission) {
+    UUID currentUserId = authService.getCurrentUser().getId();
+
+    Permission permissionValue = Permission.valueOf(permission);
+
+    return membershipRepository.hasSystemPermission(
+        currentUserId, RoleType.SYSTEM, permissionValue);
+  }
 
   @Transactional(readOnly = true)
   public boolean hasOrganizationPermission(UUID organizationId, String permission) {

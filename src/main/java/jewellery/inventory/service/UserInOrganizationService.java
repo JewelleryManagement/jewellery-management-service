@@ -170,7 +170,7 @@ public class UserInOrganizationService implements EntityFetcher {
     return organizationMapper.toUserInOrganizationResponseDto(userInOrganization);
   }
 
-  public Set<Permission> getCurrentUserPermissions(UUID organizationId) {
+  public Set<Permission> getCurrentUserOrganizationPermissions(UUID organizationId) {
     UUID currentUserId = authService.getCurrentUser().getId();
 
     return roleMembershipRepository.findPermissionsByUserIdAndOrganizationId(

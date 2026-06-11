@@ -31,4 +31,17 @@ public class ScopedRole {
   @Column(name = "permission", nullable = false)
   @Convert(converter = PermissionConverter.class)
   private Set<Permission> permissions = new HashSet<>();
+
+  @PrePersist
+  @PreUpdate
+  private void validatePermissions() {
+    Set<Permission> resolvedPermissions = Permission.resolveAll(permissions);
+
+    for (Permission permission : resolvedPermissions) {
+      if (!roleType.allows(permission)) {
+        throw new IllegalStateException(
+            "Permission " + permission + " is not allowed for role type " + roleType);
+      }
+    }
+  }
 }

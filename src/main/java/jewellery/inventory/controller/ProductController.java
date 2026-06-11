@@ -35,7 +35,7 @@ public class ProductController {
 
   @Operation(summary = "Get a single product")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("@orgAuth.hasPermissionForProduct(#id, 'ORGANIZATION_PRODUCT_READ')")
+  @PreAuthorize("@auth.hasPermissionForProduct(#id, 'ORGANIZATION_PRODUCT_READ')")
   @GetMapping("/{id}")
   public ProductResponseDto getProduct(@PathVariable("id") UUID id) {
     return productService.getProductResponse(id);
@@ -43,7 +43,7 @@ public class ProductController {
 
   @Operation(summary = "Upload new image in file system and attach to product")
   @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("@orgAuth.hasPermissionForProduct(#productId, 'ORGANIZATION_PRODUCT_UPDATE')")
+  @PreAuthorize("@auth.hasPermissionForProduct(#productId, 'ORGANIZATION_PRODUCT_UPDATE')")
   @PostMapping(value = "/{productId}/picture")
   public ImageResponseDto uploadImage(
       @PathVariable("productId") @Valid UUID productId,
@@ -54,7 +54,7 @@ public class ProductController {
 
   @Operation(summary = "Get image of product")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("@orgAuth.hasPermissionForProduct(#productId, 'ORGANIZATION_PRODUCT_READ')")
+  @PreAuthorize("@auth.hasPermissionForProduct(#productId, 'ORGANIZATION_PRODUCT_READ')")
   @GetMapping(value = "/{productId}/picture", produces = "image/png")
   public byte[] getImage(@PathVariable("productId") @Valid UUID productId) throws IOException {
     return imageService.downloadImage(productId);
@@ -63,7 +63,7 @@ public class ProductController {
   @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Delete image from file system and detach from product")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @PreAuthorize("@orgAuth.hasPermissionForProduct(#productId, 'ORGANIZATION_PRODUCT_UPDATE')")
+  @PreAuthorize("@auth.hasPermissionForProduct(#productId, 'ORGANIZATION_PRODUCT_UPDATE')")
   @DeleteMapping("/{productId}/picture")
   public void deleteImage(@PathVariable("productId") @Valid UUID productId) throws IOException {
     imageService.deleteImage(productId);
@@ -72,7 +72,7 @@ public class ProductController {
   @Operation(summary = "Create a new product")
   @ResponseStatus(HttpStatus.CREATED)
   @PreAuthorize(
-      "@orgAuth.hasOrganizationPermission(#productRequestDto.ownerId, 'ORGANIZATION_PRODUCT_CREATE')")
+      "@auth.hasOrganizationPermission(#productRequestDto.ownerId, 'ORGANIZATION_PRODUCT_CREATE')")
   @PostMapping
   public ProductsInOrganizationResponseDto createProduct(
       @RequestBody @Valid ProductRequestDto productRequestDto) {
@@ -81,7 +81,7 @@ public class ProductController {
 
   @Operation(summary = "Delete a new product in organization")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @PreAuthorize("@orgAuth.hasPermissionForProduct(#productId, 'ORGANIZATION_PRODUCT_DELETE')")
+  @PreAuthorize("@auth.hasPermissionForProduct(#productId, 'ORGANIZATION_PRODUCT_DELETE')")
   @DeleteMapping("/{productId}")
   public void deleteProduct(@PathVariable("productId") UUID productId) {
     productService.deleteProductInOrganization(productId);
@@ -89,7 +89,7 @@ public class ProductController {
 
   @Operation(summary = "Update a product in organization")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("@orgAuth.hasPermissionForProduct(#productId, 'ORGANIZATION_PRODUCT_UPDATE')")
+  @PreAuthorize("@auth.hasPermissionForProduct(#productId, 'ORGANIZATION_PRODUCT_UPDATE')")
   @PutMapping("/{productId}")
   public ProductsInOrganizationResponseDto updateProduct(
       @PathVariable("productId") UUID productId,
@@ -100,8 +100,8 @@ public class ProductController {
   @Operation(summary = "Transfer a product to other organization")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize(
-      "@orgAuth.hasPermissionForProduct(#productId, 'ORGANIZATION_PRODUCT_TRANSFER')&& "
-          + "@orgAuth.hasOrganizationPermission(#recipientId, 'ORGANIZATION_PRODUCT_TRANSFER')")
+      "@auth.hasPermissionForProduct(#productId, 'ORGANIZATION_PRODUCT_TRANSFER')&& "
+          + "@auth.hasOrganizationPermission(#recipientId, 'ORGANIZATION_PRODUCT_TRANSFER')")
   @PutMapping("/{productId}/transfer/{recipientId}")
   public ProductsInOrganizationResponseDto transferProduct(
       @PathVariable("productId") UUID productId, @PathVariable("recipientId") UUID recipientId) {

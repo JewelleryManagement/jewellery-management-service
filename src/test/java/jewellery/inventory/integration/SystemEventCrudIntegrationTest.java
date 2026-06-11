@@ -1,19 +1,21 @@
 package jewellery.inventory.integration;
 
+import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizationRequest;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
+import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
 import static jewellery.inventory.helper.UserTestHelper.createTestUserRequest;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import io.micrometer.common.lang.Nullable;
+import java.util.*;
+import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
-import jewellery.inventory.dto.response.DetailedUserResponseDto;
-import jewellery.inventory.dto.response.SystemEventLiteResponseDto;
-import jewellery.inventory.dto.response.SystemEventResponseDto;
+import jewellery.inventory.dto.response.*;
 import jewellery.inventory.model.EventType;
+import jewellery.inventory.model.Permission;
+import jewellery.inventory.model.User;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -21,6 +23,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
+  private User userWithoutPermission;
+
+  @BeforeEach
+  void setUp() {
+    userWithoutPermission = createUserInDatabase(createDifferentUserRequest());
+    systemEventRepository.deleteAll();
+  }
 
   @Test
   void testGetAllEventsShouldReturnEmptyList() {
@@ -44,6 +53,38 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertFalse(events != null && events.isEmpty());
     assertNotNull(events, "Retrieved events list is empty");
     assertEquals(EventType.USER_CREATE, events.getFirst().getType());
+  }
+
+  @Test
+  void testGetAllEventsShouldReturnEmptyListWhenUserHasNoReadPermission() {
+    authenticateAs(userWithoutPermission);
+
+    ResponseEntity<List<SystemEventLiteResponseDto>> eventResponse =
+        this.testRestTemplate.exchange(
+            getBaseSystemEventUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
+
+    assertNotNull(eventResponse);
+    assertEquals(0, eventResponse.getBody().size());
+  }
+
+  @Test
+  void testGetAllEventsShouldReturnOnlyOrganizationEventsWhenUserHasOrganizationReadPermission() {
+    createAndSaveUser();
+    OrganizationResponseDto organizationsWithRequest =
+        createOrganizationsWithRequest(getTestOrganizationRequest());
+    Set<Permission> permissions = Set.of(Permission.ORGANIZATION_EVENT_READ);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(
+        userWithoutPermission.getId(), organizationsWithRequest.getId(), newRole.getId());
+    authenticateAs(userWithoutPermission);
+
+    ResponseEntity<List<SystemEventLiteResponseDto>> eventResponse =
+        this.testRestTemplate.exchange(
+            getBaseSystemEventUrl(), HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
+
+    assertNotNull(eventResponse);
+    assertEquals(1, eventResponse.getBody().size());
+    assertEquals(EventType.ORGANIZATION_CREATE, eventResponse.getBody().getFirst().getType());
   }
 
   @Test
@@ -107,6 +148,39 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(EventType.USER_CREATE, eventWithRelatedId.getBody().getFirst().getType());
   }
 
+  @Test
+  void testGetEventsRelatedToShouldReturnEmptyListWhenUserHasNoReadPermission() {
+    createAndSaveUser();
+
+    authenticateAs(userWithoutPermission);
+
+    ResponseEntity<List<SystemEventLiteResponseDto>> eventWithRelatedId =
+        getRelatedEventsResponse(loggedInAdminUser.getId());
+
+    assertNotNull(eventWithRelatedId);
+    assertEquals(0, eventWithRelatedId.getBody().size());
+  }
+
+  @Test
+  void
+      testGetEventsRelatedToShouldReturnOnlyOrganizationEventsWhenUserHasOrganizationReadPermission() {
+    createAndSaveUser();
+    OrganizationResponseDto organizationsWithRequest =
+        createOrganizationsWithRequest(getTestOrganizationRequest());
+    Set<Permission> permissions = Set.of(Permission.ORGANIZATION_EVENT_READ);
+    ScopedRoleResponseDto newRole = createRole("Test", permissions);
+    createRoleMembership(
+        userWithoutPermission.getId(), organizationsWithRequest.getId(), newRole.getId());
+    authenticateAs(userWithoutPermission);
+
+    ResponseEntity<List<SystemEventLiteResponseDto>> eventWithRelatedId =
+        getRelatedEventsResponse(loggedInAdminUser.getId());
+
+    assertNotNull(eventWithRelatedId);
+    assertEquals(1, eventWithRelatedId.getBody().size());
+    assertEquals(EventType.ORGANIZATION_CREATE, eventWithRelatedId.getBody().getFirst().getType());
+  }
+
   private String getBaseSystemEventUrl() {
     return "/system-events";
   }
@@ -117,6 +191,14 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private String getSystemEventRelatedToUrl(UUID id) {
     return getBaseSystemEventUrl() + "/related-to/" + id;
+  }
+
+  private String getBaseUserUrl() {
+    return "/users";
+  }
+
+  private String getBaseOrganizationsUrl() {
+    return "/organizations";
   }
 
   private DetailedUserResponseDto createAndSaveUser() {
@@ -133,5 +215,22 @@ class SystemEventCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
         HttpMethod.GET,
         null,
         new ParameterizedTypeReference<>() {});
+  }
+
+  @Nullable
+  private User createUserInDatabase(UserRequestDto userRequest) {
+    ResponseEntity<User> createUser =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, User.class);
+
+    return createUser.getBody();
+  }
+
+  @Nullable
+  private OrganizationResponseDto createOrganizationsWithRequest(OrganizationRequestDto dto) {
+    ResponseEntity<OrganizationResponseDto> response =
+        this.testRestTemplate.postForEntity(
+            getBaseOrganizationsUrl(), dto, OrganizationResponseDto.class);
+
+    return response.getBody();
   }
 }

@@ -35,7 +35,7 @@ public class OrganizationController {
 
   @Operation(summary = "Get organization by id")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("@orgAuth.hasOrganizationPermission(#id, 'ORGANIZATION_READ')")
+  @PreAuthorize("@auth.hasOrganizationPermission(#id, 'ORGANIZATION_READ')")
   @GetMapping("/{id}")
   public OrganizationResponseDto getOrganizationById(@PathVariable UUID id) {
     return organizationService.getOrganizationResponse(id);
@@ -51,6 +51,7 @@ public class OrganizationController {
 
   @Operation(summary = "Create a new organization")
   @ResponseStatus(HttpStatus.CREATED)
+  @PreAuthorize("@auth.hasOrganizationPermission(#id, 'SYSTEM_ORGANIZATION_CREATE')")
   @PostMapping
   public OrganizationResponseDto create(
       @RequestBody @Valid OrganizationRequestDto organizationRequestDto) {
@@ -59,7 +60,7 @@ public class OrganizationController {
 
   @Operation(summary = "Add a user in organization")
   @ResponseStatus(HttpStatus.CREATED)
-  @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_ADD')")
+  @PreAuthorize("@auth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_ADD')")
   @PostMapping("/{organizationId}/users/{userId}")
   public OrganizationSingleMemberResponseDto addUserInOrganization(
       @PathVariable UUID organizationId, @PathVariable UUID userId) {
@@ -69,8 +70,8 @@ public class OrganizationController {
   @Operation(summary = "Add a user in organization with roles")
   @ResponseStatus(HttpStatus.CREATED)
   @PreAuthorize(
-      "@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_ADD') && "
-          + "@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_ROLE_ASSIGN')")
+      "@auth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_ADD') && "
+          + "@auth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_ROLE_ASSIGN')")
   @PostMapping("/{organizationId}/users/roles")
   public OrganizationSingleMemberResponseDto addUserInOrganizationWithRoles(
       @PathVariable UUID organizationId, @RequestBody @Valid UserInOrganizationRequestDto request) {
@@ -79,7 +80,7 @@ public class OrganizationController {
 
   @Operation(summary = "Delete a user in organization")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_DELETE')")
+  @PreAuthorize("@auth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_DELETE')")
   @DeleteMapping("{organizationId}/users/{userId}")
   public void deleteUserInOrganization(
       @PathVariable UUID organizationId, @PathVariable UUID userId) {
@@ -89,7 +90,7 @@ public class OrganizationController {
   @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Delete an organization")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_DELETE')")
+  @PreAuthorize("@auth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_DELETE')")
   @DeleteMapping("/{organizationId}")
   public void deleteOrganization(@PathVariable UUID organizationId) {
     organizationService.delete(organizationId);
@@ -97,7 +98,7 @@ public class OrganizationController {
 
   @Operation(summary = "Update a user permissions in organization")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_ROLE_UPDATE')")
+  @PreAuthorize("@auth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_ROLE_UPDATE')")
   @PutMapping("{organizationId}/users/{userId}")
   public OrganizationSingleMemberResponseDto updateUserRolesInOrganization(
       @PathVariable UUID organizationId,
@@ -109,7 +110,7 @@ public class OrganizationController {
 
   @Operation(summary = "Get all users in organization")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_READ')")
+  @PreAuthorize("@auth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_READ')")
   @GetMapping("{organizationId}/users")
   public List<UserInOrganizationResponseDto> getAllUsersInOrganization(
       @PathVariable UUID organizationId) {
@@ -118,7 +119,7 @@ public class OrganizationController {
 
   @Operation(summary = "Get all users in organization with roles")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_READ')")
+  @PreAuthorize("@auth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_READ')")
   @GetMapping("{organizationId}/users/roles")
   public List<UserInOrganizationResponseDto> getAllUsersInOrganizationWithRoles(
       @PathVariable UUID organizationId) {
@@ -127,7 +128,7 @@ public class OrganizationController {
 
   @Operation(summary = "Get user in organization")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_READ')")
+  @PreAuthorize("@auth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_READ')")
   @GetMapping("{organizationId}/users/{userId}")
   public UserInOrganizationResponseDto getUserInOrganization(
       @PathVariable UUID organizationId, @PathVariable UUID userId) {
@@ -136,7 +137,7 @@ public class OrganizationController {
 
   @Operation(summary = "Get all products in organization")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("@orgAuth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_PRODUCT_READ')")
+  @PreAuthorize("@auth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_PRODUCT_READ')")
   @GetMapping("/{organizationId}/products")
   public ProductsInOrganizationResponseDto getAllProductsInOrganization(
       @PathVariable UUID organizationId) {
@@ -146,7 +147,7 @@ public class OrganizationController {
   @Operation(summary = "Get current user permissions")
   @ResponseStatus(HttpStatus.OK)
   @GetMapping("/{organizationId}/permissions")
-  public Set<Permission> getCurrentUserPermissions(@PathVariable UUID organizationId) {
-    return userInOrganizationService.getCurrentUserPermissions(organizationId);
+  public Set<Permission> getCurrentUserOrganizationPermissions(@PathVariable UUID organizationId) {
+    return userInOrganizationService.getCurrentUserOrganizationPermissions(organizationId);
   }
 }

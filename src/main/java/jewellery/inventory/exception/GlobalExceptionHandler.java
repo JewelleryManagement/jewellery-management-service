@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import jewellery.inventory.exception.duplicate.DuplicateException;
+import jewellery.inventory.exception.forbidden.ForbiddenException;
 import jewellery.inventory.exception.image.MultipartFileContentTypeException;
 import jewellery.inventory.exception.image.MultipartFileNotSelectedException;
 import jewellery.inventory.exception.image.MultipartFileSizeException;
@@ -107,6 +108,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler({SignatureException.class, AuthenticationException.class})
   public ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex) {
     return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), ex);
+  }
+
+  @ExceptionHandler({ForbiddenException.class})
+  public ResponseEntity<Object> handleForbiddenException(ForbiddenException ex) {
+    return createErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage(), ex);
   }
 
   @ExceptionHandler({InvalidSecretKeyException.class})

@@ -330,9 +330,9 @@ class ResourceInOrganizationCrudIntegrationTest extends AuthenticatedIntegration
 
   @Test
   void addResourceToOrganizationShouldThrowWhenUserHasNoResourceAddPermission() {
+    ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
     User deniedUser = createAndPersistUser(createDifferentUserRequest());
     authenticateAs(deniedUser);
-    ResourceResponseDto resourceResponse = createResourceResponse(PEARL_CLAZZ);
     ResourceInOrganizationRequestDto request =
         ResourceInOrganizationTestHelper.createResourceInOrganizationRequestDto(
             organizationResponseDto.getId(),

@@ -60,7 +60,7 @@ class UserInOrganizationServiceTest {
     organization = getTestOrganizationWithUserWithAllPermissions(user);
     userInOrganization = getTestUserInOrganization(organization);
     userInOrganizationResponseDto = OrganizationTestHelper.getUserInOrganizationResponseDto(user);
-    scopedRoleRequestDto = createRoleRequest();
+    scopedRoleRequestDto = createOrganizationRoleRequest();
     scopedRole = createRole(scopedRoleRequestDto);
     scopedRoleResponseDto = createRoleResponse(scopedRole);
     roleMembership = new RoleMembership(UUID.randomUUID(), user, organization, scopedRole);
@@ -160,7 +160,7 @@ class UserInOrganizationServiceTest {
 
   @Test
   void updateUserRolesInOrganizationWhenUserHasRoleSuccessfully() {
-    ScopedRoleRequestDto scopedRoleRequestDto = createRoleRequest();
+    ScopedRoleRequestDto scopedRoleRequestDto = createOrganizationRoleRequest();
     ScopedRole scopedRole = createRole(scopedRoleRequestDto);
     ScopedRoleResponseDto scopedRoleResponseDto = createRoleResponse(scopedRole);
     userInOrganizationResponseDto.setOrganizationRoles(List.of(scopedRoleResponseDto));

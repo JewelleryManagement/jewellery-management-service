@@ -5,7 +5,7 @@ import static jewellery.inventory.helper.SaleTestHelper.*;
 import static jewellery.inventory.helper.UserTestHelper.createTestUser;
 import static jewellery.inventory.helper.UserTestHelper.createTestUserResponseDto;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -16,7 +16,7 @@ import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.RoleMembershipRepository;
-import jewellery.inventory.service.OrganizationAuthorizationService;
+import jewellery.inventory.service.AuthorizationService;
 import jewellery.inventory.service.security.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,8 +26,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class OrganizationAuthorizationServiceTest {
-  @InjectMocks private OrganizationAuthorizationService organizationAuthorizationService;
+class AuthorizationServiceTest {
+  @InjectMocks private AuthorizationService authorizationService;
   @Mock private RoleMembershipRepository roleMembershipRepository;
   @Mock private AuthService authService;
 
@@ -55,13 +55,36 @@ class OrganizationAuthorizationServiceTest {
   }
 
   @Test
+  void hasSystemPermissionShouldThrowWhenUserNotFound() {
+    when(authService.getCurrentUser()).thenThrow(UserNotFoundException.class);
+
+    assertThrows(
+        UserNotFoundException.class,
+        () -> authorizationService.hasSystemPermission(permission.name()));
+  }
+
+  @Test
+  void hasSystemPermissionReturnFalseWhenCurrentUserHasNoPermission() {
+    when(authService.getCurrentUser()).thenReturn(currentUser);
+    when(roleMembershipRepository.hasSystemPermission(
+            currentUser.getId(), RoleType.SYSTEM, permission))
+        .thenReturn(false);
+
+    boolean hasPermission = authorizationService.hasSystemPermission(permission.name());
+
+    assertFalse(hasPermission);
+    verify(roleMembershipRepository, times(1))
+        .hasSystemPermission(currentUser.getId(), RoleType.SYSTEM, permission);
+  }
+
+  @Test
   void hasOrganizationPermissionShouldThrowWhenUserNotFound() {
     when(authService.getCurrentUser()).thenThrow(UserNotFoundException.class);
 
     assertThrows(
         UserNotFoundException.class,
         () ->
-            organizationAuthorizationService.hasOrganizationPermission(
+            authorizationService.hasOrganizationPermission(
                 organization.getId(), permission.name()));
   }
 
@@ -73,8 +96,7 @@ class OrganizationAuthorizationServiceTest {
         .thenReturn(false);
 
     boolean hasPermission =
-        organizationAuthorizationService.hasOrganizationPermission(
-            organization.getId(), permission.name());
+        authorizationService.hasOrganizationPermission(organization.getId(), permission.name());
 
     assertFalse(hasPermission);
   }
@@ -87,8 +109,7 @@ class OrganizationAuthorizationServiceTest {
         .thenReturn(true);
 
     boolean hasPermission =
-        organizationAuthorizationService.hasOrganizationPermission(
-            organization.getId(), permission.name());
+        authorizationService.hasOrganizationPermission(organization.getId(), permission.name());
 
     assertTrue(hasPermission);
   }
@@ -99,9 +120,7 @@ class OrganizationAuthorizationServiceTest {
 
     assertThrows(
         UserNotFoundException.class,
-        () ->
-            organizationAuthorizationService.hasPermissionForProduct(
-                product.getId(), permission.name()));
+        () -> authorizationService.hasPermissionForProduct(product.getId(), permission.name()));
   }
 
   @Test
@@ -112,8 +131,7 @@ class OrganizationAuthorizationServiceTest {
         .thenReturn(false);
 
     boolean hasPermission =
-        organizationAuthorizationService.hasPermissionForProduct(
-            product.getId(), permission.name());
+        authorizationService.hasPermissionForProduct(product.getId(), permission.name());
 
     assertFalse(hasPermission);
   }
@@ -126,8 +144,7 @@ class OrganizationAuthorizationServiceTest {
         .thenReturn(true);
 
     boolean hasPermission =
-        organizationAuthorizationService.hasPermissionForProduct(
-            product.getId(), permission.name());
+        authorizationService.hasPermissionForProduct(product.getId(), permission.name());
 
     assertTrue(hasPermission);
   }
@@ -138,8 +155,7 @@ class OrganizationAuthorizationServiceTest {
 
     assertThrows(
         UserNotFoundException.class,
-        () ->
-            organizationAuthorizationService.hasPermissionForSale(sale.getId(), permission.name()));
+        () -> authorizationService.hasPermissionForSale(sale.getId(), permission.name()));
   }
 
   @Test
@@ -149,7 +165,7 @@ class OrganizationAuthorizationServiceTest {
         .thenReturn(false);
 
     boolean hasPermission =
-        organizationAuthorizationService.hasPermissionForSale(sale.getId(), permission.name());
+        authorizationService.hasPermissionForSale(sale.getId(), permission.name());
 
     assertFalse(hasPermission);
   }
@@ -161,7 +177,7 @@ class OrganizationAuthorizationServiceTest {
         .thenReturn(true);
 
     boolean hasPermission =
-        organizationAuthorizationService.hasPermissionForSale(sale.getId(), permission.name());
+        authorizationService.hasPermissionForSale(sale.getId(), permission.name());
 
     assertTrue(hasPermission);
   }

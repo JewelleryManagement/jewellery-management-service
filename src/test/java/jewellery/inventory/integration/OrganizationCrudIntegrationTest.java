@@ -515,6 +515,21 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             .contains("You do not have permission to perform this action"));
   }
 
+  @Test
+  void createOrganizationShouldThrowWhenUserHasNoCreatePermission() {
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.postForEntity(
+            getBaseOrganizationsUrl(), organizationRequestDto, String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
   private ResponseEntity<OrganizationSingleMemberResponseDto> removeRolesForUser(
       OrganizationResponseDto secondOrganization, User user) {
     UpdateUserInOrganizationRequest request = new UpdateUserInOrganizationRequest();

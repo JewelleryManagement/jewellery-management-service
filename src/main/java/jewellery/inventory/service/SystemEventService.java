@@ -10,14 +10,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import jewellery.inventory.dto.response.SystemEventLiteResponseDto;
 import jewellery.inventory.dto.response.SystemEventResponseDto;
+import jewellery.inventory.exception.forbidden.ForbiddenException;
 import jewellery.inventory.exception.not_found.NotFoundException;
 import jewellery.inventory.model.EventType;
+import jewellery.inventory.model.Permission;
+import jewellery.inventory.model.RoleType;
 import jewellery.inventory.model.SystemEvent;
+import jewellery.inventory.repository.RoleMembershipRepository;
 import jewellery.inventory.repository.SystemEventRepository;
 import jewellery.inventory.service.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,19 +34,72 @@ public class SystemEventService {
   private final SystemEventRepository systemEventRepository;
   private final AuthService authService;
   private final ObjectMapper objectMapper;
+  private final RoleMembershipRepository roleMembershipRepository;
+  private final AuthorizationService authorizationService;
 
   public List<SystemEventLiteResponseDto> getAllEvents() {
-    return systemEventRepository.findAllWithoutRelatedIds();
+    UUID currentUserId = authService.getCurrentUser().getId();
+
+    if (authorizationService.hasSystemPermission(Permission.SYSTEM_EVENT_READ.name())) {
+      return systemEventRepository.findAllWithoutRelatedIds();
+    }
+
+    List<UUID> organizationIds =
+        roleMembershipRepository.findOrganizationIdsByUserIdAndPermission(
+            currentUserId, RoleType.ORGANIZATION, Permission.ORGANIZATION_EVENT_READ);
+
+    if (organizationIds.isEmpty()) {
+      return List.of();
+    }
+
+    return systemEventRepository.findByRelatedOrganizationIds(organizationIds);
   }
 
+  @Transactional(readOnly = true)
   public SystemEventResponseDto getSystemEvent(UUID id) {
+    if (!systemEventRepository.existsById(id)) {
+      throw new NotFoundException("Event with id: " + id + " is not found!");
+    }
+
+    if (authorizationService.hasSystemPermission(Permission.SYSTEM_EVENT_READ.name())) {
+      return systemEventRepository
+          .findByIdWithoutRelatedIds(id)
+          .orElseThrow(() -> new NotFoundException("Event with id: " + id + " is not found!"));
+    }
+
+    UUID currentUserId = authService.getCurrentUser().getId();
+
+    List<UUID> organizationIds =
+        roleMembershipRepository.findOrganizationIdsByUserIdAndPermission(
+            currentUserId, RoleType.ORGANIZATION, Permission.ORGANIZATION_EVENT_READ);
+
+    if (organizationIds.isEmpty()) {
+      throw new ForbiddenException("You do not have permission to perform this action");
+    }
+
     return systemEventRepository
-        .findByIdWithoutRelatedIds(id)
-        .orElseThrow(() -> new NotFoundException("Event with id: " + id + " is not found!"));
+        .findByIdAndRelatedOrganizationIds(id, organizationIds)
+        .orElseThrow(
+            () -> new ForbiddenException("You do not have permission to perform this action"));
   }
 
+  @Transactional(readOnly = true)
   public List<SystemEventLiteResponseDto> getEventsRelatedTo(UUID id) {
-    return systemEventRepository.findByRelatedId(id);
+    UUID currentUserId = authService.getCurrentUser().getId();
+
+    if (authorizationService.hasSystemPermission(Permission.SYSTEM_EVENT_READ.name())) {
+      return systemEventRepository.findByRelatedId(id);
+    }
+
+    List<UUID> organizationIds =
+        roleMembershipRepository.findOrganizationIdsByUserIdAndPermission(
+            currentUserId, RoleType.ORGANIZATION, Permission.ORGANIZATION_EVENT_READ);
+
+    if (organizationIds.isEmpty()) {
+      return List.of();
+    }
+
+    return systemEventRepository.findByRelatedIdAndRelatedOrganizationIds(id, organizationIds);
   }
 
   public <T, U> void logEvent(EventType type, T newEntity, @Nullable U oldEntity) {

@@ -11,6 +11,7 @@ import jewellery.inventory.service.ResourceService;
 import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,6 +23,7 @@ public class ResourceController {
 
   @Operation(summary = "Get all resources")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@auth.hasSystemPermission('SYSTEM_RESOURCE_READ')")
   @GetMapping
   public List<ResourceResponseDto> getAllResources() {
     return resourceService.getAllResources();
@@ -29,6 +31,7 @@ public class ResourceController {
 
   @Operation(summary = "Get resource by resource id")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@auth.hasSystemPermission('SYSTEM_RESOURCE_READ')")
   @GetMapping("/{id}")
   public ResourceResponseDto getResourceById(@PathVariable("id") UUID id) {
     return resourceService.getResource(id);
@@ -36,6 +39,7 @@ public class ResourceController {
 
   @Operation(summary = "Create new resource")
   @ResponseStatus(HttpStatus.CREATED)
+  @PreAuthorize("@auth.hasSystemPermission('SYSTEM_RESOURCE_CREATE')")
   @PostMapping
   public ResourceResponseDto createResource(
       @RequestBody @Valid ResourceRequestDto resourceRequestDto) {
@@ -44,6 +48,7 @@ public class ResourceController {
 
   @Operation(summary = "Update resource by resource id")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@auth.hasSystemPermission('SYSTEM_RESOURCE_UPDATE')")
   @PutMapping("/{id}")
   public ResourceResponseDto updateResource(
       @PathVariable("id") UUID id, @Valid @RequestBody ResourceRequestDto resourceRequestDto) {
@@ -52,6 +57,7 @@ public class ResourceController {
 
   @Operation(summary = "Delete resource by resource id")
   @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PreAuthorize("@auth.hasSystemPermission('SYSTEM_RESOURCE_DELETE')")
   @DeleteMapping("/{id}")
   public void deleteResourceById(@PathVariable("id") UUID id) {
     resourceService.deleteResourceById(id);
@@ -59,6 +65,7 @@ public class ResourceController {
 
   @Operation(summary = "Get all resource quantities")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@auth.hasSystemPermission('SYSTEM_RESOURCE_READ')")
   @GetMapping("/quantity")
   public List<ResourceQuantityResponseDto> getAllResourceQuantities() {
     return resourceService.getAllResourceQuantities();
@@ -67,6 +74,7 @@ public class ResourceController {
   @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Import resources from CSV")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@auth.hasSystemPermission('SYSTEM_RESOURCE_IMPORT')")
   @PostMapping("/import")
   public List<ResourceResponseDto> importResources(@RequestParam("file") MultipartFile file) {
     return resourceService.importResources(file);

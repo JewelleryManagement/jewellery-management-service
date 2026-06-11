@@ -8,13 +8,12 @@ import static org.mockito.Mockito.*;
 import java.util.*;
 import jewellery.inventory.dto.response.ProductResponseDto;
 import jewellery.inventory.exception.not_found.*;
-import jewellery.inventory.exception.product.*;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ProductMapper;
 import jewellery.inventory.model.*;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.*;
-import jewellery.inventory.service.OrganizationAuthorizationService;
+import jewellery.inventory.service.AuthorizationService;
 import jewellery.inventory.service.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,7 +29,7 @@ class ProductServiceTest {
   @Mock private ProductRepository productRepository;
   @Mock private ProductMapper productMapper;
   @Mock private UserRepository userRepository;
-  @Mock private OrganizationAuthorizationService organizationAuthorizationService;
+  @Mock private AuthorizationService authorizationService;
 
   private User user;
   private Product product;

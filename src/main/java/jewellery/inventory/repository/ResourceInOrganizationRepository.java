@@ -1,10 +1,12 @@
 package jewellery.inventory.repository;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.model.Permission;
 import jewellery.inventory.model.ResourceInOrganization;
+import jewellery.inventory.utils.ResourceQuantitySumDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,4 +32,17 @@ public interface ResourceInOrganizationRepository
 """)
   List<ResourceInOrganization> findAllByResourceIdAndUserIdAndPermission(
       UUID resourceId, UUID userId, Permission permission);
+
+  @Query(
+      """
+            select new jewellery.inventory.utils.ResourceQuantitySumDto(
+                rio.resource.id,
+                coalesce(sum(rio.quantity), 0)
+            )
+            from ResourceInOrganization rio
+            where rio.organization.id in :organizationIds
+            group by rio.resource.id
+          """)
+  List<ResourceQuantitySumDto> sumQuantitiesByOrganizationIds(
+      @Param("organizationIds") Collection<UUID> organizationIds);
 }
