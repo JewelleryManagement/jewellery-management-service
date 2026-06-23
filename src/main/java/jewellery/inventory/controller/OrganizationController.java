@@ -112,7 +112,7 @@ public class OrganizationController {
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("@auth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_READ')")
   @GetMapping("{organizationId}/users")
-  public List<UserInOrganizationResponseDto> getAllUsersInOrganization(
+  public List<UserWithRolesResponseDto> getAllUsersInOrganization(
       @PathVariable UUID organizationId) {
     return userInOrganizationService.getAllUsersInOrganization(organizationId);
   }
@@ -121,7 +121,7 @@ public class OrganizationController {
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("@auth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_READ')")
   @GetMapping("{organizationId}/users/roles")
-  public List<UserInOrganizationResponseDto> getAllUsersInOrganizationWithRoles(
+  public List<UserWithRolesResponseDto> getAllUsersInOrganizationWithRoles(
       @PathVariable UUID organizationId) {
     return userInOrganizationService.getAllUsersInOrganizationWithRoles(organizationId);
   }
@@ -130,7 +130,7 @@ public class OrganizationController {
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("@auth.hasOrganizationPermission(#organizationId, 'ORGANIZATION_USER_READ')")
   @GetMapping("{organizationId}/users/{userId}")
-  public UserInOrganizationResponseDto getUserInOrganization(
+  public UserWithRolesResponseDto getUserInOrganization(
       @PathVariable UUID organizationId, @PathVariable UUID userId) {
     return userInOrganizationService.getUserInOrganization(organizationId, userId);
   }

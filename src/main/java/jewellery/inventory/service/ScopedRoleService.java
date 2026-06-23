@@ -5,13 +5,13 @@ import java.util.stream.Collectors;
 import jewellery.inventory.dto.request.ScopedRoleRequestDto;
 import jewellery.inventory.dto.response.PermissionResponseDto;
 import jewellery.inventory.dto.response.ScopedRoleResponseDto;
+import jewellery.inventory.dto.response.UserWithRolesResponseDto;
 import jewellery.inventory.exception.not_found.RoleNotFoundException;
 import jewellery.inventory.exception.role.RoleAlreadyAssignedException;
 import jewellery.inventory.exception.role.RoleNameAlreadyExistsException;
 import jewellery.inventory.mapper.ScopedRoleMapper;
-import jewellery.inventory.model.Permission;
-import jewellery.inventory.model.RoleType;
-import jewellery.inventory.model.ScopedRole;
+import jewellery.inventory.mapper.UserMapper;
+import jewellery.inventory.model.*;
 import jewellery.inventory.repository.RoleMembershipRepository;
 import jewellery.inventory.repository.ScopedRoleRepository;
 import jewellery.inventory.service.security.AuthService;
@@ -26,6 +26,8 @@ public class ScopedRoleService {
   private final ScopedRoleMapper scopedRoleMapper;
   private final RoleMembershipRepository roleMembershipRepository;
   private final AuthService authService;
+  private final UserService userService;
+  private final UserMapper userMapper;
 
   public ScopedRoleResponseDto createRole(ScopedRoleRequestDto request) {
     String roleName = request.getName().trim().toUpperCase();
@@ -109,6 +111,24 @@ public class ScopedRoleService {
         roleMembershipRepository.findSystemPermissionsByUserId(currentUserId, RoleType.SYSTEM);
 
     return scopedRoleMapper.toPermissionResponseSet(permissions);
+  }
+
+  @Transactional
+  public UserWithRolesResponseDto assignSystemRoles(UUID userId, Set<UUID> systemRoleIds) {
+    User user = userService.getUser(userId);
+
+    roleMembershipRepository.deleteAllSystemRolesByUserId(userId);
+
+    if (!systemRoleIds.isEmpty()) {
+      roleMembershipRepository.insertAll(userId, null, systemRoleIds.toArray(UUID[]::new));
+    }
+
+    List<ScopedRole> systemRoles =
+        roleMembershipRepository.findAllSystemRolesByUserId(userId).stream()
+            .map(RoleMembership::getRole)
+            .toList();
+
+    return userMapper.toUserWithRolesResponseDto(user, systemRoles);
   }
 
   private ScopedRole getRoleById(UUID id) {

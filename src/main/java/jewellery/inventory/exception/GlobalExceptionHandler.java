@@ -22,12 +22,16 @@ import jewellery.inventory.exception.not_found.ResourceInUserNotFoundException;
 import jewellery.inventory.exception.organization.*;
 import jewellery.inventory.exception.product.*;
 import jewellery.inventory.exception.resource.ResourceInUseException;
+import jewellery.inventory.exception.role.InvalidRolePermissionException;
 import jewellery.inventory.exception.role.RoleAlreadyAssignedException;
 import jewellery.inventory.exception.role.RoleNameAlreadyExistsException;
 import jewellery.inventory.exception.sale.EmptySaleException;
 import jewellery.inventory.exception.security.InvalidSecretKeyException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.postgresql.util.PSQLException;
+import org.postgresql.util.ServerErrorMessage;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -71,7 +75,8 @@ public class GlobalExceptionHandler {
     MultipartFileSizeException.class,
     ConstraintViolationException.class,
     HttpMessageNotReadableException.class,
-    InvalidFormatException.class
+    InvalidFormatException.class,
+    InvalidRolePermissionException.class
   })
   public ResponseEntity<Object> handleBadDataExceptions(RuntimeException ex) {
     String errorMessage = ex.getMessage();
@@ -118,6 +123,33 @@ public class GlobalExceptionHandler {
   @ExceptionHandler({InvalidSecretKeyException.class})
   public ResponseEntity<Object> handleBadSecretKey(RuntimeException ex) {
     return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
+  }
+
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<Map<String, String>> handleDataIntegrityViolation(
+      DataIntegrityViolationException exception) {
+
+    String message = findPostgresMessage(exception);
+
+    return ResponseEntity.badRequest().body(Map.of("message", message));
+  }
+
+  private String findPostgresMessage(Throwable throwable) {
+    Throwable current = throwable;
+
+    while (current != null) {
+      if (current instanceof PSQLException postgresException) {
+        ServerErrorMessage serverError = postgresException.getServerErrorMessage();
+
+        if (serverError != null && serverError.getMessage() != null) {
+          return serverError.getMessage();
+        }
+      }
+
+      current = current.getCause();
+    }
+
+    return "Invalid request";
   }
 
   private ResponseEntity<Object> createErrorResponse(

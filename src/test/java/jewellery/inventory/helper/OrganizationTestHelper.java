@@ -131,11 +131,11 @@ public class OrganizationTestHelper {
     return resourceInOrganization;
   }
 
-  public static UserInOrganizationResponseDto getUserInOrganizationResponseDto(User user) {
-    UserInOrganizationResponseDto userInOrganizationResponseDto =
-        new UserInOrganizationResponseDto();
-    userInOrganizationResponseDto.setUser(createTestUserResponseDto(user));
-    return userInOrganizationResponseDto;
+  public static UserWithRolesResponseDto getUserInOrganizationResponseDto(User user) {
+    UserWithRolesResponseDto userWithRolesResponseDto =
+        new UserWithRolesResponseDto();
+    userWithRolesResponseDto.setUser(createTestUserResponseDto(user));
+    return userWithRolesResponseDto;
   }
 
   public static UserInOrganization createUserInOrganization(User user, Organization organization) {
@@ -147,12 +147,12 @@ public class OrganizationTestHelper {
   }
 
   public static OrganizationSingleMemberResponseDto createOrganizationSingleMemberResponseDto(
-      UserInOrganizationResponseDto userInOrganizationResponseDto,
+      UserWithRolesResponseDto userWithRolesResponseDto,
       OrganizationResponseDto organizationResponseDto) {
     OrganizationSingleMemberResponseDto organizationSingleMemberResponseDto =
         new OrganizationSingleMemberResponseDto();
     organizationSingleMemberResponseDto.setOrganization(organizationResponseDto);
-    organizationSingleMemberResponseDto.setMember(userInOrganizationResponseDto);
+    organizationSingleMemberResponseDto.setMember(userWithRolesResponseDto);
     return organizationSingleMemberResponseDto;
   }
 }

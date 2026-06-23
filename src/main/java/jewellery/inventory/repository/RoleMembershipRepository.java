@@ -144,4 +144,24 @@ public interface RoleMembershipRepository extends JpaRepository<RoleMembership, 
       @Param("userId") UUID userId,
       @Param("roleType") RoleType roleType,
       @Param("permission") Permission permission);
+
+  @Modifying
+  @Query(
+      """
+    delete from RoleMembership rm
+    where rm.user.id = :userId
+      and rm.organization is null
+    """)
+  void deleteAllSystemRolesByUserId(UUID userId);
+
+  @Query(
+      """
+    select distinct rm
+    from RoleMembership rm
+    join fetch rm.role r
+    left join fetch r.permissions
+    where rm.user.id = :userId
+      and rm.organization is null
+    """)
+  List<RoleMembership> findAllSystemRolesByUserId(@Param("userId") UUID userId);
 }

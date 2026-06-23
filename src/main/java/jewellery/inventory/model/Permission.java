@@ -49,6 +49,7 @@ public enum Permission {
   SYSTEM_ROLE_CREATE(PermissionScope.SYSTEM, "system:role:create"),
   SYSTEM_ROLE_DELETE(PermissionScope.SYSTEM, "system:role:delete"),
   SYSTEM_ROLE_READ(PermissionScope.SYSTEM, "system:role:read"),
+  SYSTEM_ROLE_ASSIGN(PermissionScope.SYSTEM, "system:role:assign"),
 
   SYSTEM_RESOURCE_READ(PermissionScope.SYSTEM, "system:resource:read"),
   SYSTEM_RESOURCE_CREATE(PermissionScope.SYSTEM, "system:resource:create"),
@@ -130,6 +131,7 @@ public enum Permission {
 
     SYSTEM_ROLE_CREATE.implied.add(SYSTEM_ROLE_READ);
     SYSTEM_ROLE_DELETE.implied.add(SYSTEM_ROLE_READ);
+    SYSTEM_ROLE_ASSIGN.implied.add(SYSTEM_ROLE_READ);
 
     SYSTEM_RESOURCE_CREATE.implied.add(SYSTEM_RESOURCE_READ);
     SYSTEM_RESOURCE_UPDATE.implied.add(SYSTEM_RESOURCE_READ);

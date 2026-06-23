@@ -7,6 +7,7 @@ import java.util.UUID;
 import jewellery.inventory.dto.request.ScopedRoleRequestDto;
 import jewellery.inventory.dto.response.PermissionResponseDto;
 import jewellery.inventory.dto.response.ScopedRoleResponseDto;
+import jewellery.inventory.dto.response.UserWithRolesResponseDto;
 import jewellery.inventory.model.RoleType;
 import jewellery.inventory.service.ScopedRoleService;
 import lombok.RequiredArgsConstructor;
@@ -80,5 +81,15 @@ public class ScopedRoleController {
   @GetMapping("/current-user/system-permissions")
   public Set<PermissionResponseDto> getCurrentUserSystemPermissions() {
     return scopedRoleService.getCurrentUserSystemPermissions();
+  }
+
+  @Operation(summary = "Assign system roles")
+  @ResponseStatus(HttpStatus.CREATED)
+  @PreAuthorize("@auth.hasSystemPermission('SYSTEM_ROLE_ASSIGN')")
+  @PostMapping("/users/{userId}/system-roles")
+  public UserWithRolesResponseDto assignSystemRoles(
+      @PathVariable UUID userId, @RequestBody Set<UUID> systemRoleIds) {
+
+    return scopedRoleService.assignSystemRoles(userId, systemRoleIds);
   }
 }

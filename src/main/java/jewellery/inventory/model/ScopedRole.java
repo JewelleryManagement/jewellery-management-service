@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import jewellery.inventory.exception.role.InvalidRolePermissionException;
 import jewellery.inventory.utils.PermissionConverter;
 import lombok.*;
 
@@ -39,8 +40,7 @@ public class ScopedRole {
 
     for (Permission permission : resolvedPermissions) {
       if (!roleType.allows(permission)) {
-        throw new IllegalStateException(
-            "Permission " + permission + " is not allowed for role type " + roleType);
+        throw new InvalidRolePermissionException(permission, roleType);
       }
     }
   }

@@ -11,17 +11,19 @@ import jewellery.inventory.dto.request.ScopedRoleRequestDto;
 import jewellery.inventory.dto.response.PermissionResponseDto;
 import jewellery.inventory.dto.response.ScopedRoleResponseDto;
 import jewellery.inventory.dto.response.UserResponseDto;
+import jewellery.inventory.dto.response.UserWithRolesResponseDto;
 import jewellery.inventory.exception.not_found.NoAuthenticatedUserException;
 import jewellery.inventory.exception.not_found.RoleNotFoundException;
+import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.exception.role.RoleAlreadyAssignedException;
 import jewellery.inventory.exception.role.RoleNameAlreadyExistsException;
 import jewellery.inventory.mapper.ScopedRoleMapper;
-import jewellery.inventory.model.Permission;
-import jewellery.inventory.model.RoleType;
-import jewellery.inventory.model.ScopedRole;
+import jewellery.inventory.mapper.UserMapper;
+import jewellery.inventory.model.*;
 import jewellery.inventory.repository.RoleMembershipRepository;
 import jewellery.inventory.repository.ScopedRoleRepository;
 import jewellery.inventory.service.ScopedRoleService;
+import jewellery.inventory.service.UserService;
 import jewellery.inventory.service.security.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +39,8 @@ class ScopedRoleServiceTest {
   @Mock private ScopedRoleMapper scopedRoleMapper;
   @Mock private RoleMembershipRepository roleMembershipRepository;
   @Mock private AuthService authService;
+  @Mock private UserService userService;
+  @Mock private UserMapper userMapper;
 
   private ScopedRoleRequestDto scopedOrganizationRoleRequestDto;
   private ScopedRoleRequestDto scopedSystemRoleRequestDto;
@@ -46,6 +50,7 @@ class ScopedRoleServiceTest {
   private ScopedRoleResponseDto scopedSystemRoleResponseDto;
   private UserResponseDto currentUser;
   private UserResponseDto targetUser;
+  private User testUser;
 
   @BeforeEach
   void setUp() {
@@ -56,7 +61,8 @@ class ScopedRoleServiceTest {
     scopedOrganizationRoleResponseDto = createRoleResponse(scopedOrganizationRole);
     scopedSystemRoleResponseDto = createRoleResponse(scopedSystemRole);
     currentUser = createTestUserResponseDto(createTestAdminUser());
-    targetUser = createTestUserResponseDto(createTestUser());
+    testUser = createTestUser();
+    targetUser = createTestUserResponseDto(testUser);
   }
 
   @Test
@@ -329,5 +335,41 @@ class ScopedRoleServiceTest {
     verify(roleMembershipRepository, times(1))
         .findSystemPermissionsByUserId(targetUser.getId(), RoleType.SYSTEM);
     verify(scopedRoleMapper, times(1)).toPermissionResponseSet(expectedPermissions);
+  }
+
+  @Test
+  void assignSystemRoleShouldThrowWhenUserNotFound() {
+    when(userService.getUser(targetUser.getId())).thenThrow(UserNotFoundException.class);
+
+    assertThrows(
+        UserNotFoundException.class,
+        () ->
+            scopedRoleService.assignSystemRoles(
+                targetUser.getId(), Set.of(scopedSystemRole.getId())));
+  }
+
+  @Test
+  void assignSystemRoleSuccessfully() {
+    when(userService.getUser(targetUser.getId())).thenReturn(testUser);
+    RoleMembership roleMembership =
+        new RoleMembership(UUID.randomUUID(), testUser, null, scopedSystemRole);
+    when(roleMembershipRepository.findAllSystemRolesByUserId(targetUser.getId()))
+        .thenReturn(List.of(roleMembership));
+    UserWithRolesResponseDto userWithRolesResponseDto = new UserWithRolesResponseDto();
+    userWithRolesResponseDto.setUser(targetUser);
+    userWithRolesResponseDto.setRoles(List.of(scopedSystemRoleResponseDto));
+    when(userMapper.toUserWithRolesResponseDto(testUser, List.of(scopedSystemRole)))
+        .thenReturn(userWithRolesResponseDto);
+
+    UserWithRolesResponseDto responseDto =
+        scopedRoleService.assignSystemRoles(targetUser.getId(), Set.of(scopedSystemRole.getId()));
+
+    assertNotNull(responseDto);
+    assertEquals(responseDto.getUser(), targetUser);
+    assertEquals(responseDto.getRoles(), List.of(scopedSystemRoleResponseDto));
+
+    verify(userService, times(1)).getUser(targetUser.getId());
+    verify(roleMembershipRepository, times(1)).findAllSystemRolesByUserId(targetUser.getId());
+    verify(userMapper, times(1)).toUserWithRolesResponseDto(testUser, List.of(scopedSystemRole));
   }
 }
