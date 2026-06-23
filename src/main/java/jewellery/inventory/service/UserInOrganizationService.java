@@ -120,8 +120,6 @@ public class UserInOrganizationService implements EntityFetcher {
     UserInOrganization userInOrganization =
         createOrganizationMembership(organizationId, userInOrganizationRequestDto.getUserId());
 
-    System.out.println("###############################################################################" + userInOrganizationRequestDto.getOrganizationRoles());
-
     if (!userInOrganizationRequestDto.getOrganizationRoles().isEmpty()) {
       roleMembershipRepository.insertAll(
           userInOrganization.getUser().getId(),
