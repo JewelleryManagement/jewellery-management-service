@@ -8,7 +8,7 @@ import jewellery.inventory.aspect.annotation.LogDeleteEvent;
 import jewellery.inventory.aspect.annotation.LogUpdateEvent;
 import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationSingleMemberResponseDto;
-import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
+import jewellery.inventory.dto.response.UserWithRolesResponseDto;
 import jewellery.inventory.exception.not_found.UserNotFoundException;
 import jewellery.inventory.exception.organization.UserIsPartOfOrganizationException;
 import jewellery.inventory.mapper.OrganizationMapper;
@@ -33,7 +33,7 @@ public class UserInOrganizationService implements EntityFetcher {
   private final RoleMembershipRepository roleMembershipRepository;
   private final AuthService authService;
 
-  public List<UserInOrganizationResponseDto> getAllUsersInOrganization(UUID organizationId) {
+  public List<UserWithRolesResponseDto> getAllUsersInOrganization(UUID organizationId) {
     Organization organization = organizationService.getOrganization(organizationId);
     organizationService.validateUserInOrganization(organization);
 
@@ -43,8 +43,7 @@ public class UserInOrganizationService implements EntityFetcher {
   }
 
   @Transactional(readOnly = true)
-  public List<UserInOrganizationResponseDto> getAllUsersInOrganizationWithRoles(
-      UUID organizationId) {
+  public List<UserWithRolesResponseDto> getAllUsersInOrganizationWithRoles(UUID organizationId) {
     Organization organization = organizationService.getOrganization(organizationId);
     organizationService.validateUserInOrganization(organization);
 
@@ -163,14 +162,14 @@ public class UserInOrganizationService implements EntityFetcher {
         userId);
   }
 
-  public UserInOrganizationResponseDto getUserInOrganization(UUID organizationId, UUID userId) {
+  public UserWithRolesResponseDto getUserInOrganization(UUID organizationId, UUID userId) {
     UserInOrganization userInOrganization =
         getUserInOrganizationByUserIdAndOrganizationId(userId, organizationId);
 
     return organizationMapper.toUserInOrganizationResponseDto(userInOrganization);
   }
 
-  public Set<Permission> getCurrentUserPermissions(UUID organizationId) {
+  public Set<Permission> getCurrentUserOrganizationPermissions(UUID organizationId) {
     UUID currentUserId = authService.getCurrentUser().getId();
 
     return roleMembershipRepository.findPermissionsByUserIdAndOrganizationId(

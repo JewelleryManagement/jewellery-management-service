@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import jewellery.inventory.exception.role.InvalidRolePermissionException;
 import jewellery.inventory.utils.PermissionConverter;
 import lombok.*;
 
@@ -31,4 +32,16 @@ public class ScopedRole {
   @Column(name = "permission", nullable = false)
   @Convert(converter = PermissionConverter.class)
   private Set<Permission> permissions = new HashSet<>();
+
+  @PrePersist
+  @PreUpdate
+  private void validatePermissions() {
+    Set<Permission> resolvedPermissions = Permission.resolveAll(permissions);
+
+    for (Permission permission : resolvedPermissions) {
+      if (!roleType.allows(permission)) {
+        throw new InvalidRolePermissionException(permission, roleType);
+      }
+    }
+  }
 }

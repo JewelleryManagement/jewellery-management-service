@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 import jewellery.inventory.dto.response.SystemEventLiteResponseDto;
 import jewellery.inventory.dto.response.SystemEventResponseDto;
-import jewellery.inventory.model.SystemEvent;
 import jewellery.inventory.service.SystemEventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

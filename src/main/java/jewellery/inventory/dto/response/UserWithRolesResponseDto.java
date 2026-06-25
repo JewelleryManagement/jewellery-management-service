@@ -5,7 +5,7 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-public class UserInOrganizationResponseDto {
+public class UserWithRolesResponseDto {
   private UserResponseDto user;
-  private List<ScopedRoleResponseDto> organizationRoles = new ArrayList<>();
+  private List<ScopedRoleResponseDto> roles = new ArrayList<>();
 }

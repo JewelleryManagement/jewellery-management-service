@@ -2,6 +2,7 @@ package jewellery.inventory.integration;
 
 import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizationRequest;
+import static jewellery.inventory.helper.ScopedRoleHelper.createSystemRoleRequest;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
 import static jewellery.inventory.helper.UserTestHelper.createDifferentUserRequest;
@@ -12,10 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.micrometer.common.lang.Nullable;
 import java.util.*;
-import jewellery.inventory.dto.request.OrganizationRequestDto;
-import jewellery.inventory.dto.request.UpdateUserInOrganizationRequest;
-import jewellery.inventory.dto.request.UserInOrganizationRequestDto;
-import jewellery.inventory.dto.request.UserRequestDto;
+import jewellery.inventory.dto.request.*;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.model.Permission;
 import jewellery.inventory.model.User;
@@ -39,6 +37,10 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   private String getOrganizationUsersUrlWithRoles(UUID organizationId) {
     return "/organizations/" + organizationId + "/users/roles";
+  }
+
+  private String getBaseRoleUrl() {
+    return "/roles";
   }
 
   private String getOrganizationUsersUrl(UUID organizationId) {
@@ -105,7 +107,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getAllUsersInOrganizationSuccessfully() {
-    ResponseEntity<List<UserInOrganizationResponseDto>> response =
+    ResponseEntity<List<UserWithRolesResponseDto>> response =
         this.testRestTemplate.exchange(
             getOrganizationUsersUrl(organizationResponseDto.getId()),
             HttpMethod.GET,
@@ -118,7 +120,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
   @Test
   void getAllUsersInOrganizationWithRolesSuccessfully() {
-    ResponseEntity<List<UserInOrganizationResponseDto>> response =
+    ResponseEntity<List<UserWithRolesResponseDto>> response =
         this.testRestTemplate.exchange(
             getOrganizationUsersUrl(organizationResponseDto.getId()) + "/roles",
             HttpMethod.GET,
@@ -127,8 +129,7 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     assertNotNull(response);
     assertEquals(response.getBody().getFirst().getUser().getId(), loggedInAdminUser.getId());
-    assertEquals(
-        ADMIN_ROLE_NAME, response.getBody().getFirst().getOrganizationRoles().getFirst().getName());
+    assertEquals(ADMIN_ROLE_NAME, response.getBody().getFirst().getRoles().getFirst().getName());
   }
 
   @Test
@@ -136,11 +137,11 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     OrganizationSingleMemberResponseDto userInOrganization =
         addUserInOrganization(organizationResponseDto.getId());
 
-    ResponseEntity<UserInOrganizationResponseDto> response =
+    ResponseEntity<UserWithRolesResponseDto> response =
         this.testRestTemplate.getForEntity(
             getOrganizationUsersUrl(
                 organizationResponseDto.getId(), userInOrganization.getMember().getUser().getId()),
-            UserInOrganizationResponseDto.class);
+            UserWithRolesResponseDto.class);
     assertNotNull(response);
     assertEquals(
         userInOrganization.getMember().getUser().getId(),
@@ -283,6 +284,30 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertTrue(
         Objects.requireNonNull(response.getBody())
             .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
+  void addUserInOrganizationWithRolesShouldThrowWhenPassedSystemRole() {
+    ScopedRoleRequestDto systemRoleRequest = createSystemRoleRequest();
+    systemRoleRequest.setName("Test_Role");
+    ScopedRoleResponseDto systemRole =
+        testRestTemplate
+            .postForEntity(getBaseRoleUrl(), systemRoleRequest, ScopedRoleResponseDto.class)
+            .getBody();
+
+    userInOrganizationRequestDto.setOrganizationRoles(List.of(systemRole.getId()));
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.postForEntity(
+            getOrganizationUsersUrlWithRoles(organizationResponseDto.getId()),
+            userInOrganizationRequestDto,
+            String.class);
+
+    System.out.println(response);
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("System role membership must not have an organization"));
   }
 
   @Test
@@ -508,6 +533,21 @@ class OrganizationCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
             getOrganizationUsersUrl(
                 organizationResponseDto.getId(), userInOrganization.getMember().getUser().getId()),
             String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
+  void createOrganizationShouldThrowWhenUserHasNoCreatePermission() {
+    User deniedUser = createAndPersistUser(createDifferentUserRequest());
+    authenticateAs(deniedUser);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.postForEntity(
+            getBaseOrganizationsUrl(), organizationRequestDto, String.class);
 
     assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     assertTrue(

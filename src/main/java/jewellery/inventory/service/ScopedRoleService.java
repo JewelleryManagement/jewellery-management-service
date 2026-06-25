@@ -1,16 +1,17 @@
 package jewellery.inventory.service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import jewellery.inventory.dto.request.ScopedRoleRequestDto;
 import jewellery.inventory.dto.response.PermissionResponseDto;
 import jewellery.inventory.dto.response.ScopedRoleResponseDto;
+import jewellery.inventory.dto.response.UserWithRolesResponseDto;
 import jewellery.inventory.exception.not_found.RoleNotFoundException;
 import jewellery.inventory.exception.role.RoleAlreadyAssignedException;
 import jewellery.inventory.exception.role.RoleNameAlreadyExistsException;
 import jewellery.inventory.mapper.ScopedRoleMapper;
-import jewellery.inventory.model.Permission;
-import jewellery.inventory.model.RoleType;
-import jewellery.inventory.model.ScopedRole;
+import jewellery.inventory.mapper.UserMapper;
+import jewellery.inventory.model.*;
 import jewellery.inventory.repository.RoleMembershipRepository;
 import jewellery.inventory.repository.ScopedRoleRepository;
 import jewellery.inventory.service.security.AuthService;
@@ -25,6 +26,8 @@ public class ScopedRoleService {
   private final ScopedRoleMapper scopedRoleMapper;
   private final RoleMembershipRepository roleMembershipRepository;
   private final AuthService authService;
+  private final UserService userService;
+  private final UserMapper userMapper;
 
   public ScopedRoleResponseDto createRole(ScopedRoleRequestDto request) {
     String roleName = request.getName().trim().toUpperCase();
@@ -63,10 +66,6 @@ public class ScopedRoleService {
     return scopedRoleMapper.toResponse(getRoleById(roleId));
   }
 
-  public List<ScopedRoleResponseDto> getAllRoles() {
-    return scopedRoleRepository.findAll().stream().map(scopedRoleMapper::toResponse).toList();
-  }
-
   public ScopedRole getRoleByName(String name) {
     return scopedRoleRepository.findByName(name).orElseThrow(() -> new RoleNotFoundException(name));
   }
@@ -78,7 +77,7 @@ public class ScopedRoleService {
   }
 
   @Transactional(readOnly = true)
-  public List<ScopedRoleResponseDto> getAllUserRoles(UUID targetUserId) {
+  public List<ScopedRoleResponseDto> getAllUserOrganizationRoles(UUID targetUserId) {
     UUID currentUserId = authService.getCurrentUser().getId();
 
     return scopedRoleRepository
@@ -89,25 +88,47 @@ public class ScopedRoleService {
         .toList();
   }
 
-  @Transactional(readOnly = true)
-  public List<ScopedRoleResponseDto> getAllUserRolesByOrganization(
-      UUID targetUserId, UUID organizationId) {
-    UUID currentUserId = authService.getCurrentUser().getId();
-
-    return scopedRoleRepository
-        .findVisibleRolesForUserByOrganization(
-            targetUserId, currentUserId, organizationId, Permission.ORGANIZATION_USER_ROLES_READ)
-        .stream()
-        .map(scopedRoleMapper::toResponse)
-        .toList();
+  public List<ScopedRoleResponseDto> getAllUserSystemRoles(UUID userId) {
+    return scopedRoleMapper.toResponseList(
+        scopedRoleRepository.findRolesByUserIdAndRoleType(userId, RoleType.SYSTEM));
   }
 
-  public List<PermissionResponseDto> getAllPermissions() {
-    return Arrays.stream(Permission.values())
-        .map(
-            permission ->
-                new PermissionResponseDto(permission, permission.resolveIncludedPermissions()))
-        .toList();
+  public Set<PermissionResponseDto> getPermissionsByRoleType(RoleType roleType) {
+    if (roleType == null) {
+      throw new IllegalArgumentException("Role type must not be null");
+    }
+
+    Set<Permission> permissions =
+        Arrays.stream(Permission.values()).filter(roleType::allows).collect(Collectors.toSet());
+
+    return scopedRoleMapper.toPermissionResponseSet(permissions);
+  }
+
+  public Set<PermissionResponseDto> getCurrentUserSystemPermissions() {
+    UUID currentUserId = authService.getCurrentUser().getId();
+
+    Set<Permission> permissions =
+        roleMembershipRepository.findSystemPermissionsByUserId(currentUserId, RoleType.SYSTEM);
+
+    return scopedRoleMapper.toPermissionResponseSet(permissions);
+  }
+
+  @Transactional
+  public UserWithRolesResponseDto assignSystemRoles(UUID userId, Set<UUID> systemRoleIds) {
+    User user = userService.getUser(userId);
+
+    roleMembershipRepository.deleteAllSystemRolesByUserId(userId);
+
+    if (!systemRoleIds.isEmpty()) {
+      roleMembershipRepository.insertAll(userId, null, systemRoleIds.toArray(UUID[]::new));
+    }
+
+    List<ScopedRole> systemRoles =
+        roleMembershipRepository.findAllSystemRolesByUserId(userId).stream()
+            .map(RoleMembership::getRole)
+            .toList();
+
+    return userMapper.toUserWithRolesResponseDto(user, systemRoles);
   }
 
   private ScopedRole getRoleById(UUID id) {

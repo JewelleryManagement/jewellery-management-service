@@ -5,10 +5,9 @@ import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
 import jewellery.inventory.aspect.EntityFetcher;
 import jewellery.inventory.aspect.annotation.LogCreateEvent;
 import jewellery.inventory.aspect.annotation.LogDeleteEvent;
@@ -23,15 +22,21 @@ import jewellery.inventory.exception.not_found.ResourceNotFoundException;
 import jewellery.inventory.exception.resource.ResourceInUseException;
 import jewellery.inventory.mapper.ResourceMapper;
 import jewellery.inventory.model.EventType;
+import jewellery.inventory.model.Permission;
+import jewellery.inventory.model.RoleType;
 import jewellery.inventory.model.resource.Resource;
 import jewellery.inventory.repository.ResourceInOrganizationRepository;
 import jewellery.inventory.repository.ResourceInProductRepository;
 import jewellery.inventory.repository.ResourceRepository;
+import jewellery.inventory.repository.RoleMembershipRepository;
+import jewellery.inventory.service.security.AuthService;
 import jewellery.inventory.utils.NotUsedYet;
+import jewellery.inventory.utils.ResourceQuantitySumDto;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -42,6 +47,8 @@ public class ResourceService implements EntityFetcher {
   private final ResourceInOrganizationRepository resourceInOrganizationRepository;
   private final ResourceMapper resourceMapper;
   private final ResourceInProductRepository resourceInProductRepository;
+  private final AuthService authService;
+  private final RoleMembershipRepository roleMembershipRepository;
 
   public List<ResourceResponseDto> getAllResources() {
     logger.debug("Fetching all Resources");
@@ -101,15 +108,32 @@ public class ResourceService implements EntityFetcher {
     return resourceMapper.toResourceResponse(updatedResource);
   }
 
+  @Transactional(readOnly = true)
   public List<ResourceQuantityResponseDto> getAllResourceQuantities() {
+    UUID currentUserId = authService.getCurrentUser().getId();
+
+    List<UUID> visibleOrganizationIds =
+        roleMembershipRepository.findOrganizationIdsByUserIdAndPermission(
+            currentUserId, RoleType.ORGANIZATION, Permission.ORGANIZATION_RESOURCE_READ);
+
+    Map<UUID, BigDecimal> quantityByResourceId =
+        visibleOrganizationIds.isEmpty()
+            ? Map.of()
+            : resourceInOrganizationRepository
+                .sumQuantitiesByOrganizationIds(visibleOrganizationIds)
+                .stream()
+                .collect(
+                    Collectors.toMap(
+                        ResourceQuantitySumDto::resourceId, ResourceQuantitySumDto::quantity));
+
     logger.debug("Fetching all resource quantities.");
+
     return resourceRepository.findAll().stream()
         .map(
             resource ->
                 ResourceQuantityResponseDto.builder()
                     .resource(resourceMapper.toResourceResponse(resource))
-                    .quantity(
-                        resourceInOrganizationRepository.sumQuantityByResource(resource.getId()))
+                    .quantity(quantityByResourceId.getOrDefault(resource.getId(), BigDecimal.ZERO))
                     .build())
         .toList();
   }

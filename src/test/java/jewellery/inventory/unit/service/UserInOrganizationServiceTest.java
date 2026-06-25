@@ -43,7 +43,7 @@ class UserInOrganizationServiceTest {
   private User user;
   private User newUser;
   private UserInOrganization userInOrganization;
-  private UserInOrganizationResponseDto userInOrganizationResponseDto;
+  private UserWithRolesResponseDto userWithRolesResponseDto;
   private ScopedRoleRequestDto scopedRoleRequestDto;
   private ScopedRole scopedRole;
   private ScopedRoleResponseDto scopedRoleResponseDto;
@@ -59,15 +59,15 @@ class UserInOrganizationServiceTest {
     newUser = UserTestHelper.createSecondTestUser();
     organization = getTestOrganizationWithUserWithAllPermissions(user);
     userInOrganization = getTestUserInOrganization(organization);
-    userInOrganizationResponseDto = OrganizationTestHelper.getUserInOrganizationResponseDto(user);
-    scopedRoleRequestDto = createRoleRequest();
+    userWithRolesResponseDto = OrganizationTestHelper.getUserInOrganizationResponseDto(user);
+    scopedRoleRequestDto = createOrganizationRoleRequest();
     scopedRole = createRole(scopedRoleRequestDto);
     scopedRoleResponseDto = createRoleResponse(scopedRole);
     roleMembership = new RoleMembership(UUID.randomUUID(), user, organization, scopedRole);
     organizationResponseDto = getTestOrganizationResponseDto(organization);
     organizationSingleMemberResponseDto =
         OrganizationTestHelper.createOrganizationSingleMemberResponseDto(
-            userInOrganizationResponseDto, organizationResponseDto);
+                userWithRolesResponseDto, organizationResponseDto);
     newUserInOrganization = OrganizationTestHelper.createUserInOrganization(newUser, organization);
     userInOrganizationRequestDto =
         OrganizationTestHelper.getTestUserInOrganizationRequestWithRoles(
@@ -80,14 +80,14 @@ class UserInOrganizationServiceTest {
 
     when(organizationMapper.toUserInOrganizationResponseDto(
             organization.getUsersInOrganization().get(0)))
-        .thenReturn(userInOrganizationResponseDto);
+        .thenReturn(userWithRolesResponseDto);
 
-    List<UserInOrganizationResponseDto> actual =
+    List<UserWithRolesResponseDto> actual =
         userInOrganizationService.getAllUsersInOrganization(organization.getId());
 
     assertNotNull(actual);
     assertEquals(
-        actual.getFirst().getUser().getId(), userInOrganizationResponseDto.getUser().getId());
+        actual.getFirst().getUser().getId(), userWithRolesResponseDto.getUser().getId());
     verify(organizationService, times(1)).getOrganization(organization.getId());
     verify(organizationMapper, times(1))
         .toUserInOrganizationResponseDto(organization.getUsersInOrganization().get(0));
@@ -95,23 +95,23 @@ class UserInOrganizationServiceTest {
 
   @Test
   void getAllUsersInOrganizationWithRolesSuccessfully() {
-    userInOrganizationResponseDto.setOrganizationRoles(List.of(scopedRoleResponseDto));
+    userWithRolesResponseDto.setRoles(List.of(scopedRoleResponseDto));
     when(organizationService.getOrganization(organization.getId())).thenReturn(organization);
     when(roleMembershipRepository.findAllByOrganizationIdAndUserIds(
             organization.getId(), List.of(userInOrganization.getUser().getId())))
         .thenReturn(List.of(roleMembership));
     when(organizationMapper.toUserInOrganizationResponseDto(
             organization.getUsersInOrganization().get(0), List.of(scopedRole)))
-        .thenReturn(userInOrganizationResponseDto);
+        .thenReturn(userWithRolesResponseDto);
 
-    List<UserInOrganizationResponseDto> actual =
+    List<UserWithRolesResponseDto> actual =
         userInOrganizationService.getAllUsersInOrganizationWithRoles(organization.getId());
 
     assertNotNull(actual);
     assertEquals(1, actual.size());
     assertFalse(actual.isEmpty());
-    assertEquals(userInOrganizationResponseDto, actual.get(0));
-    assertEquals(actual.getFirst().getOrganizationRoles().getFirst(), scopedRoleResponseDto);
+    assertEquals(userWithRolesResponseDto, actual.get(0));
+    assertEquals(actual.getFirst().getRoles().getFirst(), scopedRoleResponseDto);
     verify(organizationService, times(1)).getOrganization(organization.getId());
     verify(organizationService, times(1)).validateUserInOrganization(organization);
     verify(roleMembershipRepository, times(1))
@@ -131,7 +131,7 @@ class UserInOrganizationServiceTest {
     when(userInOrganizationRepository.findByUserIdAndOrganizationId(
             organization.getUsersInOrganization().get(0).getUser().getId(), organization.getId()))
         .thenReturn(Optional.of(userInOrganization));
-    userInOrganizationResponseDto.setOrganizationRoles(List.of(scopedRoleResponseDto));
+    userWithRolesResponseDto.setRoles(List.of(scopedRoleResponseDto));
     when(roleMembershipRepository.findAllByOrganizationIdAndUserIds(
             organization.getId(),
             List.of(organization.getUsersInOrganization().get(0).getUser().getId())))
@@ -160,14 +160,14 @@ class UserInOrganizationServiceTest {
 
   @Test
   void updateUserRolesInOrganizationWhenUserHasRoleSuccessfully() {
-    ScopedRoleRequestDto scopedRoleRequestDto = createRoleRequest();
+    ScopedRoleRequestDto scopedRoleRequestDto = createOrganizationRoleRequest();
     ScopedRole scopedRole = createRole(scopedRoleRequestDto);
     ScopedRoleResponseDto scopedRoleResponseDto = createRoleResponse(scopedRole);
-    userInOrganizationResponseDto.setOrganizationRoles(List.of(scopedRoleResponseDto));
+    userWithRolesResponseDto.setRoles(List.of(scopedRoleResponseDto));
     when(userInOrganizationRepository.findByUserIdAndOrganizationId(
             organization.getUsersInOrganization().get(0).getUser().getId(), organization.getId()))
         .thenReturn(Optional.of(userInOrganization));
-    userInOrganizationResponseDto.setOrganizationRoles(Collections.emptyList());
+    userWithRolesResponseDto.setRoles(Collections.emptyList());
     when(roleMembershipRepository.findAllByOrganizationIdAndUserIds(
             organization.getId(),
             List.of(organization.getUsersInOrganization().get(0).getUser().getId())))
@@ -213,14 +213,14 @@ class UserInOrganizationServiceTest {
             userInOrganization.getId(), organization.getId()))
         .thenReturn(Optional.ofNullable(userInOrganization));
     when(organizationMapper.toUserInOrganizationResponseDto(userInOrganization))
-        .thenReturn(userInOrganizationResponseDto);
+        .thenReturn(userWithRolesResponseDto);
 
-    UserInOrganizationResponseDto response =
+    UserWithRolesResponseDto response =
         userInOrganizationService.getUserInOrganization(
             organization.getId(), userInOrganization.getId());
 
     assertNotNull(response);
-    assertEquals(response, userInOrganizationResponseDto);
+    assertEquals(response, userWithRolesResponseDto);
     verify(userInOrganizationRepository, times(1))
         .findByUserIdAndOrganizationId(userInOrganization.getId(), organization.getId());
   }
@@ -328,7 +328,7 @@ class UserInOrganizationServiceTest {
         .thenReturn(newUserInOrganization);
     organizationSingleMemberResponseDto
         .getMember()
-        .setOrganizationRoles(List.of(scopedRoleResponseDto));
+        .setRoles(List.of(scopedRoleResponseDto));
     when(organizationMapper.toOrganizationSingleMemberResponseDto(
             newUserInOrganization, Collections.emptyList()))
         .thenReturn(organizationSingleMemberResponseDto);
@@ -344,8 +344,8 @@ class UserInOrganizationServiceTest {
     assertEquals(
         responseDto.getOrganization(), organizationSingleMemberResponseDto.getOrganization());
     assertEquals(
-        responseDto.getMember().getOrganizationRoles(),
-        organizationSingleMemberResponseDto.getMember().getOrganizationRoles());
+        responseDto.getMember().getRoles(),
+        organizationSingleMemberResponseDto.getMember().getRoles());
     verify(organizationService, times(1)).getOrganization(organization.getId());
     verify(userService, times(2)).getUser(newUser.getId());
     verify(userInOrganizationRepository, times(1)).save(any(UserInOrganization.class));

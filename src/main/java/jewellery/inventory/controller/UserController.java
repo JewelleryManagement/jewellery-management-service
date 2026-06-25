@@ -13,6 +13,7 @@ import jewellery.inventory.service.UserService;
 import jewellery.inventory.utils.NotUsedYet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,6 +32,7 @@ public class UserController {
 
   @Operation(summary = "Get all users")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@auth.hasSystemPermission('SYSTEM_USER_READ')")
   @GetMapping
   public List<DetailedUserResponseDto> getAllUsers() {
     return userService.getAllUsers();
@@ -38,6 +40,7 @@ public class UserController {
 
   @Operation(summary = "Get user by id")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@auth.hasSystemPermission('SYSTEM_USER_READ')")
   @GetMapping("/{id}")
   public DetailedUserResponseDto getUser(@PathVariable UUID id) {
     return userService.getUserResponse(id);
@@ -50,6 +53,7 @@ public class UserController {
         @ApiResponse(responseCode = "400", description = "Validation failed")
       })
   @ResponseStatus(HttpStatus.CREATED)
+  @PreAuthorize("@auth.hasSystemPermission('SYSTEM_USER_CREATE')")
   @PostMapping
   public DetailedUserResponseDto createUser(@Valid @RequestBody UserRequestDto newUser) {
     return userService.createUser(newUser);
@@ -57,6 +61,7 @@ public class UserController {
 
   @Operation(summary = "Update user by id")
   @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("@auth.hasSystemPermission('SYSTEM_USER_UPDATE')")
   @PutMapping("/{id}")
   public DetailedUserResponseDto updateUser(
       @PathVariable UUID id, @Valid @RequestBody UserUpdateRequestDto userRequest) {
@@ -66,6 +71,7 @@ public class UserController {
   @NotUsedYet(reason = "Pending frontend implementation")
   @Operation(summary = "Delete user by id")
   @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PreAuthorize("@auth.hasSystemPermission('SYSTEM_USER_DELETE')")
   @DeleteMapping("/{id}")
   public void deleteUser(@PathVariable UUID id) {
     userService.deleteUser(id);

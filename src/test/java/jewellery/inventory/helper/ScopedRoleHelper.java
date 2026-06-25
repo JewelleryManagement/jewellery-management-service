@@ -1,21 +1,30 @@
 package jewellery.inventory.helper;
 
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import jewellery.inventory.dto.request.ScopedRoleRequestDto;
 import jewellery.inventory.dto.response.PermissionResponseDto;
 import jewellery.inventory.dto.response.ScopedRoleResponseDto;
 import jewellery.inventory.model.Permission;
+import jewellery.inventory.model.PermissionScope;
 import jewellery.inventory.model.RoleType;
 import jewellery.inventory.model.ScopedRole;
 
 public class ScopedRoleHelper {
-  public static ScopedRoleRequestDto createRoleRequest() {
-    return new ScopedRoleRequestDto(
-        "ORGANIZATION_ADMIN", RoleType.ORGANIZATION, EnumSet.allOf(Permission.class));
+  public static ScopedRoleRequestDto createOrganizationRoleRequest() {
+    Set<Permission> permissions =
+        Arrays.stream(Permission.values())
+            .filter(permission -> permission.getPermissionScope() == PermissionScope.ORGANIZATION)
+            .collect(Collectors.toCollection(() -> EnumSet.noneOf(Permission.class)));
+    return new ScopedRoleRequestDto("ORGANIZATION_ADMIN", RoleType.ORGANIZATION, permissions);
+  }
+
+  public static ScopedRoleRequestDto createSystemRoleRequest() {
+    Set<Permission> permissions =
+        Arrays.stream(Permission.values())
+            .filter(permission -> permission.getPermissionScope() == PermissionScope.SYSTEM)
+            .collect(Collectors.toCollection(() -> EnumSet.noneOf(Permission.class)));
+    return new ScopedRoleRequestDto("SYSTEM_ADMIN", RoleType.SYSTEM, permissions);
   }
 
   public static ScopedRole createRole(ScopedRoleRequestDto scopedRoleRequestDto) {

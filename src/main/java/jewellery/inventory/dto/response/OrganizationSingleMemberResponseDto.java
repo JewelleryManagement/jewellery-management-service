@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class OrganizationSingleMemberResponseDto {
   private OrganizationResponseDto organization;
-  private UserInOrganizationResponseDto member;
+  private UserWithRolesResponseDto member;
 }

@@ -6,6 +6,7 @@ import static jewellery.inventory.helper.ResourceInOrganizationTestHelper.create
 import static jewellery.inventory.helper.ResourceTestHelper.*;
 import static jewellery.inventory.helper.SystemEventTestHelper.getCreateOrDeleteEventPayload;
 import static jewellery.inventory.helper.SystemEventTestHelper.getUpdateEventPayload;
+import static jewellery.inventory.helper.UserTestHelper.createTestUser;
 import static jewellery.inventory.model.EventType.RESOURCE_CREATE;
 import static jewellery.inventory.model.EventType.RESOURCE_DELETE;
 import static jewellery.inventory.model.EventType.RESOURCE_UPDATE;
@@ -22,11 +23,13 @@ import java.util.*;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.request.ProductRequestDto;
 import jewellery.inventory.dto.request.ResourceInOrganizationRequestDto;
+import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.request.resource.ResourceRequestDto;
 import jewellery.inventory.dto.response.*;
 import jewellery.inventory.dto.response.resource.ResourceResponseDto;
 import jewellery.inventory.helper.ResourceTestHelper;
 import jewellery.inventory.mapper.ResourceMapper;
+import jewellery.inventory.model.User;
 import jewellery.inventory.model.resource.Diamond;
 import jewellery.inventory.model.resource.Resource;
 import org.hibernate.AssertionFailure;
@@ -75,16 +78,23 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     return "/products";
   }
 
+  private String getBaseUserUrl() {
+    return "/users";
+  }
+
   private OrganizationResponseDto organizationResponseDto;
+  private User userWithoutPermission;
 
   @BeforeEach
   void setUp() {
     OrganizationRequestDto organizationRequestDto = getTestOrganizationRequest();
     organizationResponseDto = createOrganizationsWithRequest(organizationRequestDto);
+    userWithoutPermission = createTestUser();
   }
 
   @AfterEach
   void deleteResources() throws JsonProcessingException {
+    authenticateAs(loggedInAdminUser);
     List<ResourceResponseDto> resourceDtosFromDb = getResourcesWithRequest();
     resourceDtosFromDb.forEach(resourceDTO -> deleteResourceById(resourceDTO.getId()));
   }
@@ -105,6 +115,20 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
+  void willThrowWhenCreateResourceWhenUserHasNoCreatePermission() {
+    ResourceRequestDto pearlRequestDto = ResourceTestHelper.getPearlRequestDto();
+    authenticateAs(userWithoutPermission);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.postForEntity(getBaseResourceUrl(), pearlRequestDto, String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
   void willGetAResourceFromDatabase() throws JsonProcessingException {
     sendCreateRequestsFor(List.of(ResourceTestHelper.getDiamondRequestDto()));
     List<ResourceResponseDto> createdDtos = getResourcesWithRequest();
@@ -114,6 +138,35 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     List<ResourceResponseDto> resourcesList = getResourcesWithRequest();
     assertEquals(1, resourcesList.size());
+  }
+
+  @Test
+  void willThrowGetAResourceFromDatabaseWhenUserHasNoReadPermission() {
+    ResourceRequestDto pearlRequestDto = ResourceTestHelper.getPearlRequestDto();
+    ResponseEntity<ResourceResponseDto> resource = createResource(pearlRequestDto);
+    authenticateAs(userWithoutPermission);
+
+    ResponseEntity<String> response =
+        testRestTemplate.getForEntity(
+            getBaseResourceUrl() + "/" + resource.getBody().getId(), String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
+  void willThrowGetAllResourcesFromDatabaseWhenUserHasNoReadPermission() {
+    authenticateAs(userWithoutPermission);
+
+    ResponseEntity<String> response =
+        testRestTemplate.getForEntity(getBaseResourceUrl(), String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
   }
 
   @Test
@@ -137,6 +190,20 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
+  void willThrowGetAllResourcesQuantitiesWhenUserHasNoReadPermission() {
+    authenticateAs(userWithoutPermission);
+
+    ResponseEntity<String> response = testRestTemplate.getForEntity(
+            getBaseResourceUrl() + "/quantity", String.class);
+
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+            Objects.requireNonNull(response.getBody())
+                    .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
   void willUpdateResourceToDatabase() throws JsonProcessingException {
     sendCreateRequestsFor(provideResourceRequestDtos().toList());
     List<ResourceResponseDto> createdDtos = getResourcesWithRequest();
@@ -154,6 +221,25 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
 
     systemEventTestHelper.assertEventWasLogged(
         RESOURCE_UPDATE, expectedEventPayload, updatedDtos.getFirst().getId());
+  }
+
+  @Test
+  void willThrowUpdateResourceWhenUserHasNoUpdatePermission() {
+    ResourceRequestDto pearlRequestDto = ResourceTestHelper.getPearlRequestDto();
+    ResponseEntity<ResourceResponseDto> resource = createResource(pearlRequestDto);
+    authenticateAs(userWithoutPermission);
+
+    ResponseEntity<String> response =
+        this.testRestTemplate.exchange(
+            getBaseResourceUrl() + "/" + resource.getBody().getId(),
+            HttpMethod.PUT,
+            new HttpEntity<>(pearlRequestDto),
+            String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
   }
 
   @Test
@@ -250,6 +336,20 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
   }
 
   @Test
+  void willThrowDeleteAResourceWhenUserHasNoDeletePermission() {
+    ResourceRequestDto pearlRequestDto = ResourceTestHelper.getPearlRequestDto();
+    ResponseEntity<ResourceResponseDto> resource = createResource(pearlRequestDto);
+    authenticateAs(userWithoutPermission);
+
+    ResponseEntity<String> response = deleteResourceById(resource.getBody().getId());
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
+  }
+
+  @Test
   void willFailToGetResourceFromDatabaseWithWrongId() {
     ResponseEntity<String> response =
         testRestTemplate.getForEntity(getBaseResourceUrl() + "/" + UUID.randomUUID(), String.class);
@@ -309,6 +409,24 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertEquals(responseDto.get(0).getPricePerQuantity(), BigDecimal.valueOf(30));
     assertEquals("smth", responseDto.get(0).getNote());
     assertEquals("S.K.U", responseDto.get(0).getSku());
+  }
+
+  @Test
+  void willThrowImportResourceWhenUserHasNoImportPermission() {
+    authenticateAs(userWithoutPermission);
+
+    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+    body.add("file", getTestFile().getResource());
+
+    HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+    ResponseEntity<String> response =
+        testRestTemplate.exchange(getImportUrl(), HttpMethod.POST, requestEntity, String.class);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertTrue(
+        Objects.requireNonNull(response.getBody())
+            .contains("You do not have permission to perform this action"));
   }
 
   private void willImportCsvReturnsBadRequest(MockMultipartFile TestWrongContentFile) {
@@ -468,5 +586,13 @@ class ResourceCrudIntegrationTest extends AuthenticatedIntegrationTestBase {
     assertTrue(
         Objects.requireNonNull(response.getBody())
             .contains("Stock Keeping Unit: " + resourceRequestDto.getSku() + " already exists!"));
+  }
+
+  @Nullable
+  private User createUserInDatabase(UserRequestDto userRequest) {
+    ResponseEntity<User> createUser =
+        this.testRestTemplate.postForEntity(getBaseUserUrl(), userRequest, User.class);
+
+    return createUser.getBody();
   }
 }

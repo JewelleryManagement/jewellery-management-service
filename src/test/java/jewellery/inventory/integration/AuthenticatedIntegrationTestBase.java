@@ -8,19 +8,13 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.common.lang.Nullable;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 import jewellery.inventory.dto.request.ScopedRoleRequestDto;
 import jewellery.inventory.dto.request.UserRequestDto;
 import jewellery.inventory.dto.response.ScopedRoleResponseDto;
 import jewellery.inventory.helper.SystemEventTestHelper;
-import jewellery.inventory.helper.UserTestHelper;
-import jewellery.inventory.model.Image;
-import jewellery.inventory.model.Permission;
-import jewellery.inventory.model.RoleType;
-import jewellery.inventory.model.User;
+import jewellery.inventory.model.*;
 import jewellery.inventory.repository.*;
 import jewellery.inventory.service.ImageService;
 import jewellery.inventory.service.OrganizationService;
@@ -43,6 +37,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ActiveProfiles("test")
 public abstract class AuthenticatedIntegrationTestBase {
   protected static final String ADMIN_ROLE_NAME = "ORGANIZATION_ADMIN";
+  protected static final String SYSTEM_ADMIN_ROLE_NAME = "SYSTEM_ADMIN";
 
   @Autowired protected ObjectMapper objectMapper;
 
@@ -51,7 +46,7 @@ public abstract class AuthenticatedIntegrationTestBase {
   @Autowired private JwtTokenService jwtService;
   @MockBean protected UserDetailsService userDetailsService;
   @Autowired private UserRepository userRepository;
-  @Autowired private SystemEventRepository systemEventRepository;
+  @Autowired protected SystemEventRepository systemEventRepository;
   @Autowired private SaleRepository saleRepository;
   @Autowired private ProductRepository productRepository;
   @Autowired private ResourceRepository resourceRepository;
@@ -76,17 +71,25 @@ public abstract class AuthenticatedIntegrationTestBase {
     saleRepository.deleteAll();
     productRepository.deleteAll();
     purchasedResourceInUserRepository.deleteAll();
+    resourceInProductRepository.deleteAll();
+
+    roleMembershipRepository.deleteAll();
+    scopedRoleRepository.deleteAll();
+
     userRepository.deleteAll();
     resourceRepository.deleteAll();
-    resourceInProductRepository.deleteAll();
-    scopedRoleRepository.deleteAll();
-    roleMembershipRepository.deleteAll();
-    loggedInAdminUser = createTestAdminUser();
+
+    loggedInAdminUser = userRepository.saveAndFlush(createTestAdminUser());
+
     authenticateAs(loggedInAdminUser);
     setupTestRestTemplateWithAuthHeaders();
-    loggedInAdminUser.setId(
-        createUserInDatabase(UserTestHelper.getTestUserRequest(loggedInAdminUser)).getId());
-    createRoleWithAllPermissions();
+
+    createOrganizationRoleWithAllPermissions();
+
+    ScopedRoleResponseDto systemRole = createSystemRoleWithAllPermissions();
+
+    createRoleMembership(loggedInAdminUser.getId(), null, systemRole.getId());
+
     systemEventRepository.deleteAll();
   }
 
@@ -98,11 +101,28 @@ public abstract class AuthenticatedIntegrationTestBase {
     }
   }
 
-  private void createRoleWithAllPermissions() {
-    Set<Permission> permissions = EnumSet.allOf(Permission.class);
+  private void createOrganizationRoleWithAllPermissions() {
+    Set<Permission> permissions =
+        Arrays.stream(Permission.values())
+            .filter(permission -> permission.getPermissionScope() == PermissionScope.ORGANIZATION)
+            .collect(Collectors.toCollection(() -> EnumSet.noneOf(Permission.class)));
+
     ScopedRoleRequestDto scopedRoleRequestDto =
         new ScopedRoleRequestDto(ADMIN_ROLE_NAME, RoleType.ORGANIZATION, permissions);
+
     scopedRoleService.createRole(scopedRoleRequestDto);
+  }
+
+  private ScopedRoleResponseDto createSystemRoleWithAllPermissions() {
+    Set<Permission> permissions =
+        Arrays.stream(Permission.values())
+            .filter(permission -> permission.getPermissionScope() == PermissionScope.SYSTEM)
+            .collect(Collectors.toCollection(() -> EnumSet.noneOf(Permission.class)));
+
+    ScopedRoleRequestDto scopedRoleRequestDto =
+        new ScopedRoleRequestDto(SYSTEM_ADMIN_ROLE_NAME, RoleType.SYSTEM, permissions);
+
+    return scopedRoleService.createRole(scopedRoleRequestDto);
   }
 
   protected ScopedRoleResponseDto createRole(String roleName, Set<Permission> permissions) {

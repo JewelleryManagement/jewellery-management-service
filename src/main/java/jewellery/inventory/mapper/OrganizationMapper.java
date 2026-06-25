@@ -4,7 +4,7 @@ import java.util.List;
 import jewellery.inventory.dto.request.OrganizationRequestDto;
 import jewellery.inventory.dto.response.OrganizationResponseDto;
 import jewellery.inventory.dto.response.OrganizationSingleMemberResponseDto;
-import jewellery.inventory.dto.response.UserInOrganizationResponseDto;
+import jewellery.inventory.dto.response.UserWithRolesResponseDto;
 import jewellery.inventory.model.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -47,20 +47,20 @@ public class OrganizationMapper {
     return memberResponseDto;
   }
 
-  public UserInOrganizationResponseDto toUserInOrganizationResponseDto(
+  public UserWithRolesResponseDto toUserInOrganizationResponseDto(
       UserInOrganization userInOrganization) {
-    UserInOrganizationResponseDto userResponseDto = new UserInOrganizationResponseDto();
+    UserWithRolesResponseDto userResponseDto = new UserWithRolesResponseDto();
 
     userResponseDto.setUser(userMapper.toUserResponse(userInOrganization.getUser()));
     return userResponseDto;
   }
 
-  public UserInOrganizationResponseDto toUserInOrganizationResponseDto(
+  public UserWithRolesResponseDto toUserInOrganizationResponseDto(
       UserInOrganization userInOrganization, List<ScopedRole> organizationRoles) {
-    UserInOrganizationResponseDto dto = new UserInOrganizationResponseDto();
+    UserWithRolesResponseDto dto = new UserWithRolesResponseDto();
 
     dto.setUser(userMapper.toUserResponse(userInOrganization.getUser()));
-    dto.setOrganizationRoles(scopedRoleMapper.toResponseList(organizationRoles));
+    dto.setRoles(scopedRoleMapper.toResponseList(organizationRoles));
 
     return dto;
   }

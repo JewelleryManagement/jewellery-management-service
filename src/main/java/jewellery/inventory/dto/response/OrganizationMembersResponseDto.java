@@ -5,5 +5,5 @@ import java.util.List;
 @Data
 public class OrganizationMembersResponseDto {
     OrganizationResponseDto organization;
-    List<UserInOrganizationResponseDto> members;
+    List<UserWithRolesResponseDto> members;
 }

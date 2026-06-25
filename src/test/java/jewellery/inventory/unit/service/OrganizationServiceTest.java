@@ -4,7 +4,7 @@ import static jewellery.inventory.helper.OrganizationTestHelper.*;
 import static jewellery.inventory.helper.OrganizationTestHelper.getTestOrganizationRequest;
 import static jewellery.inventory.helper.ProductTestHelper.getTestProduct;
 import static jewellery.inventory.helper.ScopedRoleHelper.createRole;
-import static jewellery.inventory.helper.ScopedRoleHelper.createRoleRequest;
+import static jewellery.inventory.helper.ScopedRoleHelper.createOrganizationRoleRequest;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -47,7 +47,7 @@ class OrganizationServiceTest {
   @Mock private ScopedRoleService scopedRoleService;
   @Mock private ScopedRoleRepository scopedRoleRepository;
   @Mock private RoleMembershipRepository roleMembershipRepository;
-  @Mock private OrganizationAuthorizationService organizationAuthorizationService;
+  @Mock private AuthorizationService authorizationService;
   private Organization organization;
   private Organization organizationWithUserAllPermission;
   private User user;
@@ -83,7 +83,7 @@ class OrganizationServiceTest {
     organizationWithProduct =
         setProductAndResourcesToOrganization(
             OrganizationTestHelper.getTestOrganization(), product, resourceInOrganization);
-    scopedRoleRequestDto = createRoleRequest();
+    scopedRoleRequestDto = createOrganizationRoleRequest();
     adminRole = createRole(scopedRoleRequestDto);
   }
 

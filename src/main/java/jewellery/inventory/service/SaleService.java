@@ -43,7 +43,6 @@ public class SaleService {
   private final ProductMapper productMapper;
   private final PurchasedResourceInUserService purchasedResourceInUserService;
   private final AuthService authService;
-  private final OrganizationAuthorizationService organizationAuthorizationService;
 
   @LogCreateEvent(eventType = EventType.ORGANIZATION_CREATE_SALE)
   @Transactional

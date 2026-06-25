@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.UUID;
 import jewellery.inventory.model.Permission;
 import jewellery.inventory.model.RoleMembership;
+import jewellery.inventory.model.RoleType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -50,6 +51,19 @@ public interface RoleMembershipRepository extends JpaRepository<RoleMembership, 
         and perm = :permission
       """)
   boolean hasAccessToSale(UUID saleId, UUID userId, Permission permission);
+
+  @Query(
+      """
+          select count(m) > 0
+          from RoleMembership m
+          join m.role r
+          join r.permissions perm
+          where m.user.id = :userId
+            and m.organization is null
+            and r.roleType = :roleType
+            and perm = :permission
+          """)
+  boolean hasSystemPermission(UUID userId, RoleType roleType, Permission permission);
 
   boolean existsByRoleId(UUID roleId);
 
@@ -101,4 +115,53 @@ public interface RoleMembershipRepository extends JpaRepository<RoleMembership, 
       @Param("userId") UUID userId,
       @Param("organizationId") UUID organizationId,
       @Param("roleIds") UUID[] roleIds);
+
+  @Query(
+      """
+            select distinct p
+            from RoleMembership rm
+            join rm.role r
+            join r.permissions p
+            where rm.user.id = :userId
+              and rm.organization is null
+              and r.roleType = :roleType
+        """)
+  Set<Permission> findSystemPermissionsByUserId(
+      @Param("userId") UUID userId, @Param("roleType") RoleType roleType);
+
+  @Query(
+      """
+        select distinct m.organization.id
+        from RoleMembership m
+        join m.role r
+        join r.permissions perm
+        where m.user.id = :userId
+          and m.organization is not null
+          and r.roleType = :roleType
+          and perm = :permission
+    """)
+  List<UUID> findOrganizationIdsByUserIdAndPermission(
+      @Param("userId") UUID userId,
+      @Param("roleType") RoleType roleType,
+      @Param("permission") Permission permission);
+
+  @Modifying
+  @Query(
+      """
+    delete from RoleMembership rm
+    where rm.user.id = :userId
+      and rm.organization is null
+    """)
+  void deleteAllSystemRolesByUserId(UUID userId);
+
+  @Query(
+      """
+    select distinct rm
+    from RoleMembership rm
+    join fetch rm.role r
+    left join fetch r.permissions
+    where rm.user.id = :userId
+      and rm.organization is null
+    """)
+  List<RoleMembership> findAllSystemRolesByUserId(@Param("userId") UUID userId);
 }
